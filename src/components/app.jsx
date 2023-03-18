@@ -5,6 +5,8 @@ import cordovaApp from "../js/cordova-app";
 
 import routes from "../js/routes";
 import store from "../js/store";
+import { ConnectContextProvider } from "./connect/connect-context";
+import logger from "../services/logger-service";
 
 const MyApp = () => {
   const device = getDevice();
@@ -41,6 +43,26 @@ const MyApp = () => {
     // Init cordova APIs (see cordova-app.js)
     if (f7.device.cordova) {
       cordovaApp.init(f7);
+      if (f7.device.android) {
+        navigator.geolocation.getCurrentPosition(
+          () => {},
+          (err) => {
+            logger.error("Cannot enable location", err);
+          }
+        );
+      }
+      ble.isEnabled(
+        () => {},
+        () => {
+          // Bluetooth not yet enabled so we try to enable it
+          ble.enable(
+            () => {},
+            (err) => {
+              logger.error("Cannot enable bluetooth", err);
+            }
+          );
+        }
+      );
     }
 
     // Call F7 APIs here
@@ -48,8 +70,10 @@ const MyApp = () => {
 
   return (
     <App {...f7params}>
-      {/* Your main view, should have "view-main" class */}
-      <View main className="safe-areas" url="/" />
+      <ConnectContextProvider>
+        {/* Your main view, should have "view-main" class */}
+        <View main className="safe-areas" url="/" />
+      </ConnectContextProvider>
     </App>
   );
 };

@@ -1,14 +1,22 @@
-
-import HomePage from '../pages/home.jsx';
+import Landing from "../pages/landing";
+import EdlHome from "../pages/edl/home";
 
 var routes = [
   {
-    path: '/',
-    component: HomePage,
+    path: "/",
+    component: Landing,
   },
   {
-    path: '(.*)',
-    component: HomePage,
+    path: "/edl",
+    component: EdlHome,
+  },
+  {
+    path: "/edl/:id",
+    component: EdlHome,
+  },
+  {
+    path: "(.*)",
+    component: Landing,
   },
 ];
 

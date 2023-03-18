@@ -1,0 +1,433 @@
+/* The Modal (background) */
+.dialog-component {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 99999; /* Sit on top */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+
+  .dialog-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%; /* Full width */
+    height: 100%;
+
+    .content {
+      width: 80%;
+      background-color: white;
+      border-radius: 15px;
+      max-width: 360px;
+
+      .title {
+        padding: 20px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #6a6f75;
+      }
+      .text {
+        padding: 0 20px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #888c91;
+      }
+      .buttons {
+        padding: 20px;
+        .button {
+          height: 36px;
+        }
+      }
+      .upload {
+        padding: 0 20px 20px;
+        color: #888c91;
+      }
+    }
+    .ok-button,
+    .cancel-button {
+      line-height: 36px;
+    }
+  }
+
+  &#dialog-alert {
+    .ok-button {
+      background: #09a8fa;
+      color: white;
+      width: fit-content;
+      border-radius: 5px;
+      min-width: 100px;
+      margin: auto;
+    }
+  }
+
+  &#dialog-error-instruction {
+    .dialog-content {
+      .content {
+        display: inline-block;
+        width: 100%;
+        background-color: white;
+        border-radius: 15px;
+        max-width: 800px;
+
+        .error-content {
+          text-align: center;
+          font-size: 16px;
+          font-weight: 400;
+          color: #888c91;
+        }
+      }
+    }
+
+    .buttons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+
+      .option-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        margin-left: 10px;
+
+        &.delete-mode {
+          background: #ff3b30;
+        }
+      }
+      .cancel-button {
+        background: #b2b2b2;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        float: left;
+        margin-right: 15px;
+      }
+    }
+  }
+
+  &#dialog-firmware {
+    .content {
+      background-color: white;
+      border-radius: 5px;
+      width: 100%;
+      max-width: 450px;
+    }
+    .checkboxs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .remind {
+        width: fit-content;
+        border-radius: 9999px;
+      }
+    }
+    .buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .ok-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+      }
+    }
+  }
+
+  &#dialog-confirm,
+  &#dialog-delete,
+  &#dialog-location,
+  &#dialog-question {
+    .buttons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+
+      .ok-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+
+        &.delete-mode {
+          background: #ff3b30;
+        }
+      }
+      .cancel-button {
+        background: #b2b2b2;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        float: left;
+        margin-right: 15px;
+      }
+    }
+  }
+
+  &#dialog-devicename,
+  &#dialog-prompt,
+  &#dialog-prompt-numpad,
+  &#dialog-zip-upload,
+  &#dialog-json-upload,
+  &#dialog-prompt-piano {
+    .buttons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+
+      .ok-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+      }
+      .cancel-button {
+        background: #b2b2b2;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        float: left;
+        margin-right: 15px;
+      }
+    }
+
+    .text-1 {
+      padding: 0px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #888c91;
+      .form-group {
+        box-sizing: inherit;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+        position: relative;
+        display: flex;
+        width: 100%;
+
+        .input {
+          &::placeholder {
+            color: #cbd1dc;
+          }
+          &:focus {
+            outline: none;
+            border-color: #275efe;
+          }
+
+          box-sizing: inherit;
+          width: 100%;
+          padding: 8px 16px;
+          padding-right: 40px;
+          line-height: 30px;
+          font-size: 14px;
+          border: 1px solid #cdd9ed;
+          background: #fff;
+          transition: border 0.3s ease;
+          white-space: nowrap;
+          display: block;
+          position: relative;
+          -webkit-box-flex: 1;
+          flex: 1 1 auto;
+          margin-top: 0;
+          margin-bottom: 0;
+          border-radius: 10px;
+        }
+
+        #import-project-input {
+          padding: 8px;
+          line-height: 20px;
+        }
+
+        .clear-button {
+          width: 30px;
+          position: absolute;
+          right: 9px;
+          top: 11px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+
+#dialog-prompt-numpad {
+  .content {
+    background-color: #606060;
+    border: 5px solid #ffffff;
+    width: 280px;
+  }
+  .buttons {
+    padding: 0;
+  }
+  .button {
+    background-color: #ffffff;
+  }
+  .ok-button {
+    margin: 10px auto;
+    width: 120px !important;
+    border-radius: 8px !important;
+    font-size: 22px;
+    height: 36px;
+    line-height: 36px;
+  }
+  .form-group {
+    margin: 10px auto;
+  }
+  .input {
+    font-size: 28px !important;
+    text-align: right;
+    padding-right: 50px !important;
+    color: #606060;
+  }
+  .numpad-content {
+    .button {
+      color: #606060;
+      font-size: 20px;
+      height: 36px;
+      border-radius: 8px;
+      line-height: 36px;
+    }
+    .row {
+      margin: 8px 0;
+    }
+  }
+}
+
+#dialog-prompt-piano {
+  .content {
+    width: 100%;
+    max-width: 568px;
+  }
+  .buttons {
+    padding: 0;
+  }
+  .ok-button {
+    margin: 10px auto;
+    width: 120px !important;
+    border-radius: 8px !important;
+    font-size: 22px;
+    height: 36px;
+    line-height: 36px;
+  }
+}
+
+/* Piano */
+.piano-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  background: #111;
+  border-radius: 10px;
+  box-shadow: 10px 2px 10px #090909, 2px 10px 10px #090909;
+}
+
+.keyboard {
+  width: 95%;
+  height: 160px;
+  display: flex;
+  margin: 10px auto 10px;
+  position: relative;
+  .key {
+    font-size: 13px;
+  }
+}
+
+%key-style {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 2rem;
+  border-radius: 5px;
+  border: 2px solid black;
+  font-family: sans-serif;
+}
+
+.white {
+  @extend %key-style;
+  height: 100%;
+  width: 5%;
+  background-color: ivory;
+  box-shadow: 2px 7px 2px #222222;
+  &.played {
+    background-color: #dddddd;
+    transform: translate(0, 2px);
+  }
+}
+
+.black {
+  @extend %key-style;
+  height: 60%;
+  width: 3%;
+  position: absolute;
+  z-index: 2;
+  margin-left: -1.6%;
+  background-color: black;
+  color: white;
+  &.played {
+    background-color: #333333;
+    transform: translate(0, 2px);
+  }
+  &.black1 {
+    left: 4.5%;
+  }
+  &.black2 {
+    left: 9.4%;
+  }
+  &.black3 {
+    left: 18.7%;
+  }
+  &.black4 {
+    left: 23.5%;
+  }
+  &.black5 {
+    left: 28.3%;
+  }
+  &.black6 {
+    left: 37.8%;
+  }
+  &.black7 {
+    left: 42.6%;
+  }
+  &.black8 {
+    left: 52.1%;
+  }
+  &.black9 {
+    left: 56.8%;
+  }
+  &.black10 {
+    left: 61.7%;
+  }
+  &.black11 {
+    left: 71.2%;
+  }
+  &.black12 {
+    left: 75.8%;
+  }
+  &.black13 {
+    left: 85.4%;
+  }
+  &.black14 {
+    left: 90.2%;
+  }
+  &.black15 {
+    left: 94.9%;
+  }
+}
+
+.active-note {
+  background-color: orange;
+}
