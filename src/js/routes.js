@@ -1,10 +1,19 @@
-import Landing from "../pages/landing";
-import EdlHome from "../pages/edl/home";
+import EdlHome from "../pages/home";
+import EdlLayout from "../pages/layout";
+import EdlActivity from "../pages/activity";
 
 var routes = [
   {
     path: "/",
-    component: Landing,
+    component: EdlHome,
+  },
+  {
+    path: "/layout",
+    component: EdlLayout,
+  },
+  {
+    path: "/layout/:layout",
+    component: EdlActivity,
   },
   {
     path: "/edl",
@@ -12,11 +21,11 @@ var routes = [
   },
   {
     path: "/edl/:id",
-    component: EdlHome,
+    component: EdlActivity,
   },
   {
     path: "(.*)",
-    component: Landing,
+    component: EdlHome,
   },
 ];
 

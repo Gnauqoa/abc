@@ -457,23 +457,6 @@ export function formatDisplay(value, format, option) {
   }
 }
 
-export function getSupportedDevices() {
-  return [
-    CONTROLLERHANDLE,
-    MYROBOT,
-    ARMBOT,
-    MYPET,
-    BATMAN,
-    YOLOBIT,
-    TANK,
-    XBOT,
-    XBUILD,
-    TRANSFORMBOT,
-    SPIDERBOT,
-    ROBOTWALLE,
-  ];
-}
-
 export function getLandingPage() {
   let landingPage = "";
   const selectedDev = selectedDevice();

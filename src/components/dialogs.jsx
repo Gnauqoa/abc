@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7 } from "framework7-react";
 
-import { FREQUENCIES, DEFAULT_CODE_NAME } from "../js/constants";
+import { DEFAULT_CODE_NAME } from "../js/constants";
 import * as core from "../utils/core";
 
 export default class extends Component {
@@ -19,58 +19,6 @@ export default class extends Component {
     });
     this.$$("#dialog-prompt-numpad .clear-button").on("click", () => {
       this.inputNumpad.current.value = "";
-    });
-
-    /* Piano */
-    const key = Array.from(document.querySelectorAll(".key"));
-    let volume = 0.5;
-
-    //Create new audio context when note played
-    function playNote(note, length) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext,
-        ctx = new AudioContext(),
-        oscillator = ctx.createOscillator(),
-        gainNode = ctx.createGain();
-      oscillator.type = "triangle";
-      oscillator.frequency.value = note;
-      gainNode.gain.value = volume;
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.start(0);
-      //Trying to prevent popping sound on note end. Probably can be improved
-      gainNode.gain.setTargetAtTime(0, length / 1000 - 0.05, 0.08);
-      oscillator.stop(ctx.currentTime + (length / 1000 + 0.2));
-      oscillator.onended = () => ctx.close();
-    }
-
-    //Finds clicked element returns data-note value and runs playKey function
-    function onClickPlay(e) {
-      let key = 0;
-      let length = 300;
-      let noteClass = e.target.dataset.note;
-      window.selectedNote = noteClass;
-      f7.$(".active-note").removeClass("active-note");
-      f7.$(e.target).addClass("active-note");
-      for (let i = 0; i < FREQUENCIES.length; i++) {
-        if (FREQUENCIES[i][0] === noteClass) {
-          key = FREQUENCIES[i][1];
-        }
-      }
-      addVisual(e.target);
-      playNote(key, length);
-    }
-
-    //adds css class when note played
-    function addVisual(key, length) {
-      key.classList.add("played");
-      setTimeout(() => {
-        key.classList.remove("played");
-      }, length || 300);
-    }
-
-    //event listeners
-    key.forEach((key) => {
-      key.addEventListener("click", onClickPlay);
     });
   };
 
@@ -394,121 +342,6 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="ok-button">OK</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="dialog-prompt-piano" className="dialog-component">
-          <div id="piano-content" className="dialog-content">
-            <div className="content">
-              <div className="piano-wrap">
-                <div className="keyboard">
-                  <div data-note="C3" className="key white">
-                    đô
-                  </div>
-                  <div data-note="DB3" className="key black black1"></div>
-                  <div data-note="D3" className="key white">
-                    rê
-                  </div>
-                  <div data-note="EB3" className="key black black2"></div>
-                  <div data-note="E3" className="key white">
-                    mi
-                  </div>
-                  <div data-note="F3" className="key white">
-                    fa
-                  </div>
-                  <div data-note="GB3" className="key black black3"></div>
-                  <div data-note="G3" className="key white">
-                    sol
-                  </div>
-                  <div data-note="AB3" className="key black black4"></div>
-                  <div data-note="A3" className="key white">
-                    la
-                  </div>
-                  <div data-note="BB3" className="key black black5"></div>
-                  <div data-note="B3" className="key white">
-                    si
-                  </div>
-
-                  <div data-note="C4" className="key white">
-                    đô
-                  </div>
-                  <div data-note="DB4" className="key black black6"></div>
-                  <div data-note="D4" className="key white">
-                    rê
-                  </div>
-                  <div data-note="EB4" className="key black black7"></div>
-                  <div data-note="E4" className="key white">
-                    mi
-                  </div>
-                  <div data-note="F4" className="key white">
-                    fa
-                  </div>
-                  <div data-note="GB4" className="key black black8"></div>
-                  <div data-note="G4" className="key white">
-                    sol
-                  </div>
-                  <div data-note="AB4" className="key black black9"></div>
-                  <div data-note="A4" className="key white">
-                    la
-                  </div>
-                  <div data-note="BB4" className="key black black10"></div>
-                  <div data-note="B4" className="key white">
-                    si
-                  </div>
-
-                  <div data-note="C5" className="key white">
-                    đô
-                  </div>
-                  <div data-note="DB5" className="key black black11"></div>
-                  <div data-note="D5" className="key white">
-                    rê
-                  </div>
-                  <div data-note="EB5" className="key black black12"></div>
-                  <div data-note="E5" className="key white">
-                    mi
-                  </div>
-                  <div data-note="F5" className="key white">
-                    fa
-                  </div>
-                  <div data-note="GB5" className="key black black13"></div>
-                  <div data-note="G5" className="key white">
-                    sol
-                  </div>
-                  <div data-note="AB5" className="key black black14"></div>
-                  <div data-note="A5" className="key white">
-                    la
-                  </div>
-                  <div data-note="BB5" className="key black black15"></div>
-                  <div data-note="B5" className="key white">
-                    si
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="dialog-location" className="dialog-component">
-          <div className="dialog-content">
-            <div className="content" style={{ maxWidth: "460px" }}>
-              <div className="title">
-                <Icon ios="material:location_on" md="material:location_on"></Icon> Sử dụng định vị (Use your location)
-              </div>
-              <p style={{ margin: "auto 20px 15px" }}>
-                Khi sử dụng ứng dụng để quét và kết nối với thiết bị, bạn được yêu cầu bật Định Vị. Điều này cần thiết
-                cho mục đích giao tiếp Bluetooth năng lượng thấp. Chúng tôi không dùng Định Vị khi ứng dụng không được
-                sử dụng. Chúng tôi không thu thập, lưu trữ hoặc chia sẻ thông tin này.
-              </p>
-              <p style={{ margin: "auto 20px" }}>
-                When using the app to scan and connect to device, you will be asked to enable Location. This is required
-                for the Bluetooth low energy communication item. We do not use location when the app is not in use. We
-                do not collect, store or share this information.
-              </p>
-              <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
                 <Button className="ok-button">OK</Button>
               </div>
             </div>

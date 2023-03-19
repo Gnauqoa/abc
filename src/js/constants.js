@@ -1,4 +1,13 @@
-export const APP_VERSION = "2.3.6";
+export const APP_VERSION = "1.0.0";
+
+// Layout
+export const LAYOUT_CHART = "chart";
+export const LAYOUT_TABLE = "table";
+export const LAYOUT_NUMBER = "number";
+export const LAYOUT_TABLE_CHART = "table-chart";
+export const LAYOUT_NUMBER_CHART = "number-chart";
+export const LAYOUT_NUMBER_TABLE = "number-table";
+
 // Bluetooth
 export const DEVICE_PREFIX = "ohstem-";
 export const XBOT_PREFIX = "xbot";
@@ -144,47 +153,6 @@ export const CMD_REPL_EXEC_CMD = 13;
 export const ROBOT_MESSAGE_CHAR_LIMIT = 35;
 export const ROBOT_DATA_RECV_SIGN = "\x06";
 
-// Music Frequencies list from http://www.phy.mtu.edu
-export const FREQUENCIES = [
-  ["REST", 0],
-  ["C3", 131],
-  ["DB3", 139],
-  ["D3", 147],
-  ["EB3", 156],
-  ["E3", 165],
-  ["F3", 175],
-  ["GB3", 185],
-  ["G3", 196],
-  ["AB3", 208],
-  ["A3", 220],
-  ["BB3", 233],
-  ["B3", 247],
-  ["C4", 262],
-  ["DB4", 277],
-  ["D4", 294],
-  ["EB4", 311],
-  ["E4", 330],
-  ["F4", 349],
-  ["GB4", 370],
-  ["G4", 392],
-  ["AB4", 415],
-  ["A4", 440],
-  ["BB4", 466],
-  ["B4", 494],
-  ["C5", 523],
-  ["DB5", 554],
-  ["D5", 587],
-  ["EB5", 622],
-  ["E5", 659],
-  ["F5", 698],
-  ["GB5", 740],
-  ["G5", 784],
-  ["AB5", 831],
-  ["A5", 880],
-  ["BB5", 932],
-  ["B5", 988],
-];
-
 // Pin mode
 export const INPUT = "Input";
 export const OUTPUT = "Output";
@@ -209,163 +177,5 @@ export const EVENT_RELEASED = "released";
 export const EVENT_LOW = "low";
 export const EVENT_HIGH = "high";
 
-// file code of gamepad
-export const CUSTOM_MAPPING = {
-  dpad_up: {
-    pressed: "m(90,100)",
-    released: "m(0,0)",
-  },
-  dpad_down: {
-    pressed: "m(270,100)",
-    released: "m(0,0)",
-  },
-  dpad_left: {
-    pressed: "m(180,100)",
-    released: "m(0,0)",
-  },
-  dpad_right: {
-    pressed: "m(0,100)",
-    released: "m(0,0)",
-  },
-  a: {
-    pressed: "",
-    released: "",
-  },
-  b: {
-    pressed: "",
-    released: "",
-  },
-  c: {
-    pressed: "",
-    released: "",
-  },
-  d: {
-    pressed: "",
-    released: "",
-  },
-  r1: {
-    rotate: "%d",
-    min: "0",
-    max: "100",
-  },
-  r2: {
-    rotate: "%d",
-    min: "0",
-    max: "100",
-  },
-  j1: {
-    0: "m(0,100)",
-    45: "m(45,100)",
-    90: "m(90,100)",
-    135: "m(135,100)",
-    180: "m(180,100)",
-    225: "m(225,100)",
-    270: "m(270,100)",
-    315: "m(315,100)",
-    center: "m(0,0)",
-  },
-  j2: {
-    0: "m(0,100)",
-    45: "m(45,100)",
-    90: "m(90,100)",
-    135: "m(135,100)",
-    180: "m(180,100)",
-    225: "m(225,100)",
-    270: "m(270,100)",
-    315: "m(315,100)",
-    center: "m(0,0)",
-  },
-  sw1: "",
-  sw2: "",
-  btn1: {
-    pressed: "",
-    released: "",
-  },
-  btn2: {
-    pressed: "",
-    released: "",
-  },
-  mpu: {
-    0: "m(0,%d)",
-    45: "m(45,%d)",
-    90: "m(90,%d)",
-    135: "m(135,%d)",
-    180: "m(180,%d)",
-    225: "m(225,%d)",
-    270: "m(270,%d)",
-    315: "m(315,%d)",
-    center: "m(0,0)",
-  },
-};
-
-export const DEFAULT_CODE_BLOCK =
-  '<xml xmlns="https://developers.google.com/blockly/xml"><block type="yolobit_basic_forever" id="w5Bl*-!,Ihc8X2tI)wP*" x="87" y="37"></block></xml>';
 export const ENTER_KEY = 13;
 export const SPACE_KEY = 32;
-export const BLOCK = "block";
-export const PYTHON = "python";
-export const JAVASCRIPT = "javascript";
-export const BUTTONMUSIC = [
-  {
-    id: "do",
-    name: "Đồ",
-  },
-  {
-    id: "re",
-    name: "Rê",
-  },
-  {
-    id: "mi",
-    name: "Mi",
-  },
-  {
-    id: "fa",
-    name: "Fa",
-  },
-  {
-    id: "son",
-    name: "Son",
-  },
-  {
-    id: "la",
-    name: "La",
-  },
-  {
-    id: "si",
-    name: "Si",
-  },
-];
-export const COLOR_CONTROL = [
-  "#ff0000",
-  "#ffa500",
-  "#ffff00",
-  "#008000",
-  "#0000ff",
-  "#4b0082",
-  "#800080",
-  "#ff00ff",
-  "#c66300",
-  "#0080ff",
-  "#8080c0",
-  "#ffffff",
-];
-
-export const WIDGET_COLORS = [
-  "#ff0000",
-  "#ffa500",
-  "#ffff00",
-  "#008000",
-  "#0000ff",
-  "#4b0082",
-  "#800080",
-  "#ff00ff",
-  "#c66300",
-  "#0080ff",
-];
-
-// Emotions
-export const GREETING_EMO = "greeting_emo";
-export const SAD_EMO = "sad_emo";
-
-// Firmwares
-export const YOLOBOT_V3_FIRMWARE_URL = "https://s3-ap-southeast-1.amazonaws.com/yolobit-firmware.ohstem.vn/";
