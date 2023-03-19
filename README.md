@@ -1,8 +1,14 @@
 # EDL App
 
-## Install Dependencies
 
-First of all we need to install dependencies, run in terminal
+## Code Editor
+* Visual Studio Code
+* Code formatter extension: Prettier
+* Prettier setting: Print Width = 120
+
+## Install Dependencies
+* Node.js v14
+* First of all we need to install dependencies, run in terminal
 ```
 npm install
 ```

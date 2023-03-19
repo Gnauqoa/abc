@@ -172,29 +172,6 @@ export const promptNumpad = (callbackOk, defaultValue) => {
   });
 };
 
-export const promptPiano = (callbackOk, defaultValue) => {
-  let dialogId = "dialog-prompt-piano";
-  const open = () => {
-    f7.$(`#${dialogId}`).css({ display: "block" });
-    f7.$(".active-note").removeClass("active-note");
-    f7.$(`[data-note="${defaultValue}"]`).addClass("active-note");
-    f7.$(`#${dialogId}`).addClass("dialog-in");
-  };
-  const close = () => {
-    f7.$(`#${dialogId}`).css({ display: "none" });
-    f7.$(`#${dialogId}`).removeClass("dialog-in");
-  };
-
-  open();
-
-  window.onclick = (e) => {
-    if (e.target === document.getElementById("piano-content")) {
-      callbackOk(window.selectedNote);
-      close();
-    }
-  };
-};
-
 export const zipUpload = (title, text, callbackOk, callbackCancel) => {
   let dialogId = "dialog-zip-upload";
   const open = () => {
@@ -238,32 +215,6 @@ export const jsonUpload = (title, text, callbackOk, callbackCancel) => {
     f7.$(`#${dialogId}`).css({ display: "none" });
     f7.$(`#${dialogId} .title`).html("");
     f7.$(`#${dialogId} .text`).html("");
-    f7.$(`#${dialogId}`).removeClass("dialog-in");
-  };
-
-  open();
-
-  f7.$(`#${dialogId} .ok-button`).off("click");
-  f7.$(`#${dialogId} .cancel-button`).off("click");
-
-  f7.$(`#${dialogId} .ok-button`).on("click", () => {
-    callbackOk();
-    close();
-  });
-  f7.$(`#${dialogId} .cancel-button`).on("click", () => {
-    callbackCancel();
-    close();
-  });
-};
-
-export const askLocation = (callbackOk, callbackCancel) => {
-  let dialogId = "dialog-location";
-  const open = () => {
-    f7.$(`#${dialogId}`).css({ display: "block" });
-    f7.$(`#${dialogId}`).addClass("dialog-in");
-  };
-  const close = () => {
-    f7.$(`#${dialogId}`).css({ display: "none" });
     f7.$(`#${dialogId}`).removeClass("dialog-in");
   };
 
@@ -383,10 +334,8 @@ export default {
   question,
   prompt,
   promptNumpad,
-  promptPiano,
   zipUpload,
   jsonUpload,
-  askLocation,
   askUpgradeFirmware,
   changeFwDeviceName,
   notiErrorInstruction,

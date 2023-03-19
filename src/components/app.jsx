@@ -7,6 +7,7 @@ import routes from "../js/routes";
 import store from "../js/store";
 import { ConnectContextProvider } from "./connect/connect-context";
 import logger from "../services/logger-service";
+import MainMenu from "../pages/menu/menu";
 
 const MyApp = () => {
   const device = getDevice();
@@ -71,6 +72,7 @@ const MyApp = () => {
   return (
     <App {...f7params}>
       <ConnectContextProvider>
+        <MainMenu />
         {/* Your main view, should have "view-main" class */}
         <View main className="safe-areas" url="/" />
       </ConnectContextProvider>
