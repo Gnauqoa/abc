@@ -34,7 +34,7 @@ export default ({ f7router }) => (
       <Block>
         <Row>
           <Col>
-            <Link href={`/layout/${LAYOUT_CHART}`} view=".view-main">
+            <Link href={`/chart/1`} view=".view-main">
               <img src={chartImg} className="responsive" />
             </Link>
           </Col>
