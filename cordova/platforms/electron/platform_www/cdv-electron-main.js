@@ -83,6 +83,7 @@ async function createWindow () {
     browserWindowOpts.webPreferences.contextIsolation = true;
 
     mainWindow = new BrowserWindow(browserWindowOpts);
+    mainWindow.setMenuBarVisibility(false);
 
     // Load a local HTML file or a remote URL.
     const cdvUrl = cdvElectronSettings.browserWindowInstance.loadURL.url;
