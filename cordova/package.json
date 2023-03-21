@@ -18,7 +18,13 @@
     "cordova-ios": "^6.2.0",
     "cordova-plugin-keyboard": "^1.2.0",
     "cordova-plugin-splashscreen": "^6.0.2",
-    "cordova-plugin-statusbar": "^3.0.0"
+    "cordova-plugin-statusbar": "^3.0.0",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "@serialport/list": "^10.5.0",
+    "@serialport/parser-readline": "^10.5.0",
+    "serialport": "^10.3.0"
   },
   "cordova": {
     "plugins": {

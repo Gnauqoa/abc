@@ -52,6 +52,7 @@ const MyApp = () => {
           }
         );
       }
+      /*
       ble.isEnabled(
         () => {},
         () => {
@@ -64,9 +65,16 @@ const MyApp = () => {
           );
         }
       );
+      */
     }
 
     // Call F7 APIs here
+    if (f7.device.electron) {
+      window._cdvElectronIpc.onDeviceData((event, value) => {
+          console.log(value);
+          //event.sender.send('device-command', newValue)
+      })
+    }
   });
 
   return (
