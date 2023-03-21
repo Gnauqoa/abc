@@ -542,3 +542,35 @@ export function scrollToElSelector(selector) {
     inline: "center",
   });
 }
+
+export function findGCD(nums) {
+  function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
+  }
+
+  let result = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    result = gcd(result, nums[i]);
+  }
+  return result;
+}
+
+export function getLCM(nums) {
+  // Find the LCM using the prime factorization method
+  const primes = {};
+  nums.forEach((num) => {
+    for (let i = 2; i <= num; i++) {
+      let count = 0;
+      while (num % i === 0) {
+        num /= i;
+        count++;
+      }
+      primes[i] = Math.max(primes[i] || 0, count);
+    }
+  });
+  let lcm = 1;
+  for (const prime in primes) {
+    lcm *= prime ** primes[prime];
+  }
+  return lcm;
+}
