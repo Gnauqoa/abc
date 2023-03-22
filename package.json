@@ -26,6 +26,7 @@
     "Samsung >= 12"
   ],
   "dependencies": {
+    "clsx": "^1.2.1",
     "dom7": "^4.0.6",
     "framework7": "^7.1.5",
     "framework7-icons": "^5.0.5",
