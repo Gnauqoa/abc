@@ -7,43 +7,98 @@ import { sensors } from "./sensor-service";
 const MIN_DATA_SENSORS_CALLBACK = 4;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 
-/** @class DataManager
- * @property subscribers {Object} List of subscribers
- * @property buffer {Object} The buffer used to store sensors data
- * @property readSensorIntervalId {number} read sensor interval id
+/**
+ * Class representing a data manager that stores and manages data runs and subscriptions.
  */
 class DataManager {
-  subscribers = {};
-  buffer = {};
-  dataRuns = {};
-  emitSubscribersIntervalId = null;
-
   constructor() {
-    this.emitter = new EventEmitter();
-    this.storeService = new StoreService("data-manager");
+    /**
+     * Object containing subscriber information.
+     * @type {Object.<string, {sensorId: number, subscription: EventEmitter.subscription}>}
+     */
+    this.subscribers = {};
 
-    // initializes variables
-    this.readSensorFrequency = 1;
-    this.readSensorInterval = (1 / this.readSensorFrequency) * 1000;
-    this.emitSubscribersFrequencies = [1, 2, 5, 10];
-    this.emitSubscribersIntervals = this.emitSubscribersFrequencies.map((e) => (1 / e) * 1000);
+    /**
+     * Object containing sensor data buffer.
+     * @type {Object.<number, *>}
+     */
+    this.buffer = {};
 
-    this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
-    this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
-
-    this.selectedSensorId = null;
-
+    /**
+     * Object containing data run information.
+     * @type {Object.<string, {name: string, data: Array}>}
+     */
     this.dataRuns = {};
+
+    /**
+     * Interval ID for emitting subscribers.
+     * @type {?number}
+     */
+    this.emitSubscribersIntervalId = null;
+
+    /**
+     * ID for the current data run.
+     * @type {?string}
+     */
     this.curDataRunId = null;
 
+    /**
+     * EventEmitter instance for handling subscriptions.
+     * @type {EventEmitter}
+     */
+    this.emitter = new EventEmitter();
+
+    /**
+     * Frequencies for emitting subscribers.
+     * @type {number[]}
+     */
+    this.emitSubscribersFrequencies = [1, 2, 5, 10];
+
+    /**
+     * Intervals for emitting subscribers.
+     * @type {number[]}
+     */
+    this.emitSubscribersIntervals = this.emitSubscribersFrequencies.map((e) => (1 / e) * 1000);
+
+    /**
+     * Maximum interval for emitting subscribers.
+     * @type {number}
+     */
+    this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
+
+    /**
+     * Interval for emitting subscribers.
+     * @type {number}
+     */
+    this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
+
+    /**
+     * Total time for collecting data.
+     * @type {number}
+     */
+    this.collectingDataTime = 0;
+
+    /**
+     * Boolean indicating if data is being collected.
+     * @type {boolean}
+     */
+    this.isCollectingData = false;
+
+    /**
+     * interval to emit data when in collecting data mode
+     * @type {number}
+     */
+    this.collectingDataInterval = 1000;
+
+    this.storeService = new StoreService("data-manager");
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   /**
-   * Get instance of DataManager
-   * @returns {DataManager} DataManagerIST - The instance of DataManager
+   * Returns the instance of the DataManager class.
+   * @returns {DataManager} - The instance of the DataManager class.
    */
   static getInstance() {
     if (!DataManager.instance) {
@@ -55,33 +110,28 @@ class DataManager {
 
   // -------------------------------- SUBSCRIBER -------------------------------- //
   /**
-   * @param {(data: any) => void} emitFunction - The emit function subscription.
-   * @param {number} frequency - The frequency to call emitFunction.
-   * @returns {string | boolean} subscriberId - The subscriber's unique id if register successfully otherwise false.
+   * Subscribes to a sensor data emitter.
+   * @param {function} emitFunction - The function to be called when a sensor data emitter is triggered.
+   * @param {string} sensorId - The ID of the sensor.
+   * @returns {(string|boolean)} - The ID of the subscriber if successful; otherwise, false.
    */
-  subscribe(emitFunction, frequency) {
+  subscribe(emitFunction, sensorId) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-      const isValidFrequency = this.emitSubscribersFrequencies.includes(Number(frequency));
-      if (!isValidFrequency || !hasEmitFunction) {
-        console.log(`SUBSCRIBE: Invalid parameters frequency_${frequency}-emitFunction_${emitFunction}`);
+      if (!hasEmitFunction) {
+        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}`);
         return false;
       }
 
       const subscriberId = uuidv4();
-      const interval = (1 / frequency) * 1000;
       const subscription = this.emitter.addListener(subscriberId, emitFunction);
 
       this.subscribers[subscriberId] = {
-        interval: Number(interval),
+        sensorId: Number(sensorId),
         subscription: subscription,
-        totalTimeRunning: 0,
       };
 
-      // Create new DataRuns
-      this.createDataRun();
-
-      console.log(`SUBSCRIBE: subscriberId_${subscriberId}-frequency_${frequency}Hz-interval_${interval}ms`);
+      console.log(`SUBSCRIBE: subscriberId_${subscriberId}-sensorId_${sensorId}`);
 
       return subscriberId;
     } catch (error) {
@@ -91,8 +141,10 @@ class DataManager {
   }
 
   /**
-   * @param {string} subscriberId - The subscriberId to remove from list.
-   * @returns {boolean} status - Whether the unsubscribe was successfully or not.
+   * Removes a subscriber from the list of subscribers.
+   * @param {string} subscriberId - The ID of the subscriber to remove.
+   * @returns {boolean} - True if the subscriber was successfully removed, false otherwise.
+   * @throws {Error} - If an error occurs while trying to remove the subscriber.
    */
   unsubscribe(subscriberId) {
     try {
@@ -103,6 +155,7 @@ class DataManager {
         return true;
       } else {
         console.error(`UNSUBSCRIBED: Invalid subscriberId_${subscriberId}`);
+        return false;
       }
     } catch (error) {
       console.error(error);
@@ -111,35 +164,45 @@ class DataManager {
   }
 
   /**
-   * @param {string} subscriberId - The subscriber to check for in list.
-   * @returns {boolean} - Boolean indicating whether subscriber is in list.
+   * Check if a subscriber from the list of subscribers or not.
+   * @param {string} subscriberId - The ID of the subscriber to remove.
+   * @returns {boolean} - True if the subscriber in subscribers list, false otherwise.
    */
   isSubscribed(subscriberId) {
     return this.subscribers.hasOwnProperty(subscriberId);
   }
 
-  // -------------------------------- SET_SENSOR_VIEW -------------------------------- //
-  /**
-   * Change sensor data in callback function
-   * @param {number} sensorId - The subscriber to check for in list.
-   * @returns {boolean} - Success or failure
-   */
-  setSelectedSensorId(sensorId) {
-    const selectedSensor = sensors.find((sensor) => Number(sensor.id) === Number(sensorId));
-
-    if (selectedSensor) {
-      this.selectedSensorId = Number(sensorId);
-      return true;
-    }
-
-    console.log(`setSelectedSensorId: invalid sensorId ${sensorId}`);
-    return false;
-  }
-
   // -------------------------------- DATA RUN -------------------------------- //
   /**
-   * Create a new data run with an optional name.
-   * @param {string} [name] - The name of the data run (optional).
+   * Sets the frequency for collecting data.
+   * @param {number} frequency - The frequency for collecting data.
+   * @returns {boolean} - True if the frequency is valid; otherwise, false.
+   */
+  setCollectingDataFrequency(frequency) {
+    if (!this.emitSubscribersFrequencies.hasOwnProperty(frequency)) {
+      console.log(`setCollectingDataFrequency: Invalid frequency: ${frequency}`);
+      return false;
+    }
+    console.log(`setCollectingDataFrequency: set frequency: ${frequency}`);
+    this.collectingDataInterval = (1 / frequency) * 1000;
+    return true;
+  }
+
+  startCollectingData() {
+    this.collectingDataTime = 0;
+    this.isCollectingData = true;
+    this.createDataRun();
+  }
+
+  stopCollectingData() {
+    this.isCollectingData = false;
+  }
+
+  /**
+   * Creates a new data run with the given name.
+   * If no name is provided, a default name is generated.
+   * If a data run already exists, it clears its data.
+   * @param {string} [name] - The name of the new data run.
    */
   createDataRun(name) {
     // TODO: Uncomment for support multiple data runs
@@ -154,7 +217,7 @@ class DataManager {
       this.dataRuns[this.curDataRunId].data = [];
       return;
     }
-
+    console.log("createDataRun: Create successfully");
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
@@ -164,10 +227,10 @@ class DataManager {
   }
 
   /**
-   * Update the name of a data run.
+   * Updates the name of a data run.
    * @param {string} dataRunId - The ID of the data run to update.
    * @param {string} dataRunName - The new name of the data run.
-   * @returns {boolean} True if the data run was updated successfully, false otherwise.
+   * @returns {boolean} - Returns true if the data run was successfully updated, false otherwise.
    */
   updateDataRun(dataRunId, dataRunName) {
     const dataRun = this.dataRuns[dataRunId];
@@ -179,9 +242,10 @@ class DataManager {
     return true;
   }
 
-  /** Delete a data run.
+  /**
+   * Deletes a data run.
    * @param {string} dataRunId - The ID of the data run to delete.
-   * @returns {boolean} True if the data run was deleted successfully, false otherwise.
+   * @returns {boolean} - Returns true if the data run was successfully deleted, false otherwise.
    */
   deleteDataRun(dataRunId) {
     if (!this.dataRuns[dataRunId]) {
@@ -193,9 +257,9 @@ class DataManager {
   }
 
   /**
-   * Append data to a data run.
+   * Appends sensor data to a data run.
    * @param {string} dataRunId - The ID of the data run to append data to.
-   * @param {object} sensorsData - The data to append to the data run.
+   * @param {object} sensorsData - An object containing the data from all sensors.
    */
   appendDataRun(dataRunId, sensorsData) {
     const dataRun = this.dataRuns[dataRunId];
@@ -206,10 +270,6 @@ class DataManager {
     dataRun.data.push(sensorsData);
   }
 
-  /**
-   * Get the preview information for all data runs.
-   * @returns {Array<Object>} An array of objects containing the ID and name of each data run.
-   */
   getDataRunPreview() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       return { id: dataRunId, name: this.dataRuns[dataRunId].name };
@@ -217,11 +277,15 @@ class DataManager {
     return dataRunInfos;
   }
 
-  /**
-   * Get the data for a specific data run.
-   * @param {string} dataRunId - The ID of the data run to retrieve.
-   * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
-   */
+  getIndividualSample(sensorId) {
+    const sensorData = this.buffer[Number(sensorId)];
+    if (!sensorData) {
+      console.log(`getIndividualSample: sensorId ${sensorId} does not exist`);
+      return false;
+    }
+    return sensorData;
+  }
+
   getDataRunData(dataRunId) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
@@ -229,12 +293,7 @@ class DataManager {
     }
     return dataRun.data;
   }
-  /** Export the current data run to a CSV file.
-   * @function
-   * @name exportCSVDataRun
-   * @memberof ClassName
-   * @returns {void}
-   */
+
   exportCSVDataRun() {
     // TODO: Support multiple data runs in future
     if (!this.dataRuns[this.curDataRunId]) {
@@ -281,11 +340,7 @@ class DataManager {
   exportEDL() {}
 
   // -------------------------------- Read sensor data -------------------------------- //
-  /**
-   * Callback function called in DeviceManager when there is data available
-   * @param {string} sensorsData - The format sensor data (@, id, data1, data2, data3, data 4, *).
-   * @returns {void} - No return.
-   */
+
   callbackReadSensor(data) {
     const splitData = data.split(/\s*,\s*/);
     if (
@@ -300,43 +355,52 @@ class DataManager {
     const sensorId = Number(splitData[1]);
     const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
     this.buffer[sensorId] = sensorsData;
+
+    if (this.isCollectingData) return;
+    this.emitSubscribers();
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
   runEmitSubscribersScheduler() {
     let counter = 0;
-
     this.emitSubscribersIntervalId = setInterval(() => {
+      if (!this.isCollectingData) return;
+
       const curInterval = counter * this.emitSubscribersInterval;
+      if (curInterval % this.collectingDataInterval === 0) {
+        this.emitSubscribers();
 
-      Object.keys(this.subscribers).forEach((subscriberId) => {
-        const subscriber = this.subscribers[subscriberId];
-        try {
-          let sensorData = this.buffer[this.selectedSensorId];
-          let totalTimeRunning = subscriber.totalTimeRunning;
+        // Add all data in buffer to data run
+        this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
 
-          if (curInterval % subscriber.interval !== 0) return;
-          if (!subscriber.subscription.subscriber) {
-            delete this.subscribers[subscriberId];
-            console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
-            return;
-          }
-
-          subscriber.totalTimeRunning += subscriber.interval;
-          // Add all data in buffer to data run
-          this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [totalTimeRunning] });
-
-          // Notify subscriber
-          this.emitter.emit(subscriberId, sensorData ? sensorData : []);
-        } catch (error) {
-          console.error(error);
-          if (!this.subscribers.hasOwnProperty(subscriberId)) return;
-          delete this.subscribers[subscriberId];
-        }
-      });
+        // Update total time collecting data
+        this.collectingDataTime += this.collectingDataInterval;
+      }
 
       counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
     }, this.emitSubscribersInterval);
+  }
+
+  emitSubscribers() {
+    for (const subscriberId in this.subscribers) {
+      const subscriber = this.subscribers[subscriberId];
+      try {
+        let sensorData = this.buffer[subscriber.sensorId];
+
+        if (!subscriber.subscription.subscriber) {
+          delete this.subscribers[subscriberId];
+          console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
+          continue;
+        }
+
+        // Notify subscriber
+        this.emitter.emit(subscriberId, sensorData ? sensorData : []);
+      } catch (error) {
+        console.error(error);
+        if (!this.subscribers.hasOwnProperty(subscriberId)) continue;
+        delete this.subscribers[subscriberId];
+      }
+    }
   }
 
   // TODO: stop EmitSubscribersScheduler when object is destroyed. Otherwise leading to leak memory
@@ -346,20 +410,20 @@ class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const max = 4;
+      const max = 10;
       const min = 1;
       const decimals = 2;
 
-      const sensorId = (Math.random() * (max - min) + min).toFixed(0);
+      const sensorId = (Math.random() * (1 - 1) + 1).toFixed(0);
       const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
       //   const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
       //   const data3 = (Math.random() * (max - min) + min).toFixed(decimals);
       //   const data4 = (Math.random() * (max - min) + min).toFixed(decimals);
       const dummyData = `@, ${sensorId}, ${data1}, *`;
 
-      //   console.log(`DUMMY SENSOR DATA: ${dummyData}`);
+      console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
-    }, 3000);
+    }, 500);
   }
 }
 
