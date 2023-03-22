@@ -38,8 +38,15 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleActivityDelete(e) {
-    activityService.delete(activity.id);
-    f7router.navigate("/");
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        activityService.delete(activity.id);
+        f7router.navigate("/");
+      },
+      () => {}
+    );
   }
 
   function handleActivitySave() {
@@ -72,11 +79,7 @@ export default ({ f7route, f7router }) => {
       <Navbar className="custom-dashboards-navbar">
         <NavLeft>
           <BackButton link="/" />
-          <RoundButton
-            icon="add"
-            color="#42C63F"
-            onClick={() => f7router.navigate("/layout")}
-          />
+          <RoundButton icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
           <RoundButton icon="close" color="#FF0000" onClick={handleActivityDelete} />
         </NavLeft>
         <NavRight>
