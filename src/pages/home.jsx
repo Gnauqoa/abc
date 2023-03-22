@@ -34,7 +34,7 @@ export default () => {
         {allActivities && (
           <div className="activity-list">
             <h2 className="text-color-white text-align-center">HOẠT ĐỘNG GẦN ĐÂY</h2>
-            <Swiper className="recent-activities" navigation spaceBetween={10} speed={500} slidesPerView={5}>
+            <Swiper className="recent-activities" navigation speed={500} slidesPerView={5}>
               {allActivities.map((a) => {
                 return (
                   <SwiperSlide key={a.id}>
