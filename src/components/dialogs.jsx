@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7 } from "framework7-react";
+import $ from "jquery";
 
 import { DEFAULT_CODE_NAME } from "../js/constants";
 import * as core from "../utils/core";
@@ -14,10 +15,10 @@ export default class extends Component {
   }
 
   componentDidMount = () => {
-    this.$$("#dialog-prompt .clear-button").on("click", () => {
-      this.setState({ inputText: this.$$("#dialog-prompt .input").val().slice(0, -1) });
+    $("#dialog-prompt .clear-button").on("click", () => {
+      this.setState({ inputText: $("#dialog-prompt .input").val().slice(0, -1) });
     });
-    this.$$("#dialog-prompt-numpad .clear-button").on("click", () => {
+    $("#dialog-prompt-numpad .clear-button").on("click", () => {
       this.inputNumpad.current.value = "";
     });
   };
@@ -182,7 +183,7 @@ export default class extends Component {
               </div>
               <div className="buttons">
                 <Button className="cancel-button">Bỏ qua</Button>
-                <Button className="ok-button" disabled={!inputText.length || inputText.trim() === DEFAULT_CODE_NAME}>
+                <Button className="ok-button" disabled={!inputText.length}>
                   Lưu
                 </Button>
               </div>

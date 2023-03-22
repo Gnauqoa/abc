@@ -9,7 +9,7 @@ export default () => (
       <div>
         <img src={logo} width={"25%"} />
       </div>
-      <div className="project">OhStem {APP_VERSION}</div>
+      <div className="project">EDL {APP_VERSION}</div>
       <div className="copyright">Bản quyền thuộc sở hữu của AITT</div>
       <div className="contact">
         <span>

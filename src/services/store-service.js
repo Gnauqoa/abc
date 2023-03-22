@@ -3,7 +3,6 @@ import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import * as core from "../utils/core";
-import { DEFAULT_ID } from "../js/constants";
 
 export default class StoreService {
   constructor(table) {
@@ -53,8 +52,8 @@ export default class StoreService {
     return allItems;
   }
 
-  updateOrCreate(item) {
-    if (!item.id || item.id === DEFAULT_ID) {
+  save(item) {
+    if (!item.id) {
       item.id = uuidv4();
     }
     item.updatedAt = core.getTime();
