@@ -13,28 +13,21 @@
 
 .bg-color-regal-blue {
   --f7-theme-color-bg-color: #023a68;
-}
-
-.bg-color-regal-white {
-  --f7-theme-color-bg-color: #ffffff;
-}
-
-.bg-color-slate-100 {
-  --f7-theme-color-bg-color: rgb(241 245 249);
+  .navbar {
+    .left i,
+    .title {
+      color: #ffffff;
+    }
+  }
 }
 
 .navbar-bg {
   opacity: 0;
 }
-.navbar {
-  .title,
-  a {
-    opacity: 1;
-    color: gray;
-  }
-  .right {
-    margin-top: 10px;
-  }
+
+.swiper-slide {
+  width: 135px;
+  height: 192px;
 }
 
 .navbar-inner > a.button {
@@ -70,7 +63,7 @@
   }
 }
 
-.round-button {
+.button--round {
   width: 44px;
   height: 44px;
   display: flex;
@@ -83,6 +76,9 @@
   color: #91a7b5 !important;
   margin: 0 5px;
   padding: 0;
+  i {
+    font-size: 32px;
+  }
 }
 
 .delete {
@@ -167,42 +163,6 @@
     width: 36px;
     height: 36px;
   }
-}
-
-/* Device Home and Custom Dashboard */
-.edl-home-navbar,
-.custom-dashboards-navbar {
-  .title,
-  a,
-  i {
-    color: #ffffff;
-  }
-}
-
-.edl-home,
-.custom-dashboards {
-  .page-content {
-    padding-top: 20px;
-    margin: 0 10px;
-    .swiper-container {
-      height: 80%;
-      .swiper-pagination-bullets {
-        .swiper-pagination-bullet {
-          width: 50px;
-          border-radius: 0;
-          height: 3px;
-          margin: 0;
-          background: #fff;
-        }
-        bottom: 5px;
-      }
-    }
-  }
-}
-
-.swiper-slide {
-  width: 135px;
-  height: 192px;
 }
 
 /* Setup device */
