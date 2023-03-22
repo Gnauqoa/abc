@@ -124,7 +124,6 @@ export const prompt = (title, text, callbackOk, callbackCancel, defaultValue) =>
     $(`#${dialogId} .title`).html(title);
     $(`#${dialogId} .text`).html(text);
     $(`#${dialogId} .input`).val(defaultValue);
-    $(`#${dialogId} .ok-button`).addClass("disabled");
     $(`#${dialogId}`).addClass("dialog-in");
   };
   const close = () => {
@@ -140,6 +139,7 @@ export const prompt = (title, text, callbackOk, callbackCancel, defaultValue) =>
   $(`#${dialogId} .cancel-button`).off("click");
 
   $(`#${dialogId} .ok-button`).on("click", () => {
+    if (!$(`#${dialogId} .input`).val().trim().length) return;
     callbackOk($(`#${dialogId} .input`).val());
     close();
   });
