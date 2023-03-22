@@ -1,6 +1,7 @@
 import React from "react";
 import { Page, Link, Navbar, NavTitle, Row, Col, NavLeft, Block } from "framework7-react";
 
+import BackButton from "../components/back-button";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -17,22 +18,17 @@ import numberImg from "../img/layout/number.png";
 import tableChartImg from "../img/layout/table-chart.png";
 import tableImg from "../img/layout/table.png";
 
-export default ({ f7router }) => (
-  <Page className="bg-color-regal-blue custom-dashboards">
-    <Navbar className="custom-dashboards-navbar">
+export default () => (
+  <Page className="bg-color-regal-blue">
+    <Navbar>
       <NavLeft>
-        <Link
-          iconIos="material:arrow_back"
-          iconMd="material:arrow_back"
-          className="back-icon"
-          onClick={() => f7router.back()}
-        />
+        <BackButton link="/" />
       </NavLeft>
       <NavTitle>Hoạt động mới</NavTitle>
     </Navbar>
     <div className="page-content display-flex justify-content-center align-items-center">
       <Block>
-        <Row>
+        <Row className="padding-bottom">
           <Col>
             <Link href={`/layout/${LAYOUT_CHART}`} view=".view-main">
               <img src={chartImg} className="responsive" />
