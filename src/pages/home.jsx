@@ -33,7 +33,7 @@ export default () => {
         </Swiper>
         {allActivities && (
           <div className="activity-list">
-            <h2 className="text-color-white text-align-center">HOẠT ĐỘNG GẦN ĐÂY</h2>
+            <h2 className="text-color-white">HOẠT ĐỘNG GẦN ĐÂY</h2>
             <Swiper className="recent-activities" navigation speed={500} slidesPerView={5}>
               {allActivities.map((a) => {
                 return (
