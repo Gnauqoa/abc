@@ -18,8 +18,8 @@ export default () => {
         </NavLeft>
         <NavTitle>EDL</NavTitle>
       </Navbar>
-      <div className="page-content display-flex flex-direction-column justify-content-space-around align-items-center">
-        <Swiper pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
+      <div className="page-content display-flex flex-direction-column justify-content-space-around">
+        <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
           <SwiperSlide>
             <Link href="/layout" view=".view-main">
               <img src={newImg} className="responsive" />
@@ -31,22 +31,23 @@ export default () => {
             </Link>
           </SwiperSlide>
         </Swiper>
-        <div>
-          <h2 className="text-color-white">HOẠT ĐỘNG GẦN ĐÂY</h2>
-          <Swiper pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
-            {allActivities.map((a) => {
-              return (
-                <SwiperSlide key={a.id}>
-                  <Link href={`/edl/${a.id}`}>
-                    <div className="text-color-white">{a.name}</div>
-                  </Link>
-                </SwiperSlide>
-              );
-            })}
-          </Swiper>
-        </div>
+        {allActivities && (
+          <div className="activity-list">
+            <h2 className="text-color-white text-align-center">HOẠT ĐỘNG GẦN ĐÂY</h2>
+            <Swiper className="recent-activities" navigation spaceBetween={10} speed={500} slidesPerView={5}>
+              {allActivities.map((a) => {
+                return (
+                  <SwiperSlide key={a.id}>
+                    <Link href={`/edl/${a.id}`}>
+                      <div className="activity text-color-white">{a.name}</div>
+                    </Link>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
+        )}
       </div>
-      <h2 className="color-red">HOẠT ĐỘNG GẦN ĐÂY</h2>
     </Page>
   );
 };

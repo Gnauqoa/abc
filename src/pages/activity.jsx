@@ -24,7 +24,7 @@ export default ({ f7route, f7router }) => {
     const id = f7route.params.id;
     initActivity = activityService.find(id);
     if (!initActivity) {
-      f7router.navigate("/", { reloadDetail: true });
+      f7router.navigate("/");
     }
   }
 
@@ -39,7 +39,7 @@ export default ({ f7route, f7router }) => {
 
   function handleActivityDelete(e) {
     activityService.delete(activity.id);
-    f7router.navigate("/", { reloadDetail: true });
+    f7router.navigate("/");
   }
 
   function handleActivitySave() {
@@ -71,11 +71,11 @@ export default ({ f7route, f7router }) => {
     <Page className="bg-color-regal-blue">
       <Navbar className="custom-dashboards-navbar">
         <NavLeft>
-          <BackButton link="/layout" />
+          <BackButton link="/" />
           <RoundButton
             icon="add"
             color="#42C63F"
-            onClick={() => f7router.navigate("/layout", { reloadDetail: true })}
+            onClick={() => f7router.navigate("/layout")}
           />
           <RoundButton icon="close" color="#FF0000" onClick={handleActivityDelete} />
         </NavLeft>
