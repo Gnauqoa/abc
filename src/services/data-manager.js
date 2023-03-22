@@ -19,7 +19,6 @@ class DataManager {
   emitSubscribersIntervalId = null;
 
   constructor() {
-    console.log("construct");
     this.emitter = new EventEmitter();
     this.storeService = new StoreService("data-manager");
 
@@ -39,7 +38,7 @@ class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    // this.dummySensorData();
   }
 
   /**
@@ -54,6 +53,7 @@ class DataManager {
     return DataManager.instance;
   }
 
+  // -------------------------------- SUBSCRIBER -------------------------------- //
   /**
    * @param {(data: any) => void} emitFunction - The emit function subscription.
    * @param {number} frequency - The frequency to call emitFunction.
@@ -118,6 +118,7 @@ class DataManager {
     return this.subscribers.hasOwnProperty(subscriberId);
   }
 
+  // -------------------------------- SET_SENSOR_VIEW -------------------------------- //
   /**
    * Change sensor data in callback function
    * @param {number} sensorId - The subscriber to check for in list.
@@ -287,7 +288,6 @@ class DataManager {
    */
   callbackReadSensor(data) {
     const splitData = data.split(/\s*,\s*/);
-    // console.log(`RECEIVE SENSOR DATA: ${splitData}`);
     if (
       splitData[0] !== "@" ||
       splitData[splitData.length - 1] !== "*" ||
