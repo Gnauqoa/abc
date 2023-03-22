@@ -270,12 +270,23 @@ class DataManager {
     dataRun.data.push(sensorsData);
   }
 
+  /**
+   * Get the preview information for all data runs.
+   * @returns {Array<Object>} An array of objects containing the ID and name of each data run.
+   */
+
   getDataRunPreview() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       return { id: dataRunId, name: this.dataRuns[dataRunId].name };
     });
     return dataRunInfos;
   }
+
+  /**
+   * Get the data for a specific data run.
+   * @param {string} dataRunId - The ID of the data run to retrieve.
+   * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
+   */
 
   getIndividualSample(sensorId) {
     const sensorData = this.buffer[Number(sensorId)];
@@ -293,6 +304,13 @@ class DataManager {
     }
     return dataRun.data;
   }
+
+  /** Export the current data run to a CSV file.
+   * @function
+   * @name exportCSVDataRun
+   * @memberof ClassName
+   * @returns {void}
+   */
 
   exportCSVDataRun() {
     // TODO: Support multiple data runs in future
@@ -341,6 +359,11 @@ class DataManager {
 
   // -------------------------------- Read sensor data -------------------------------- //
 
+  /**
+   * Callback function called in DeviceManager when there is data available
+   * @param {string} sensorsData - The format sensor data (@, id, data1, data2, data3, data 4, *).
+   * @returns {void} - No return.
+   */
   callbackReadSensor(data) {
     const splitData = data.split(/\s*,\s*/);
     if (
@@ -356,14 +379,18 @@ class DataManager {
     const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
     this.buffer[sensorId] = sensorsData;
 
-    if (this.isCollectingData) return;
-    this.emitSubscribers();
+    // Emit subscribers when not in collecting data mode
+    if (!this.isCollectingData) this.emitSubscribers();
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
   runEmitSubscribersScheduler() {
     let counter = 0;
     this.emitSubscribersIntervalId = setInterval(() => {
+      // When in collecting data mode, check if reach set frequency
+      //  1. Emit subscribers
+      //  2. Append buffer to data runs
+      //  3. Increase total time for collecting data
       if (!this.isCollectingData) return;
 
       const curInterval = counter * this.emitSubscribersInterval;
