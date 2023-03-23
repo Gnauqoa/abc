@@ -188,12 +188,20 @@ class DataManager {
     return true;
   }
 
+  /**
+   * Start collecting data
+   * @returns {string} - Returns the curDataRunId.
+   */
   startCollectingData() {
     this.collectingDataTime = 0;
     this.isCollectingData = true;
-    this.createDataRun();
+    const dataRunId = this.createDataRun();
+    return dataRunId;
   }
 
+  /**
+   * Stop collecting data
+   */
   stopCollectingData() {
     this.isCollectingData = false;
   }
@@ -203,6 +211,7 @@ class DataManager {
    * If no name is provided, a default name is generated.
    * If a data run already exists, it clears its data.
    * @param {string} [name] - The name of the new data run.
+   * @returns {string} - Returns the curDataRunId.
    */
   createDataRun(name) {
     // TODO: Uncomment for support multiple data runs
@@ -215,7 +224,7 @@ class DataManager {
 
     if (this.curDataRunId) {
       this.dataRuns[this.curDataRunId].data = [];
-      return;
+      return this.curDataRunId;
     }
     console.log("createDataRun: Create successfully");
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
@@ -224,6 +233,7 @@ class DataManager {
       name: dataRunName,
       data: [],
     };
+    return this.curDataRunId;
   }
 
   /**
