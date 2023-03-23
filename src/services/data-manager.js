@@ -188,12 +188,20 @@ class DataManager {
     return true;
   }
 
+  /**
+   * Start collecting data
+   * @returns {string} - Returns the curDataRunId.
+   */
   startCollectingData() {
     this.collectingDataTime = 0;
     this.isCollectingData = true;
-    this.createDataRun();
+    const dataRunId = this.createDataRun();
+    return dataRunId;
   }
 
+  /**
+   * Stop collecting data
+   */
   stopCollectingData() {
     this.isCollectingData = false;
   }
@@ -203,6 +211,7 @@ class DataManager {
    * If no name is provided, a default name is generated.
    * If a data run already exists, it clears its data.
    * @param {string} [name] - The name of the new data run.
+   * @returns {string} - Returns the curDataRunId.
    */
   createDataRun(name) {
     // TODO: Uncomment for support multiple data runs
@@ -215,7 +224,7 @@ class DataManager {
 
     if (this.curDataRunId) {
       this.dataRuns[this.curDataRunId].data = [];
-      return;
+      return this.curDataRunId;
     }
     console.log("createDataRun: Create successfully");
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
@@ -224,6 +233,7 @@ class DataManager {
       name: dataRunName,
       data: [],
     };
+    return this.curDataRunId;
   }
 
   /**
@@ -274,7 +284,6 @@ class DataManager {
    * Get the preview information for all data runs.
    * @returns {Array<Object>} An array of objects containing the ID and name of each data run.
    */
-
   getDataRunPreview() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       return { id: dataRunId, name: this.dataRuns[dataRunId].name };
@@ -287,7 +296,6 @@ class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-
   getIndividualSample(sensorId) {
     const sensorData = this.buffer[Number(sensorId)];
     if (!sensorData) {
@@ -311,7 +319,6 @@ class DataManager {
    * @memberof ClassName
    * @returns {void}
    */
-
   exportCSVDataRun() {
     // TODO: Support multiple data runs in future
     if (!this.dataRuns[this.curDataRunId]) {
@@ -365,22 +372,26 @@ class DataManager {
    * @returns {void} - No return.
    */
   callbackReadSensor(data) {
-    const splitData = data.split(/\s*,\s*/);
-    if (
-      splitData[0] !== "@" ||
-      splitData[splitData.length - 1] !== "*" ||
-      splitData.length < MIN_DATA_SENSORS_CALLBACK
-    ) {
-      console.log(`callbackReadSensor: Invalid sensor data format ${data}`);
-      return;
+    try {
+      const splitData = data.split(/\s*,\s*/);
+      if (
+        splitData[0] !== "@" ||
+        splitData[splitData.length - 1] !== "*" ||
+        splitData.length < MIN_DATA_SENSORS_CALLBACK
+      ) {
+        console.log(`callbackReadSensor: Invalid sensor data format ${data}`);
+        return;
+      }
+
+      const sensorId = Number(splitData[1]);
+      const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
+      this.buffer[sensorId] = sensorsData;
+
+      // Emit subscribers when not in collecting data mode
+      if (!this.isCollectingData) this.emitSubscribers();
+    } catch (e) {
+      console.error(`callbackReadSensor: ${e.message} at ${data}`);
     }
-
-    const sensorId = Number(splitData[1]);
-    const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
-    this.buffer[sensorId] = sensorsData;
-
-    // Emit subscribers when not in collecting data mode
-    if (!this.isCollectingData) this.emitSubscribers();
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
@@ -393,15 +404,19 @@ class DataManager {
       //  3. Increase total time for collecting data
       if (!this.isCollectingData) return;
 
-      const curInterval = counter * this.emitSubscribersInterval;
-      if (curInterval % this.collectingDataInterval === 0) {
-        this.emitSubscribers();
+      try {
+        const curInterval = counter * this.emitSubscribersInterval;
+        if (curInterval % this.collectingDataInterval === 0) {
+          this.emitSubscribers();
 
-        // Add all data in buffer to data run
-        this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
+          // Add all data in buffer to data run
+          this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
 
-        // Update total time collecting data
-        this.collectingDataTime += this.collectingDataInterval;
+          // Update total time collecting data
+          this.collectingDataTime += this.collectingDataInterval;
+        }
+      } catch (e) {
+        log.error(`runEmitSubscribersScheduler: ${e.message}`);
       }
 
       counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
@@ -411,22 +426,16 @@ class DataManager {
   emitSubscribers() {
     for (const subscriberId in this.subscribers) {
       const subscriber = this.subscribers[subscriberId];
-      try {
-        let sensorData = this.buffer[subscriber.sensorId];
+      let sensorData = this.buffer[subscriber.sensorId];
 
-        if (!subscriber.subscription.subscriber) {
-          delete this.subscribers[subscriberId];
-          console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
-          continue;
-        }
-
-        // Notify subscriber
-        this.emitter.emit(subscriberId, sensorData ? sensorData : []);
-      } catch (error) {
-        console.error(error);
-        if (!this.subscribers.hasOwnProperty(subscriberId)) continue;
+      if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
+        console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
+        continue;
       }
+
+      // Notify subscriber
+      this.emitter.emit(subscriberId, sensorData ? sensorData : []);
     }
   }
 
