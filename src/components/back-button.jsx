@@ -7,6 +7,7 @@ export default ({ link }) => {
       href={link}
       iconIos="material:arrow_back"
       iconMd="material:arrow_back"
+      iconAurora="material:arrow_back"
       className="back-icon margin-right"
     />
   );

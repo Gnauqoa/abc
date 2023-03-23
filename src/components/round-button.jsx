@@ -8,6 +8,7 @@ export default ({ color, icon, onClick }) => {
       onClick={onClick}
       iconIos={`material:${icon}`}
       iconMd={`material:${icon}`}
+      iconAurora={`material:${icon}`}
       className={clsx("button--round", color && "-icon-white")}
       style={{ background: color }}
     ></Button>

@@ -31,7 +31,7 @@ export default () => {
             </Link>
           </SwiperSlide>
         </Swiper>
-        {allActivities && (
+        {allActivities.length > 0 && (
           <div className="activity-list">
             <h2 className="text-color-white">HOẠT ĐỘNG GẦN ĐÂY</h2>
             <Swiper className="recent-activities" navigation speed={500} slidesPerView={5}>
