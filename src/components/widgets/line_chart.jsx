@@ -5,8 +5,10 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 
 Chart.register(zoomPlugin);
 
+import SensorSelector from "../sensor-selector";
+import sensors from "../../services/sensor-service";
+
 const log = (text, data) => {
-    console.dir(Hammer);
     let debug = true;
     if (debug) {
         console.log(text);
@@ -15,34 +17,47 @@ const log = (text, data) => {
         }
     }
 }
-const chartJsPlugin = {
-    afterDraw: (chart, args, options) => {
-        log("after chart draw");
-        const { ctx } = chart;
-        let xAxis = chart.scales['x'];
-        let yAxis = chart.scales['y'];
-        let maxValue = Math.max(...chart.data.datasets[0].data);
-        let minValue = Math.min(...chart.data.datasets[0].data);
-        if (chart.data.datasets.length > 0) {
-            const dataset = chart.data.datasets[chart.data.datasets.length - 1];
-            if (dataset.data.length > 0) {
-                const data = dataset.data[dataset.data.length - 1];
-                log("draw last data", data);
-                ctx.save();
-                ctx.textAlign = 'center';
-                ctx.font = '16px Arial';
-                ctx.fillStyle = '#000000';
-                ctx.textAlign = 'left';
-                ctx.fillText(`x=${data.x} y=${data.y}`, xAxis.left + 5, yAxis.top + 5);
-
-                //ctx.fillText('Dagens laveste temperatur = ' + minValue + 'Â°C', xAxis.left + 5, yAxis.top + 18);
-                ctx.restore();
-            }
-
+const getChartJsPlugin = ({
+    lastDataRef
+}) =>{
+    return {
+        afterDraw: (chart, args, options) => {
+            log("after chart draw");
+            const { ctx } = chart;
+            let xAxis = chart.scales['x'];
+            let yAxis = chart.scales['y'];
+    
+            const data = lastDataRef.current;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'left';
+            ctx.fillText(`x=${data.x || 0} y=${data.y || 0}`, xAxis.left + 5, yAxis.top + 5);
+    
+            ctx.restore();
+            // let maxValue = Math.max(...chart.data.datasets[0].data);
+            // let minValue = Math.min(...chart.data.datasets[0].data);
+            // if (chart.data.datasets.length > 0) {
+            //     const dataset = chart.data.datasets[chart.data.datasets.length - 1];
+            //     if (dataset.data.length > 0) {
+            //         const data = dataset.data[dataset.data.length - 1];
+            //         log("draw last data", data);
+            //         ctx.save();
+            //         ctx.textAlign = 'center';
+            //         ctx.font = '16px Arial';
+            //         ctx.fillStyle = '#000000';
+            //         ctx.textAlign = 'left';
+            //         ctx.fillText(`x=${data.x} y=${data.y}`, xAxis.left + 5, yAxis.top + 5);
+    
+            //         //ctx.fillText('Dagens laveste temperatur = ' + minValue + 'Â°C', xAxis.left + 5, yAxis.top + 18);
+            //         ctx.restore();
+            //     }
+    
+            // }
         }
-
     }
-}
+} 
 const buildChartData = ({
     dataList = [],
     labelList = [],
@@ -147,57 +162,8 @@ const createChartJsData = ({
 
     return chartDataParam;
 }
-/**
- * var chartData = {
-  datasets: [
-    {
-    label: 'Dataset 1',
-    yAxisID: 'YLEFT',
-    data: [
-      {
-        x: 10,
-        y: 15
-      },
-      {
-        x: 15,
-        y: 25
-      },
-            {
-        x: 55,
-        y: 8
-      }
-    ],
-    borderColor: "#6fbf3b",
-    backgroundColor: '#6fbf3b',
-    fill: false,
-    borderWidth: 4
-  },
-  {
-    yAxisID: 'YRIGHT',
-    data: [
-      {
-        x: 15,
-        y: 15
-      },
-      {
-        x: 25,
-        y: 23
-      },
-            {
-        x: 65,
-        y: 8
-      }
-    ],
-    label: 'Dataset 2 (' + 3 + ')',
-    borderColor: "#2a97f6",
-    fill: false,
-    borderWidth: 4
-  }
- ]
-};
- * 
- */
 
+ 
 /**
  * data: [{
  * name:string,
@@ -261,43 +227,6 @@ const updateChart = ({
             }
         }
     };
-    // chartInstance.options = {
-
-
-    //     // plugins: {
-    //     //     zoom: {
-    //     //         pan: {
-    //     //             // pan options and/or events
-    //     //             enabled: true,
-    //     //             mode: 'xy',
-    //     //             // onPanStart({ chart, point }) {
-    //     //             //     log("on pan");
-    //     //             //     const area = chart.chartArea;
-    //     //             //     const w25 = area.width * 0.25;
-    //     //             //     const h25 = area.height * 0.25;
-    //     //             //     if (point.x < area.left + w25 || point.x > area.right - w25
-    //     //             //         || point.y < area.top + h25 || point.y > area.bottom - h25) {
-    //     //             //         return false; // abort
-    //     //             //     }
-    //     //             // },
-    //     //         },
-    //     //         limits: {
-    //     //             x: {min: -200, max: 200, minRange: 50},
-    //     //             y: {min: -200, max: 200, minRange: 50}
-    //     //           },
-    //     //         // zoom: {
-    //     //         //     wheel: {
-    //     //         //         enabled: false,
-    //     //         //     },
-    //     //         //     pinch: {
-    //     //         //         enabled: true
-    //     //         //     },
-
-    //     //         //     mode: 'xy',
-    //     //         // }
-    //     //     }
-    //     // }
-    // };
 
     chartInstance.update();
 }
@@ -340,12 +269,17 @@ const addOrUpdateChart = ({
 
 let LineChart = (props, ref) => {
     log("line chart render");
-    const { dataList, labelList } = props;
+    const sensorList = sensors;
+    //const { dataList, labelList } = props;
     const chartEl = useRef(),
         chartInstanceRef = useRef();
 
     let currentDataListRef = useRef([]),
         currentLabelListRef = useRef([]),
+        lastDataRef = useRef({
+            x: null,
+            y: null
+        }),
         checkDataResult;
 
 
@@ -367,6 +301,11 @@ let LineChart = (props, ref) => {
     useImperativeHandle(ref, () => ({
         clearData: () => {
 
+        },
+        setCurrentData: ({
+            data
+        }) => {
+            lastDataRef.current = data;
         },
         setChartData: ({
             sensorId,
@@ -415,6 +354,7 @@ let LineChart = (props, ref) => {
                 data: []
             }]
         });
+        const chartJsPlugin = getChartJsPlugin({ lastDataRef });
         //const myChartRef = chartEl.current.getContext("2d");
         chartInstanceRef.current = new Chart(chartEl.current, {
             type: "line",
@@ -439,10 +379,12 @@ let LineChart = (props, ref) => {
                             //     }
                             // },
                         },
-                        // limits: {
-                        //     x: {min: -200, max: 200, minRange: 50},
-                        //     y: {min: -200, max: 200, minRange: 50}
-                        //   },
+                        limits: {
+                            // x: {min: 0, max: 200, minRange: 50},
+                            // y: {min: 0, max: 200, minRange: 50}
+                            x: {min: 0 },
+                            y: {min: 0}
+                          },
                         zoom: {
                             wheel: {
                                 enabled: true,
@@ -463,9 +405,14 @@ let LineChart = (props, ref) => {
 
     return (
         <div className="line-chart-wapper">
-            <canvas
-                ref={chartEl}
-            />
+            <div className="sensor-select-container">
+                <SensorSelector sensorList={sensorList}></SensorSelector>
+            </div>
+            <div className="canvas-container">
+                <canvas
+                    ref={chartEl}
+                />
+            </div>
         </div>
     )
 }

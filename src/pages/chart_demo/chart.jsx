@@ -1,7 +1,7 @@
 import "./chart.scss";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Page, Link, Navbar, NavTitle, NavLeft, Block, f7ready } from "framework7-react";
-import LineChart from "../../components/charts/line_chart";
+import LineChart from "../../components/widgets/line_chart";
 
 const log = (text, data) => {
     let debug = true;

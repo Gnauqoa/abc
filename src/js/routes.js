@@ -1,7 +1,7 @@
 import EdlHome from "../pages/home";
 import EdlLayout from "../pages/layout";
 import EdlActivity from "../pages/activity";
-import Chart from "../pages/chart/chart";
+import Chart from "../pages/chart_demo/chart";
 
 var routes = [
   {
