@@ -82,11 +82,16 @@ export default (props) => {
            
             testSimInterval = setInterval(() => {
                 let currentTick = Date.now();
+               
                 //chartRef.current.setData(dataHere);
                 const firstData = dataRunRef.current[1].data;
 
                 const labelNum = currentTick - startTick,
                     dataValue = Math.floor(Math.random() * 100).toFixed(0);
+
+                    if(labelNum > 10000) {
+                        clearInterval(testSimInterval);
+                    }
 
                     firstData.push({
                         x: labelNum,
@@ -100,7 +105,7 @@ export default (props) => {
                         chartData: dataRunRef.current,
                         xUnit : "ms",
                         yUnit : "yUnit",
-                        maxHz: 5
+                        maxHz: 10
                     });
                 //newState.labelList.push(labelNum + "");
                 //newState.dataList.push(dataValue);
@@ -123,7 +128,7 @@ export default (props) => {
                 //     log("finished setting state");
                 //     return newState;
                 // });
-            }, 1000);
+            }, 100);
         });
 
         return () => {

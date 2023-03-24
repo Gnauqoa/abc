@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import "./line_chart.scss";
 import Chart from "chart.js/auto";
+import zoomPlugin from 'chartjs-plugin-zoom';
+
+Chart.register(zoomPlugin);
+
 const log = (text, data) => {
+    console.dir(Hammer);
     let debug = true;
     if (debug) {
         console.log(text);
@@ -18,24 +23,24 @@ const chartJsPlugin = {
         let yAxis = chart.scales['y'];
         let maxValue = Math.max(...chart.data.datasets[0].data);
         let minValue = Math.min(...chart.data.datasets[0].data);
-        if(chart.data.datasets.length > 0) {
+        if (chart.data.datasets.length > 0) {
             const dataset = chart.data.datasets[chart.data.datasets.length - 1];
-            if(dataset.data.length > 0) {
+            if (dataset.data.length > 0) {
                 const data = dataset.data[dataset.data.length - 1];
                 log("draw last data", data);
                 ctx.save();
                 ctx.textAlign = 'center';
-                ctx.font = '14px Arial';
+                ctx.font = '16px Arial';
                 ctx.fillStyle = '#000000';
                 ctx.textAlign = 'left';
                 ctx.fillText(`x=${data.x} y=${data.y}`, xAxis.left + 5, yAxis.top + 5);
-                
+
                 //ctx.fillText('Dagens laveste temperatur = ' + minValue + 'Â°C', xAxis.left + 5, yAxis.top + 18);
                 ctx.restore();
             }
-            
+
         }
-        
+
     }
 }
 const buildChartData = ({
@@ -232,32 +237,67 @@ const updateChart = ({
     chartInstance.data = createChartJsData({
         chartData: data
     });
-    chartInstance.options = {
-        //Customize chart options
-        animation: false,
-        scales: {
-            y: {
-                title: {
-                    color: 'orange',
-                    display: true,
-                    text: yUnit
-                }
+
+    chartInstance.options.animation = false;
+    chartInstance.options.scales = {
+        y: {
+            title: {
+                color: 'orange',
+                display: true,
+                text: yUnit
+            }
+        },
+        x: {
+            type: 'linear',
+            ticks: {
+                // forces step size to be 50 units
+                stepSize: ((1 / maxHz) * 1000).toFixed(0)
             },
-            x: {
-                type: 'linear',
-                ticks: {
-                    // forces step size to be 50 units
-                    stepSize: ((1/maxHz)*1000).toFixed(0)
-                },
-                title: {
-                    color: 'orange',
-                    display: true,
-                    text: xUnit,
-                    align: "end"
-                }
+            title: {
+                color: 'orange',
+                display: true,
+                text: xUnit,
+                align: "end"
             }
         }
     };
+    // chartInstance.options = {
+
+
+    //     // plugins: {
+    //     //     zoom: {
+    //     //         pan: {
+    //     //             // pan options and/or events
+    //     //             enabled: true,
+    //     //             mode: 'xy',
+    //     //             // onPanStart({ chart, point }) {
+    //     //             //     log("on pan");
+    //     //             //     const area = chart.chartArea;
+    //     //             //     const w25 = area.width * 0.25;
+    //     //             //     const h25 = area.height * 0.25;
+    //     //             //     if (point.x < area.left + w25 || point.x > area.right - w25
+    //     //             //         || point.y < area.top + h25 || point.y > area.bottom - h25) {
+    //     //             //         return false; // abort
+    //     //             //     }
+    //     //             // },
+    //     //         },
+    //     //         limits: {
+    //     //             x: {min: -200, max: 200, minRange: 50},
+    //     //             y: {min: -200, max: 200, minRange: 50}
+    //     //           },
+    //     //         // zoom: {
+    //     //         //     wheel: {
+    //     //         //         enabled: false,
+    //     //         //     },
+    //     //         //     pinch: {
+    //     //         //         enabled: true
+    //     //         //     },
+
+    //     //         //     mode: 'xy',
+    //     //         // }
+    //     //     }
+    //     // }
+    // };
 
     chartInstance.update();
 }
@@ -381,7 +421,40 @@ let LineChart = (props, ref) => {
             data: data,
             options: {
                 //Customize chart options
-                animation: false
+                animation: false,
+                plugins: {
+                    zoom: {
+                        pan: {
+                            // pan options and/or events
+                            enabled: true,
+                            mode: 'xy',
+                            // onPanStart({ chart, point }) {
+                            //     log("on pan");
+                            //     const area = chart.chartArea;
+                            //     const w25 = area.width * 0.25;
+                            //     const h25 = area.height * 0.25;
+                            //     if (point.x < area.left + w25 || point.x > area.right - w25
+                            //         || point.y < area.top + h25 || point.y > area.bottom - h25) {
+                            //         return false; // abort
+                            //     }
+                            // },
+                        },
+                        // limits: {
+                        //     x: {min: -200, max: 200, minRange: 50},
+                        //     y: {min: -200, max: 200, minRange: 50}
+                        //   },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+
+                            mode: 'xy',
+                        }
+                    }
+                }
             },
             plugins: [chartJsPlugin]
         });
