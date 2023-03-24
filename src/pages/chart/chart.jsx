@@ -26,40 +26,104 @@ export default (props) => {
     const { f7router, id: activityId } = props;
     log("activity id", activityId);
 
-    const [firstDataRunState, setFirstDataRunState] = useState({
-        labelList: [],
-        dataList: []
+    
+    const dataRunRef = useRef([]);
+
+    const secondDataRunRef = useRef({
+        name: "run2",
+        data: [{
+            x: 50,
+            y: 100
+        },
+        {
+            x: 100,
+            y: 90
+        },
+        {
+            x: 150,
+            y: 200
+        },
+        {
+            x: 200,
+            y: 10
+        },
+        {
+            x: 250,
+            y: 15
+        },
+        {
+            x: 1050,
+            y: 100
+        },
+        {
+            x: 2050,
+            y: 120
+        },
+        {
+            x: 3050,
+            y: 130
+        }]
     });
 
     const goBackCallback = useCallback(() => {
         f7router.back()
     }, []);
-
+    const chartRef = useRef();
     useEffect(() => {
         /**Simulate data */
         let testSimInterval;
         f7ready((f7) => {
+            dataRunRef.current.push(secondDataRunRef.current);
+            dataRunRef.current.push({
+                name: "run1",
+                data: []
+            });
             let startTick = Date.now();
            
             testSimInterval = setInterval(() => {
                 let currentTick = Date.now();
-                setFirstDataRunState((prevState) => {
-                    log("previous chart state", prevState)
-                    const newState = {
-                        labelList: prevState.labelList,
-                        dataList: prevState.dataList
-                    };
+                //chartRef.current.setData(dataHere);
+                const firstData = dataRunRef.current[1].data;
 
-                    const labelNum = currentTick - startTick,
-                        dataValue = Math.floor(Math.random() * 100).toFixed(0);
+                const labelNum = currentTick - startTick,
+                    dataValue = Math.floor(Math.random() * 100).toFixed(0);
 
-                    newState.labelList.push(labelNum + "");
-                    newState.dataList.push(dataValue);
+                    firstData.push({
+                        x: labelNum,
+                        y: dataValue
+                    });
+                    // dataRunRef.current[1].data = [{
+                    //     x: 0,
+                    //     y: dataValue
+                    // }]
+                    chartRef.current.setChartData({
+                        chartData: dataRunRef.current,
+                        xUnit : "ms",
+                        yUnit : "yUnit",
+                        maxHz: 5
+                    });
+                //newState.labelList.push(labelNum + "");
+                //newState.dataList.push(dataValue);
+                log("finished setting state");
 
-                    log("finished setting state");
-                    return newState;
-                });
-            }, 500);
+
+                // setFirstDataRunState((prevState) => {
+                //     log("previous chart state", prevState)
+                //     const newState = {
+                //         labelList: prevState.labelList,
+                //         dataList: prevState.dataList
+                //     };
+
+                //     const labelNum = currentTick - startTick,
+                //         dataValue = Math.floor(Math.random() * 100).toFixed(0);
+
+                //     newState.labelList.push(labelNum + "");
+                //     newState.dataList.push(dataValue);
+
+                //     log("finished setting state");
+                //     return newState;
+                // });
+            }, 1000);
         });
 
         return () => {
@@ -82,7 +146,7 @@ export default (props) => {
             </Navbar>
 
             <Block className="chart-content">
-                <LineChart dataList={firstDataRunState.dataList} labelList={firstDataRunState.labelList} />
+                <LineChart ref={chartRef}/>
             </Block>
         </Page>
     )
