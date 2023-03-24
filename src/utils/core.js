@@ -542,3 +542,74 @@ export function scrollToElSelector(selector) {
     inline: "center",
   });
 }
+
+export function findGCD(nums) {
+  function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
+  }
+
+  let result = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    result = gcd(result, nums[i]);
+  }
+  return result;
+}
+
+export function getLCM(nums) {
+  // Find the LCM using the prime factorization method
+  const primes = {};
+  nums.forEach((num) => {
+    for (let i = 2; i <= num; i++) {
+      let count = 0;
+      while (num % i === 0) {
+        num /= i;
+        count++;
+      }
+      primes[i] = Math.max(primes[i] || 0, count);
+    }
+  });
+  let lcm = 1;
+  for (const prime in primes) {
+    lcm *= prime ** primes[prime];
+  }
+  return lcm;
+}
+
+export function exportToCSV(filename, rows) {
+  const processRow = function (row) {
+    let finalVal = "";
+    for (let j = 0; j < row.length; j++) {
+      let innerValue = row[j] === null ? "" : row[j].toString();
+      if (row[j] instanceof Date) {
+        innerValue = row[j].toLocaleString();
+      }
+      let result = innerValue.replace(/"/g, '""');
+      if (result.search(/("|,|\n)/g) >= 0) result = '"' + result + '"';
+      if (j > 0) finalVal += ",";
+      finalVal += result;
+    }
+    return finalVal + "\n";
+  };
+
+  let csvFile = "";
+  for (let i = 0; i < rows.length; i++) {
+    csvFile += processRow(rows[i]);
+  }
+
+  const blob = new Blob([csvFile], { type: "text/csv;charset=utf-8;" });
+  if (navigator.msSaveBlob) {
+    navigator.msSaveBlob(blob, filename);
+  } else {
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      console.log("url: ", url);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      //   document.body.removeChild(link);
+    }
+  }
+}

@@ -1,5 +1,7 @@
 {
   "browserWindow": {
+    "fullscreen": false,
+    "autoHideMenuBar": false,
     "webPreferences": {
       "nodeIntegration": true
     }

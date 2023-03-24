@@ -209,7 +209,7 @@ export default class extends Component {
         {this.props?.icon && (
           <>
             <Button
-              className={clsx("round-button", this.props?.isClassMobile ? "css-button-mobile" : "")}
+              className={clsx("button--round", this.props?.isClassMobile ? "css-button-mobile" : "")}
               large
               icon={isDeviceConnected === true ? `${this.props?.icon}-on` : `${this.props?.icon}-off`}
               onClick={() => this.handleConnections(false, CONNECT_BLE_TYPE)}
@@ -224,7 +224,7 @@ export default class extends Component {
                 isDeviceConnected === true && deviceConnectedType == CONNECT_BLE_TYPE
                   ? "device-connected"
                   : "device-disconnected",
-                "round-button",
+                "button--round",
                 this.props?.isClassMobile ? "css-button-mobile" : ""
               )}
               large
@@ -250,7 +250,7 @@ export default class extends Component {
                 isDeviceConnected === true && deviceConnectedType == CONNECT_BLE_TYPE
                   ? "device-connected"
                   : "device-disconnected",
-                "round-button",
+                "button--round",
                 this.props?.isClassMobile ? "css-button-mobile" : ""
               )}
               large
@@ -273,7 +273,7 @@ export default class extends Component {
                     isDeviceConnected === true && deviceConnectedType == CONNECT_SERIAL_TYPE
                       ? "device-connected"
                       : "device-disconnected",
-                    "round-button",
+                    "button--round",
                     this.props?.isClassMobile ? "css-button-mobile" : ""
                   )}
                   large

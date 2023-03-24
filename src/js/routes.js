@@ -25,7 +25,7 @@ var routes = [
     component: EdlActivity,
   },
   {
-    path: "/chart/:id",
+    path: "/chart_test",
     component: Chart,
   },
 
