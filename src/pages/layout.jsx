@@ -26,7 +26,7 @@ export default () => (
       </NavLeft>
       <NavTitle>Hoạt động mới</NavTitle>
     </Navbar>
-    <div className="page-content display-flex justify-content-center align-items-center">
+    <div className="full-height display-flex justify-content-center align-items-center">
       <Block>
         <Row className="padding-bottom">
           <Col>

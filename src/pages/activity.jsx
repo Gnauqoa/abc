@@ -1,11 +1,22 @@
 import React, { useState } from "react";
-import { Page, Navbar, Button, NavLeft, NavRight } from "framework7-react";
+import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
 import dialog from "../components/dialog";
 import storeService from "../services/store-service";
+import {
+  LAYOUT_CHART,
+  LAYOUT_TABLE,
+  LAYOUT_NUMBER,
+  LAYOUT_TABLE_CHART,
+  LAYOUT_NUMBER_CHART,
+  LAYOUT_NUMBER_TABLE,
+} from "../js/constants";
+import freImg from "../img/activity/freq.png";
+import navImg from "../img/activity/nav.png";
+import timeImg from "../img/activity/time.png";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -75,8 +86,8 @@ export default ({ f7route, f7router }) => {
   }
 
   return (
-    <Page className="bg-color-regal-blue">
-      <Navbar className="custom-dashboards-navbar">
+    <Page className="bg-color-regal-blue activity">
+      <Navbar>
         <NavLeft>
           <BackButton link="/" />
           <RoundButton icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
@@ -94,8 +105,32 @@ export default ({ f7route, f7router }) => {
           <RoundButton icon="settings" />
         </NavRight>
       </Navbar>
-      <div className="page-content display-flex justify-content-center align-items-center">
-        <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleRun} />
+      <div className="full-height display-flex flex-direction-column justify-content-space-between">
+        <div className="activity-layout">
+          <div className="__card __card-left">Card Left</div>
+          <div className="__card __card-right">Card Right</div>
+          {/* <div className="__column">Single Column</div> */}
+        </div>
+        <div className="activity-footer display-flex justify-content-space-between">
+          <div className="__toolbar-left">
+            <div className="freq">
+              <img src={freImg} />
+            </div>
+          </div>
+          <div className="__toolbar-center">
+            <div className="navi">
+              <img src={navImg} />
+            </div>
+          </div>
+          <div className="__toolbar-right">
+            <div class="timer">
+              <img src={timeImg} />
+            </div>
+            <div class="sample">
+              <RoundButton className="play" icon="play_arrow" color="#45A3DB" onClick={handleRun} />
+            </div>
+          </div>
+        </div>
       </div>
     </Page>
   );

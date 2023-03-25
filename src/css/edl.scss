@@ -1,3 +1,9 @@
+.activity {
+  .page-content {
+    overflow: hidden;
+  }
+}
+
 .activity-name {
   border: 1px solid #a9becb !important;
   margin-right: 10px !important;
@@ -7,4 +13,37 @@
   font-size: 14px;
   background-color: #ffffff !important;
   text-align: center;
+}
+
+.activity-layout {
+  width: 90%;
+  height: 90%;
+  margin: auto;
+  display: flex;
+  gap: 20px;
+  .__card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    flex-grow: 1;
+  }
+  .__card-left {
+    flex-grow: 1;
+  }
+  .__card-right {
+    flex-grow: 2;
+  }
+}
+
+.activity-footer {
+  height: 60px;
+  padding-left: 20px;
+  padding-right: 20px;
+  .__toolbar-right {
+    .timer {
+      float: left;
+    }
+    .sample {
+      float: right;
+    }
+  }
 }
