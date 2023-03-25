@@ -1,3 +1,12 @@
+.activity {
+  .page-content {
+    overflow: hidden;
+  }
+  .navbar-inner {
+    justify-content: space-between;
+  }
+}
+
 .activity-name {
   border: 1px solid #a9becb !important;
   margin-right: 10px !important;
@@ -7,4 +16,61 @@
   font-size: 14px;
   background-color: #ffffff !important;
   text-align: center;
+  margin-left: auto !important;
+  width: 40%;
+}
+
+.activity-layout {
+  width: 90%;
+  height: 90%;
+  margin: auto;
+  display: flex;
+  gap: 20px;
+  .__card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    flex-grow: 1;
+  }
+  .__card-left {
+    flex-grow: 1;
+  }
+  .__card-right {
+    flex-grow: 2;
+  }
+}
+
+.activity-footer {
+  height: 60px;
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  .__toolbar-right {
+    .timer {
+      float: left;
+      width: 130px;
+      height: 44px;
+      background: #ffffff;
+      border-radius: 32px;
+      font-size: 24px;
+      line-height: 44px;
+      padding-left: 15px;
+    }
+    .sample {
+      float: right;
+    }
+  }
+}
+
+.activity-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .prev, .next {
+    cursor: pointer;
+  }
+  .order {
+    color: #ffffff;
+    font-size: 24px;
+    padding: 0 10px 0 10px;
+  }
 }

@@ -11,14 +11,14 @@ export default () => {
   const allActivities = activityService.all();
 
   return (
-    <Page className="bg-color-regal-blue edl-home">
-      <Navbar className="edl-home-navbar">
+    <Page className="bg-color-regal-blue home">
+      <Navbar>
         <NavLeft>
           <Link iconIos="material:menu" iconMd="material:menu" panelOpen="left" />
         </NavLeft>
         <NavTitle>EDL</NavTitle>
       </Navbar>
-      <div className="page-content display-flex flex-direction-column justify-content-space-around">
+      <div className="full-height display-flex flex-direction-column justify-content-space-around">
         <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
           <SwiperSlide>
             <Link href="/layout" view=".view-main">
