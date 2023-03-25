@@ -31,7 +31,10 @@ export default ({ f7route, f7router }) => {
     layout: layout,
     sampleMode: MANUAL,
     frequency: 1,
-    widgets: [{ sensorId: 0 }, { sensorId: 0 }],
+    widgets: [
+      { id: 0, sensorId: 0 },
+      { id: 1, sensorId: 0 },
+    ],
   };
   if (id) {
     const foundActivity = activityService.find(id);
@@ -100,6 +103,20 @@ export default ({ f7route, f7router }) => {
     });
   }
 
+  function handleSensorChange(widgetId, sensorId) {
+    let widgets = { ...activity.widgets };
+    widgets = widgets.map((w) => {
+      if (w.id === widgetId) {
+        return { ...w, sensorId };
+      }
+
+      setActivity({
+        ...activity,
+        widgets,
+      });
+    });
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
@@ -127,7 +144,7 @@ export default ({ f7route, f7router }) => {
               <div className="__card __card-left">Card Left</div>
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
-                  <LineChart ref={lineChartRef} sensorId={activity.widgets[1].sensorId} />
+                  <LineChart ref={lineChartRef} widget={activity.widgets[1]} handleSensorChange={handleSensorChange} />
                 )}
               </div>
             </>
@@ -135,7 +152,7 @@ export default ({ f7route, f7router }) => {
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
             <div className="__card">
               {activity.layout == LAYOUT_CHART && (
-                <LineChart ref={lineChartRef} sensorId={activity.widgets[0].sensorId} />
+                <LineChart ref={lineChartRef} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
               )}
             </div>
           )}
