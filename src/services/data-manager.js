@@ -4,7 +4,6 @@ import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
 
-const MIN_DATA_SENSORS_CALLBACK = 4;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 
 /**
@@ -90,6 +89,8 @@ class DataManager {
      */
     this.collectingDataInterval = 1000;
 
+    this.sensorIds = sensors.map((sensor) => sensor.id);
+
     this.storeService = new StoreService("data-manager");
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
@@ -118,8 +119,9 @@ class DataManager {
   subscribe(emitFunction, sensorId) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-      if (!hasEmitFunction) {
-        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}`);
+      const validSensorId = this.sensorIds.includes(Number(sensorId));
+      if (!hasEmitFunction || !validSensorId) {
+        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}-sensorId_${sensorId}`);
         return false;
       }
 
@@ -373,13 +375,11 @@ class DataManager {
    */
   callbackReadSensor(data) {
     try {
-      const splitData = data.split(/\s*,\s*/);
-      if (
-        splitData[0] !== "@" ||
-        splitData[splitData.length - 1] !== "*" ||
-        splitData.length < MIN_DATA_SENSORS_CALLBACK
-      ) {
-        console.log(`callbackReadSensor: Invalid sensor data format ${data}`);
+      const parseData = String(data).trim();
+      const splitData = parseData.split(/\s*,\s*/);
+      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
+      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
+        console.log(`callbackReadSensor: Invalid sensor data format ${parseData}`);
         return;
       }
 
@@ -390,7 +390,7 @@ class DataManager {
       // Emit subscribers when not in collecting data mode
       if (!this.isCollectingData) this.emitSubscribers();
     } catch (e) {
-      console.error(`callbackReadSensor: ${e.message} at ${data}`);
+      console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
   }
 
@@ -461,11 +461,12 @@ class DataManager {
       //   const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
       //   const data3 = (Math.random() * (max - min) + min).toFixed(decimals);
       //   const data4 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const dummyData = `@, ${sensorId}, ${data1}, *`;
+      //   const dummyData = `@, ${sensorId}, ${data1}, *`;
+      const dummyData = "@,14,1.00,2.00,3.00,4.00,*";
 
       console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
-    }, 500);
+    }, 1000);
   }
 }
 
