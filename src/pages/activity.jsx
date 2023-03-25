@@ -1,13 +1,11 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Page, Navbar, Button, NavLeft, NavRight, f7ready } from "framework7-react";
+import React, { useState } from "react";
+import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
 import dialog from "../components/dialog";
 import storeService from "../services/store-service";
-import LineChart from "../components/widgets/line_chart";
-
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -16,60 +14,12 @@ import {
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
 } from "../js/constants";
+import freImg from "../img/activity/freq.png";
+import ActivityNav from "../components/activity-nav";
+import Timer from "../components/timer";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
-
-const useDemoChart = ({ layout, chartLayoutChartRef, dataRunRef }) => {
-  useEffect(() => {
-    let testSimInterval;
-    if (layout == LAYOUT_CHART) {
-      f7ready((f7) => {
-        //dataRunRef.current.push(secondDataRunRef.current);
-        dataRunRef.current.push({
-          name: "run1",
-          data: [],
-        });
-        let startTick = Date.now();
-
-        testSimInterval = setInterval(() => {
-          let currentTick = Date.now();
-          const firstData = dataRunRef.current[0].data;
-
-          const labelNum = currentTick - startTick,
-            dataValue = Math.floor(Math.random() * 100).toFixed(0);
-
-          // if(labelNum > 10000) {
-          //     clearInterval(testSimInterval);
-          // }
-          firstData.push({
-            x: labelNum,
-            y: dataValue,
-          });
-          /*For passing realtime data to chart when it is not played*/
-
-          chartLayoutChartRef.current.setCurrentData({
-            data: {
-              x: labelNum,
-              y: dataValue,
-            },
-          });
-          chartLayoutChartRef.current.setChartData({
-            chartData: dataRunRef.current,
-            xUnit: "ms",
-            yUnit: "",
-            maxHz: 10,
-          });
-        }, 1000);
-      });
-    }
-
-    return () => {
-      clearInterval(testSimInterval);
-      //log("chart page is cleaned up");
-    };
-  }, []);
-};
 
 export default ({ f7route, f7router }) => {
   const layout = f7route.params.layout;
@@ -90,14 +40,8 @@ export default ({ f7route, f7router }) => {
   }
 
   const [activity, setActivity] = useState(initActivity);
-  const chartLayoutChartRef = useRef(),
-    dataRunRef = useRef([]);
-
-  useDemoChart({
-    layout,
-    chartLayoutChartRef,
-    dataRunRef,
-  });
+  const [isRunning, setIsRunning] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   function handleActivityNameChange(e) {
     setActivity({
@@ -121,6 +65,7 @@ export default ({ f7route, f7router }) => {
   function handleActivitySave() {
     if (activity.name.length) {
       activityService.save(activity);
+      setForceUpdate((n) => n + 1);
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -139,34 +84,62 @@ export default ({ f7route, f7router }) => {
     }
   }
 
-  function handleRun() {
-    console.log("Run...");
+  function handleSampleClick() {
+    setIsRunning(!isRunning);
   }
 
   return (
-    <Page className="bg-color-regal-blue">
-      <Navbar className="custom-dashboards-navbar">
+    <Page className="bg-color-regal-blue activity">
+      <Navbar>
         <NavLeft>
           <BackButton link="/" />
           <RoundButton icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
           <RoundButton icon="close" color="#FF0000" onClick={handleActivityDelete} />
         </NavLeft>
+        <input
+          value={activity.name}
+          type="text"
+          name="name"
+          onChange={handleActivityNameChange}
+          className="activity-name"
+        />
         <NavRight>
-          <input
-            value={activity.name}
-            type="text"
-            name="name"
-            onChange={handleActivityNameChange}
-            className="activity-name"
-          />
           <RoundButton icon="save" onClick={handleActivitySave} />
           <RoundButton icon="settings" />
         </NavRight>
       </Navbar>
-      <div className="page-content display-flex justify-content-center align-items-center">
-        {layout == LAYOUT_CHART ? <LineChart ref={chartLayoutChartRef} /> : null}
-
-        <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleRun} />
+      <div className="full-height display-flex flex-direction-column justify-content-space-between">
+        <div className="activity-layout">
+          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+            <>
+              <div className="__card __card-left">Card Left</div>
+              <div className="__card __card-right">Card Right</div>
+            </>
+          )}
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
+            <div className="__card">Single Card</div>
+          )}
+        </div>
+        <div className="activity-footer display-flex justify-content-space-between">
+          <div className="__toolbar-left">
+            <div className="freq">
+              <img src={freImg} />
+            </div>
+          </div>
+          <div className="__toolbar-center">
+            <ActivityNav currentId={activity.id} />
+          </div>
+          <div className="__toolbar-right">
+            <Timer isRunning={isRunning} />
+            <div className="sample">
+              {isRunning ? (
+                <RoundButton icon="stop" color="#FF0000" onClick={handleSampleClick} />
+              ) : (
+                <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleSampleClick} />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </Page>
   );

@@ -89,11 +89,33 @@ export default class StoreService {
   }
 
   size() {
-    return this.all().filter((item) => item.name.trim() !== "").length;
+    return this.all().length;
   }
 
   find(id) {
     return _.find(this.all(), { id });
+  }
+
+  findOrder(id) {
+    return `${_.findIndex(this.all(), { id }) + 1}/${this.size()}`;
+  }
+
+  findNextId(id) {
+    const currentIndex = _.findIndex(this.all(), { id });
+    let nextIndex = currentIndex + 1;
+    if (nextIndex === this.size()) {
+      nextIndex = 0;
+    }
+    return this.all()[nextIndex]?.id;
+  }
+
+  findPrevId(id) {
+    const currentIndex = _.findIndex(this.all(), { id });
+    let prevIndex = currentIndex - 1;
+    if (prevIndex < 0) {
+      prevIndex = this.size() - 1;
+    }
+    return this.all()[prevIndex]?.id;
   }
 
   findBy(condition) {
