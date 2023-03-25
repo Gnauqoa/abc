@@ -429,8 +429,6 @@ class DataManager {
   emitSubscribers() {
     for (const subscriberId in this.subscribers) {
       const subscriber = this.subscribers[subscriberId];
-      let sensorData = this.buffer[subscriber.sensorId] || [];
-
       if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
         console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
@@ -439,8 +437,10 @@ class DataManager {
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
       const time = this.isCollectingData ? this.collectingDataTime : Date.now();
-      let emittedData = [dataRunId, time, subscriber.sensorId, ...sensorData];
+      const sensorData = this.buffer[subscriber.sensorId] || [];
+
       // Notify subscriber
+      const emittedData = [dataRunId, time, subscriber.sensorId, ...sensorData];
       this.emitter.emit(subscriberId, emittedData);
     }
   }
