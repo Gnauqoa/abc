@@ -214,7 +214,7 @@ async function listSerialPorts() {
                         portsList[port.path] = undefined;
                     })
 
-                    const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }))
+                    const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }))
                     parser.on('data', function(data) {
                         //console.log(data);
                         mainWindow.webContents.send('device-data', data);
