@@ -40,7 +40,7 @@ export default ({ f7route, f7router }) => {
       return;
     }
 
-    initActivity = { ...initActivity, foundActivity };
+    initActivity = { ...initActivity, ...foundActivity };
   }
 
   const [activity, setActivity] = useState(initActivity);
