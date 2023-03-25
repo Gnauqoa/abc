@@ -423,19 +423,25 @@ class DataManager {
     }, this.emitSubscribersInterval);
   }
 
+  /**
+   * Emit data to all subscribers.
+   */
   emitSubscribers() {
     for (const subscriberId in this.subscribers) {
       const subscriber = this.subscribers[subscriberId];
-      let sensorData = this.buffer[subscriber.sensorId];
-
       if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
         console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
         continue;
       }
 
+      const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
+      const time = this.isCollectingData ? this.collectingDataTime : Date.now();
+      const sensorData = this.buffer[subscriber.sensorId] || [];
+
       // Notify subscriber
-      this.emitter.emit(subscriberId, sensorData ? sensorData : []);
+      const emittedData = [dataRunId, time, subscriber.sensorId, ...sensorData];
+      this.emitter.emit(subscriberId, emittedData);
     }
   }
 
