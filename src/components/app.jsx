@@ -10,6 +10,8 @@ import logger from "../services/logger-service";
 import MainMenu from "../pages/menu/menu";
 import Dialogs from "./dialogs";
 
+import dataManager from "../services/data-manager";
+
 const MyApp = () => {
   const device = getDevice();
   // Framework7 Parameters
@@ -72,8 +74,7 @@ const MyApp = () => {
     // Call F7 APIs here
     if (f7.device.electron) {
       window._cdvElectronIpc.onDeviceData((event, value) => {
-          console.log(value);
-          //event.sender.send('device-command', newValue)
+          dataManager.callbackReadSensor(value);
       })
     }
   });
