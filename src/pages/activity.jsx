@@ -14,30 +14,36 @@ import {
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
 } from "../js/constants";
-import freImg from "../img/activity/freq.png";
 import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
+import Frequency from "../components/frequency";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
 
 export default ({ f7route, f7router }) => {
   const layout = f7route.params.layout;
-  let initActivity;
-  if (layout) {
-    initActivity = {
-      id: uuidv4(),
-      name: "",
-      layout: layout,
-      sampleMode: MANUAL,
-    };
-  } else {
-    const id = f7route.params.id;
-    initActivity = activityService.find(id);
-    if (!initActivity) {
+  const id = f7route.params.id;
+  let initActivity = {
+    id: uuidv4(),
+    name: "",
+    layout: layout,
+    sampleMode: MANUAL,
+    frequency: 1,
+    widgets: [
+      { id: 0, sensorId: 0 },
+      { id: 1, sensorId: 0 },
+    ],
+  };
+  if (id) {
+    const foundActivity = activityService.find(id);
+    if (!foundActivity) {
       f7router.navigate("/");
+      return;
     }
+
+    initActivity = { ...initActivity, ...foundActivity };
   }
 
   const [activity, setActivity] = useState(initActivity);
@@ -90,6 +96,27 @@ export default ({ f7route, f7router }) => {
     setIsRunning(!isRunning);
   }
 
+  function handleFrequencySelect(frequency) {
+    setActivity({
+      ...activity,
+      frequency,
+    });
+  }
+
+  function handleSensorChange(widgetId, sensorId) {
+    let widgets = { ...activity.widgets };
+    widgets = widgets.map((w) => {
+      if (w.id === widgetId) {
+        return { ...w, sensorId };
+      }
+
+      setActivity({
+        ...activity,
+        widgets,
+      });
+    });
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
@@ -116,21 +143,23 @@ export default ({ f7route, f7router }) => {
             <>
               <div className="__card __card-left">Card Left</div>
               <div className="__card __card-right">
-                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) ? (
-                  <LineChart ref={lineChartRef} />
-                ) : null}
+                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
+                  <LineChart ref={lineChartRef} widget={activity.widgets[1]} handleSensorChange={handleSensorChange} />
+                )}
               </div>
             </>
           )}
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
-            <div className="__card">{activity.layout == LAYOUT_CHART ? <LineChart ref={lineChartRef} /> : null}</div>
+            <div className="__card">
+              {activity.layout == LAYOUT_CHART && (
+                <LineChart ref={lineChartRef} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+              )}
+            </div>
           )}
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
-            <div className="freq">
-              <img src={freImg} />
-            </div>
+            <Frequency frequency={1} handleFrequencySelect={handleFrequencySelect} />
           </div>
           <div className="__toolbar-center">
             <ActivityNav currentId={activity.id} />
