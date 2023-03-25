@@ -94,7 +94,7 @@ class DataManager {
     this.storeService = new StoreService("data-manager");
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    //this.dummySensorData();
+    this.dummySensorData();
   }
 
   /**
@@ -413,7 +413,6 @@ class DataManager {
 
       const sensorId = Number(splitData[1]);
       console.log("Sensor ", sensorId, " has been disconnected");
-      //this.buffer[sensorId] = undefined;
       // safe way to remove this sensor data from data buffer dictionary
       const { [sensorId]: buff, ...bufferWithoutSensorId } = this.buffer;
       this.buffer = bufferWithoutSensorId;
