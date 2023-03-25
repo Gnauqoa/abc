@@ -27,6 +27,8 @@
   ],
   "dependencies": {
     "clsx": "^1.2.1",
+    "chart.js": "^4.2.1",
+    "chartjs-plugin-zoom": "^2.0.1",
     "dom7": "^4.0.6",
     "fbemitter": "^3.0.0",
     "framework7": "^7.1.5",
