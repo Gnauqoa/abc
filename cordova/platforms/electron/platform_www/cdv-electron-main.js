@@ -207,6 +207,7 @@ async function listSerialPorts() {
                     serialPort.on('close', function(err) {
                         if (err.disconnected == true) {
                             console.log(port.path, ' disconnected');
+                            mainWindow.webContents.send('device-disconnected', portsList[port.path].lastDdata);
                         } else {
                             console.log(port.path, ' got unknown error');
                         }
@@ -217,10 +218,14 @@ async function listSerialPorts() {
                     const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }))
                     parser.on('data', function(data) {
                         //console.log(data);
+                        portsList[port.path].lastDdata = data;
                         mainWindow.webContents.send('device-data', data);
                     });
 
-                    portsList[port.path] = serialPort;
+                    portsList[port.path] = {
+                        port: serialPort,
+                        lastDdata: ''
+                    }
 
                 } catch (err) {
                     console.log(err);

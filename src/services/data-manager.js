@@ -94,7 +94,7 @@ class DataManager {
     this.storeService = new StoreService("data-manager");
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    //this.dummySensorData();
   }
 
   /**
@@ -387,10 +387,38 @@ class DataManager {
       const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
 
+      console.log(sensorsData);
+
       // Emit subscribers when not in collecting data mode
       if (!this.isCollectingData) this.emitSubscribers();
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
+    }
+  }
+
+  /**
+   * Callback function called in DeviceManager when a sensor is disconnected
+   * @param {string} sensorsData - Last data received from sensor to identify which one
+   * @returns {void} - No return.
+   */
+   callbackSensorDisconnected(data) {
+    try {
+      const parseData = String(data).trim();
+      const splitData = parseData.split(/\s*,\s*/);
+      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
+      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
+        console.log(`callbackSensorDisconnected: Unecognized sensor data format ${parseData}`);
+        return;
+      }
+
+      const sensorId = Number(splitData[1]);
+      console.log("Sensor ", sensorId, " has been disconnected");
+      //this.buffer[sensorId] = undefined;
+      // safe way to remove this sensor data from data buffer dictionary
+      const { [sensorId]: buff, ...bufferWithoutSensorId } = this.buffer;
+      this.buffer = bufferWithoutSensorId;
+    } catch (e) {
+      console.error(`callbackSensorDisconnected: ${e.message} at ${parseData}`);
     }
   }
 
