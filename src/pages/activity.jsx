@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
+import DataManagerIST from "../services/data-manager";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
@@ -94,10 +95,12 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleFrequencySelect(frequency) {
-    setActivity({
-      ...activity,
-      frequency,
-    });
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result &&
+      setActivity({
+        ...activity,
+        frequency,
+      });
   }
 
   return (
@@ -142,7 +145,7 @@ export default ({ f7route, f7router }) => {
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
-            <Frequency frequency={1} handleFrequencySelect={handleFrequencySelect} />
+            <Frequency frequency={activity.frequency} handleFrequencySelect={handleFrequencySelect} />
           </div>
           <div className="__toolbar-center">
             <ActivityNav currentId={activity.id} />

@@ -3,6 +3,7 @@ import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
+import { FREQUENCIES } from "../js/constants";
 
 const MIN_DATA_SENSORS_CALLBACK = 4;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
@@ -49,16 +50,10 @@ class DataManager {
     this.emitter = new EventEmitter();
 
     /**
-     * Frequencies for emitting subscribers.
-     * @type {number[]}
-     */
-    this.emitSubscribersFrequencies = [1, 2, 5, 10];
-
-    /**
      * Intervals for emitting subscribers.
      * @type {number[]}
      */
-    this.emitSubscribersIntervals = this.emitSubscribersFrequencies.map((e) => (1 / e) * 1000);
+    this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
 
     /**
      * Maximum interval for emitting subscribers.
@@ -179,12 +174,13 @@ class DataManager {
    * @returns {boolean} - True if the frequency is valid; otherwise, false.
    */
   setCollectingDataFrequency(frequency) {
-    if (!this.emitSubscribersFrequencies.hasOwnProperty(frequency)) {
+    const isValidFrequency = FREQUENCIES.includes(Number(frequency));
+    if (!isValidFrequency) {
       console.log(`setCollectingDataFrequency: Invalid frequency: ${frequency}`);
       return false;
     }
     console.log(`setCollectingDataFrequency: set frequency: ${frequency}`);
-    this.collectingDataInterval = (1 / frequency) * 1000;
+    this.collectingDataInterval = (1 / Number(frequency)) * 1000;
     return true;
   }
 
@@ -465,7 +461,7 @@ class DataManager {
 
       console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
-    }, 500);
+    }, 1000);
   }
 }
 
