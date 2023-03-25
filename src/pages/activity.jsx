@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -17,6 +17,7 @@ import {
 import freImg from "../img/activity/freq.png";
 import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
+import LineChart from "../components/widgets/line_chart";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -41,7 +42,8 @@ export default ({ f7route, f7router }) => {
 
   const [activity, setActivity] = useState(initActivity);
   const [isRunning, setIsRunning] = useState(false);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [, setForceUpdate] = useState(0);
+  const lineChartRef = useRef();
 
   function handleActivityNameChange(e) {
     setActivity({
@@ -113,11 +115,15 @@ export default ({ f7route, f7router }) => {
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
             <>
               <div className="__card __card-left">Card Left</div>
-              <div className="__card __card-right">Card Right</div>
+              <div className="__card __card-right">
+                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) ? (
+                  <LineChart ref={lineChartRef} />
+                ) : null}
+              </div>
             </>
           )}
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
-            <div className="__card">Single Card</div>
+            <div className="__card">{activity.layout == LAYOUT_CHART ? <LineChart ref={lineChartRef} /> : null}</div>
           )}
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
