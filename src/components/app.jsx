@@ -84,7 +84,7 @@ const MyApp = () => {
         <Dialogs />
         <MainMenu />
         {/* Your main view, should have "view-main" class */}
-        <View main className="safe-areas" url="/layout/chart" />
+        <View main className="safe-areas" url="/" />
       </ConnectContextProvider>
     </App>
   );

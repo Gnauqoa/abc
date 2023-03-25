@@ -15,8 +15,8 @@ import {
   LAYOUT_NUMBER_TABLE,
 } from "../js/constants";
 import freImg from "../img/activity/freq.png";
-import navImg from "../img/activity/nav.png";
-import timeImg from "../img/activity/time.png";
+import ActivityNav from "../components/activity-nav";
+import Timer from "../components/timer";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -40,6 +40,8 @@ export default ({ f7route, f7router }) => {
   }
 
   const [activity, setActivity] = useState(initActivity);
+  const [isRunning, setIsRunning] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   function handleActivityNameChange(e) {
     setActivity({
@@ -63,6 +65,7 @@ export default ({ f7route, f7router }) => {
   function handleActivitySave() {
     if (activity.name.length) {
       activityService.save(activity);
+      setForceUpdate((n) => n + 1);
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -81,8 +84,8 @@ export default ({ f7route, f7router }) => {
     }
   }
 
-  function handleRun() {
-    console.log("Run...");
+  function handleSampleClick() {
+    setIsRunning(!isRunning);
   }
 
   return (
@@ -93,23 +96,29 @@ export default ({ f7route, f7router }) => {
           <RoundButton icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
           <RoundButton icon="close" color="#FF0000" onClick={handleActivityDelete} />
         </NavLeft>
+        <input
+          value={activity.name}
+          type="text"
+          name="name"
+          onChange={handleActivityNameChange}
+          className="activity-name"
+        />
         <NavRight>
-          <input
-            value={activity.name}
-            type="text"
-            name="name"
-            onChange={handleActivityNameChange}
-            className="activity-name"
-          />
           <RoundButton icon="save" onClick={handleActivitySave} />
           <RoundButton icon="settings" />
         </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
-          <div className="__card __card-left">Card Left</div>
-          <div className="__card __card-right">Card Right</div>
-          {/* <div className="__column">Single Column</div> */}
+          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+            <>
+              <div className="__card __card-left">Card Left</div>
+              <div className="__card __card-right">Card Right</div>
+            </>
+          )}
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
+            <div className="__card">Single Card</div>
+          )}
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
@@ -118,16 +127,16 @@ export default ({ f7route, f7router }) => {
             </div>
           </div>
           <div className="__toolbar-center">
-            <div className="navi">
-              <img src={navImg} />
-            </div>
+            <ActivityNav currentId={activity.id} />
           </div>
           <div className="__toolbar-right">
-            <div class="timer">
-              <img src={timeImg} />
-            </div>
-            <div class="sample">
-              <RoundButton className="play" icon="play_arrow" color="#45A3DB" onClick={handleRun} />
+            <Timer isRunning={isRunning} />
+            <div className="sample">
+              {isRunning ? (
+                <RoundButton icon="stop" color="#FF0000" onClick={handleSampleClick} />
+              ) : (
+                <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleSampleClick} />
+              )}
             </div>
           </div>
         </div>
