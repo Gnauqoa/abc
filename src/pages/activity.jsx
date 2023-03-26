@@ -40,6 +40,7 @@ export default ({ f7route, f7router }) => {
     ],
   };
   if (id) {
+    console.log(">>>>> Load activity id:", id);
     const foundActivity = activityService.find(id);
     if (!foundActivity) {
       f7router.navigate("/");
@@ -129,9 +130,8 @@ export default ({ f7route, f7router }) => {
   if (isRunning) {
     console.log(">>>>> Start DataManagerIST");
     const sensorId = 0;
-    const frequency = 1;
     DataManagerIST.subscribe(handleDataManagerCallback, sensorId);
-    DataManagerIST.setCollectingDataFrequency(frequency);
+    DataManagerIST.setCollectingDataFrequency(activity.frequency);
   }
 
   return (
