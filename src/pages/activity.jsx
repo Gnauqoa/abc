@@ -29,16 +29,21 @@ const activityService = new storeService("activity");
 export default ({ f7route, f7router }) => {
   const layout = f7route.params.layout;
   const id = f7route.params.id;
+  let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+  if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout)) {
+    defaultWidgets = [
+      { id: 0, sensor: { id: 1, index: 0 } },
+      { id: 1, sensor: { id: 2, index: 0 } },
+    ];
+  }
+
   let initActivity = {
     id: uuidv4(),
     name: "",
     layout: layout,
     sampleMode: MANUAL,
     frequency: 1,
-    widgets: [
-      { id: 0, sensor: { id: 1, index: 0 } },
-      { id: 1, sensor: { id: 2, index: 0 } },
-    ],
+    widgets: defaultWidgets,
   };
   if (id) {
     console.log(">>>>> Load activity id:", id);
@@ -58,15 +63,24 @@ export default ({ f7route, f7router }) => {
   const lineChartRef = useRef();
 
   useEffect(() => {
-    let subscriberId;
+    let subscriberIds = [];
     if (isRunning) {
       console.log(">>>>> Start DataManagerIST");
-      subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, 1);
+      activity.widgets.map((w) => {
+        const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
+        subscriberIds.push(subscriberId);
+      });
+
       DataManagerIST.setCollectingDataFrequency(activity.frequency);
+    } else {
+      if (subscriberIds.length) {
+        subscriberIds.map((id) => DataManagerIST.unsubscribe(id));
+        subscriberIds = [];
+      }
     }
 
     return () => {
-      if (subscriberId) DataManagerIST.unsubscribe(subscriberId);
+      if (subscriberIds.length) subscriberIds.map((id) => DataManagerIST.unsubscribe(id));
     };
   }, [isRunning]);
 
@@ -147,8 +161,12 @@ export default ({ f7route, f7router }) => {
 
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const value = _.maxBy(sensorData, "time")?.values[sensor.index] || "";
-    return value;
+    return _.maxBy(sensorData, "time")?.values[sensor.index] || "";
+  }
+
+  function getDataForTable(sensor) {
+    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
+    return sensorData.map((d) => ({ time: d.time, value: d.values[0] })) || [];
   }
 
   return (
@@ -178,10 +196,7 @@ export default ({ f7route, f7router }) => {
               <div className="__card __card-left">
                 {activity.layout === LAYOUT_TABLE_CHART && (
                   <Table
-                    data={[
-                      { time: 0, value: 0 },
-                      { time: 100, value: 2 },
-                    ]}
+                    data={getDataForTable(activity.widgets[0].sensor)}
                     widget={activity.widgets[0]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -200,10 +215,7 @@ export default ({ f7route, f7router }) => {
                 )}
                 {activity.layout === LAYOUT_NUMBER_TABLE && (
                   <Table
-                    data={[
-                      { time: 0, value: 0 },
-                      { time: 100, value: 2 },
-                    ]}
+                    data={getDataForTable(activity.widgets[1].sensor)}
                     widget={activity.widgets[0]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -218,10 +230,7 @@ export default ({ f7route, f7router }) => {
               )}
               {activity.layout === LAYOUT_TABLE && (
                 <Table
-                  data={[
-                    { time: 0, value: 0 },
-                    { time: 100, value: 2 },
-                  ]}
+                  data={getDataForTable(activity.widgets[0].sensor)}
                   widget={activity.widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
