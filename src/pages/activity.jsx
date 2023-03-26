@@ -64,6 +64,7 @@ export default ({ f7route, f7router }) => {
   useEffect(() => {
     let subscriberIds = [];
     if (isRunning) {
+      setDataRun(() => []);
       console.log(">>>>> Start DataManagerIST");
       activity.widgets.map((w) => {
         const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
@@ -156,7 +157,9 @@ export default ({ f7route, f7router }) => {
     const time = data[1];
     const sensorId = data[2];
     const values = data.slice(3);
-    setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
+    if (values.length) {
+      setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
+    }
   }
 
   function getValueForNumber(sensor) {
@@ -166,7 +169,7 @@ export default ({ f7route, f7router }) => {
 
   function getDataForTable(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.map((d) => ({ time: d.time, value: d.values[0] })) || [];
+    return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
   }
 
   return (
