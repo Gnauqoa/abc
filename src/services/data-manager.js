@@ -114,7 +114,7 @@ class DataManager {
   subscribe(emitFunction, sensorId) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-      const validSensorId = this.sensorIds.includes(Number(sensorId));
+      const validSensorId = this.sensorIds.includes(Number(sensorId)) && Number(sensorId) !== 0;
       if (!hasEmitFunction || !validSensorId) {
         console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}-sensorId_${sensorId}`);
         return false;
@@ -383,8 +383,6 @@ class DataManager {
       const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
 
-      console.log(sensorsData);
-
       // Emit subscribers when not in collecting data mode
       if (!this.isCollectingData) this.emitSubscribers();
     } catch (e) {
@@ -397,7 +395,7 @@ class DataManager {
    * @param {string} sensorsData - Last data received from sensor to identify which one
    * @returns {void} - No return.
    */
-   callbackSensorDisconnected(data) {
+  callbackSensorDisconnected(data) {
     try {
       const parseData = String(data).trim();
       const splitData = parseData.split(/\s*,\s*/);
@@ -479,13 +477,10 @@ class DataManager {
       const min = 1;
       const decimals = 2;
 
-      const sensorId = (Math.random() * (1 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
       const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data3 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data4 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const dummyData = `@, ${sensorId}, ${data1}, *`;
-      const dummyData = "@,14,1.00,2.00,3.00,4.00,*";
+      const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
+      const dummyData = `@,${sensorId},${data1},${data2}, *`;
 
       console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
