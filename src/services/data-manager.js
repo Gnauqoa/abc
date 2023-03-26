@@ -3,8 +3,8 @@ import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
+import { FREQUENCIES } from "../js/constants";
 
-const MIN_DATA_SENSORS_CALLBACK = 4;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 
 /**
@@ -49,16 +49,10 @@ class DataManager {
     this.emitter = new EventEmitter();
 
     /**
-     * Frequencies for emitting subscribers.
-     * @type {number[]}
-     */
-    this.emitSubscribersFrequencies = [1, 2, 5, 10];
-
-    /**
      * Intervals for emitting subscribers.
      * @type {number[]}
      */
-    this.emitSubscribersIntervals = this.emitSubscribersFrequencies.map((e) => (1 / e) * 1000);
+    this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
 
     /**
      * Maximum interval for emitting subscribers.
@@ -90,6 +84,8 @@ class DataManager {
      */
     this.collectingDataInterval = 1000;
 
+    this.sensorIds = sensors.map((sensor) => sensor.id);
+
     this.storeService = new StoreService("data-manager");
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
@@ -118,8 +114,9 @@ class DataManager {
   subscribe(emitFunction, sensorId) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-      if (!hasEmitFunction) {
-        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}`);
+      const validSensorId = this.sensorIds.includes(Number(sensorId)) && Number(sensorId) !== 0;
+      if (!hasEmitFunction || !validSensorId) {
+        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}-sensorId_${sensorId}`);
         return false;
       }
 
@@ -179,12 +176,13 @@ class DataManager {
    * @returns {boolean} - True if the frequency is valid; otherwise, false.
    */
   setCollectingDataFrequency(frequency) {
-    if (!this.emitSubscribersFrequencies.hasOwnProperty(frequency)) {
+    const isValidFrequency = FREQUENCIES.includes(Number(frequency));
+    if (!isValidFrequency) {
       console.log(`setCollectingDataFrequency: Invalid frequency: ${frequency}`);
       return false;
     }
     console.log(`setCollectingDataFrequency: set frequency: ${frequency}`);
-    this.collectingDataInterval = (1 / frequency) * 1000;
+    this.collectingDataInterval = (1 / Number(frequency)) * 1000;
     return true;
   }
 
@@ -373,13 +371,11 @@ class DataManager {
    */
   callbackReadSensor(data) {
     try {
-      const splitData = data.split(/\s*,\s*/);
-      if (
-        splitData[0] !== "@" ||
-        splitData[splitData.length - 1] !== "*" ||
-        splitData.length < MIN_DATA_SENSORS_CALLBACK
-      ) {
-        console.log(`callbackReadSensor: Invalid sensor data format ${data}`);
+      const parseData = String(data).trim();
+      const splitData = parseData.split(/\s*,\s*/);
+      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
+      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
+        console.log(`callbackReadSensor: Invalid sensor data format ${parseData}`);
         return;
       }
 
@@ -390,7 +386,32 @@ class DataManager {
       // Emit subscribers when not in collecting data mode
       if (!this.isCollectingData) this.emitSubscribers();
     } catch (e) {
-      console.error(`callbackReadSensor: ${e.message} at ${data}`);
+      console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
+    }
+  }
+
+  /**
+   * Callback function called in DeviceManager when a sensor is disconnected
+   * @param {string} sensorsData - Last data received from sensor to identify which one
+   * @returns {void} - No return.
+   */
+  callbackSensorDisconnected(data) {
+    try {
+      const parseData = String(data).trim();
+      const splitData = parseData.split(/\s*,\s*/);
+      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
+      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
+        console.log(`callbackSensorDisconnected: Unecognized sensor data format ${parseData}`);
+        return;
+      }
+
+      const sensorId = Number(splitData[1]);
+      console.log("Sensor ", sensorId, " has been disconnected");
+      // safe way to remove this sensor data from data buffer dictionary
+      const { [sensorId]: buff, ...bufferWithoutSensorId } = this.buffer;
+      this.buffer = bufferWithoutSensorId;
+    } catch (e) {
+      console.error(`callbackSensorDisconnected: ${e.message} at ${parseData}`);
     }
   }
 
@@ -423,19 +444,25 @@ class DataManager {
     }, this.emitSubscribersInterval);
   }
 
+  /**
+   * Emit data to all subscribers.
+   */
   emitSubscribers() {
     for (const subscriberId in this.subscribers) {
       const subscriber = this.subscribers[subscriberId];
-      let sensorData = this.buffer[subscriber.sensorId];
-
       if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
         console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
         continue;
       }
 
+      const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
+      const time = this.isCollectingData ? this.collectingDataTime : Date.now();
+      const sensorData = this.buffer[subscriber.sensorId] || [];
+
       // Notify subscriber
-      this.emitter.emit(subscriberId, sensorData ? sensorData : []);
+      const emittedData = [dataRunId, time, subscriber.sensorId, ...sensorData];
+      this.emitter.emit(subscriberId, emittedData);
     }
   }
 
@@ -450,16 +477,18 @@ class DataManager {
       const min = 1;
       const decimals = 2;
 
-      const sensorId = (Math.random() * (1 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
       const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data3 = (Math.random() * (max - min) + min).toFixed(decimals);
-      //   const data4 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const dummyData = `@, ${sensorId}, ${data1}, *`;
+      const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
+      const datas = [data1, data2];
+
+      const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
+      const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
+      const dummyData = `@,${sensorId},${sensorData}, *`;
 
       console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
-    }, 500);
+    }, 1000);
   }
 }
 

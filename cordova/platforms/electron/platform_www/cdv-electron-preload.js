@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld('_cdvElectronIpc', {
     },
 
     onDeviceData: (callback) => ipcRenderer.on('device-data', callback),
+    onDeviceDisconnected: (callback) => ipcRenderer.on('device-disconnected', callback),
 
     hasService: (serviceName) => cordova &&
     cordova.services &&
