@@ -480,7 +480,11 @@ class DataManager {
       const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
       const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
       const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const dummyData = `@,${sensorId},${data1},${data2}, *`;
+      const datas = [data1, data2];
+
+      const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
+      const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
+      const dummyData = `@,${sensorId},${sensorData}, *`;
 
       console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
