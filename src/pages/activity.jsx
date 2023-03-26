@@ -17,7 +17,10 @@ import {
 import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
+import Number from "../components/widgets/number";
+import Table from "../components/widgets/table";
 import Frequency from "../components/frequency";
+import DataManagerIST from "../services/data-manager";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -92,15 +95,12 @@ export default ({ f7route, f7router }) => {
     }
   }
 
-  function handleSampleClick() {
-    setIsRunning(!isRunning);
-  }
-
   function handleFrequencySelect(frequency) {
     setActivity({
       ...activity,
       frequency,
     });
+    DataManagerIST.setCollectingDataFrequency(frequency);
   }
 
   function handleSensorChange(widgetId, sensorId) {
@@ -115,6 +115,23 @@ export default ({ f7route, f7router }) => {
         widgets,
       });
     });
+  }
+
+  function handleSampleClick() {
+    setIsRunning(!isRunning);
+  }
+
+  function handleDataManagerCallback(data) {
+    const newData = data.join(" ");
+    console.log(">>>>> data:", newData);
+  }
+
+  if (isRunning) {
+    console.log(">>>>> Start DataManagerIST");
+    const sensorId = 0;
+    const frequency = 1;
+    DataManagerIST.subscribe(handleDataManagerCallback, sensorId);
+    DataManagerIST.setCollectingDataFrequency(frequency);
   }
 
   return (
@@ -141,18 +158,55 @@ export default ({ f7route, f7router }) => {
         <div className="activity-layout">
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
             <>
-              <div className="__card __card-left">Card Left</div>
+              <div className="__card __card-left">
+                {activity.layout === LAYOUT_TABLE_CHART && (
+                  <Table
+                    data={[
+                      { time: 0, value: 0 },
+                      { time: 100, value: 2 },
+                    ]}
+                    widget={activity.widgets[0]}
+                    handleSensorChange={handleSensorChange}
+                  />
+                )}
+                {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+                  <Number value={50} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+                )}
+              </div>
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
                   <LineChart ref={lineChartRef} widget={activity.widgets[1]} handleSensorChange={handleSensorChange} />
+                )}
+                {activity.layout === LAYOUT_NUMBER_TABLE && (
+                  <Table
+                    data={[
+                      { time: 0, value: 0 },
+                      { time: 100, value: 2 },
+                    ]}
+                    widget={activity.widgets[0]}
+                    handleSensorChange={handleSensorChange}
+                  />
                 )}
               </div>
             </>
           )}
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
             <div className="__card">
-              {activity.layout == LAYOUT_CHART && (
+              {activity.layout === LAYOUT_CHART && (
                 <LineChart ref={lineChartRef} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+              )}
+              {activity.layout === LAYOUT_TABLE && (
+                <Table
+                  data={[
+                    { time: 0, value: 0 },
+                    { time: 100, value: 2 },
+                  ]}
+                  widget={activity.widgets[0]}
+                  handleSensorChange={handleSensorChange}
+                />
+              )}
+              {activity.layout === LAYOUT_NUMBER && (
+                <Number value={50} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
               )}
             </div>
           )}
