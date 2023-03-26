@@ -21,7 +21,6 @@ import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
 import Table from "../components/widgets/table";
 import Frequency from "../components/frequency";
-import DataManagerIST from "../services/data-manager";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
