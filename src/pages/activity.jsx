@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
-import _ from "lodash";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
@@ -156,12 +155,12 @@ export default ({ f7route, f7router }) => {
     const time = data[1];
     const sensorId = data[2];
     const values = data.slice(3);
-    setDataRun([...dataRun, { time, sensorId, values }]);
+    setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
   }
 
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return _.maxBy(sensorData, "time")?.values[sensor.index] || "";
+    return sensorData.pop()?.values[sensor.index] || "";
   }
 
   function getDataForTable(sensor) {
