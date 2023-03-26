@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
+import _ from "lodash";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
@@ -35,8 +36,8 @@ export default ({ f7route, f7router }) => {
     sampleMode: MANUAL,
     frequency: 1,
     widgets: [
-      { id: 0, sensorId: 0 },
-      { id: 1, sensorId: 0 },
+      { id: 0, sensor: { id: 1, index: 0 } },
+      { id: 1, sensor: { id: 2, index: 0 } },
     ],
   };
   if (id) {
@@ -52,8 +53,22 @@ export default ({ f7route, f7router }) => {
 
   const [activity, setActivity] = useState(initActivity);
   const [isRunning, setIsRunning] = useState(false);
+  const [dataRun, setDataRun] = useState([]);
   const [, setForceUpdate] = useState(0);
   const lineChartRef = useRef();
+
+  useEffect(() => {
+    let subscriberId;
+    if (isRunning) {
+      console.log(">>>>> Start DataManagerIST");
+      subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, 1);
+      DataManagerIST.setCollectingDataFrequency(activity.frequency);
+    }
+
+    return () => {
+      if (subscriberId) DataManagerIST.unsubscribe(subscriberId);
+    };
+  }, [isRunning]);
 
   function handleActivityNameChange(e) {
     setActivity({
@@ -104,11 +119,11 @@ export default ({ f7route, f7router }) => {
     DataManagerIST.setCollectingDataFrequency(frequency);
   }
 
-  function handleSensorChange(widgetId, sensorId) {
+  function handleSensorChange(widgetId, sensor) {
     let widgets = { ...activity.widgets };
     widgets = widgets.map((w) => {
       if (w.id === widgetId) {
-        return { ...w, sensorId };
+        return { ...w, sensor };
       }
 
       setActivity({
@@ -123,15 +138,17 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleDataManagerCallback(data) {
-    const newData = data.join(" ");
-    console.log(">>>>> data:", newData);
+    console.log(">>>>> data manager:", data);
+    const time = data[1];
+    const sensorId = data[2];
+    const values = data.slice(3);
+    setDataRun([...dataRun, { time, sensorId, values }]);
   }
 
-  if (isRunning) {
-    console.log(">>>>> Start DataManagerIST");
-    const sensorId = 0;
-    DataManagerIST.subscribe(handleDataManagerCallback, sensorId);
-    DataManagerIST.setCollectingDataFrequency(activity.frequency);
+  function getValueForNumber(sensor) {
+    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
+    const value = _.maxBy(sensorData, "time")?.values[sensor.index] || "";
+    return value;
   }
 
   return (
@@ -170,7 +187,11 @@ export default ({ f7route, f7router }) => {
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
-                  <Number value={50} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+                  <Number
+                    value={getValueForNumber(activity.widgets[0].sensor)}
+                    widget={activity.widgets[0]}
+                    handleSensorChange={handleSensorChange}
+                  />
                 )}
               </div>
               <div className="__card __card-right">
@@ -206,7 +227,11 @@ export default ({ f7route, f7router }) => {
                 />
               )}
               {activity.layout === LAYOUT_NUMBER && (
-                <Number value={50} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+                <Number
+                  value={getValueForNumber(activity.widgets[0].sensor)}
+                  widget={activity.widgets[0]}
+                  handleSensorChange={handleSensorChange}
+                />
               )}
             </div>
           )}
