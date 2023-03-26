@@ -1,6 +1,8 @@
 import React, { Component } from "react";
-import { Button, Row, Col, Icon, f7 } from "framework7-react";
+import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
+
+import { FREQUENCIES } from "../js/constants";
 
 import { DEFAULT_CODE_NAME } from "../js/constants";
 import * as core from "../utils/core";
@@ -136,6 +138,49 @@ export default class extends Component {
               </div>
             </div>
           </div>
+        </div>
+
+        <div id="dialog-sample-setting" className="dialog-component">
+          <div className="dialog-content">
+            <div className="content">
+              <div className="title"></div>
+              <div className="items">
+                <div className="item">
+                  <div className="text">Chu kỳ: </div>
+                  <Button className="button" raised popoverOpen=".popover-frequency-advanced">
+                    Định kỳ: 1Hz
+                  </Button>
+                </div>
+                <div className="item">
+                  <div className="text">Thời gian (giây): </div>
+                  <input
+                    type="text"
+                    className="input"
+                    value={this.state.inputText}
+                    onChange={this.handleInputTextChange}
+                    onKeyDown={this.handleOkByEnter}
+                  />
+                </div>
+              </div>
+              <div className="buttons">
+                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="ok-button">OK</Button>
+              </div>
+            </div>
+          </div>
+
+          <Popover
+            className="popover-frequency-advanced"
+            style={{ borderRadius: "10px", width: "120px", zIndex: 99999 }}
+          >
+            <List className="test">
+              {FREQUENCIES.map((frequency) => (
+                <Button key={frequency} textColor="black">
+                  {frequency}HZ
+                </Button>
+              ))}
+            </List>
+          </Popover>
         </div>
 
         <div id="dialog-delete" className="dialog-component">

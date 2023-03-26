@@ -2,16 +2,21 @@ import React, { useState } from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
 import { FREQUENCIES } from "../js/constants";
+import dialog from "./dialog";
 
 export default ({ frequency, handleFrequencySelect }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+  //   const handleOpenModal = () => {
+  //     setIsModalOpen(true);
+  //   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  //   const handleCloseModal = () => {
+  //     setIsModalOpen(false);
+  //   };
+
+  const handleClick = () => {
+    dialog.samplingSettings("Tùy chọn lấy mẫu");
   };
 
   const onSelectFrequency = (frequency) => {
@@ -21,7 +26,7 @@ export default ({ frequency, handleFrequencySelect }) => {
 
   return (
     <div className="frequency">
-      <div className="image" onClick={handleOpenModal}>
+      <div className="image" onClick={handleClick}>
         <img src={clockFreImg} alt="frequency" />
       </div>
 
@@ -31,12 +36,12 @@ export default ({ frequency, handleFrequencySelect }) => {
         bgColor="white"
         style={{ minWidth: "250", height: "44px", borderRadius: "0 10px 10px 0" }}
         raised
-        popoverOpen=".popover-menu"
+        popoverOpen=".popover-frequency"
       >
         Định kỳ: {frequency}Hz
       </Button>
 
-      <Popover className="popover-menu" style={{ borderRadius: "10px", width: "120px" }}>
+      <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
         <List className="test">
           {FREQUENCIES.map((frequency) => (
             <Button

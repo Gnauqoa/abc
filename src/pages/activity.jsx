@@ -20,7 +20,7 @@ import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
 import Table from "../components/widgets/table";
-import Frequency from "../components/frequency";
+import SamplingSetting from "../components/sampling-settings";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -214,7 +214,7 @@ export default ({ f7route, f7router }) => {
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
-            <Frequency frequency={activity.frequency} handleFrequencySelect={handleFrequencySelect} />
+            <SamplingSetting frequency={activity.frequency} handleFrequencySelect={handleFrequencySelect} />
           </div>
           <div className="__toolbar-center">
             <ActivityNav currentId={activity.id} />
