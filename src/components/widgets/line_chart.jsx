@@ -239,8 +239,12 @@ const addOrUpdateChart = ({ currentDataListRef, chartInstanceRef, dataSeries }) 
   });
 };
 
+const useSensorSelector = ({ sensorList, sensor, sensorSelectorChange = () => {} }) => {};
+
 let LineChart = (props, ref) => {
   log("line chart render");
+  const { widget, handleSensorChange } = props;
+  //log("widget:", widget);
   const sensorList = sensors;
   //const { dataList, labelList } = props;
   const chartEl = useRef(),
@@ -321,6 +325,7 @@ let LineChart = (props, ref) => {
       options: {
         //Customize chart options
         animation: false,
+        maintainAspectRatio: false,
         plugins: {
           zoom: {
             pan: {
@@ -364,7 +369,11 @@ let LineChart = (props, ref) => {
   return (
     <div className="line-chart-wapper">
       <div className="sensor-select-container">
-        <SensorSelector sensorList={sensorList}></SensorSelector>
+        <SensorSelector
+          selectedSensor={widget.sensor}
+          onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+          sensorList={sensorList}
+        ></SensorSelector>
       </div>
       <div className="canvas-container">
         <canvas ref={chartEl} />
