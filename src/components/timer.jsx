@@ -5,8 +5,6 @@ export default ({ isRunning }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    console.log("Handle Sample Click");
-
     let id;
     if (isRunning) {
       setCount(0);
