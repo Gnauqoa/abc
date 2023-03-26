@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
+import DataManagerIST from "../services/data-manager";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
@@ -19,8 +20,7 @@ import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
 import Table from "../components/widgets/table";
-import Frequency from "../components/frequency";
-import DataManagerIST from "../services/data-manager";
+import SamplingSetting from "../components/sampling-settings";
 
 const MANUAL = "manual";
 const activityService = new storeService("activity");
@@ -125,11 +125,12 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleFrequencySelect(frequency) {
-    setActivity({
-      ...activity,
-      frequency,
-    });
-    DataManagerIST.setCollectingDataFrequency(frequency);
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result &&
+      setActivity({
+        ...activity,
+        frequency,
+      });
   }
 
   function handleSensorChange(widgetId, sensor) {
@@ -246,7 +247,7 @@ export default ({ f7route, f7router }) => {
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
-            <Frequency frequency={1} handleFrequencySelect={handleFrequencySelect} />
+            <SamplingSetting frequency={activity.frequency} handleFrequencySelect={handleFrequencySelect} />
           </div>
           <div className="__toolbar-center">
             <ActivityNav currentId={activity.id} />
