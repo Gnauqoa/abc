@@ -186,6 +186,10 @@ class DataManager {
     return true;
   }
 
+  getCollectingDataFrequency() {
+    return (1 / Number(this.collectingDataInterval)) * 1000;
+  }
+
   /**
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
