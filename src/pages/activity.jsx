@@ -172,6 +172,23 @@ export default ({ f7route, f7router }) => {
     return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
   }
 
+  function getDataForChart(sensor) {
+    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
+    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
+    lineChartRef.current &&
+      lineChartRef.current.setChartData({
+        chartData: [
+          {
+            name: "run1",
+            data: data,
+          },
+        ],
+        xUnit: "ms",
+        yUnit: "",
+        maxHz: 10,
+      });
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
@@ -214,7 +231,12 @@ export default ({ f7route, f7router }) => {
               </div>
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
-                  <LineChart ref={lineChartRef} widget={activity.widgets[1]} handleSensorChange={handleSensorChange} />
+                  <LineChart
+                    data={getDataForChart(activity.widgets[1].sensor)}
+                    ref={lineChartRef}
+                    widget={activity.widgets[1]}
+                    handleSensorChange={handleSensorChange}
+                  />
                 )}
                 {activity.layout === LAYOUT_NUMBER_TABLE && (
                   <Table
@@ -229,7 +251,12 @@ export default ({ f7route, f7router }) => {
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
             <div className="__card">
               {activity.layout === LAYOUT_CHART && (
-                <LineChart ref={lineChartRef} widget={activity.widgets[0]} handleSensorChange={handleSensorChange} />
+                <LineChart
+                  data={getDataForChart(activity.widgets[0].sensor)}
+                  ref={lineChartRef}
+                  widget={activity.widgets[0]}
+                  handleSensorChange={handleSensorChange}
+                />
               )}
               {activity.layout === LAYOUT_TABLE && (
                 <Table
