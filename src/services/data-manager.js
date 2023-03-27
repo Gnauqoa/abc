@@ -3,9 +3,11 @@ import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
-import { FREQUENCIES, SAMPLING_AUTO, SAMPLING_MANUAL } from "../js/constants";
+import { FREQUENCIES } from "../js/constants";
 
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
+export const SAMPLING_AUTO = 0;
+export const SAMPLING_MANUAL = 1;
 
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
@@ -177,13 +179,21 @@ class DataManager {
    * @returns {boolean} - True if the frequency is valid; otherwise, false.
    */
   setCollectingDataFrequency(frequency) {
-    const isValidFrequency = FREQUENCIES.includes(Number(frequency));
+    const isValidFrequency = FREQUENCIES.includes(Number(frequency)) || Number(frequency) === 0;
     if (!isValidFrequency) {
       console.log(`setCollectingDataFrequency: Invalid frequency: ${frequency}`);
       return false;
     }
+
+    if (Number(frequency) === 0) {
+      this.samplingMode = SAMPLING_MANUAL;
+      console.log(`setCollectingDataFrequency: set manual sampling`);
+      return true;
+    }
+
     console.log(`setCollectingDataFrequency: set frequency: ${frequency}`);
     this.collectingDataInterval = (1 / Number(frequency)) * 1000;
+    this.samplingMode = SAMPLING_AUTO;
     return true;
   }
 
@@ -195,10 +205,9 @@ class DataManager {
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
    */
-  startCollectingData(samplingMode = SAMPLING_AUTO) {
+  startCollectingData() {
     this.collectingDataTime = 0;
     this.isCollectingData = true;
-    this.samplingMode = samplingMode;
     const dataRunId = this.createDataRun();
     return dataRunId;
   }
@@ -208,7 +217,6 @@ class DataManager {
    */
   stopCollectingData() {
     this.isCollectingData = false;
-    this.samplingMode = SAMPLING_AUTO;
   }
 
   /**
