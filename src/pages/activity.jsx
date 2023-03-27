@@ -72,7 +72,6 @@ export default ({ f7route, f7router }) => {
       }
     } else {
       if (isRunning) {
-        setDataRun(() => []);
         DataManagerIST.setCollectingDataFrequency(frequency);
 
         console.log(">>>>> Start DataManagerIST");
@@ -142,11 +141,13 @@ export default ({ f7route, f7router }) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
       }
+      return w;
     });
     setWidgets(updatedWidgets);
   }
 
   function handleSampleClick() {
+    if (!isRunning) setDataRun(() => []);
     setIsRunning(!isRunning);
   }
 
