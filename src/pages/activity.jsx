@@ -75,7 +75,6 @@ export default ({ f7route, f7router }) => {
       }
     } else if (sampleMode === SAMPLING_AUTO) {
       if (isRunning) {
-        setDataRun(() => []);
         DataManagerIST.setCollectingDataFrequency(frequency);
 
         console.log(">>>>> Start DataManagerIST");
@@ -145,12 +144,14 @@ export default ({ f7route, f7router }) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
       }
+      return w;
     });
     setWidgets(updatedWidgets);
   }
 
   function handleSampleClick() {
-    setIsRunning(!isRunning);
+    setIsRunning((isRunning) => !isRunning);
+    if (isRunning) setDataRun(() => []);
   }
 
   function handleDataManagerCallback(data) {
