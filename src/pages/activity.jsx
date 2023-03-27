@@ -3,8 +3,6 @@ import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 import DataManagerIST from "../services/data-manager";
 import {
-  SAMPLING_AUTO,
-  SAMPLING_MANUAL,
   LAYOUT_CHART,
   LAYOUT_TABLE,
   LAYOUT_NUMBER,
@@ -41,7 +39,6 @@ export default ({ f7route, f7router }) => {
     id: uuidv4(),
     name: "",
     layout: layout,
-    sampleMode: SAMPLING_AUTO,
     frequency: 1,
     widgets: defaultWidgets,
   };
@@ -67,13 +64,13 @@ export default ({ f7route, f7router }) => {
 
   useEffect(() => {
     let subscriberIds = [];
-    if (sampleMode === SAMPLING_MANUAL) {
+    if (frequency === 0) {
       if (isRunning) {
-        DataManagerIST.startCollectingData(SAMPLING_MANUAL);
+        DataManagerIST.startCollectingData();
       } else {
         DataManagerIST.stopCollectingData();
       }
-    } else if (sampleMode === SAMPLING_AUTO) {
+    } else {
       if (isRunning) {
         DataManagerIST.setCollectingDataFrequency(frequency);
 
@@ -173,7 +170,7 @@ export default ({ f7route, f7router }) => {
       if (values.length) {
         setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
       }
-      console.log(">>>>> MANUAL - data manager:", values);
+      console.log(">>>>> MANUAL - data manager:", data);
     });
   }
 
