@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 import DataManagerIST from "../services/data-manager";
+import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../js/constants";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
@@ -22,7 +23,6 @@ import Number from "../components/widgets/number";
 import Table from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 
-const MANUAL = "manual";
 const activityService = new storeService("activity");
 
 export default ({ f7route, f7router }) => {
@@ -40,7 +40,7 @@ export default ({ f7route, f7router }) => {
     id: uuidv4(),
     name: "",
     layout: layout,
-    sampleMode: MANUAL,
+    sampleMode: SAMPLING_AUTO,
     frequency: 1,
     widgets: defaultWidgets,
   };
@@ -63,24 +63,32 @@ export default ({ f7route, f7router }) => {
 
   useEffect(() => {
     let subscriberIds = [];
-    if (isRunning) {
-      setDataRun(() => []);
-      console.log(">>>>> Start DataManagerIST");
-      activity.widgets.map((w) => {
-        const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-        subscriberIds.push(subscriberId);
-      });
+    if (activity.sampleMode === SAMPLING_MANUAL) {
+      if (isRunning) {
+        DataManagerIST.startCollectingData(SAMPLING_MANUAL);
+      } else {
+        DataManagerIST.stopCollectingData();
+      }
+    } else if (activity.sampleMode === SAMPLING_AUTO) {
+      if (isRunning) {
+        setDataRun(() => []);
+        DataManagerIST.setCollectingDataFrequency(activity.frequency);
 
-      DataManagerIST.setCollectingDataFrequency(activity.frequency);
-    } else {
-      if (subscriberIds.length) {
-        subscriberIds.map((id) => DataManagerIST.unsubscribe(id));
-        subscriberIds = [];
+        console.log(">>>>> Start DataManagerIST");
+        activity.widgets.forEach((w) => {
+          const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
+          subscriberIds.push(subscriberId);
+        });
+      } else {
+        if (subscriberIds.length) {
+          subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
+          subscriberIds = [];
+        }
       }
     }
 
     return () => {
-      if (subscriberIds.length) subscriberIds.map((id) => DataManagerIST.unsubscribe(id));
+      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
   }, [isRunning]);
 
@@ -134,6 +142,13 @@ export default ({ f7route, f7router }) => {
       });
   }
 
+  function handleChangeSamplingMode(mode) {
+    setActivity({
+      ...activity,
+      sampleMode: mode,
+    });
+  }
+
   function handleSensorChange(widgetId, sensor) {
     let widgets = [...activity.widgets];
     widgets = widgets.map((w) => {
@@ -152,13 +167,26 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleDataManagerCallback(data) {
-    console.log(">>>>> data manager:", data);
+    console.log(">>>>> AUTO - data manager:", data);
     const time = data[1];
     const sensorId = data[2];
     const values = data.slice(3);
     if (values.length) {
       setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
     }
+  }
+
+  function handleSamplingManual() {
+    activity.widgets.map((w) => {
+      const sensorId = w.sensor.id;
+      const data = DataManagerIST.getIndividualSample(sensorId);
+      const time = data[1];
+      const values = data.slice(3);
+      if (values.length) {
+        setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
+      }
+      console.log(">>>>> MANUAL - data manager:", values);
+    });
   }
 
   function getValueForNumber(sensor) {
@@ -276,7 +304,13 @@ export default ({ f7route, f7router }) => {
         </div>
         <div className="activity-footer display-flex justify-content-space-between">
           <div className="__toolbar-left">
-            <SamplingSetting frequency={activity.frequency} handleFrequencySelect={handleFrequencySelect} />
+            <SamplingSetting
+              isRunning={isRunning}
+              frequency={activity.frequency}
+              handleSamplingManual={handleSamplingManual}
+              handleFrequencySelect={handleFrequencySelect}
+              handleChangeSamplingMode={handleChangeSamplingMode}
+            />
           </div>
           <div className="__toolbar-center">
             <ActivityNav currentId={activity.id} />
