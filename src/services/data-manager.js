@@ -186,6 +186,10 @@ class DataManager {
     return true;
   }
 
+  getCollectingDataFrequency() {
+    return (1 / Number(this.collectingDataInterval)) * 1000;
+  }
+
   /**
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
@@ -486,7 +490,6 @@ class DataManager {
       const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
       const dummyData = `@,${sensorId},${sensorData}, *`;
 
-      console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
     }, 1000);
   }

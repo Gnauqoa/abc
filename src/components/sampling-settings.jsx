@@ -1,22 +1,31 @@
 import React, { useState } from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
-import { FREQUENCIES } from "../js/constants";
+import { FREQUENCIES, SAMPLING_MANUAL } from "../js/constants";
 import dialog from "./dialog";
 
 export default ({ frequency, handleFrequencySelect }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleGetSampleSettings = (samplingSettings) => {
+    try {
+      const { frequency, time } = samplingSettings;
+      // TODO: Handle time stop and check if it is not valid, notify user
+      const timeNumber = Number(time);
+      if (frequency === SAMPLING_MANUAL) {
+        // TODO: Handle sampling manual
+        console.log("Sampling-settings: Set Sampling Manual");
+      } else {
+        const frequencyNormalized = String(frequency).replace("HZ", "").trim();
+        const frequencyNumber = Number(frequencyNormalized);
+        handleFrequencySelect(frequencyNumber);
+      }
+      console.log("samplingSettings: ", samplingSettings);
+    } catch (error) {
+      console.log("Sampling-settings: ", error);
+    }
+  };
 
-  //   const handleOpenModal = () => {
-  //     setIsModalOpen(true);
-  //   };
-
-  //   const handleCloseModal = () => {
-  //     setIsModalOpen(false);
-  //   };
-
-  const handleClick = () => {
-    dialog.samplingSettings("Tùy chọn lấy mẫu");
+  const handleOpenSamplingSettings = () => {
+    dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
   };
 
   const onSelectFrequency = (frequency) => {
@@ -26,7 +35,7 @@ export default ({ frequency, handleFrequencySelect }) => {
 
   return (
     <div className="frequency">
-      <div className="image" onClick={handleClick}>
+      <div className="image" onClick={handleOpenSamplingSettings}>
         <img src={clockFreImg} alt="frequency" />
       </div>
 

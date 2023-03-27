@@ -182,3 +182,4 @@ export const SPACE_KEY = 32;
 
 // Frequency
 export const FREQUENCIES = [1, 2, 5, 10, 50, 100];
+export const SAMPLING_MANUAL = "Thủ công";
