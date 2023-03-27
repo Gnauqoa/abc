@@ -10,12 +10,18 @@
     .custom-select {
       //position: relative;
       display: block;
-      top: 100%;
-      transform: rotate(-90deg);
+      top: 50%;
+      left: 50%;
+      transform: rotate(-90deg) translate(-50%, -50%);
       transform-origin: 0% 0%;
     }
   }
   .canvas-container {
-    width: 100%;
+    //width: 100%;
+    flex: 1 0 0;
+    height: 100%;
+    > canvas {
+      width: 100%;
+    }
   }
 }
