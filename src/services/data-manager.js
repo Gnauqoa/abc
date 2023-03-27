@@ -3,7 +3,7 @@ import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
-import { FREQUENCIES } from "../js/constants";
+import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 export const SAMPLING_AUTO = 0;
@@ -172,28 +172,29 @@ class DataManager {
     return this.subscribers.hasOwnProperty(subscriberId);
   }
 
-  // -------------------------------- DATA RUN -------------------------------- //
+  // -------------------------------- SAMPLING SETTING -------------------------------- //
   /**
-   * Sets the frequency for collecting data.
-   * @param {number} frequency - The frequency for collecting data.
-   * @returns {boolean} - True if the frequency is valid; otherwise, false.
+   * Sets the frequency at which data is collected in auto-sampling mode.
+   * @param frequency - The frequency at which data should be collected in Hz.
+   * @returns A boolean indicating whether the frequency was set successfully.
    */
   setCollectingDataFrequency(frequency) {
-    const isValidFrequency = FREQUENCIES.includes(Number(frequency)) || Number(frequency) === 0;
+    const isValidFrequency = FREQUENCIES.includes(frequency) || frequency === 0;
+
     if (!isValidFrequency) {
-      console.log(`setCollectingDataFrequency: Invalid frequency: ${frequency}`);
+      console.error(`Invalid frequency: ${frequency}`);
       return false;
     }
 
-    if (Number(frequency) === 0) {
+    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       this.samplingMode = SAMPLING_MANUAL;
-      console.log(`setCollectingDataFrequency: set manual sampling`);
-      return true;
+      console.log("Frequency set to 0 Hz. Switching to manual sampling mode.");
+    } else {
+      this.collectingDataInterval = (1 / frequency) * 1000;
+      this.samplingMode = SAMPLING_AUTO;
+      console.log(`Frequency set to ${frequency} Hz. Switching to auto-sampling mode.`);
     }
 
-    console.log(`setCollectingDataFrequency: set frequency: ${frequency}`);
-    this.collectingDataInterval = (1 / Number(frequency)) * 1000;
-    this.samplingMode = SAMPLING_AUTO;
     return true;
   }
 
@@ -201,6 +202,7 @@ class DataManager {
     return (1 / Number(this.collectingDataInterval)) * 1000;
   }
 
+  // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
@@ -219,6 +221,7 @@ class DataManager {
     this.isCollectingData = false;
   }
 
+  // -------------------------------- DATA RUN -------------------------------- //
   /**
    * Creates a new data run with the given name.
    * If no name is provided, a default name is generated.
