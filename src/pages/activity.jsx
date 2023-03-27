@@ -2,13 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
 import { v4 as uuidv4 } from "uuid";
 import DataManagerIST from "../services/data-manager";
-import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../js/constants";
-
-import BackButton from "../components/back-button";
-import RoundButton from "../components/round-button";
-import dialog from "../components/dialog";
-import storeService from "../services/store-service";
 import {
+  SAMPLING_AUTO,
+  SAMPLING_MANUAL,
   LAYOUT_CHART,
   LAYOUT_TABLE,
   LAYOUT_NUMBER,
@@ -16,6 +12,11 @@ import {
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
 } from "../js/constants";
+
+import BackButton from "../components/back-button";
+import RoundButton from "../components/round-button";
+import dialog from "../components/dialog";
+import storeService from "../services/store-service";
 import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
