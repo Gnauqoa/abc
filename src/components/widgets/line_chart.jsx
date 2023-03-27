@@ -6,7 +6,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 Chart.register(zoomPlugin);
 
 import SensorSelector from "../sensor-selector";
-import sensors from "../../services/sensor-service";
+
 
 const log = (text, data) => {
   let debug = true;
@@ -236,12 +236,9 @@ const addOrUpdateChart = ({ currentDataListRef, chartInstanceRef, dataSeries }) 
   });
 };
 
-const useSensorSelector = ({ sensorList, sensor, sensorSelectorChange = () => {} }) => {};
-
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
   //log("widget:", widget);
-  const sensorList = sensors;
   //const { dataList, labelList } = props;
   const chartEl = useRef(),
     chartInstanceRef = useRef();
@@ -367,7 +364,6 @@ let LineChart = (props, ref) => {
         <SensorSelector
           selectedSensor={widget.sensor}
           onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-          sensorList={sensorList}
         ></SensorSelector>
       </div>
       <div className="canvas-container">
