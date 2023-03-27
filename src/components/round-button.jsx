@@ -2,9 +2,10 @@ import React from "react";
 import { Button } from "framework7-react";
 import clsx from "clsx";
 
-export default ({ color, icon, onClick }) => {
+export default ({ color, icon, onClick, disabled }) => {
   return (
     <Button
+      disabled={disabled}
       onClick={onClick}
       iconIos={`material:${icon}`}
       iconMd={`material:${icon}`}

@@ -9,6 +9,7 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
+  SAMPLING_MANUAL_FREQUENCY,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -64,7 +65,9 @@ export default ({ f7route, f7router }) => {
 
   useEffect(() => {
     let subscriberIds = [];
-    if (frequency === 0) {
+    DataManagerIST.setCollectingDataFrequency(frequency);
+
+    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       if (isRunning) {
         DataManagerIST.startCollectingData();
       } else {
@@ -72,8 +75,6 @@ export default ({ f7route, f7router }) => {
       }
     } else {
       if (isRunning) {
-        DataManagerIST.setCollectingDataFrequency(frequency);
-
         console.log(">>>>> Start DataManagerIST");
         widgets.forEach((w) => {
           const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
@@ -206,13 +207,13 @@ export default ({ f7route, f7router }) => {
       <Navbar>
         <NavLeft>
           <BackButton link="/" />
-          <RoundButton icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
-          <RoundButton icon="close" color="#FF0000" onClick={handleActivityDelete} />
+          <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
+          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handleActivityDelete} />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
-          <RoundButton icon="save" onClick={handleActivitySave} />
-          <RoundButton icon="settings" />
+          <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
+          <RoundButton disabled={isRunning} icon="settings" />
         </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
@@ -292,7 +293,7 @@ export default ({ f7route, f7router }) => {
             />
           </div>
           <div className="__toolbar-center">
-            <ActivityNav currentId={activity.id} />
+            <ActivityNav currentId={activity.id} isRunning={isRunning} />
           </div>
           <div className="__toolbar-right">
             <Timer isRunning={isRunning} />

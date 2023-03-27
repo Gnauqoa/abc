@@ -5,7 +5,7 @@ import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME } from "..
 import dialog from "./dialog";
 
 export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySelect }) => {
-  const isManualMode = frequency === 0;
+  const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
@@ -27,8 +27,9 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
   };
 
   const handleOpenSamplingSettings = () => {
-    if (isRunning) return;
-    dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
+    if (!isRunning) {
+      dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
+    }
   };
 
   const onSelectFrequency = (frequency) => {
@@ -38,11 +39,12 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
 
   return (
     <div className="frequency">
-      <div className="image" onClick={handleOpenSamplingSettings}>
+      <div className={`image ${isRunning ? "disabled" : ""}`} onClick={handleOpenSamplingSettings}>
         <img src={clockFreImg} alt="frequency" />
       </div>
 
       <Button
+        disabled={isRunning}
         className="button"
         textColor="black"
         bgColor="white"

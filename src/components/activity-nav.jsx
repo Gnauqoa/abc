@@ -6,15 +6,17 @@ import storeService from "../services/store-service";
 
 const activityService = new storeService("activity");
 
-export default ({ currentId }) => {
+export default ({ currentId, isRunning }) => {
   const order = activityService.findOrder(currentId);
+  const isDisableNav = order === "1/1" || isRunning;
+
   return (
-    <div className="activity-nav">
-      <Link disabled={order === "1/1"} className="prev" href={`/edl/${activityService.findPrevId(currentId)}`}>
+    <div className="activity-nav >">
+      <Link className={`prev ${isDisableNav ? "disabled" : ""}`} href={`/edl/${activityService.findPrevId(currentId)}`}>
         <img src={prevImg} />
       </Link>
       <div className="order">{order}</div>
-      <Link disabled={order === "1/1"} className="next" href={`/edl/${activityService.findNextId(currentId)}`}>
+      <Link className={`next ${isDisableNav ? "disabled" : ""}`} href={`/edl/${activityService.findNextId(currentId)}`}>
         <img src={nextImg} />
       </Link>
     </div>
