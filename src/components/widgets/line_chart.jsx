@@ -20,7 +20,6 @@ const log = (text, data) => {
 const getChartJsPlugin = ({ lastDataRef }) => {
   return {
     afterDraw: (chart, args, options) => {
-      log("after chart draw");
       const { ctx } = chart;
       let xAxis = chart.scales["x"];
       let yAxis = chart.scales["y"];
@@ -160,8 +159,6 @@ const createChartJsData = ({ chartData = [] }) => {
  *
  */
 const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
-  log("chart instance", chartInstance);
-  log("chart instance data", chartInstance.data);
   // newDataItemList.forEach(item => {
   //     chartInstance.data.datasets[0].data.push(item);
   // });
@@ -242,7 +239,6 @@ const addOrUpdateChart = ({ currentDataListRef, chartInstanceRef, dataSeries }) 
 const useSensorSelector = ({ sensorList, sensor, sensorSelectorChange = () => {} }) => {};
 
 let LineChart = (props, ref) => {
-  log("line chart render");
   const { widget, handleSensorChange } = props;
   //log("widget:", widget);
   const sensorList = sensors;
@@ -258,7 +254,6 @@ let LineChart = (props, ref) => {
     }),
     checkDataResult;
 
-  log("chart instance ref at constructor", chartInstanceRef.current);
 
   // checkDataResult = checkDataChangeAndUpdate({
   //     currentDataListRef,

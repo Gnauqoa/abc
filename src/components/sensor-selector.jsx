@@ -3,8 +3,6 @@ import _ from "lodash";
 
 const defaultSensorSelectedValue = "";
 export default function SensorSelector({ selectedSensor, sensorList, onChange = () => {} }) {
-  console.log("selected sensor:");
-  console.dir(selectedSensor);
   const [selectedSensorState, setSelectedSensorState] = useState();
 
   //const derivedSensorList =
