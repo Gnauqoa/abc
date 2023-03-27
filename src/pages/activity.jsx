@@ -135,16 +135,15 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSensorChange(widgetId, sensor) {
-    let widgets = { ...activity.widgets };
+    let widgets = [...activity.widgets];
     widgets = widgets.map((w) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
       }
-
-      setActivity({
-        ...activity,
-        widgets,
-      });
+    });
+    setActivity({
+      ...activity,
+      widgets,
     });
   }
 
