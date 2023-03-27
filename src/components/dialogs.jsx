@@ -2,8 +2,8 @@ import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
 
-import { FREQUENCIES, SAMPLING_MANUAL } from "../js/constants";
 import DataManagerIST from "../services/data-manager";
+import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 
 import { DEFAULT_CODE_NAME } from "../js/constants";
 import * as core from "../utils/core";
@@ -160,8 +160,8 @@ export default class extends Component {
                     raised
                     popoverOpen=".popover-frequency-advanced"
                   >
-                    {this.state.samplingFrequency === SAMPLING_MANUAL
-                      ? SAMPLING_MANUAL
+                    {this.state.samplingFrequency === SAMPLING_MANUAL_FREQUENCY
+                      ? SAMPLING_MANUAL_NAME
                       : `${this.state.samplingFrequency}HZ`}
                   </Button>
                 </div>
@@ -191,8 +191,8 @@ export default class extends Component {
             style={{ borderRadius: "10px", width: "120px", zIndex: 99999 }}
           >
             <List className="test">
-              {[...FREQUENCIES, SAMPLING_MANUAL].map((f) => {
-                const frequency = f === SAMPLING_MANUAL ? SAMPLING_MANUAL : `${f}HZ`;
+              {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
+                const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f}HZ`;
                 return (
                   <Button
                     key={f}

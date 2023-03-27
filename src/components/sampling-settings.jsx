@@ -1,22 +1,11 @@
 import React, { useState } from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
-import { FREQUENCIES, SAMPLING_MANUAL, SAMPLING_AUTO } from "../js/constants";
+import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME } from "../js/constants";
 import dialog from "./dialog";
 
-export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySelect, handleChangeSamplingMode }) => {
-  const [isManualMode, setIsManualMode] = useState(false);
-
-  const setModeSamplingAuto = (frequency) => {
-    setIsManualMode(false);
-    handleFrequencySelect(frequency);
-    handleChangeSamplingMode(SAMPLING_AUTO);
-  };
-
-  const setModeSamplingManual = () => {
-    setIsManualMode(true);
-    handleChangeSamplingMode(SAMPLING_MANUAL);
-  };
+export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySelect }) => {
+  const isManualMode = frequency === 0;
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
@@ -24,13 +13,13 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
       // TODO: Handle time stop and check if it is not valid, notify user
       const timeNumber = Number(time);
 
-      if (frequency === SAMPLING_MANUAL) {
-        setModeSamplingManual();
+      if (frequency === SAMPLING_MANUAL_NAME) {
+        handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
       } else {
         const frequencyNormalized = String(frequency).replace("HZ", "").trim();
         const frequencyNumber = Number(frequencyNormalized);
 
-        setModeSamplingAuto(frequencyNumber);
+        handleFrequencySelect(frequencyNumber);
       }
     } catch (error) {
       console.log("Sampling-settings: ", error);
@@ -43,7 +32,7 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
   };
 
   const onSelectFrequency = (frequency) => {
-    setModeSamplingAuto(frequency);
+    handleFrequencySelect(frequency);
     f7.popover.close();
   };
 
@@ -65,7 +54,7 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
         raised
         popoverOpen=".popover-frequency"
       >
-        {isManualMode ? SAMPLING_MANUAL : `Định kỳ: ${frequency}Hz`}
+        {isManualMode ? SAMPLING_MANUAL_NAME : `Định kỳ: ${frequency}Hz`}
       </Button>
 
       {isManualMode && (
