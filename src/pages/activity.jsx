@@ -150,8 +150,8 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSampleClick() {
-    setIsRunning((isRunning) => !isRunning);
-    if (isRunning) setDataRun(() => []);
+    if (!isRunning) setDataRun(() => []);
+    setIsRunning(!isRunning);
   }
 
   function handleDataManagerCallback(data) {
