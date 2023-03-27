@@ -490,7 +490,6 @@ class DataManager {
       const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
       const dummyData = `@,${sensorId},${sensorData}, *`;
 
-      console.log(`DUMMY SENSOR DATA: ${dummyData}`);
       this.callbackReadSensor(dummyData);
     }, 1000);
   }
