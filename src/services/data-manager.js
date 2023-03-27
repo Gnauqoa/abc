@@ -3,7 +3,7 @@ import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
-import { FREQUENCIES } from "../js/constants";
+import { FREQUENCIES, SAMPLING_AUTO, SAMPLING_MANUAL } from "../js/constants";
 
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 
@@ -84,9 +84,10 @@ class DataManager {
      */
     this.collectingDataInterval = 1000;
 
+    this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = sensors.map((sensor) => sensor.id);
-
     this.storeService = new StoreService("data-manager");
+
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
     this.dummySensorData();
@@ -194,9 +195,10 @@ class DataManager {
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
    */
-  startCollectingData() {
+  startCollectingData(samplingMode = SAMPLING_AUTO) {
     this.collectingDataTime = 0;
     this.isCollectingData = true;
+    this.samplingMode = samplingMode;
     const dataRunId = this.createDataRun();
     return dataRunId;
   }
@@ -206,6 +208,7 @@ class DataManager {
    */
   stopCollectingData() {
     this.isCollectingData = false;
+    this.samplingMode = SAMPLING_AUTO;
   }
 
   /**
@@ -299,12 +302,19 @@ class DataManager {
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
   getIndividualSample(sensorId) {
-    const sensorData = this.buffer[Number(sensorId)];
-    if (!sensorData) {
+    if (!this.sensorIds.includes(Number(sensorId))) {
       console.log(`getIndividualSample: sensorId ${sensorId} does not exist`);
       return false;
     }
-    return sensorData;
+
+    const dataRunId = this.curDataRunId;
+    const time = this.collectingDataTime;
+    const sensorData = this.buffer[Number(sensorId)] || [];
+
+    this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
+
+    const returnedData = [dataRunId, time, sensorId, ...sensorData];
+    return returnedData;
   }
 
   getDataRunData(dataRunId) {
@@ -420,31 +430,37 @@ class DataManager {
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
+  /**
+   * Runs a scheduler that emits data to subscribers at regular intervals.
+   * This function also handles data collection when in "collecting data mode".
+   */
   runEmitSubscribersScheduler() {
     let counter = 0;
     this.emitSubscribersIntervalId = setInterval(() => {
-      // When in collecting data mode, check if reach set frequency
-      //  1. Emit subscribers
-      //  2. Append buffer to data runs
-      //  3. Increase total time for collecting data
+      // Check if in collecting data mode
       if (!this.isCollectingData) return;
 
       try {
-        const curInterval = counter * this.emitSubscribersInterval;
-        if (curInterval % this.collectingDataInterval === 0) {
-          this.emitSubscribers();
+        // If in auto-sampling mode, emit data and append to buffer
+        if (this.samplingMode === SAMPLING_AUTO) {
+          const curInterval = counter * this.emitSubscribersInterval;
+          if (curInterval % this.collectingDataInterval === 0) {
+            this.emitSubscribers();
 
-          // Add all data in buffer to data run
-          this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
-
-          // Update total time collecting data
-          this.collectingDataTime += this.collectingDataInterval;
+            // Add all data in buffer to data run
+            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
+          }
         }
-      } catch (e) {
-        log.error(`runEmitSubscribersScheduler: ${e.message}`);
-      }
 
-      counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
+        // Update total time collecting data
+        this.collectingDataTime += this.emitSubscribersInterval;
+
+        // Increment counter and loop back to 0 if greater than max interval
+        counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
+      } catch (e) {
+        const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
+        log.error(schedulerError);
+      }
     }, this.emitSubscribersInterval);
   }
 
