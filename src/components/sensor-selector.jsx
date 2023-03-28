@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import _ from "lodash";
+import sensorList from "../services/sensor-service";
 
 const defaultSensorSelectedValue = "";
-export default function SensorSelector({ selectedSensor, sensorList, onChange = () => {} }) {
-  console.log("selected sensor:");
-  console.dir(selectedSensor);
+export default function SensorSelector({ selectedSensor, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
 
   //const derivedSensorList =

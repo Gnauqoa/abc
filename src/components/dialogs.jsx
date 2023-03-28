@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
 
-import { FREQUENCIES } from "../js/constants";
+import DataManagerIST from "../services/data-manager";
+import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 
 import { DEFAULT_CODE_NAME } from "../js/constants";
 import * as core from "../utils/core";
@@ -12,6 +13,8 @@ export default class extends Component {
     super(props);
     this.state = {
       inputText: "Tên",
+      samplingTime: "",
+      samplingFrequency: DataManagerIST.getCollectingDataFrequency(),
     };
     this.inputNumpad = React.createRef();
   }
@@ -27,6 +30,10 @@ export default class extends Component {
 
   handleInputTextChange = (e) => {
     this.setState({ inputText: e.target.value.trimStart() });
+  };
+
+  handleSamplingTimeChange = (e) => {
+    this.setState({ ...this.state, samplingTime: e.target.value.trim() });
   };
 
   handleInputTextChangeForDevice = (e) => {
@@ -143,21 +150,31 @@ export default class extends Component {
         <div id="dialog-sample-setting" className="dialog-component">
           <div className="dialog-content">
             <div className="content">
-              <div className="title"></div>
+              <div className="title" />
               <div className="items">
                 <div className="item">
                   <div className="text">Chu kỳ: </div>
-                  <Button className="button" raised popoverOpen=".popover-frequency-advanced">
-                    Định kỳ: 1Hz
+                  <Button
+                    id="input-sampling-frequency"
+                    className="button"
+                    raised
+                    popoverOpen=".popover-frequency-advanced"
+                  >
+                    {this.state.samplingFrequency === SAMPLING_MANUAL_FREQUENCY
+                      ? SAMPLING_MANUAL_NAME
+                      : `${this.state.samplingFrequency}HZ`}
                   </Button>
                 </div>
+
                 <div className="item">
                   <div className="text">Thời gian (giây): </div>
                   <input
+                    id="input-sampling-time"
                     type="text"
+                    placeholder="--"
                     className="input"
-                    value={this.state.inputText}
-                    onChange={this.handleInputTextChange}
+                    value={this.state.samplingTime}
+                    onChange={this.handleSamplingTimeChange}
                     onKeyDown={this.handleOkByEnter}
                   />
                 </div>
@@ -174,11 +191,24 @@ export default class extends Component {
             style={{ borderRadius: "10px", width: "120px", zIndex: 99999 }}
           >
             <List className="test">
-              {FREQUENCIES.map((frequency) => (
-                <Button key={frequency} textColor="black">
-                  {frequency}HZ
-                </Button>
-              ))}
+              {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
+                const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f}HZ`;
+                return (
+                  <Button
+                    key={f}
+                    textColor="black"
+                    onClick={() => {
+                      this.setState({
+                        ...this.state,
+                        samplingFrequency: f,
+                      });
+                      f7.popover.close();
+                    }}
+                  >
+                    {frequency}
+                  </Button>
+                );
+              })}
             </List>
           </Popover>
         </div>
@@ -219,8 +249,8 @@ export default class extends Component {
                   <input
                     type="text"
                     className="input"
-                    value={this.state.inputText}
-                    onChange={this.handleInputTextChange}
+                    value={this.state.samplingTime}
+                    onChange={this.handleSamplingTimeChange}
                     onKeyDown={this.handleOkByEnter}
                   />
                   <Icon ios="material:backspace" md="material:backspace" className="clear-button"></Icon>

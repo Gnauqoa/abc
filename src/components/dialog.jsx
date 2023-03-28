@@ -327,18 +327,16 @@ export const notiErrorInstruction = (content, buttonsMapping) => {
   });
 };
 
-export const samplingSettings = (title, text, callbackOk, callbackCancel) => {
+export const samplingSettings = (title, handleGetSampleSettings) => {
   let dialogId = "dialog-sample-setting";
   const open = () => {
     $(`#${dialogId}`).css({ display: "block" });
     $(`#${dialogId} .title`).html(title);
-    $(`#${dialogId} .text`).html(text);
     $(`#${dialogId}`).addClass("dialog-in");
   };
   const close = () => {
     $(`#${dialogId}`).css({ display: "none" });
     $(`#${dialogId} .title`).html("");
-    $(`#${dialogId} .text`).html("");
     $(`#${dialogId}`).removeClass("dialog-in");
   };
 
@@ -348,11 +346,17 @@ export const samplingSettings = (title, text, callbackOk, callbackCancel) => {
   $(`#${dialogId} .cancel-button`).off("click");
 
   $(`#${dialogId} .ok-button`).on("click", () => {
-    callbackOk && callbackOk();
+    const time = $(`#${dialogId} #input-sampling-time`).val().trim();
+    const samplingSettings = {
+      time: time === "" ? 0 : time,
+      frequency: $(`#${dialogId} #input-sampling-frequency`).text(),
+    };
+
+    handleGetSampleSettings && handleGetSampleSettings(samplingSettings);
     close();
   });
+
   $(`#${dialogId} .cancel-button`).on("click", () => {
-    callbackCancel && callbackCancel();
     close();
   });
 };

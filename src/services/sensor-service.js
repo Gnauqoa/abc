@@ -57,4 +57,8 @@ export const sensors = [
   },
 ];
 
+export function getUnit(sensorId, dataIndex) {
+  return sensors.filter(s => s.id === sensorId)[0]?.data[dataIndex]?.unit || ""
+}
+
 export default sensors;

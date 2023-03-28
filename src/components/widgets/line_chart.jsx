@@ -6,7 +6,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 Chart.register(zoomPlugin);
 
 import SensorSelector from "../sensor-selector";
-import sensors from "../../services/sensor-service";
+
 
 const log = (text, data) => {
   let debug = true;
@@ -20,7 +20,6 @@ const log = (text, data) => {
 const getChartJsPlugin = ({ lastDataRef }) => {
   return {
     afterDraw: (chart, args, options) => {
-      log("after chart draw");
       const { ctx } = chart;
       let xAxis = chart.scales["x"];
       let yAxis = chart.scales["y"];
@@ -160,8 +159,6 @@ const createChartJsData = ({ chartData = [] }) => {
  *
  */
 const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
-  log("chart instance", chartInstance);
-  log("chart instance data", chartInstance.data);
   // newDataItemList.forEach(item => {
   //     chartInstance.data.datasets[0].data.push(item);
   // });
@@ -239,13 +236,9 @@ const addOrUpdateChart = ({ currentDataListRef, chartInstanceRef, dataSeries }) 
   });
 };
 
-const useSensorSelector = ({ sensorList, sensor, sensorSelectorChange = () => {} }) => {};
-
 let LineChart = (props, ref) => {
-  log("line chart render");
   const { widget, handleSensorChange } = props;
   //log("widget:", widget);
-  const sensorList = sensors;
   //const { dataList, labelList } = props;
   const chartEl = useRef(),
     chartInstanceRef = useRef();
@@ -258,7 +251,6 @@ let LineChart = (props, ref) => {
     }),
     checkDataResult;
 
-  log("chart instance ref at constructor", chartInstanceRef.current);
 
   // checkDataResult = checkDataChangeAndUpdate({
   //     currentDataListRef,
@@ -372,7 +364,6 @@ let LineChart = (props, ref) => {
         <SensorSelector
           selectedSensor={widget.sensor}
           onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-          sensorList={sensorList}
         ></SensorSelector>
       </div>
       <div className="canvas-container">

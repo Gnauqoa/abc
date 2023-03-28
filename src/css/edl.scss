@@ -65,7 +65,7 @@
     .frequency {
       float: left;
       display: flex;
-      width: 200px;
+      width: 250px;
       height: 44px;
       line-height: 44px;
 
@@ -79,8 +79,20 @@
         border-radius: 10px 0 0 10px;
 
         img {
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
+        }
+      }
+
+      /* Added CSS for disabled state */
+      &:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        cursor: not-allowed;
+
+        .image {
+          cursor: not-allowed;
+          color: #3398f0;
         }
       }
     }
@@ -95,11 +107,25 @@
   .prev,
   .next {
     cursor: pointer;
+    color: #000000;
   }
 
   .order {
     color: #ffffff;
     font-size: 24px;
     padding: 0 10px 0 10px;
+  }
+
+  /* Added CSS for disabled state */
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+
+    .prev,
+    .next {
+      cursor: not-allowed;
+      color: #cccccc;
+    }
   }
 }
