@@ -5,8 +5,7 @@ import sensors from "../../services/sensor-service";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
-const DEFAULT_ROWS = 7;
-
+const DEFAULT_ROWS = 10;
 const PAGE_SETTINGS = {
   [LAYOUT_TABLE]: {
     "table-chart-body": {
@@ -39,17 +38,18 @@ const PAGE_SETTINGS = {
     },
   },
 };
-const emptyData = Array.from({ length: 10 }, () => ({ colum1: "", colum2: "" }));
+const emptyData = Array.from({ length: DEFAULT_ROWS }, () => ({ colum1: "", colum2: "" }));
 
 const TableChart = (props) => {
   const { widget, handleSensorChange, chartLayout } = props;
   const [unit, setUnit] = useState();
-  const [sensorName, setSensorName] = useState();
+  const [displaySensorSelector, setDisplaySensorSelector] = useState();
+
   useEffect(() => {
     const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
     const sensorDetail = sensor.data[widget.sensor.index];
     setUnit(sensorDetail.unit);
-    setSensorName(sensorDetail.name);
+    setDisplaySensorSelector(sensorDetail.name);
   }, [widget]);
 
   return (
@@ -66,7 +66,7 @@ const TableChart = (props) => {
                 <div className="header-name">
                   <SensorSelector
                     customStyle={PAGE_SETTINGS[chartLayout]["custom-select"]}
-                    isRemoveUnit={true}
+                    displaySensorSelector={displaySensorSelector}
                     selectedSensor={widget.sensor}
                     onChange={(sensor) => handleSensorChange(widget.id, sensor)}
                   ></SensorSelector>
