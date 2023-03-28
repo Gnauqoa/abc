@@ -7,7 +7,6 @@ Chart.register(zoomPlugin);
 
 import SensorSelector from "../sensor-selector";
 
-
 const log = (text, data) => {
   let debug = true;
   if (debug) {
@@ -17,41 +16,28 @@ const log = (text, data) => {
     }
   }
 };
-const getChartJsPlugin = ({ lastDataRef }) => {
+const getChartJsPlugin = ({ lastDataRef, valueLabelContainerRef }) => {
   return {
     afterDraw: (chart, args, options) => {
       const { ctx } = chart;
       let xAxis = chart.scales["x"];
       let yAxis = chart.scales["y"];
 
+      // lastPosition.current = {
+      //   x: xAxis.left,
+      //   y: yAxis.top
+      // };
       const data = lastDataRef.current;
+      valueLabelContainerRef.current.style.top = `${yAxis.top + 5}px`;
+      valueLabelContainerRef.current.style.left = `${xAxis.left + 5}px`;
       ctx.save();
-      ctx.textAlign = "center";
-      ctx.font = "16px Arial";
-      ctx.fillStyle = "#000000";
-      ctx.textAlign = "left";
-      ctx.fillText(`x=${data.x || 0} y=${data.y || 0}`, xAxis.left + 5, yAxis.top + 5);
+      // ctx.textAlign = "center";
+      // ctx.font = "16px Arial";
+      // ctx.fillStyle = "#000000";
+      // ctx.textAlign = "left";
+      // ctx.fillText(`x=${data.x || 0} y=${data.y || 0}`, xAxis.left + 5, yAxis.top + 5);
 
       ctx.restore();
-      // let maxValue = Math.max(...chart.data.datasets[0].data);
-      // let minValue = Math.min(...chart.data.datasets[0].data);
-      // if (chart.data.datasets.length > 0) {
-      //     const dataset = chart.data.datasets[chart.data.datasets.length - 1];
-      //     if (dataset.data.length > 0) {
-      //         const data = dataset.data[dataset.data.length - 1];
-      //         log("draw last data", data);
-      //         ctx.save();
-      //         ctx.textAlign = 'center';
-      //         ctx.font = '16px Arial';
-      //         ctx.fillStyle = '#000000';
-      //         ctx.textAlign = 'left';
-      //         ctx.fillText(`x=${data.x} y=${data.y}`, xAxis.left + 5, yAxis.top + 5);
-
-      //         //ctx.fillText('Dagens laveste temperatur = ' + minValue + 'Â°C', xAxis.left + 5, yAxis.top + 18);
-      //         ctx.restore();
-      //     }
-
-      // }
     },
   };
 };
@@ -129,13 +115,19 @@ const createChartJsData = ({ chartData = [] }) => {
   chartDataParam.datasets = [];
 
   chartData.forEach((s, index) => {
-    const dataList = [],
-      labelList = [];
-    s.data.forEach((d) => {
-      //dataList.push(d.y);
-      //labelList.push(d.x);
+    const dataList = [];
+    let firstPoint = null;
+
+    s.data.forEach((d, dataIndex) => {
+      if (dataIndex == 0) {
+        const firstData = s.data[0];
+        firstPoint = {
+          x: firstData.x,
+          y: firstData.y,
+        };
+      }
       dataList.push({
-        x: d.x,
+        x: d.x - firstPoint.x,
         y: d.y,
       });
     });
@@ -148,41 +140,63 @@ const createChartJsData = ({ chartData = [] }) => {
   return chartDataParam;
 };
 
+const getMaxX = ({ chartData }) => {
+  let max = 0;
+  chartData.forEach((s) => {
+    if (s.data.length > 0) {
+      const lastData = s.data[s.data.length - 1],
+        firstData = s.data[0],
+        xValue = lastData.x - firstData.x;
+      if (xValue > max) {
+        max = xValue;
+      }
+    }
+  });
+
+  return max;
+};
+
+const calculateSuggestMaxX = ({ chartData, pageStep = 15000 }) => {
+  const maxX = getMaxX({
+      chartData,
+    }),
+    numOfPage = Math.ceil(maxX / pageStep);
+
+  return pageStep * numOfPage;
+};
+
 /**
  * data: [{
  * name:string,
- * data: {
+ * data: [{
  * x: 0,
  * y:0
- * }
+ * }]
  * }]
  *
  */
 const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
-  // newDataItemList.forEach(item => {
-  //     chartInstance.data.datasets[0].data.push(item);
-  // });
+  const pageStep = 30000;
+  let suggestedMaxX = calculateSuggestMaxX({
+      chartData: data,
+      pageStep,
+    }), stepSize;
+  
+  if(!suggestedMaxX) {
+    suggestedMaxX = pageStep;
+  }
 
-  // newLabelItemList.forEach(item => {
-  //     chartInstance.data.labels.push(item);
-  // });
-  // data.forEach((d, index) => {
-  //     chartInstance.data.datasets[0].data
-
-  // });
-  // const currentChartDataLength = chartInstance.data.datasets[0].data.length;
-  // for (let i = 0; i < currentChartDataLength; i++) {
-  //     const element = array[i];
-
-  // }
+  stepSize = Math.round(suggestedMaxX / 10)
 
   chartInstance.data = createChartJsData({
     chartData: data,
   });
 
   chartInstance.options.animation = false;
+
   chartInstance.options.scales = {
     y: {
+      min: 0,
       title: {
         color: "orange",
         display: true,
@@ -191,9 +205,12 @@ const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
     },
     x: {
       type: "linear",
+      suggestedMin : 0,
+      suggestedMax: suggestedMaxX,
       ticks: {
         // forces step size to be 50 units
-        stepSize: ((1 / maxHz) * 1000).toFixed(0),
+        //stepSize: ((1 / maxHz) * 1000).toFixed(0),
+        //stepSize: stepSize
       },
       title: {
         color: "orange",
@@ -203,6 +220,10 @@ const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
       },
     },
   };
+  if (stepSize) {
+    //log("chart step size", stepSize);
+    chartInstance.options.scales.x.ticks.stepSize = stepSize;
+  }
 
   chartInstance.update();
 };
@@ -249,8 +270,13 @@ let LineChart = (props, ref) => {
       x: null,
       y: null,
     }),
-    checkDataResult;
-
+    lastPositionOnChart = useRef({
+      x: 0,
+      y: 0
+    }),
+    valueContainerElRef = useRef(),
+    xElRef = useRef(),
+    yElRef = useRef();
 
   // checkDataResult = checkDataChangeAndUpdate({
   //     currentDataListRef,
@@ -268,7 +294,9 @@ let LineChart = (props, ref) => {
   useImperativeHandle(ref, () => ({
     clearData: () => {},
     setCurrentData: ({ data }) => {
-      lastDataRef.current = data;
+      //lastDataRef.current = data;
+      xElRef.current.innerText = data.x;
+      yElRef.current.innerText = data.y;
     },
     setChartData: ({ sensorId, xUnit, yUnit, maxHz, chartData = [] }) => {
       /**
@@ -301,6 +329,10 @@ let LineChart = (props, ref) => {
     },
   }));
   useEffect(() => {
+    // const intervalTest = setInterval(()=>{
+    //   log("label position", lastPositionOnChart.current);
+
+    // }, 1000);
     const data = createChartJsData({
       chartData: [
         {
@@ -309,7 +341,7 @@ let LineChart = (props, ref) => {
         },
       ],
     });
-    const chartJsPlugin = getChartJsPlugin({ lastDataRef });
+    const chartJsPlugin = getChartJsPlugin({ lastDataRef, valueLabelContainerRef: valueContainerElRef });
     //const myChartRef = chartEl.current.getContext("2d");
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
@@ -356,6 +388,18 @@ let LineChart = (props, ref) => {
       },
       plugins: [chartJsPlugin],
     });
+
+    updateChart({
+      chartInstance: chartInstanceRef.current,
+      data: [],
+      xUnit: "ms",
+      yUnit: ""
+    });
+
+    // return () => {
+    //   clearInterval(intervalTest);
+
+    // };
   }, []);
 
   return (
@@ -368,6 +412,10 @@ let LineChart = (props, ref) => {
       </div>
       <div className="canvas-container">
         <canvas ref={chartEl} />
+        <div className="current-value-sec" ref={valueContainerElRef}>
+          <div className="value-container">x = &nbsp;<span ref={xElRef}></span></div>
+          <div className="value-container">y = &nbsp;<span ref={yElRef}></span></div>
+        </div>
       </div>
     </div>
   );
