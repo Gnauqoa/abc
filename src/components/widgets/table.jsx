@@ -1,16 +1,9 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
+import sensors from "../../services/sensor-service";
 
-import {
-  LAYOUT_CHART,
-  LAYOUT_TABLE,
-  LAYOUT_NUMBER,
-  LAYOUT_TABLE_CHART,
-  LAYOUT_NUMBER_CHART,
-  LAYOUT_NUMBER_TABLE,
-  SAMPLING_MANUAL_FREQUENCY,
-} from "../../js/constants";
+import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
 const DEFAULT_ROWS = 7;
 
@@ -20,11 +13,19 @@ const PAGE_SETTINGS = {
       width: "86%",
       margin: "3% 7%", // 3% top and bottom, 7% left and right
     },
+    "custom-select": {
+      width: "70%",
+      height: "60%",
+    },
   },
   [LAYOUT_TABLE_CHART]: {
     "table-chart-body": {
       width: "96%",
       margin: "3% 2%", // 3% top and bottom, 7% left and right
+    },
+    "custom-select": {
+      width: "90%",
+      height: "70%",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -32,19 +33,31 @@ const PAGE_SETTINGS = {
       width: "90%",
       margin: "3% 5%", // 3% top and bottom, 7% left and right
     },
+    "custom-select": {
+      width: "70%",
+      height: "60%",
+    },
   },
 };
+const emptyData = Array.from({ length: 10 }, () => ({ colum1: "", colum2: "" }));
 
 const TableChart = (props) => {
   const { widget, handleSensorChange, chartLayout } = props;
-  const emptyData = Array.from({ length: 10 }, () => ({ colum1: "", colum2: "" }));
+  const [unit, setUnit] = useState();
+  const [sensorName, setSensorName] = useState();
+  useEffect(() => {
+    const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
+    const sensorDetail = sensor.data[widget.sensor.index];
+    setUnit(sensorDetail.unit);
+    setSensorName(sensorDetail.name);
+  }, [widget]);
 
   return (
-    <div className="table-chart-wapper">
-      <div className="table-chart">
-        <table>
-          <tbody className="table-chart-body" style={{ ...PAGE_SETTINGS[chartLayout]["table-chart-body"] }}>
-            <tr className="table-chart-header">
+    <div className="wapper">
+      <div className="wapper__chart">
+        <table className="wapper__chart__table">
+          <tbody className="wapper__chart__table__body" style={{ ...PAGE_SETTINGS[chartLayout]["table-chart-body"] }}>
+            <tr className="header">
               <td>
                 <div className="header-name">Thời gian</div>
                 <div className="header-unit">(Giây)</div>
@@ -52,11 +65,13 @@ const TableChart = (props) => {
               <td>
                 <div className="header-name">
                   <SensorSelector
+                    customStyle={PAGE_SETTINGS[chartLayout]["custom-select"]}
+                    isRemoveUnit={true}
                     selectedSensor={widget.sensor}
                     onChange={(sensor) => handleSensorChange(widget.id, sensor)}
                   ></SensorSelector>
                 </div>
-                <div className="header-unit">(giay)</div>
+                <div className="header-unit">({unit})</div>
               </td>
             </tr>
             {emptyData.map((row, index) => (

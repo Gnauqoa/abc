@@ -1,4 +1,4 @@
-.table-chart-wapper {
+.wapper {
   background-color: #ffffff;
   border-radius: 5px;
 
@@ -8,16 +8,7 @@
   justify-content: center;
   align-items: center;
 
-  table {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .table-chart {
+  &__chart {
     border-collapse: separate;
     border-spacing: 0;
     margin: 0 auto;
@@ -27,11 +18,20 @@
     table-layout: fixed;
     position: relative;
 
-    .table-chart-body {
+    &__table {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    &__table__body {
       display: block;
       height: 94%;
 
-      .table-chart-header {
+      .header {
         height: 140px;
         .custom-select,
         td {
@@ -62,9 +62,7 @@
         }
         .custom-select {
           top: 0%;
-          width: 70%;
           position: relative;
-          height: 60%;
           font-size: 24px;
           white-space: pre-wrap; /* Break lines on whitespace, allow wrapping */
           overflow-wrap: break-word; /* Break long words into multiple lines */

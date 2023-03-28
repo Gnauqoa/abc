@@ -3,7 +3,7 @@ import _ from "lodash";
 import sensorList from "../services/sensor-service";
 
 const defaultSensorSelectedValue = "";
-export default function SensorSelector({ selectedSensor, onChange = () => {} }) {
+export default function SensorSelector({ isRemoveUnit, customStyle, selectedSensor, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
 
   //const derivedSensorList =
@@ -37,14 +37,21 @@ export default function SensorSelector({ selectedSensor, onChange = () => {} }) 
   };
 
   return (
-    <select value={selectedIdString} className="custom-select" onChange={changeHandler}>
+    <select
+      value={selectedIdString}
+      className="custom-select"
+      onChange={changeHandler}
+      style={customStyle && { ...customStyle }}
+    >
       <option value={defaultSensorSelectedValue} disabled>
         Chọn thông tin
       </option>
       {sensorList.map(({ id, name, data }) => (
         <optgroup label={name} key={id}>
           {data.map((s) => (
-            <option key={id + "|" + s.id} value={id + "|" + s.id}>{`${s.name} (${s.unit})`}</option>
+            <option key={id + "|" + s.id} value={id + "|" + s.id}>
+              {`${s.name}${isRemoveUnit ? "" : ` (${s.unit})`}`}
+            </option>
           ))}
         </optgroup>
       ))}
