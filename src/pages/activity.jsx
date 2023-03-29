@@ -59,6 +59,7 @@ export default ({ f7route, f7router }) => {
   const [widgets, setWidgets] = useState(activity.widgets);
 
   const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState(0);
   const [dataRun, setDataRun] = useState([]);
   const [, setForceUpdate] = useState(0);
   const lineChartRef = useRef();
@@ -148,7 +149,10 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSampleClick() {
-    if (!isRunning) setDataRun(() => []);
+    if (!isRunning) {
+      setStartTime(Date.now());
+      setDataRun(() => []);
+    }
     setIsRunning(!isRunning);
   }
 
@@ -177,18 +181,22 @@ export default ({ f7route, f7router }) => {
 
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.pop()?.values[sensor.index] || "";
+    return sensorData.slice(-1)[0]?.values[sensor.index] || "";
   }
 
   function getDataForTable(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
+    return sensorData.map((d) => ({ time: d.time - startTime, value: d.values[sensor.index] })) || [];
   }
 
   function getDataForChart(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
-    lineChartRef.current &&
+    const data = sensorData.map((d) => ({ x: d.time - startTime, y: d.values[sensor.index] })) || [];
+    if (lineChartRef.current && Object.keys(data).length !== 0) {
+      lineChartRef.current.setCurrentData({
+        data: data.slice(-1)[0],
+      });
+
       lineChartRef.current.setChartData({
         chartData: [
           {
@@ -200,6 +208,7 @@ export default ({ f7route, f7router }) => {
         yUnit: "",
         maxHz: 10,
       });
+    }
   }
 
   return (

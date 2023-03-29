@@ -14,14 +14,33 @@
       left: 50%;
       transform: rotate(-90deg) translate(-50%, -50%);
       transform-origin: 0% 0%;
+      text-align: center;
+      text-align-last: center;
+
+      optgroup {
+        text-align: left;
+      }
+      option {
+        text-align: left;
+      }
     }
   }
   .canvas-container {
     //width: 100%;
+    position: relative;
     flex: 1 0 0;
     height: 100%;
     > canvas {
       width: 100%;
+    }
+    > .current-value-sec {
+      position: absolute;
+      display: flex;
+      align-items: center;
+
+      > .value-container {
+        margin-left: 5px;
+      }
     }
   }
 }
