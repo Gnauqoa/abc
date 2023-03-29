@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Popup, Page, Navbar, NavRight, Block, Link, List, ListItem, AccordionContent } from "framework7-react";
+import {
+  Button,
+  Popup,
+  Page,
+  Navbar,
+  NavRight,
+  Block,
+  Link,
+  List,
+  ListItem,
+  AccordionContent,
+  PageContent,
+} from "framework7-react";
 import _ from "lodash";
 import sensorList from "../services/sensor-service";
 import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
+import RoundButton from "../components/round-button";
 
 const defaultSensorSelectedValue = "";
 export default function SensorSelectorEnhanched({ selectedSensor, onChange = () => {} }) {
@@ -82,47 +95,49 @@ export default function SensorSelectorEnhanched({ selectedSensor, onChange = () 
         onPopupClosed={() => setSensorSelectPopupOpened(false)}
       >
         <Page>
-          <Navbar title="Chọn thông tin">
+          <Navbar className="sensor-select-title" title="Chọn thông tin">
             <NavRight>
-              <Link iconIos="material:close" iconMd="material:close" popupClose></Link>
+              <RoundButton icon="close" color="#FF0000" popupClose={true} />
             </NavRight>
           </Navbar>
-          <Block>
-            <List>
-              {sensorListForDislpay.map(({ id, name, data, sensorStatus }) => (
-                <ListItem
-                  className={clsx("sensor-select-device", {
-                    __activeDevice: sensorStatus === "online",
-                    __default: sensorStatus === "offline",
-                  })}
-                  accordionItem
-                  key={id}
-                  title={name}
-                  accordionItemOpened={sensorStatus === "online" ? true : false}
-                >
-                  <AccordionContent>
-                    <List>
-                      {data.map((s) => (
-                        <ListItem
-                          link="#"
-                          popupClose
-                          key={id + "|" + s.id}
-                          className={clsx("sensor-select-measurement", {
-                            __activeDevice: sensorStatus === "online",
-                            __default: sensorStatus === "offline",
-                          })}
-                          title={`${s.name} (${s.unit})`}
-                          onClick={() => {
-                            changeHandler(id + "|" + s.id);
-                          }}
-                        ></ListItem>
-                      ))}
-                    </List>
-                  </AccordionContent>
-                </ListItem>
-              ))}
-            </List>
-          </Block>
+          <PageContent className="invisible-scrollbar zero-padding">
+            <Block>
+              <List>
+                {sensorListForDislpay.map(({ id, name, data, sensorStatus }) => (
+                  <ListItem
+                    className={clsx("sensor-select-device", {
+                      __activeDevice: sensorStatus === "online",
+                      __default: sensorStatus === "offline",
+                    })}
+                    accordionItem
+                    key={id}
+                    title={name}
+                    accordionItemOpened={sensorStatus === "online" ? true : false}
+                  >
+                    <AccordionContent>
+                      <List>
+                        {data.map((s) => (
+                          <ListItem
+                            link="#"
+                            popupClose
+                            key={id + "|" + s.id}
+                            className={clsx("sensor-select-measurement", {
+                              __activeDevice: sensorStatus === "online",
+                              __default: sensorStatus === "offline",
+                            })}
+                            title={`${s.name} (${s.unit})`}
+                            onClick={() => {
+                              changeHandler(id + "|" + s.id);
+                            }}
+                          ></ListItem>
+                        ))}
+                      </List>
+                    </AccordionContent>
+                  </ListItem>
+                ))}
+              </List>
+            </Block>
+          </PageContent>
         </Page>
       </Popup>
     </div>
