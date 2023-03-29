@@ -73,14 +73,6 @@ export default ({ f7route, f7router }) => {
 
     DataManagerIST.setCollectingDataFrequency(frequency);
 
-    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
-      if (isRunning) {
-        DataManagerIST.startCollectingData();
-      } else {
-        DataManagerIST.stopCollectingData();
-      }
-    }
-
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
@@ -142,6 +134,7 @@ export default ({ f7route, f7router }) => {
 
   function handleSampleClick() {
     if (!isRunning) {
+      DataManagerIST.startCollectingData();
       setStartTime(Date.now());
       setDataRun(() => []);
     }
