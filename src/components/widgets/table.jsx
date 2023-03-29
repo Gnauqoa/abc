@@ -65,6 +65,7 @@ const TableChart = (props) => {
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
+  const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
   useEffect(() => {
@@ -73,26 +74,19 @@ const TableChart = (props) => {
     setUnit(sensorDetail.unit);
   }, [widget]);
 
-  const updateRows = (newRow) => {
-    setRows((rows) => {
-      let newRows;
-      if (numRows < DEFAULT_ROWS) {
-        newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
-      } else {
-        newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
-      }
-      return newRows;
-    });
-  };
-
   useEffect(() => {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      setNumRows(0);
+      setRows(defaultRows);
+      scrollToRef(headerRowRef);
+      return;
+    }
     const newData = data[data.length - 1];
     const { time, value } = newData;
 
     if (isRunning) {
       const newRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows]["colum1"],
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (time / 1000).toFixed(1) : rows[numRows]["colum1"],
         colum2: value,
       };
 
@@ -111,14 +105,30 @@ const TableChart = (props) => {
       updateRows(newRow);
     }
 
-    if (lastRowRef.current) {
-      lastRowRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
+    scrollToRef(lastRowRef);
   }, [data]);
+
+  const updateRows = (newRow) => {
+    setRows((rows) => {
+      let newRows;
+      if (numRows < DEFAULT_ROWS) {
+        newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
+      } else {
+        newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
+      }
+      return newRows;
+    });
+  };
 
   const handleFirstColumSelector = (evt) => {
     const optionId = evt.target.value;
     setFirstColumnOption(optionId);
+  };
+
+  const scrollToRef = (ref) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   };
 
   return (
@@ -126,7 +136,7 @@ const TableChart = (props) => {
       <div className="wapper__chart">
         <table className="wapper__chart__table">
           <tbody className="wapper__chart__table__body" style={{ ...PAGE_SETTINGS[chartLayout]["table-chart-body"] }}>
-            <tr className="header">
+            <tr className="header" ref={headerRowRef}>
               <td>
                 <div className="header-name">
                   <select
