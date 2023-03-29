@@ -74,13 +74,15 @@ const TableChart = (props) => {
   }, [widget]);
 
   const updateRows = (newRow) => {
-    let newRows;
-    if (numRows < DEFAULT_ROWS) {
-      newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
-    } else {
-      newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
-    }
-    setRows(newRows);
+    setRows((rows) => {
+      let newRows;
+      if (numRows < DEFAULT_ROWS) {
+        newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
+      } else {
+        newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
+      }
+      return newRows;
+    });
   };
 
   useEffect(() => {
@@ -110,7 +112,7 @@ const TableChart = (props) => {
     }
 
     if (lastRowRef.current) {
-      lastRowRef.current.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+      lastRowRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [data]);
 
@@ -161,7 +163,10 @@ const TableChart = (props) => {
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => (
-              <tr key={index} ref={numRows < DEFAULT_ROWS ? null : index === rows.length ? lastRowRef : null}>
+              <tr
+                key={index}
+                ref={numRows < DEFAULT_ROWS || !isRunning ? null : index === rows.length ? lastRowRef : null}
+              >
                 <td>
                   <input type="text" defaultValue={row.colum1} />
                 </td>
