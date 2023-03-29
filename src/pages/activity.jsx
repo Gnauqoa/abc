@@ -66,28 +66,12 @@ export default ({ f7route, f7router }) => {
 
   useEffect(() => {
     let subscriberIds = [];
-    DataManagerIST.setCollectingDataFrequency(frequency);
+    widgets.forEach((w) => {
+      const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
+      subscriberIds.push(subscriberId);
+    });
 
-    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
-      if (isRunning) {
-        DataManagerIST.startCollectingData();
-      } else {
-        DataManagerIST.stopCollectingData();
-      }
-    } else {
-      if (isRunning) {
-        console.log(">>>>> Start DataManagerIST");
-        widgets.forEach((w) => {
-          const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-          subscriberIds.push(subscriberId);
-        });
-      } else {
-        if (subscriberIds.length) {
-          subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
-          subscriberIds = [];
-        }
-      }
-    }
+    DataManagerIST.setCollectingDataFrequency(frequency);
 
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
@@ -150,6 +134,7 @@ export default ({ f7route, f7router }) => {
 
   function handleSampleClick() {
     if (!isRunning) {
+      DataManagerIST.startCollectingData();
       setStartTime(Date.now());
       setDataRun(() => []);
     }
@@ -193,21 +178,27 @@ export default ({ f7route, f7router }) => {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     const data = sensorData.map((d) => ({ x: d.time - startTime, y: d.values[sensor.index] })) || [];
     if (lineChartRef.current && Object.keys(data).length !== 0) {
+      let currentData = data.slice(-1)[0];
+      if (!isRunning) {
+        currentData = { ...currentData, x: 0 };
+      }
       lineChartRef.current.setCurrentData({
-        data: data.slice(-1)[0],
+        data: currentData,
       });
 
-      lineChartRef.current.setChartData({
-        chartData: [
-          {
-            name: "run1",
-            data: data,
-          },
-        ],
-        xUnit: "ms",
-        yUnit: "",
-        maxHz: 10,
-      });
+      if (isRunning) {
+        lineChartRef.current.setChartData({
+          chartData: [
+            {
+              name: "run1",
+              data: data,
+            },
+          ],
+          xUnit: "ms",
+          yUnit: "",
+          maxHz: 10,
+        });
+      }
     }
   }
 
