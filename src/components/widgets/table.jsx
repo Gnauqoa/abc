@@ -6,7 +6,7 @@ import { Button } from "framework7-react";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
-const DEFAULT_ROWS = 10;
+const DEFAULT_ROWS = 8;
 const FIRST_COLUMN_DEFAULT_OPT = "time";
 const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
@@ -55,18 +55,64 @@ const FIRST_COLUMN_OPTIONS = [
     unit: <input id={FIRST_COLUMN_CUSTOM_OPT} className="header-unit__input" type="text" placeholder="--------" />,
   },
 ];
-const emptyData = Array.from({ length: DEFAULT_ROWS }, () => ({ colum1: "", colum2: "" }));
+
+const emptyRow = { colum1: "", colum2: "" };
+const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
 const TableChart = (props) => {
-  const { widget, handleSensorChange, chartLayout } = props;
+  const { data, widget, handleSensorChange, chartLayout, isRunning } = props;
   const [unit, setUnit] = useState();
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
+  const [rows, setRows] = useState(defaultRows);
+  const [numRows, setNumRows] = useState(0);
+  const lastRowRef = useRef(null);
 
   useEffect(() => {
     const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
     const sensorDetail = sensor.data[widget.sensor.index];
     setUnit(sensorDetail.unit);
   }, [widget]);
+
+  const updateRows = (newRow) => {
+    let newRows;
+    if (numRows < DEFAULT_ROWS) {
+      newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
+    } else {
+      newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
+    }
+    setRows(newRows);
+  };
+
+  useEffect(() => {
+    if (data.length === 0) return;
+    const newData = data[data.length - 1];
+    const { time, value } = newData;
+
+    if (isRunning) {
+      const newRow = {
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows]["colum1"],
+        colum2: value,
+      };
+
+      updateRows(newRow);
+      setNumRows((prevNumRows) => prevNumRows + 1);
+    } else {
+      const newRow = {
+        colum1:
+          numRows === 0
+            ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
+              ? "0"
+              : rows[numRows]["colum1"]
+            : rows[numRows - 1]["colum1"],
+        colum2: value,
+      };
+      updateRows(newRow);
+    }
+
+    if (lastRowRef.current) {
+      lastRowRef.current.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+    }
+  }, [data]);
 
   const handleFirstColumSelector = (evt) => {
     const optionId = evt.target.value;
@@ -114,13 +160,13 @@ const TableChart = (props) => {
                 <div className="header-unit">({unit})</div>
               </td>
             </tr>
-            {emptyData.map((row, index) => (
-              <tr key={index}>
+            {[...rows, emptyRow].map((row, index) => (
+              <tr key={index} ref={numRows < DEFAULT_ROWS ? null : index === rows.length ? lastRowRef : null}>
                 <td>
-                  <input type="text" placeholder={row.colum2} />
+                  <input type="text" defaultValue={row.colum1} />
                 </td>
                 <td>
-                  <span>{row.colum1}</span>
+                  <span>{row.colum2}</span>
                 </td>
               </tr>
             ))}

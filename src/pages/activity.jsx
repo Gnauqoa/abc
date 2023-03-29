@@ -241,6 +241,7 @@ export default ({ f7route, f7router }) => {
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
+                    isRunning={isRunning}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
@@ -266,6 +267,7 @@ export default ({ f7route, f7router }) => {
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
+                    isRunning={isRunning}
                   />
                 )}
               </div>
@@ -287,6 +289,7 @@ export default ({ f7route, f7router }) => {
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
+                  isRunning={isRunning}
                 />
               )}
               {activity.layout === LAYOUT_NUMBER && (
