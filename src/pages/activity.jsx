@@ -137,6 +137,8 @@ export default ({ f7route, f7router }) => {
       DataManagerIST.startCollectingData();
       setStartTime(Date.now());
       setDataRun(() => []);
+    } else {
+      DataManagerIST.stopCollectingData();
     }
     setIsRunning(!isRunning);
   }
