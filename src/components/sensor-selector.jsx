@@ -3,7 +3,7 @@ import _ from "lodash";
 import sensorList from "../services/sensor-service";
 
 const defaultSensorSelectedValue = "";
-export default function SensorSelector({ customStyle, displaySensorSelector, selectedSensor, onChange = () => {} }) {
+export default function SensorSelector({ selectedSensor, onChange = () => {}, customStyle }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
 
   //const derivedSensorList =
@@ -49,9 +49,7 @@ export default function SensorSelector({ customStyle, displaySensorSelector, sel
       {sensorList.map(({ id, name, data }) => (
         <optgroup label={name} key={id}>
           {data.map((s) => (
-            <option key={id + "|" + s.id} value={id + "|" + s.id}>
-              {displaySensorSelector || `${s.name} (${s.unit})`}
-            </option>
+            <option key={id + "|" + s.id} value={id + "|" + s.id}>{`${s.name} (${s.unit})`}</option>
           ))}
         </optgroup>
       ))}
