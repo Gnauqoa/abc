@@ -5,7 +5,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.register(zoomPlugin);
 
-import SensorSelector from "../sensor-selector";
+import SensorSelectorEnhanched from "../sensor-selector-enhanched";
 
 const log = (text, data) => {
   let debug = true;
@@ -180,13 +180,14 @@ const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
   let suggestedMaxX = calculateSuggestMaxX({
       chartData: data,
       pageStep,
-    }), stepSize;
-  
-  if(!suggestedMaxX) {
+    }),
+    stepSize;
+
+  if (!suggestedMaxX) {
     suggestedMaxX = pageStep;
   }
 
-  stepSize = Math.round(suggestedMaxX / 10)
+  stepSize = Math.round(suggestedMaxX / 10);
 
   chartInstance.data = createChartJsData({
     chartData: data,
@@ -205,7 +206,7 @@ const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
     },
     x: {
       type: "linear",
-      suggestedMin : 0,
+      suggestedMin: 0,
       suggestedMax: suggestedMaxX,
       ticks: {
         // forces step size to be 50 units
@@ -272,7 +273,7 @@ let LineChart = (props, ref) => {
     }),
     lastPositionOnChart = useRef({
       x: 0,
-      y: 0
+      y: 0,
     }),
     valueContainerElRef = useRef(),
     xElRef = useRef(),
@@ -393,7 +394,7 @@ let LineChart = (props, ref) => {
       chartInstance: chartInstanceRef.current,
       data: [],
       xUnit: "ms",
-      yUnit: ""
+      yUnit: "",
     });
 
     // return () => {
@@ -405,16 +406,20 @@ let LineChart = (props, ref) => {
   return (
     <div className="line-chart-wapper">
       <div className="sensor-select-container">
-        <SensorSelector
+        <SensorSelectorEnhanched
           selectedSensor={widget.sensor}
           onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-        ></SensorSelector>
+        ></SensorSelectorEnhanched>
       </div>
       <div className="canvas-container">
         <canvas ref={chartEl} />
         <div className="current-value-sec" ref={valueContainerElRef}>
-          <div className="value-container">x = &nbsp;<span ref={xElRef}></span></div>
-          <div className="value-container">y = &nbsp;<span ref={yElRef}></span></div>
+          <div className="value-container">
+            x = &nbsp;<span ref={xElRef}></span>
+          </div>
+          <div className="value-container">
+            y = &nbsp;<span ref={yElRef}></span>
+          </div>
         </div>
       </div>
     </div>

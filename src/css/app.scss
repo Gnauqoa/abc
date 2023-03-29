@@ -245,6 +245,30 @@
   }
 }
 
+.sensor-select-device {
+  font-weight: bold;
+  &.__activeDevice {
+    background: #add3fa;
+  }
+
+  &.__default {
+    background: #d1d1d1;
+  }
+}
+
+.sensor-select-measurement {
+  margin-left: 2rem;
+  &.__activeDevice {
+    color: blue;
+    .item-title {
+      font-weight: bold;
+    }
+  }
+  &.__default {
+    color: #d1d1d1;
+  }
+}
+
 /* about menu */
 .about-menu {
   margin: 0;
@@ -428,21 +452,21 @@
 .custom-select {
   background-color: #ffbb02;
   border-radius: 5px;
-  -webkit-appearance:none;
+  -webkit-appearance: none;
   appearance: none;
   font-size: 20px;
   height: 40px;
-  padding:5px 5px;
+  padding: 5px 5px;
   position: absolute;
   top: 800px;
 }
 
 .custom-select option {
-  background-color: #ffffff
+  background-color: #ffffff;
 }
 
 .custom-select optgroup {
-  background-color: #ffffff
+  background-color: #ffffff;
 }
 
 @media only screen and (max-width: 992px) {
@@ -708,8 +732,8 @@
   margin: auto;
   display: flex;
   justify-content: center;
-  
-  border: 2px solid #3482EC;
+
+  border: 2px solid #3482ec;
   border-radius: 20px;
 
   height: 50%;
@@ -717,7 +741,7 @@
 }
 
 .flexFont {
-  color: #0086FF;
+  color: #0086ff;
 }
 
 .auto-size {
@@ -732,8 +756,7 @@
   text-align: center;
   justify-content: center;
   justify-items: center;
-  color: #0086FF;
-
+  color: #0086ff;
 }
 
 .container-group {
