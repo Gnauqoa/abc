@@ -6,6 +6,7 @@
   display: flex;
 
   .sensor-selector-wrapper {
+    position: relative;
     width: 60px;
     //flex: 0 0 0;
     .sensor-select-vertical-mount-container {
