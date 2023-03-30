@@ -151,26 +151,7 @@ export default ({ f7route, f7router }) => {
     const sensorId = data[2];
     const values = data.slice(3);
     if (values.length) {
-      const newData = { time, sensorId, values };
-      if (isRunning) {
-        setDataRun((dataRun) => [...dataRun, newData]);
-      } else {
-        let updatedDataRun = [...dataRun];
-        let dataIndex = -1;
-        for (let i = updatedDataRun.length - 1; i >= 0; i--) {
-          const data = updatedDataRun[i];
-          if (data.sensorId === sensorId) {
-            dataIndex = i;
-            break;
-          }
-        }
-        if (dataIndex >= 0) {
-          updatedDataRun[dataIndex] = newData;
-        } else {
-          updatedDataRun.push(newData);
-        }
-        setDataRun(updatedDataRun);
-      }
+      setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
     }
   }
 
