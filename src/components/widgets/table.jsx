@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
 import sensors from "../../services/sensor-service";
-import { Button } from "framework7-react";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
-const DEFAULT_ROWS = 8;
+const DEFAULT_ROWS = 15;
+const NUM_ROWS_FIT_TABLE = 7;
 const FIRST_COLUMN_DEFAULT_OPT = "time";
 const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
@@ -18,7 +18,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      height: "60%",
+      height: "40%",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -87,7 +87,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
       const newRow = {
         colum1:
           firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
-            ? (time / 1000).toFixed(1)
+            ? (time / 1000).toFixed(0)
             : rows[numRows]
             ? rows[numRows]["colum1"]
             : "",
@@ -115,9 +115,11 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
   const updateRows = (newRow) => {
     setRows((rows) => {
       let newRows;
-      if (numRows < DEFAULT_ROWS) {
+      if (numRows === 0 || (isRunning && numRows < DEFAULT_ROWS)) {
         newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
-      } else {
+      } else if (numRows < DEFAULT_ROWS) {
+        newRows = [...rows.slice(0, numRows - 1), newRow, ...rows.slice(numRows, DEFAULT_ROWS)];
+      } else if (numRows >= DEFAULT_ROWS) {
         newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
       }
       return newRows;
@@ -166,11 +168,13 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
               </td>
               <td>
                 <div className="header-name">
-                  <SensorSelector
-                    selectedSensor={widget.sensor}
-                    onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-                    customStyle={PAGE_SETTINGS[chartLayout]["custom-select"]}
-                  ></SensorSelector>
+                  <div className="sensor-select-container-table-chart">
+                    <SensorSelector
+                      selectedSensor={widget.sensor}
+                      hideDisplayUnit={true}
+                      onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+                    ></SensorSelector>
+                  </div>
                 </div>
                 <div className="header-unit">({unit})</div>
               </td>
@@ -178,7 +182,17 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
             {[...rows, emptyRow].map((row, index) => (
               <tr
                 key={index}
-                ref={numRows < DEFAULT_ROWS || !isRunning ? null : index === rows.length ? lastRowRef : null}
+                ref={
+                  numRows < NUM_ROWS_FIT_TABLE || !isRunning
+                    ? null
+                    : numRows < DEFAULT_ROWS
+                    ? index === numRows
+                      ? lastRowRef
+                      : null
+                    : index === rows.length
+                    ? lastRowRef
+                    : null
+                }
               >
                 <td>
                   <input

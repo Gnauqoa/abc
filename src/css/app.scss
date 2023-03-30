@@ -245,6 +245,45 @@
   }
 }
 
+.sensor-select-device {
+  font-weight: bold;
+  &.__activeDevice {
+    background: #add3fa;
+  }
+
+  &.__default {
+    background: #d1d1d1;
+  }
+}
+
+.sensor-select-measurement {
+  margin-left: 2rem;
+  &.__activeDevice {
+    color: blue;
+    .item-title {
+      font-weight: bold;
+    }
+  }
+  &.__default {
+    color: #d1d1d1;
+  }
+}
+
+.invisible-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.zero-padding {
+  padding: 0;
+}
+
+.sensor-select-title {
+  color: #007ff5;
+  .title {
+    line-height: 100px;
+  }
+}
+
 /* about menu */
 .about-menu {
   margin: 0;
@@ -295,21 +334,21 @@
 .custom-select {
   background-color: #ffbb02;
   border-radius: 5px;
-  -webkit-appearance:none;
+  -webkit-appearance: none;
   appearance: none;
   font-size: 20px;
   height: 40px;
-  padding:5px 5px;
+  padding: 5px 5px;
   position: absolute;
   top: 800px;
 }
 
 .custom-select option {
-  background-color: #ffffff
+  background-color: #ffffff;
 }
 
 .custom-select optgroup {
-  background-color: #ffffff
+  background-color: #ffffff;
 }
 
 .noselect {

@@ -216,11 +216,12 @@ const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
  *
  */
 const updateChart = ({ chartInstance, data, axisRef, maxHz }) => {
-  const pageStep = 5000, firstPageStep = 10000;
+  const pageStep = 5000,
+    firstPageStep = 10000;
   let suggestedMaxX = calculateSuggestMaxX({
       chartData: data,
       pageStep,
-      firstPageStep
+      firstPageStep,
     }),
     stepSize;
 
@@ -481,7 +482,7 @@ let LineChart = (props, ref) => {
        * { name, data: [{x,y}, ...]}
        * ]
        */
-
+      //log("chart data:", chartData);
       axisRef.current.xUnit = xUnit;
       updateChart({
         chartInstance: chartInstanceRef.current,
@@ -497,6 +498,7 @@ let LineChart = (props, ref) => {
        * name: "run1"
        * data: [{x,y}, ...]
        */
+
       addOrUpdateChart({
         currentDataListRef,
         chartInstanceRef,
@@ -512,6 +514,7 @@ let LineChart = (props, ref) => {
     //   log("label position", lastPositionOnChart.current);
 
     // }, 1000);
+
     const data = createChartJsData({
       chartData: [
         {
@@ -603,12 +606,15 @@ let LineChart = (props, ref) => {
 
   return (
     <div className="line-chart-wapper">
-      <div className="sensor-select-container">
-        <SensorSelector
-          selectedSensor={widget.sensor}
-          onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-        ></SensorSelector>
+      <div className="sensor-selector-wrapper">
+        <div className="sensor-select-vertical-mount-container">
+          <SensorSelector
+            selectedSensor={widget.sensor}
+            onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+          ></SensorSelector>
+        </div>
       </div>
+
       <div className="canvas-container">
         <canvas ref={chartEl} />
         <div className="current-value-sec" ref={valueContainerElRef}>
