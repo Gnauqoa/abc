@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
 import sensors from "../../services/sensor-service";
-import { Button } from "framework7-react";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
@@ -19,7 +18,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      height: "60%",
+      height: "40%",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -169,11 +168,13 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
               </td>
               <td>
                 <div className="header-name">
-                  <SensorSelector
-                    selectedSensor={widget.sensor}
-                    onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-                    customStyle={PAGE_SETTINGS[chartLayout]["custom-select"]}
-                  ></SensorSelector>
+                  <div className="sensor-select-container-table-chart">
+                    <SensorSelector
+                      selectedSensor={widget.sensor}
+                      hideDisplayUnit={true}
+                      onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+                    ></SensorSelector>
+                  </div>
                 </div>
                 <div className="header-unit">({unit})</div>
               </td>

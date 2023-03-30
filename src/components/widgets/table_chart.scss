@@ -117,3 +117,16 @@
     }
   }
 }
+
+.sensor-select-container-table-chart {
+  z-index: 1;
+  position: absolute;
+  display: block;
+  width: 35%;
+  .button {
+    background-color: #ffbb02;
+    font-size: 18px;
+    color: black;
+    border-radius: 5px;
+  }
+}
