@@ -20,7 +20,7 @@ import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
-import Table from "../components/widgets/table";
+import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 
 const activityService = new storeService("activity");
@@ -59,34 +59,19 @@ export default ({ f7route, f7router }) => {
   const [widgets, setWidgets] = useState(activity.widgets);
 
   const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState(0);
   const [dataRun, setDataRun] = useState([]);
   const [, setForceUpdate] = useState(0);
   const lineChartRef = useRef();
 
   useEffect(() => {
     let subscriberIds = [];
-    DataManagerIST.setCollectingDataFrequency(frequency);
+    widgets.forEach((w) => {
+      const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
+      subscriberIds.push(subscriberId);
+    });
 
-    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
-      if (isRunning) {
-        DataManagerIST.startCollectingData();
-      } else {
-        DataManagerIST.stopCollectingData();
-      }
-    } else {
-      if (isRunning) {
-        console.log(">>>>> Start DataManagerIST");
-        widgets.forEach((w) => {
-          const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-          subscriberIds.push(subscriberId);
-        });
-      } else {
-        if (subscriberIds.length) {
-          subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
-          subscriberIds = [];
-        }
-      }
-    }
+    DataManagerIST.setCollectingDataFrequency(frequency);
 
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
@@ -148,7 +133,13 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSampleClick() {
-    if (!isRunning) setDataRun(() => []);
+    if (!isRunning) {
+      DataManagerIST.startCollectingData();
+      setStartTime(Date.now());
+      setDataRun(() => []);
+    } else {
+      DataManagerIST.stopCollectingData();
+    }
     setIsRunning(!isRunning);
   }
 
@@ -158,7 +149,19 @@ export default ({ f7route, f7router }) => {
     const sensorId = data[2];
     const values = data.slice(3);
     if (values.length) {
-      setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
+      const newData = { time, sensorId, values };
+      if (isRunning) {
+        setDataRun((dataRun) => [...dataRun, newData]);
+      } else {
+        let updatedDataRun = [...dataRun];
+        const dataIndex = updatedDataRun.findIndex((d) => d.sensorId === sensorId);
+        if (dataIndex >= 0) {
+          updatedDataRun[dataIndex] = newData;
+        } else {
+          updatedDataRun.push(newData);
+        }
+        setDataRun(updatedDataRun);
+      }
     }
   }
 
@@ -177,29 +180,40 @@ export default ({ f7route, f7router }) => {
 
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.pop()?.values[sensor.index] || "";
+    return sensorData.slice(-1)[0]?.values[sensor.index] || "";
   }
 
   function getDataForTable(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
+    return sensorData.map((d) => ({ time: d.time - startTime, value: d.values[sensor.index] })) || [];
   }
 
   function getDataForChart(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
-    lineChartRef.current &&
-      lineChartRef.current.setChartData({
-        chartData: [
-          {
-            name: "run1",
-            data: data,
-          },
-        ],
-        xUnit: "ms",
-        yUnit: "",
-        maxHz: 10,
+    const data = sensorData.map((d) => ({ x: d.time - startTime, y: d.values[sensor.index] })) || [];
+    if (lineChartRef.current && Object.keys(data).length !== 0) {
+      let currentData = data.slice(-1)[0];
+      if (!isRunning) {
+        currentData = { ...currentData, x: 0 };
+      }
+      lineChartRef.current.setCurrentData({
+        data: currentData,
       });
+
+      if (isRunning) {
+        lineChartRef.current.setChartData({
+          chartData: [
+            {
+              name: "run1",
+              data: data,
+            },
+          ],
+          xUnit: "ms",
+          yUnit: "",
+          maxHz: 10,
+        });
+      }
+    }
   }
 
   return (
@@ -222,10 +236,12 @@ export default ({ f7route, f7router }) => {
             <>
               <div className="__card __card-left">
                 {activity.layout === LAYOUT_TABLE_CHART && (
-                  <Table
+                  <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_TABLE_CHART}
+                    isRunning={isRunning}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
@@ -246,10 +262,12 @@ export default ({ f7route, f7router }) => {
                   />
                 )}
                 {activity.layout === LAYOUT_NUMBER_TABLE && (
-                  <Table
+                  <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_NUMBER_TABLE}
+                    isRunning={isRunning}
                   />
                 )}
               </div>
@@ -266,10 +284,12 @@ export default ({ f7route, f7router }) => {
                 />
               )}
               {activity.layout === LAYOUT_TABLE && (
-                <Table
+                <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
+                  chartLayout={LAYOUT_TABLE}
+                  isRunning={isRunning}
                 />
               )}
               {activity.layout === LAYOUT_NUMBER && (
