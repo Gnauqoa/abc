@@ -192,7 +192,9 @@ class DataManager {
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
-      console.log(`Frequency set to ${frequency} Hz. Switching to auto-sampling mode.`);
+      console.log(
+        `Frequency set to ${frequency}Hz - ${this.collectingDataInterval}ms. Switching to auto-sampling mode.`
+      );
     }
 
     return true;
@@ -319,8 +321,7 @@ class DataManager {
     }
 
     const dataRunId = this.curDataRunId;
-    // const time = this.collectingDataTime;
-    const time = Date.now();
+    const time = this.collectingDataTime;
     const sensorData = this.buffer[Number(sensorId)] || [];
 
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
@@ -489,8 +490,7 @@ class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      // const time = this.isCollectingData ? this.collectingDataTime : Date.now();
-      const time = Date.now();
+      const time = this.isCollectingData ? this.collectingDataTime : 0;
       const sensorData = this.buffer[subscriber.sensorId] || [];
 
       // Notify subscriber
