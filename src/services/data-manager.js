@@ -319,8 +319,7 @@ class DataManager {
     }
 
     const dataRunId = this.curDataRunId;
-    // const time = this.collectingDataTime;
-    const time = Date.now();
+    const time = this.collectingDataTime;
     const sensorData = this.buffer[Number(sensorId)] || [];
 
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
@@ -489,8 +488,7 @@ class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      // const time = this.isCollectingData ? this.collectingDataTime : Date.now();
-      const time = Date.now();
+      const time = this.isCollectingData ? this.collectingDataTime : 0;
       const sensorData = this.buffer[subscriber.sensorId] || [];
 
       // Notify subscriber

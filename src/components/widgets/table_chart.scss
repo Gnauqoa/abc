@@ -52,18 +52,20 @@
         }
         .header-name {
           font-weight: bold;
-          font-size: 36px;
+          font-size: 32px;
           height: 70%;
         }
         .header-unit {
           height: 20%;
-          font-size: 32px;
+          font-size: 22px;
           margin-bottom: 5%;
         }
         .custom-select {
           top: 0%;
           position: relative;
-          font-size: 26px;
+          font-size: 24px;
+          padding-left: 10%;
+          padding-right: 10%;
           white-space: pre-wrap; /* Break lines on whitespace, allow wrapping */
           overflow-wrap: break-word; /* Break long words into multiple lines */
         }
