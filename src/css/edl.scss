@@ -33,8 +33,17 @@
   }
   .__card-left {
     width: 33%;
+    .sensor-select-container-table-chart {
+      width: 47%;
+      .button {
+        font-size: 14px;
+      }
+    }
   }
   .__card-right {
+    .sensor-select-vertical-mount-container {
+      left: 37%
+    }
     width: 67%;
   }
 }

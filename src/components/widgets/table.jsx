@@ -27,8 +27,8 @@ const PAGE_SETTINGS = {
       margin: "3% 2%", // 3% top and bottom, 7% left and right
     },
     "custom-select": {
-      width: "90%",
-      height: "70%",
+      width: "70%",
+      height: "40%",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -38,7 +38,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      height: "60%",
+      height: "40%",
     },
   },
 };
