@@ -59,7 +59,7 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableChart = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
+const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
   const [unit, setUnit] = useState();
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
@@ -199,4 +199,4 @@ const TableChart = ({ data, widget, handleSensorChange, chartLayout, isRunning }
   );
 };
 
-export default TableChart;
+export default TableWidget;

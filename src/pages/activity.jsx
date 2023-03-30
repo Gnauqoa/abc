@@ -20,7 +20,7 @@ import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
-import TableChart from "../components/widgets/table";
+import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 
 const activityService = new storeService("activity");
@@ -236,7 +236,7 @@ export default ({ f7route, f7router }) => {
             <>
               <div className="__card __card-left">
                 {activity.layout === LAYOUT_TABLE_CHART && (
-                  <TableChart
+                  <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -262,7 +262,7 @@ export default ({ f7route, f7router }) => {
                   />
                 )}
                 {activity.layout === LAYOUT_NUMBER_TABLE && (
-                  <TableChart
+                  <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -284,7 +284,7 @@ export default ({ f7route, f7router }) => {
                 />
               )}
               {activity.layout === LAYOUT_TABLE && (
-                <TableChart
+                <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
