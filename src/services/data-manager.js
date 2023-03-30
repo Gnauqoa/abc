@@ -88,7 +88,6 @@ class DataManager {
 
     this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = sensors.map((sensor) => sensor.id);
-    this.storeService = new StoreService("data-manager");
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
@@ -385,10 +384,6 @@ class DataManager {
     exportToCSV("test.csv", rows);
   }
 
-  // -------------------------------- EDL -------------------------------- //
-  importELD() {}
-  exportEDL() {}
-
   // -------------------------------- Read sensor data -------------------------------- //
 
   /**
@@ -440,6 +435,11 @@ class DataManager {
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message} at ${parseData}`);
     }
+  }
+
+  getListActiveSensor() {
+    const activeSensors = Object.keys(this.buffer);
+    return activeSensors;
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
