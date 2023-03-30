@@ -506,17 +506,16 @@ class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const max = 10;
-      const min = 1;
-      const decimals = 2;
-
       const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
-      const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const datas = [data1, data2];
 
+      const datas = [];
       const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
-      const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
+      for (const numData in sensorInfo.data) {
+        const dataInfo = sensorInfo.data[numData];
+        const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);
+        datas.push(data);
+      }
+      const sensorData = datas.join(",");
       const dummyData = `@,${sensorId},${sensorData}, *`;
 
       this.callbackReadSensor(dummyData);
