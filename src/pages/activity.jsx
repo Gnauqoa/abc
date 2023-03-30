@@ -65,17 +65,17 @@ export default ({ f7route, f7router }) => {
 
   useEffect(() => {
     let subscriberIds = [];
+    DataManagerIST.setCollectingDataFrequency(frequency);
+
     widgets.forEach((w) => {
       const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
       subscriberIds.push(subscriberId);
     });
 
-    DataManagerIST.setCollectingDataFrequency(frequency);
-
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
-  }, [isRunning, widgets]);
+  }, [widgets]);
 
   function handleActivityNameChange(e) {
     setName(e.target.value);
@@ -133,6 +133,7 @@ export default ({ f7route, f7router }) => {
 
   function handleSampleClick() {
     if (!isRunning) {
+      DataManagerIST.setCollectingDataFrequency(frequency);
       DataManagerIST.startCollectingData();
       setDataRun(() => []);
     } else {

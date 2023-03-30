@@ -192,7 +192,9 @@ class DataManager {
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
-      console.log(`Frequency set to ${frequency} Hz. Switching to auto-sampling mode.`);
+      console.log(
+        `Frequency set to ${frequency}Hz - ${this.collectingDataInterval}ms. Switching to auto-sampling mode.`
+      );
     }
 
     return true;
