@@ -67,6 +67,9 @@ export default ({ f7route, f7router }) => {
     let subscriberIds = [];
     DataManagerIST.setCollectingDataFrequency(frequency);
 
+    if (subscriberIds.length) {
+      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
+    }
     widgets.forEach((w) => {
       const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
       subscriberIds.push(subscriberId);
@@ -75,7 +78,7 @@ export default ({ f7route, f7router }) => {
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
-  }, [widgets]);
+  }, [widgets, isRunning]);
 
   function handleActivityNameChange(e) {
     setName(e.target.value);
@@ -191,6 +194,7 @@ export default ({ f7route, f7router }) => {
   }
 
   function getDataForTable(sensor) {
+    console.log(">>>>dataRun table", dataRun)
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
   }

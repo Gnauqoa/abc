@@ -26,7 +26,20 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChang
 
   useEffect(() => {
     appendSensorStatusKey();
+    setInitSelectedSensor();
   }, [""]);
+
+  const setInitSelectedSensor = () => {
+    if (Object.keys(selectedSensor).length != 0) {
+      const sensorId = parseInt(selectedSensor.id),
+        sensorIndex = parseInt(selectedSensor.index),
+        existingSensorData = sensorList.find((s) => s.id == sensorId),
+        sensorDetailData = existingSensorData.data[sensorIndex];
+      setSelectedSensorState(
+        hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
+      );
+    }
+  };
 
   const changeHandler = (value) => {
     const selectedValueString = value;
