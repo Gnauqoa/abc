@@ -1,7 +1,7 @@
 import React from "react";
 import { getUnit } from "../../services/sensor-service";
-import SensorSelector from "../sensor-selector";
 import "./number.scss";
+import SensorSelector from "../sensor-selector";
 
 export default ({ value, widget, handleSensorChange }) => {
   const sensor = widget.sensor;
