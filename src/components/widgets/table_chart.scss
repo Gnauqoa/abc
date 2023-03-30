@@ -1,0 +1,130 @@
+.wapper {
+  background-color: #ffffff;
+  border-radius: 5px;
+
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &__chart {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    table-layout: fixed;
+    position: relative;
+
+    &__table {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    &__table__body {
+      display: block;
+      height: 94%;
+
+      .header {
+        height: 140px;
+        .custom-select,
+        td {
+          vertical-align: middle;
+          text-align: center;
+          padding: 0;
+        }
+
+        .header-name,
+        .header-unit {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          text-align: center;
+          padding: 0;
+        }
+        .header-name {
+          font-weight: bold;
+          font-size: 36px;
+          height: 70%;
+        }
+        .header-unit {
+          height: 20%;
+          font-size: 32px;
+          margin-bottom: 5%;
+        }
+        .custom-select {
+          top: 0%;
+          position: relative;
+          font-size: 26px;
+          white-space: pre-wrap; /* Break lines on whitespace, allow wrapping */
+          overflow-wrap: break-word; /* Break long words into multiple lines */
+        }
+
+        .header-unit__input {
+          display: block;
+          width: 100%;
+          height: 100%;
+          text-align: center;
+        }
+      }
+
+      tr {
+        width: 100%;
+        display: flex;
+        height: 80px;
+        font-weight: bold;
+
+        td {
+          border-right: 2px solid #000000;
+          display: table-cell;
+          color: #000000;
+          font-weight: 500;
+          font-size: 36px;
+          width: 50%;
+
+          span,
+          input {
+            display: block;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            line-height: 80px;
+          }
+          input {
+            text-align: left;
+            padding-left: 10px;
+          }
+        }
+
+        td:last-child {
+          border-right: none;
+        }
+      }
+
+      tr:not(:last-child) td {
+        border-bottom: 2px solid #000000;
+      }
+    }
+  }
+}
+
+.sensor-select-container-table-chart {
+  z-index: 1;
+  position: absolute;
+  display: block;
+  width: 35%;
+  .button {
+    background-color: #ffbb02;
+    font-size: 18px;
+    color: black;
+    border-radius: 5px;
+  }
+}

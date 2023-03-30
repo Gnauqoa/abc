@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "framework7-react";
 import clsx from "clsx";
 
-export default ({ color, icon, onClick, disabled, popupClose }) => {
+export default ({ color, icon, onClick, disabled }) => {
   return (
     <Button
       disabled={disabled}
@@ -11,7 +11,6 @@ export default ({ color, icon, onClick, disabled, popupClose }) => {
       iconMd={`material:${icon}`}
       iconAurora={`material:${icon}`}
       className={clsx("button--round", color && "-icon-white")}
-      popupClose={popupClose}
       style={{ background: color }}
     ></Button>
   );

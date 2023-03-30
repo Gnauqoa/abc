@@ -1,8 +1,7 @@
 import React from "react";
 import { getUnit } from "../../services/sensor-service";
-import SensorSelector from "../sensor-selector";
 import "./number.scss";
-import SensorSelectorEnhanched from "../sensor-selector-enhanched";
+import SensorSelector from "../sensor-selector";
 
 export default ({ value, widget, handleSensorChange }) => {
   const sensor = widget.sensor;
@@ -12,10 +11,10 @@ export default ({ value, widget, handleSensorChange }) => {
         {value} <span className="__unit">{value.length && getUnit(sensor.id, sensor.index)}</span>
       </div>
       <div className="sensor-select-container">
-        <SensorSelectorEnhanched
+        <SensorSelector
           selectedSensor={widget.sensor}
           onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-        ></SensorSelectorEnhanched>
+        ></SensorSelector>
       </div>
     </div>
   );

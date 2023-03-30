@@ -5,7 +5,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.register(zoomPlugin);
 
-import SensorSelectorEnhanched from "../sensor-selector-enhanched";
+import SensorSelector from "../sensor-selector";
 
 const log = (text, data) => {
   let debug = true;
@@ -405,11 +405,11 @@ let LineChart = (props, ref) => {
 
   return (
     <div className="line-chart-wapper">
-      <div className="sensor-select-container">
-        <SensorSelectorEnhanched
+      <div className="sensor-select-vertical-mount-container">
+        <SensorSelector
           selectedSensor={widget.sensor}
           onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-        ></SensorSelectorEnhanched>
+        ></SensorSelector>
       </div>
       <div className="canvas-container">
         <canvas ref={chartEl} />

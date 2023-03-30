@@ -5,7 +5,7 @@
   height: 100%;
   display: flex;
 
-  .sensor-select-container {
+  .sensor-select-vertical-mount-container {
     position: absolute;
     display: block;
     width: 25vw;
@@ -16,6 +16,10 @@
     text-align: center;
     text-align-last: center;
     z-index: 1;
+    .button {
+      background-color: #ffbb02;
+      color: black;
+    }
   }
   .canvas-container {
     margin-left: 40px;

@@ -20,7 +20,7 @@ import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import Number from "../components/widgets/number";
-import Table from "../components/widgets/table";
+import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 
 const activityService = new storeService("activity");
@@ -236,10 +236,12 @@ export default ({ f7route, f7router }) => {
             <>
               <div className="__card __card-left">
                 {activity.layout === LAYOUT_TABLE_CHART && (
-                  <Table
+                  <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_TABLE_CHART}
+                    isRunning={isRunning}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
@@ -260,10 +262,12 @@ export default ({ f7route, f7router }) => {
                   />
                 )}
                 {activity.layout === LAYOUT_NUMBER_TABLE && (
-                  <Table
+                  <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_NUMBER_TABLE}
+                    isRunning={isRunning}
                   />
                 )}
               </div>
@@ -280,10 +284,12 @@ export default ({ f7route, f7router }) => {
                 />
               )}
               {activity.layout === LAYOUT_TABLE && (
-                <Table
+                <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
+                  chartLayout={LAYOUT_TABLE}
+                  isRunning={isRunning}
                 />
               )}
               {activity.layout === LAYOUT_NUMBER && (
