@@ -13,10 +13,9 @@
 
   .sensor-select-container {
     position: absolute;
-    bottom: 50px;
-    display: block;
-    top: 94.5%;
-    left: 1%;
+    bottom: -10px;
+    left: 50%;
+    transform: translate(-50%, -50%);
     .button {
       background-color: #ffbb02;
       color: black;

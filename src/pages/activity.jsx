@@ -164,7 +164,6 @@ export default ({ f7route, f7router }) => {
             break;
           }
         }
-        console.log(updatedDataRun);
         if (dataIndex >= 0) {
           updatedDataRun[dataIndex] = newData;
         } else {
@@ -194,7 +193,6 @@ export default ({ f7route, f7router }) => {
   }
 
   function getDataForTable(sensor) {
-    console.log(">>>>dataRun table", dataRun)
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
   }
