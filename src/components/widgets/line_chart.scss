@@ -35,12 +35,24 @@
     }
     > .current-value-sec {
       position: absolute;
+      right: 0px;
       display: flex;
       align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      font-size: 18px;
 
       > .value-container {
         margin-left: 5px;
       }
     }
+  }
+}
+body {
+  .chartjs-tooltip-custom {
+    transform: translate(0, -50%);
+    background-color: rgb(185 185 185 / 73%);
+    padding: 5px;
+    border-radius: 4px;
   }
 }
