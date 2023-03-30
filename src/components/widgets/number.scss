@@ -14,11 +14,13 @@
   .sensor-select-container {
     position: absolute;
     bottom: 50px;
-    .custom-select {
-      //position: relative;
-      display: block;
-      top: 50%;
-      left: 50%;
+    //position: relative;
+    display: block;
+    top: 92%;
+    left: 2%;
+    .button {
+      background-color: #ffbb02;
+      color: black;
     }
   }
 }
