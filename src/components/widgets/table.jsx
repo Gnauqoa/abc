@@ -59,8 +59,7 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableChart = (props) => {
-  const { data, widget, handleSensorChange, chartLayout, isRunning } = props;
+const TableChart = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
   const [unit, setUnit] = useState();
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
@@ -86,7 +85,12 @@ const TableChart = (props) => {
 
     if (isRunning) {
       const newRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (time / 1000).toFixed(1) : rows[numRows]["colum1"],
+        colum1:
+          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
+            ? (time / 1000).toFixed(1)
+            : rows[numRows]
+            ? rows[numRows]["colum1"]
+            : "",
         colum2: value,
       };
 
@@ -120,9 +124,8 @@ const TableChart = (props) => {
     });
   };
 
-  const handleFirstColumSelector = (evt) => {
-    const optionId = evt.target.value;
-    setFirstColumnOption(optionId);
+  const handleFirstColumSelector = ({ target: { value } }) => {
+    setFirstColumnOption(value);
   };
 
   const scrollToRef = (ref) => {
@@ -178,7 +181,11 @@ const TableChart = (props) => {
                 ref={numRows < DEFAULT_ROWS || !isRunning ? null : index === rows.length ? lastRowRef : null}
               >
                 <td>
-                  <input type="text" defaultValue={row.colum1} />
+                  <input
+                    type="text"
+                    defaultValue={row.colum1}
+                    disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                  />
                 </td>
                 <td>
                   <span>{row.colum2}</span>
