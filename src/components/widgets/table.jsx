@@ -168,6 +168,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
                   <div className="sensor-select-container-table-chart">
                     <SensorSelector
                       selectedSensor={widget.sensor}
+                      hideDisplayUnit={true}
                       onChange={(sensor) => handleSensorChange(widget.id, sensor)}
                     ></SensorSelector>
                   </div>

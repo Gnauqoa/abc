@@ -18,7 +18,7 @@ import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
 
 const defaultSensorSelectedValue = "";
-export default function SensorSelector({ selectedSensor, onChange = () => {} }) {
+export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState("");
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
 
@@ -39,7 +39,7 @@ export default function SensorSelector({ selectedSensor, onChange = () => {} }) 
           sensorDetailData = existingSensorData.data.find((s) => s.id == sensorDetailId),
           sensorIndex = _.findIndex(existingSensorData.data, (item) => item.id === sensorDetailId);
 
-        setSelectedSensorState(`${sensorDetailData.name} (${sensorDetailData.unit})`);
+        setSelectedSensorState(hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`);
         onChange({
           id: sensorId,
           index: sensorIndex,
