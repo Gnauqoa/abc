@@ -324,7 +324,7 @@ class DataManager {
     }
 
     const dataRunId = this.curDataRunId;
-    const time = this.collectingDataTime;
+    const time = (this.collectingDataTime / 1000).toFixed(3);
     const sensorData = this.buffer[Number(sensorId)] || [];
 
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
