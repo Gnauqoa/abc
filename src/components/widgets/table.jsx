@@ -19,6 +19,7 @@ const PAGE_SETTINGS = {
     "custom-select": {
       width: "70%",
       height: "40%",
+      fontSize: "24px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -29,6 +30,7 @@ const PAGE_SETTINGS = {
     "custom-select": {
       width: "70%",
       height: "40%",
+      fontSize: "18px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -39,6 +41,7 @@ const PAGE_SETTINGS = {
     "custom-select": {
       width: "70%",
       height: "40%",
+      fontSize: "24px",
     },
   },
 };
