@@ -102,7 +102,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
       const newRow = {
         colum1:
           firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
-            ? (time / 1000).toFixed(0)
+            ? (time / 1000).toFixed(3)
             : rows[numRows]
             ? rows[numRows]["colum1"]
             : "",
@@ -113,11 +113,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
     } else {
       const newRow = {
         colum1:
-          numRows === 0
-            ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
-              ? "0"
-              : rows[numRows]["colum1"]
-            : rows[numRows - 1]["colum1"],
+          numRows === 0 ? (firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? "0.000" : rows[numRows]["colum1"]) : "",
         colum2: value,
       };
       updateRows(newRow);
