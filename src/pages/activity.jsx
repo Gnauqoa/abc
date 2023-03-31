@@ -155,19 +155,6 @@ export default ({ f7route, f7router }) => {
     }
   }
 
-  function handleSamplingManual() {
-    widgets.map((w) => {
-      const sensorId = w.sensor.id;
-      const data = DataManagerIST.getIndividualSample(sensorId);
-      const time = data[1];
-      const values = data.slice(3);
-      if (values.length) {
-        setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
-      }
-      console.log(">>>>> MANUAL - data manager:", data);
-    });
-  }
-
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     return sensorData.slice(-1)[0]?.values[sensor.index] || "";
@@ -232,6 +219,7 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
+                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
@@ -258,6 +246,7 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
+                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
               </div>
@@ -280,6 +269,7 @@ export default ({ f7route, f7router }) => {
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
+                  samplingMode={DataManagerIST.getSamplingMode()}
                 />
               )}
               {activity.layout === LAYOUT_NUMBER && (
@@ -297,7 +287,6 @@ export default ({ f7route, f7router }) => {
             <SamplingSetting
               isRunning={isRunning}
               frequency={frequency}
-              handleSamplingManual={handleSamplingManual}
               handleFrequencySelect={handleFrequencySelect}
               handleChangeSamplingMode={handleChangeSamplingMode}
             />
