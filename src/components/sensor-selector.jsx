@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   Popup,
@@ -113,20 +113,22 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
     }, 1000);
   };
 
+  const sensorPopup = useRef(null);
+
   return (
     <div>
       <Button
         fill
         round
-        popupOpen=".sensor-selector-popup"
         onClick={() => {
           updateSensorStatus();
+          sensorPopup.current.f7Popup().open();
         }}
       >
         {selectedSensorState === "" ? "----- Chọn một cảm biến bất kì -----" : selectedSensorState}
       </Button>
       <Popup
-        className="sensor-selector-popup"
+        ref={sensorPopup}
         opened={sensorSelectPopupOpened}
         onPopupClosed={() => setSensorSelectPopupOpened(false)}
       >
