@@ -203,6 +203,10 @@ class DataManager {
     return (1 / Number(this.collectingDataInterval)) * 1000;
   }
 
+  getSamplingMode(){
+    return this.samplingMode
+  }
+
   // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
@@ -406,7 +410,7 @@ class DataManager {
       this.buffer[sensorId] = sensorsData;
 
       // Emit subscribers when not in collecting data mode
-      if (!this.isCollectingData) this.emitSubscribers();
+      if (!this.isCollectingData || this.samplingMode === SAMPLING_MANUAL) this.emitSubscribers();
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
