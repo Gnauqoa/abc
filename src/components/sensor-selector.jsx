@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   Popup,
@@ -11,15 +11,16 @@ import {
   ListItem,
   AccordionContent,
   PageContent,
+  f7,
 } from "framework7-react";
 import _ from "lodash";
 import sensorList from "../services/sensor-service";
 import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
 
-const defaultSensorSelectedValue = "";
-export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChange = () => {} }) {
+export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState("");
+  const [selectedSensorIdState, setSelectedSensorIdState] = useState("");
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
 
   let sensorListForDislpay = sensorList;
@@ -38,6 +39,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChang
       setSelectedSensorState(
         hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
       );
+      setSelectedSensorIdState(sensorId);
     }
   };
 
@@ -52,16 +54,19 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChang
           sensorDetailData = existingSensorData.data.find((s) => s.id == sensorDetailId),
           sensorIndex = _.findIndex(existingSensorData.data, (item) => item.id === sensorDetailId);
 
-        setSelectedSensorState(hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`);
+        setSelectedSensorState(
+          hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
+        );
+        setSelectedSensorIdState(sensorId);
         onChange({
           id: sensorId,
           index: sensorIndex,
         });
       }
     }
-
     // console.log("Selected sensor with Id: 👉️", selectedValueString);
   };
+
   const appendSensorStatusKey = () => {
     Object.keys(sensorListForDislpay).forEach((key) => {
       Object.assign(sensorListForDislpay[key], { sensorStatus: "offline" });
@@ -69,30 +74,61 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit,onChang
   };
 
   const sortSensorList = () => {
-    sensorListForDislpay = sensorList.sort((a) => {
-      if (a.sensorStatus === 'online') {
+    sensorListForDislpay = sensorList.sort((a, b) => {
+      if (a.id === selectedSensorIdState) {
         return -1;
+      }
+
+      if (b.id === selectedSensorIdState) {
+        return 1;
+      }
+
+      if (a.sensorStatus === b.sensorStatus) {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      }
+
+      if (a.sensorStatus === "online") {
+        return -1;
+      } else {
+        return 1;
       }
     });
   };
 
   const updateSensorStatus = () => {
+    f7.dialog.preloader();
+    const activeSensors = DataManagerIST.getListActiveSensor();
     sensorListForDislpay.forEach((item) => {
-      const sample = DataManagerIST.getIndividualSample(item["id"]);
-      console.log(sample.slice(3).length === 0);
-      const isSensorOffline = sample.slice(3).length === 0;
-      item.sensorStatus = isSensorOffline ? "offline" : "online";
+      item.sensorStatus = activeSensors.includes(item.id.toString()) ? "online" : "offline";
     });
     sortSensorList();
+    setTimeout(() => {
+      f7.dialog.close();
+    }, 1000);
   };
+
+  const sensorPopup = useRef(null);
 
   return (
     <div>
-      <Button fill round popupOpen=".sensor-selector-popup" onClick={() => updateSensorStatus()}>
+      <Button
+        fill
+        round
+        onClick={() => {
+          updateSensorStatus();
+          sensorPopup.current.f7Popup().open();
+        }}
+      >
         {selectedSensorState === "" ? "----- Chọn một cảm biến bất kì -----" : selectedSensorState}
       </Button>
       <Popup
-        className="sensor-selector-popup"
+        ref={sensorPopup}
         opened={sensorSelectPopupOpened}
         onPopupClosed={() => setSensorSelectPopupOpened(false)}
       >

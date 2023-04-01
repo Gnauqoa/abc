@@ -203,6 +203,10 @@ class DataManager {
     return (1 / Number(this.collectingDataInterval)) * 1000;
   }
 
+  getSamplingMode() {
+    return this.samplingMode;
+  }
+
   // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
@@ -320,7 +324,7 @@ class DataManager {
     }
 
     const dataRunId = this.curDataRunId;
-    const time = this.collectingDataTime;
+    const time = (this.collectingDataTime / 1000).toFixed(3);
     const sensorData = this.buffer[Number(sensorId)] || [];
 
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
@@ -406,7 +410,7 @@ class DataManager {
       this.buffer[sensorId] = sensorsData;
 
       // Emit subscribers when not in collecting data mode
-      if (!this.isCollectingData) this.emitSubscribers();
+      if (!this.isCollectingData || this.samplingMode === SAMPLING_MANUAL) this.emitSubscribers();
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
@@ -490,7 +494,7 @@ class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      const time = this.isCollectingData ? this.collectingDataTime : 0;
+      const time = this.isCollectingData ? (this.collectingDataTime / 1000).toFixed(3) : "0.000";
       const sensorData = this.buffer[subscriber.sensorId] || [];
 
       // Notify subscriber
