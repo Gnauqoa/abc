@@ -32,7 +32,7 @@
       height: 94%;
 
       .header {
-        height: 140px;
+        height: 100px;
         .custom-select,
         td {
           vertical-align: middle;
@@ -53,19 +53,19 @@
         .header-name {
           font-weight: bold;
           font-size: 32px;
-          height: 70%;
+          height: 65%;
         }
         .header-unit {
-          height: 20%;
+          height: 30%;
           font-size: 22px;
-          margin-bottom: 5%;
+          margin-bottom: 10px;
         }
         .custom-select {
           top: 0%;
           position: relative;
-          font-size: 24px;
           padding-left: 10%;
           padding-right: 10%;
+          height: 60%;
           white-space: pre-wrap; /* Break lines on whitespace, allow wrapping */
           overflow-wrap: break-word; /* Break long words into multiple lines */
         }
@@ -81,7 +81,7 @@
       tr {
         width: 100%;
         display: flex;
-        height: 80px;
+        height: 40px;
         font-weight: bold;
 
         td {
@@ -89,7 +89,7 @@
           display: table-cell;
           color: #000000;
           font-weight: 500;
-          font-size: 36px;
+          font-size: 26px;
           width: 50%;
 
           span,
@@ -98,7 +98,6 @@
             width: 100%;
             height: 100%;
             text-align: center;
-            line-height: 80px;
           }
           input {
             text-align: left;

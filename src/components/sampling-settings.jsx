@@ -4,7 +4,7 @@ import { Popover, List, Button, f7 } from "framework7-react";
 import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME } from "../js/constants";
 import dialog from "./dialog";
 
-export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySelect }) => {
+export default ({ isRunning, frequency, handleFrequencySelect }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
 
   const handleGetSampleSettings = (samplingSettings) => {
@@ -33,7 +33,13 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
   };
 
   const onSelectFrequency = (frequency) => {
-    handleFrequencySelect(frequency);
+    if (frequency === SAMPLING_MANUAL_NAME) {
+      handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
+    } else {
+      const frequencyNormalized = String(frequency).replace("HZ", "").trim();
+      const frequencyNumber = Number(frequencyNormalized);
+      handleFrequencySelect(frequencyNumber);
+    }
     f7.popover.close();
   };
 
@@ -58,12 +64,29 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
       >
         {isManualMode ? SAMPLING_MANUAL_NAME : `Định kỳ: ${frequency}Hz`}
       </Button>
-
+      <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
+        <List className="test">
+          {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
+            const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f}HZ`;
+            return (
+              <Button
+                key={frequency}
+                textColor="black"
+                onClick={() => {
+                  onSelectFrequency(frequency);
+                }}
+              >
+                {frequency}
+              </Button>
+            );
+          })}
+        </List>
+      </Popover>
       {isManualMode && (
         <Button
           disabled={!isRunning}
           onClick={() => {
-            handleSamplingManual();
+            document.dispatchEvent(new CustomEvent("getIndividualSample"));
           }}
           iconIos={"material:done"}
           iconMd={"material:done"}
@@ -78,22 +101,6 @@ export default ({ isRunning, frequency, handleSamplingManual, handleFrequencySel
           }}
         ></Button>
       )}
-
-      <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
-        <List className="test">
-          {FREQUENCIES.map((frequency) => (
-            <Button
-              key={frequency}
-              textColor="black"
-              onClick={() => {
-                onSelectFrequency(frequency);
-              }}
-            >
-              {frequency}HZ
-            </Button>
-          ))}
-        </List>
-      </Popover>
     </div>
   );
 };

@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { forwardRef, useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
+
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
 import sensors from "../../services/sensor-service";
+import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
@@ -13,22 +16,22 @@ const FIRST_COLUMN_CUSTOM_OPT = "custom";
 const PAGE_SETTINGS = {
   [LAYOUT_TABLE]: {
     "table-chart-body": {
-      width: "86%",
+      width: "96%",
       margin: "3% 7%", // 3% top and bottom, 7% left and right
     },
     "custom-select": {
       width: "70%",
-      height: "40%",
+      fontSize: "24px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
     "table-chart-body": {
-      width: "96%",
+      width: "98%",
       margin: "3% 2%", // 3% top and bottom, 7% left and right
     },
     "custom-select": {
-      width: "70%",
-      height: "40%",
+      width: "97%",
+      fontSize: "18px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -37,8 +40,8 @@ const PAGE_SETTINGS = {
       margin: "3% 5%", // 3% top and bottom, 7% left and right
     },
     "custom-select": {
-      width: "70%",
-      height: "40%",
+      width: "76%",
+      fontSize: "24px",
     },
   },
 };
@@ -59,13 +62,23 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
+const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
   const [unit, setUnit] = useState();
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = () => {
+      setNumRows((prev) => prev + 1);
+    };
+    document.addEventListener("getIndividualSample", handleClick);
+    return () => {
+      document.removeEventListener("getIndividualSample", handleClick);
+    };
+  }, []);
 
   useEffect(() => {
     const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
@@ -75,9 +88,11 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
 
   useEffect(() => {
     if (data.length === 0) {
-      setNumRows(0);
-      setRows(defaultRows);
-      scrollToRef(headerRowRef);
+      if (numRows !== 0) {
+        setNumRows(0);
+        setRows(defaultRows);
+        scrollToRef(headerRowRef);
+      }
       return;
     }
     const newData = data[data.length - 1];
@@ -85,25 +100,14 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
 
     if (isRunning) {
       const newRow = {
-        colum1:
-          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
-            ? (time / 1000).toFixed(0)
-            : rows[numRows]
-            ? rows[numRows]["colum1"]
-            : "",
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows] ? rows[numRows]["colum1"] : "",
         colum2: value,
       };
 
       updateRows(newRow);
-      setNumRows((prevNumRows) => prevNumRows + 1);
     } else {
       const newRow = {
-        colum1:
-          numRows === 0
-            ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT
-              ? "0"
-              : rows[numRows]["colum1"]
-            : rows[numRows - 1]["colum1"],
+        colum1: numRows === 0 ? (firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows]["colum1"]) : "",
         colum2: value,
       };
       updateRows(newRow);
@@ -113,17 +117,24 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning 
   }, [data]);
 
   const updateRows = (newRow) => {
-    setRows((rows) => {
-      let newRows;
-      if (numRows === 0 || (isRunning && numRows < DEFAULT_ROWS)) {
-        newRows = [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)];
-      } else if (numRows < DEFAULT_ROWS) {
-        newRows = [...rows.slice(0, numRows - 1), newRow, ...rows.slice(numRows, DEFAULT_ROWS)];
-      } else if (numRows >= DEFAULT_ROWS) {
-        newRows = isRunning ? [...rows, newRow] : [...rows.slice(0, numRows - 1), newRow];
+    let newRows = [];
+
+    if (isRunning) {
+      newRows =
+        numRows < DEFAULT_ROWS
+          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
+          : [...rows, newRow];
+
+      if (samplingMode === SAMPLING_AUTO) {
+        setNumRows((prevNumRows) => prevNumRows + 1);
       }
-      return newRows;
-    });
+    } else {
+      newRows =
+        numRows < DEFAULT_ROWS
+          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
+          : [...rows.slice(0, numRows), newRow];
+    }
+    setRows(newRows);
   };
 
   const handleFirstColumSelector = ({ target: { value } }) => {

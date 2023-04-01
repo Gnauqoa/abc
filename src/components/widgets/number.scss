@@ -1,22 +1,24 @@
 .number-widget {
-  .__value {
-    font-size: 8rem;
-    color: #0086ff;
-  }
+  .__value,
   .__unit {
-    font-size: 4rem;
     color: #0086ff;
   }
-  text-align: center;
   position: relative;
   height: 100%;
 
+  .__value {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
   .sensor-select-container {
     position: absolute;
-    bottom: 50px;
-    display: block;
-    top: 94.5%;
-    left: 1%;
+    bottom: -10px;
+    left: 50%;
+    transform: translate(-50%, -50%);
     .button {
       background-color: #ffbb02;
       color: black;

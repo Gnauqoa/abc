@@ -203,6 +203,10 @@ class DataManager {
     return (1 / Number(this.collectingDataInterval)) * 1000;
   }
 
+  getSamplingMode() {
+    return this.samplingMode;
+  }
+
   // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
@@ -320,7 +324,7 @@ class DataManager {
     }
 
     const dataRunId = this.curDataRunId;
-    const time = this.collectingDataTime;
+    const time = (this.collectingDataTime / 1000).toFixed(3);
     const sensorData = this.buffer[Number(sensorId)] || [];
 
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [time] });
@@ -406,7 +410,7 @@ class DataManager {
       this.buffer[sensorId] = sensorsData;
 
       // Emit subscribers when not in collecting data mode
-      if (!this.isCollectingData) this.emitSubscribers();
+      if (!this.isCollectingData || this.samplingMode === SAMPLING_MANUAL) this.emitSubscribers();
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
@@ -490,7 +494,7 @@ class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      const time = this.isCollectingData ? this.collectingDataTime : 0;
+      const time = this.isCollectingData ? (this.collectingDataTime / 1000).toFixed(3) : "0.000";
       const sensorData = this.buffer[subscriber.sensorId] || [];
 
       // Notify subscriber
@@ -506,17 +510,16 @@ class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const max = 10;
-      const min = 1;
-      const decimals = 2;
-
       const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
-      const data1 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const data2 = (Math.random() * (max - min) + min).toFixed(decimals);
-      const datas = [data1, data2];
 
+      const datas = [];
       const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
-      const sensorData = datas.splice(0, sensorInfo.data.length).join(",");
+      for (const numData in sensorInfo.data) {
+        const dataInfo = sensorInfo.data[numData];
+        const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);
+        datas.push(data);
+      }
+      const sensorData = datas.join(",");
       const dummyData = `@,${sensorId},${sensorData}, *`;
 
       this.callbackReadSensor(dummyData);
