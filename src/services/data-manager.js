@@ -8,6 +8,7 @@ import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 export const SAMPLING_AUTO = 0;
 export const SAMPLING_MANUAL = 1;
+export const MANUAL_FREQUENCY = 1;
 
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
@@ -187,7 +188,10 @@ class DataManager {
 
     if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       this.samplingMode = SAMPLING_MANUAL;
-      console.log("Frequency set to 0 Hz. Switching to manual sampling mode.");
+      this.collectingDataInterval = (1 / MANUAL_FREQUENCY) * 1000;
+      console.log(
+        `Frequency set to ${MANUAL_FREQUENCY}Hz - ${this.collectingDataInterval}ms. Switching to manual-sampling mode.`
+      );
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
@@ -408,9 +412,6 @@ class DataManager {
       const sensorId = Number(splitData[1]);
       const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
-
-      // Emit subscribers when not in collecting data mode
-      if (!this.isCollectingData || this.samplingMode === SAMPLING_MANUAL) this.emitSubscribers();
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
@@ -454,23 +455,20 @@ class DataManager {
   runEmitSubscribersScheduler() {
     let counter = 0;
     this.emitSubscribersIntervalId = setInterval(() => {
-      // Check if in collecting data mode
-      if (!this.isCollectingData) return;
-
       try {
-        // If in auto-sampling mode, emit data and append to buffer
-        if (this.samplingMode === SAMPLING_AUTO) {
-          const curInterval = counter * this.emitSubscribersInterval;
-          if (curInterval % this.collectingDataInterval === 0) {
-            this.emitSubscribers();
-
-            // Add all data in buffer to data run
-            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
-          }
+        const curInterval = counter * this.emitSubscribersInterval;
+        if (curInterval % this.collectingDataInterval === 0) {
+          this.emitSubscribers();
         }
 
-        // Update total time collecting data
-        this.collectingDataTime += this.emitSubscribersInterval;
+        if (this.isCollectingData) {
+          if (this.samplingMode === SAMPLING_AUTO) {
+            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [this.collectingDataTime] });
+          }
+
+          // Update total time collecting data
+          this.collectingDataTime += this.emitSubscribersInterval;
+        }
 
         // Increment counter and loop back to 0 if greater than max interval
         counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
