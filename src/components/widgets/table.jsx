@@ -97,8 +97,8 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
   useEffect(() => {
     if (data.length === 0) {
       if (numRows !== 0) {
-        setRows(defaultRows);
         setNumRows(0);
+        setRows(defaultRows);
         scrollToRef(headerRowRef);
       }
       return;
@@ -137,7 +137,7 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
       newRows =
         numRows < DEFAULT_ROWS
           ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
-          : [...rows, newRow];
+          : [...rows.slice(0, numRows), newRow];
 
       if (samplingMode === SAMPLING_AUTO) {
         setNumRows((prevNumRows) => prevNumRows + 1);
@@ -218,33 +218,36 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
                 <div className="header-unit">({unit})</div>
               </td>
             </tr>
-            {[...rows, emptyRow].map((row, index) => (
-              <tr
-                key={index}
-                ref={
-                  numRows < NUM_ROWS_FIT_TABLE || !isRunning
-                    ? null
-                    : numRows < DEFAULT_ROWS
-                    ? index === numRows
-                      ? lastRowRef
-                      : null
-                    : index === rows.length
-                    ? lastRowRef
-                    : null
-                }
-              >
-                <td>
-                  <input
-                    type="text"
-                    defaultValue={row.colum1}
-                    disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
-                  />
-                </td>
-                <td>
-                  <span>{row.colum2}</span>
-                </td>
-              </tr>
-            ))}
+            {[...rows, emptyRow].map((row, index) => {
+              const ref = !isRunning
+                ? index === rows.length
+                  ? lastRowRef
+                  : null
+                : numRows < NUM_ROWS_FIT_TABLE || !isRunning
+                ? null
+                : numRows < DEFAULT_ROWS
+                ? index === numRows
+                  ? lastRowRef
+                  : null
+                : index === rows.length
+                ? lastRowRef
+                : null;
+
+              return (
+                <tr key={index} ref={ref}>
+                  <td>
+                    <input
+                      type="text"
+                      defaultValue={row.colum1}
+                      disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                    />
+                  </td>
+                  <td>
+                    <span>{row.colum2}</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
