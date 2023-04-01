@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
 import sensors from "../../services/sensor-service";
-import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
+import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
@@ -54,7 +54,7 @@ const FIRST_COLUMN_OPTIONS = [
   },
   {
     id: FIRST_COLUMN_CUSTOM_OPT,
-    name: "Custom",
+    name: "Người dùng nhập",
     unit: <input id={FIRST_COLUMN_CUSTOM_OPT} className="header-unit__input" type="text" placeholder="--------" />,
   },
 ];
@@ -62,19 +62,27 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
+const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
   const [unit, setUnit] = useState();
+  const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
+  // const [isInitialWithData, setIsInitialWithData] = useState(false);
+
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
   useEffect(() => {
     const handleClick = () => {
-      setNumRows((prev) => prev + 1);
+      setIsCollectingDataPressed(true);
     };
+
+    console.log(`TABLE_WIDGET-INIT-initialData_${initialData.length}`, initialData);
     document.addEventListener("getIndividualSample", handleClick);
+    if (initialData?.length !== 0) {
+      parseInitialDataRun(initialData);
+    }
     return () => {
       document.removeEventListener("getIndividualSample", handleClick);
     };
@@ -89,13 +97,20 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
   useEffect(() => {
     if (data.length === 0) {
       if (numRows !== 0) {
-        setNumRows(0);
         setRows(defaultRows);
+        setNumRows(0);
         scrollToRef(headerRowRef);
       }
       return;
     }
-    const newData = data[data.length - 1];
+    let newData;
+    if (isCollectingDataPressed) {
+      newData = DataManagerIST.getManualSample(widget?.sensor?.id);
+    } else {
+      newData = data[data.length - 1];
+    }
+
+    newData = data[data.length - 1];
     const { time, value } = newData;
 
     if (isRunning) {
@@ -114,11 +129,10 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
     }
 
     scrollToRef(lastRowRef);
-  }, [data]);
+  }, [data, isCollectingDataPressed]);
 
   const updateRows = (newRow) => {
     let newRows = [];
-
     if (isRunning) {
       newRows =
         numRows < DEFAULT_ROWS
@@ -127,6 +141,9 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
 
       if (samplingMode === SAMPLING_AUTO) {
         setNumRows((prevNumRows) => prevNumRows + 1);
+      } else if (samplingMode === SAMPLING_MANUAL && isCollectingDataPressed) {
+        setNumRows((prevNumRows) => prevNumRows + 1);
+        setIsCollectingDataPressed(false);
       }
     } else {
       newRows =
@@ -147,6 +164,17 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
     }
   };
 
+  const parseInitialDataRun = (dataRun) => {
+    const parsedRows = dataRun.map((data) => {
+      return {
+        colum1: data["time"],
+        colum2: data["value"],
+      };
+    });
+    const dataLength = dataRun.length;
+    setNumRows(dataLength);
+    setRows(dataLength < DEFAULT_ROWS ? [...parsedRows, ...rows.slice(dataLength, DEFAULT_ROWS)] : parsedRows);
+  };
   return (
     <div className="wapper">
       <div className="wapper__chart">
