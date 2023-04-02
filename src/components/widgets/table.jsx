@@ -190,33 +190,36 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
                 <div className="header-unit">({unit})</div>
               </td>
             </tr>
-            {[...rows, emptyRow].map((row, index) => (
-              <tr
-                key={index}
-                ref={
-                  numRows < NUM_ROWS_FIT_TABLE || !isRunning
-                    ? null
-                    : numRows < DEFAULT_ROWS
-                    ? index === numRows
-                      ? lastRowRef
-                      : null
-                    : index === rows.length
-                    ? lastRowRef
-                    : null
-                }
-              >
-                <td>
-                  <input
-                    type="text"
-                    defaultValue={row.colum1}
-                    disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
-                  />
-                </td>
-                <td>
-                  <span>{row.colum2}</span>
-                </td>
-              </tr>
-            ))}
+            {[...rows, emptyRow].map((row, index) => {
+              const ref = !isRunning
+                ? index === numRows
+                  ? lastRowRef
+                  : null
+                : numRows < NUM_ROWS_FIT_TABLE || !isRunning
+                ? null
+                : numRows < DEFAULT_ROWS
+                ? index === numRows
+                  ? lastRowRef
+                  : null
+                : index === rows.length
+                ? lastRowRef
+                : null;
+
+              return (
+                <tr key={index} ref={ref}>
+                  <td>
+                    <input
+                      type="text"
+                      defaultValue={row.colum1}
+                      disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                    />
+                  </td>
+                  <td>
+                    <span>{row.colum2}</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
