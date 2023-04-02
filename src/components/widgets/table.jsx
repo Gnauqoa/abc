@@ -224,7 +224,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
             </tr>
             {[...rows, emptyRow].map((row, index) => {
               const ref = !isRunning
-                ? index === rows.length
+                ? index === numRows
                   ? lastRowRef
                   : null
                 : numRows < NUM_ROWS_FIT_TABLE || !isRunning
