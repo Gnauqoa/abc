@@ -491,8 +491,6 @@ export class DataManager {
       const sensorId = Number(splitData[1]);
       const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
-
-      console.log("this.DATA_RUN: ", this.dataRuns);
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
@@ -569,7 +567,7 @@ export class DataManager {
             }
 
             // Update total time collecting data
-            this.collectingDataTime += this.emitSubscribersInterval;
+            this.collectingDataTime += this.collectingDataInterval;
           }
         }
 
