@@ -53,7 +53,6 @@ export default ({ f7route, f7router }) => {
   const [dataRun, setDataRun] = useState([]);
 
   const [isRunning, setIsRunning] = useState(false);
-  const [initialDataRun, setInitialDataRun] = useState([]);
   const [, setForceUpdate] = useState(0);
   const lineChartRef = useRef();
 
@@ -73,10 +72,9 @@ export default ({ f7route, f7router }) => {
     if (dataRunPreviews.length > 0) {
       const firstDataRunId = dataRunPreviews[0].id;
       const dataRun = DataManagerIST.getDataRunData(firstDataRunId);
-      console.log("dataRun", dataRun);
       const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
       const result = DataManagerIST.setCurrentDataRun(firstDataRunId);
-      result && setInitialDataRun(parsedDataRun);
+      result && setDataRun(parsedDataRun);
     }
 
     setName(oldActivity.name);
@@ -161,7 +159,6 @@ export default ({ f7route, f7router }) => {
       DataManagerIST.setCollectingDataFrequency(frequency);
       DataManagerIST.startCollectingData();
       setDataRun(() => []);
-      setInitialDataRun(() => []);
     } else {
       DataManagerIST.stopCollectingData();
     }
@@ -183,10 +180,9 @@ export default ({ f7route, f7router }) => {
     return sensorData.slice(-1)[0]?.values[sensor.index] || "";
   }
 
-  function getDataForTable(sensor, isInitial = false) {
-    const sensorData = (isInitial ? initialDataRun : dataRun).filter((d) => d.sensorId === sensor.id);
-    const tableData = sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
-    return tableData;
+  function getDataForTable(sensor) {
+    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
+    return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
   }
 
   function getDataForChart(sensor) {
@@ -239,7 +235,6 @@ export default ({ f7route, f7router }) => {
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
-                    initialData={getDataForTable(widgets[0].sensor, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
@@ -267,7 +262,6 @@ export default ({ f7route, f7router }) => {
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
-                    initialData={getDataForTable(widgets[0].sensor, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
@@ -291,7 +285,6 @@ export default ({ f7route, f7router }) => {
               {layout === LAYOUT_TABLE && (
                 <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
-                  initialData={getDataForTable(widgets[0].sensor, true)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}

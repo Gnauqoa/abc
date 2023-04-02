@@ -62,13 +62,13 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
+const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
   const [unit, setUnit] = useState();
   const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
-  // const [isInitialWithData, setIsInitialWithData] = useState(false);
+  const [isInitialWithData, setIsInitialWithData] = useState(false);
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
@@ -78,11 +78,12 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
       setIsCollectingDataPressed(true);
     };
 
-    console.log(`TABLE_WIDGET-INIT-initialData_${initialData.length}`, initialData);
+    console.log(`TABLE_WIDGET-INIT-initialData_${data.length}`, data);
     document.addEventListener("getIndividualSample", handleClick);
-    if (initialData?.length !== 0) {
-      parseInitialDataRun(initialData);
+    if (data?.length !== 0) {
+      parseInitialDataRun(data);
     }
+    setIsInitialWithData(true);
     return () => {
       document.removeEventListener("getIndividualSample", handleClick);
     };
@@ -95,6 +96,8 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
   }, [widget]);
 
   useEffect(() => {
+    if (!isInitialWithData) return;
+
     if (data.length === 0) {
       if (numRows !== 0) {
         setNumRows(0);
@@ -173,6 +176,7 @@ const TableWidget = ({ data, initialData, widget, handleSensorChange, chartLayou
     });
     const dataLength = dataRun.length;
     setNumRows(dataLength);
+    console.log("dataRun in parseInitialDataRun: ", parsedRows);
     setRows(dataLength < DEFAULT_ROWS ? [...parsedRows, ...rows.slice(dataLength, DEFAULT_ROWS)] : parsedRows);
   };
   return (
