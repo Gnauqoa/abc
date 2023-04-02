@@ -228,13 +228,7 @@ export default ({ f7route, f7router }) => {
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton
-            disabled={isRunning}
-            icon="settings"
-            onClick={() => {
-              DataManagerIST.init();
-            }}
-          />
+          <RoundButton disabled={isRunning} icon="settings" />
         </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
