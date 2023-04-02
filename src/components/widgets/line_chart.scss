@@ -26,17 +26,13 @@
       }
     }
   }
-  
+
   .canvas-container {
-    //margin-left: 60px;
     position: relative;
     flex: 1 0 0;
     height: 100%;
     width: 80%;
-    //padding-left: 60px;
-    > canvas {
-      //width: 100%;
-    }
+
     > .current-value-sec {
       position: absolute;
       right: 0px;
