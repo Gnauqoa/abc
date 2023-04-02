@@ -22,7 +22,7 @@ const path = require("path");
 
 const { cordova } = require("./package.json");
 // Module to control application life, browser window and tray.
-const { app, BrowserWindow, protocol, ipcMain } = require("electron");
+const { app, BrowserWindow, protocol, ipcMain, dialog } = require("electron");
 // Electron settings from .json file.
 const cdvElectronSettings = require("./cdv-electron-settings.json");
 const reservedScheme = require("./cdv-reserved-scheme.json");
@@ -167,6 +167,60 @@ ipcMain.handle("cdv-plugin-exec", async (_, serviceName, action, ...args) => {
     return Promise.reject(
       new Error(`The requested plugin service "${serviceName}" does not exist have native support.`)
     );
+  }
+});
+
+ipcMain.handle("openFile", async (_, filePath, option) => {
+  if (filePath) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, "utf-8", (err, content) => {
+        if (err) {
+          reject(err);
+        }
+        resolve({ filePath, content });
+      });
+    });
+  } else {
+    return dialog.showOpenDialog(option).then((data) => {
+      return new Promise((resolve, reject) => {
+        const filePath = data.filePaths[0];
+        fs.readFile(filePath, "utf-8", (err, content) => {
+          if (err) {
+            reject(err);
+          }
+          resolve({ filePath, content });
+        });
+      });
+    });
+  }
+});
+
+ipcMain.handle("saveFile", async (_, filePath, content, option) => {
+  if (filePath) {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(filePath, content, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(null);
+        }
+      });
+    });
+  } else {
+    return dialog.showSaveDialog(option).then((data) => {
+      return new Promise((resolve, reject) => {
+        if (!data.filePath) {
+          resolve(null);
+        }
+        fs.writeFile(data.filePath, content, (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    });
   }
 });
 

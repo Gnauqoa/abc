@@ -30,3 +30,8 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
 
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
 });
+
+contextBridge.exposeInMainWorld("fileApi", {
+  open: (filePath, option) => ipcRenderer.invoke("openFile", filePath, option),
+  save: (filePath, content, option) => ipcRenderer.invoke("saveFile", filePath, content, option),
+});
