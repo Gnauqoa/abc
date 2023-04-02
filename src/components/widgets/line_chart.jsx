@@ -2,12 +2,18 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react
 import "./line_chart.scss";
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import $ from "jquery";
 
 Chart.register(zoomPlugin);
 
 import SensorSelector from "../sensor-selector";
+import sensorList from "../../services/sensor-service";
 
-
+const defaultXUnit = "s",
+  roundX = 3;
+const roundXValue = (value) => {
+  return Math.round(value * Math.pow(10, roundX)) / Math.pow(10, roundX);
+};
 const log = (text, data) => {
   let debug = true;
   if (debug) {
@@ -17,106 +23,26 @@ const log = (text, data) => {
     }
   }
 };
-const getChartJsPlugin = ({ lastDataRef }) => {
+const getChartJsPlugin = ({ valueLabelContainerRef }) => {
   return {
     afterDraw: (chart, args, options) => {
       const { ctx } = chart;
       let xAxis = chart.scales["x"];
       let yAxis = chart.scales["y"];
-
-      const data = lastDataRef.current;
+      valueLabelContainerRef.current.style.top = `${yAxis.top + 5}px`;
+      valueLabelContainerRef.current.style.left = `${xAxis.left + 5}px`;
       ctx.save();
-      ctx.textAlign = "center";
-      ctx.font = "16px Arial";
-      ctx.fillStyle = "#000000";
-      ctx.textAlign = "left";
-      ctx.fillText(`x=${data.x || 0} y=${data.y || 0}`, xAxis.left + 5, yAxis.top + 5);
-
       ctx.restore();
-      // let maxValue = Math.max(...chart.data.datasets[0].data);
-      // let minValue = Math.min(...chart.data.datasets[0].data);
-      // if (chart.data.datasets.length > 0) {
-      //     const dataset = chart.data.datasets[chart.data.datasets.length - 1];
-      //     if (dataset.data.length > 0) {
-      //         const data = dataset.data[dataset.data.length - 1];
-      //         log("draw last data", data);
-      //         ctx.save();
-      //         ctx.textAlign = 'center';
-      //         ctx.font = '16px Arial';
-      //         ctx.fillStyle = '#000000';
-      //         ctx.textAlign = 'left';
-      //         ctx.fillText(`x=${data.x} y=${data.y}`, xAxis.left + 5, yAxis.top + 5);
-
-      //         //ctx.fillText('Dagens laveste temperatur = ' + minValue + 'Â°C', xAxis.left + 5, yAxis.top + 18);
-      //         ctx.restore();
-      //     }
-
-      // }
     },
   };
 };
-const buildChartData = ({ dataList = [], labelList = [], legend = "" }) => {
-  const data = {
-    //Bring in data
-    labels: labelList,
-    datasets: [
-      {
-        label: legend,
-        data: dataList,
-      },
-    ],
-  };
-  return data;
-};
 
-const checkDataChangeAndUpdate = ({ currentDataListRef, currentLabelListRef, newDataList, newLabelList }) => {
-  const result = {
-    isUpdated: false,
-    newDataItemList: [],
-    newLabelItemList: [],
-  };
-  if (newDataList && newLabelList) {
-    if (newDataList.length == 0 && newLabelList.length == 0) {
-      result.isUpdated = true;
-      currentDataListRef.current = [];
-      currentLabelListRef.current = [];
-    } else if (newDataList.length > currentDataListRef.current.length) {
-      for (let index = currentDataListRef.current.length; index < newDataList.length; index++) {
-        const data = newDataList[index],
-          label = newLabelList[index];
-        currentDataListRef.current.push(data);
-        result.newDataItemList.push(data);
-        currentLabelListRef.current.push(label);
-        result.newLabelItemList.push(label);
-      }
-
-      result.isUpdated = true;
-    }
-  }
-
-  return result;
-};
-
-const createChartDataParam = () => {
-  return {
-    //Bring in data
-    labels: [],
-    datasets: [
-      {
-        yAxisID: "y",
-        label: "",
-        data: [],
-      },
-    ],
-  };
-};
 /**
  *
  * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
  */
 const createChartJsData = ({ chartData = [] }) => {
   let chartDataParam = {
-    //Bring in data
     labels: [],
     datasets: [
       {
@@ -127,17 +53,28 @@ const createChartJsData = ({ chartData = [] }) => {
   };
 
   chartDataParam.datasets = [];
+  chartData.forEach((s) => {
+    const dataList = [];
+    let firstPoint = null;
 
-  chartData.forEach((s, index) => {
-    const dataList = [],
-      labelList = [];
-    s.data.forEach((d) => {
-      //dataList.push(d.y);
-      //labelList.push(d.x);
+    s.data.forEach((d, dataIndex) => {
+      if (dataIndex == 0) {
+        const firstData = s.data[0];
+        firstPoint = {
+          x: roundXValue(firstData.x),
+          y: firstData.y,
+        };
+      }
       dataList.push({
-        x: d.x,
+        x: roundXValue(d.x - firstPoint.x),
         y: d.y,
       });
+      // if (dataIndex == 2) {
+      //   dataList.push({
+      //     x: d.x - firstPoint.x,
+      //     y: d.y,
+      //   });
+      // }
     });
     chartDataParam.datasets.push({
       label: s.name,
@@ -145,158 +82,293 @@ const createChartJsData = ({ chartData = [] }) => {
     });
   });
 
+  /**For testing */
+  // chartData.forEach((s, index) => {
+  //   const dataList = [];
+  //   let firstPoint = null;
+
+  //   s.data.forEach((d, dataIndex) => {
+  //     if (dataIndex == 0) {
+  //       const firstData = s.data[0];
+  //       firstPoint = {
+  //         x: firstData.x,
+  //         y: firstData.y,
+  //       };
+  //     }
+  //     dataList.push({
+  //       x: d.x - firstPoint.x,
+  //       y: parseFloat(d.y) + 10,
+  //     });
+  //   });
+  //   chartDataParam.datasets.push({
+  //     label: s.name + "test",
+  //     data: dataList,
+  //   });
+  // });
+
   return chartDataParam;
+};
+
+const getMaxX = ({ chartData }) => {
+  let max = 0;
+  chartData.forEach((s) => {
+    if (s.data.length > 0) {
+      const lastData = s.data[s.data.length - 1],
+        firstData = s.data[0],
+        xValue = roundXValue(lastData.x - firstData.x);
+      if (xValue > max) {
+        max = xValue;
+      }
+    }
+  });
+
+  return max;
+};
+
+const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
+  const maxX = getMaxX({
+    chartData,
+  });
+
+  let suggestMaxX;
+  if (maxX <= firstPageStep) {
+    suggestMaxX = firstPageStep;
+  } else {
+    const numOfPage = Math.ceil((maxX - firstPageStep) / pageStep);
+    suggestMaxX = firstPageStep + pageStep * numOfPage;
+  }
+
+  return suggestMaxX;
 };
 
 /**
  * data: [{
  * name:string,
- * data: {
+ * data: [{
  * x: 0,
  * y:0
- * }
+ * }]
  * }]
  *
  */
-const updateChart = ({ chartInstance, data, xUnit, yUnit, maxHz }) => {
-  // newDataItemList.forEach(item => {
-  //     chartInstance.data.datasets[0].data.push(item);
-  // });
+const updateChart = ({ chartInstance, data, axisRef }) => {
+  const pageStep = 5,
+    firstPageStep = 10;
+  let suggestedMaxX = calculateSuggestMaxX({
+      chartData: data,
+      pageStep,
+      firstPageStep,
+    }),
+    stepSize;
 
-  // newLabelItemList.forEach(item => {
-  //     chartInstance.data.labels.push(item);
-  // });
-  // data.forEach((d, index) => {
-  //     chartInstance.data.datasets[0].data
+  if (!suggestedMaxX) {
+    suggestedMaxX = pageStep;
+  }
 
-  // });
-  // const currentChartDataLength = chartInstance.data.datasets[0].data.length;
-  // for (let i = 0; i < currentChartDataLength; i++) {
-  //     const element = array[i];
-
-  // }
+  stepSize = suggestedMaxX / 10;
 
   chartInstance.data = createChartJsData({
     chartData: data,
   });
 
   chartInstance.options.animation = false;
+
   chartInstance.options.scales = {
     y: {
+      min: axisRef.current.yMin,
+      suggestedMax: axisRef.current.yMax,
       title: {
         color: "orange",
-        display: true,
-        text: yUnit,
+        display: false,
+        text: axisRef.current.yUnit,
       },
     },
     x: {
       type: "linear",
+      suggestedMin: 0,
+      suggestedMax: suggestedMaxX,
       ticks: {
         // forces step size to be 50 units
-        stepSize: ((1 / maxHz) * 1000).toFixed(0),
+        //stepSize: ((1 / maxHz) * 1000).toFixed(0),
+        //stepSize: stepSize
       },
       title: {
         color: "orange",
         display: true,
-        text: xUnit,
+        //text: axisRef.current.xUnit,
+        text: `(${defaultXUnit})`,
         align: "end",
       },
     },
   };
+  if (stepSize) {
+    //log("chart step size", stepSize);
+    chartInstance.options.scales.x.ticks.stepSize = stepSize;
+  }
 
   chartInstance.update();
 };
-const findDataSeries = ({ charData = [], name }) => {
-  const existingSeries = charData.find((d) => d.name == name);
-  return existingSeries;
-};
-const addOrUpdateChart = ({ currentDataListRef, chartInstanceRef, dataSeries }) => {
-  /**
-   * name: "run1"
-   * data: [{x,y}, ...]
-   */
-  // let existingDataSeries = findDataSeries({
-  //     charData: currentDataListRef.current,
-  //     name: dataSeries.name
-  // });
-  // if(existingDataSeries) {
 
-  // } else {
-  //     currentDataListRef.current.push();
-  // }
-  //currentDataListRef.current
-  // currentDataListRef.current.push({
-  //     name,
-  //     data
-  // });
-  updateChart({
-    chartInstance: chartInstanceRef.current,
-    data: dataSeries.data,
-    index: 0,
+const createChartDataAndParseXAxis = ({ chartData }) => {
+  const result = chartData.map((dataSeries) => {
+    return {
+      name: dataSeries.name,
+      data: dataSeries.data.map((item) => {
+        return {
+          x: roundXValue(parseFloat(item.x)),
+          y: item.y,
+        };
+      }),
+    };
   });
+
+  return result;
+};
+
+const roundAndGetSignificantDigitString = ({ n }) => {
+  if (typeof n === "number") {
+    return n.toString();
+  } else if (typeof n === "string") {
+    return roundXValue(parseFloat(n)).toString();
+  } else {
+    return NaN;
+  }
+};
+
+const getCustomTooltipFunc = ({ axisRef }) => {
+  return (context) => {
+    let tooltipEl = document.getElementById("chartjs-tooltip");
+
+    // Create element on first render
+    if (!tooltipEl) {
+      tooltipEl = document.createElement("div");
+      tooltipEl.classList.add("chartjs-tooltip-custom");
+      tooltipEl.id = "chartjs-tooltip";
+      tooltipEl.innerHTML = "<table></table>";
+      document.body.appendChild(tooltipEl);
+    }
+
+    // Hide if no tooltip
+    const tooltipModel = context.tooltip;
+    if (tooltipModel.opacity === 0) {
+      tooltipEl.style.opacity = 0;
+      return;
+    }
+
+    // Set caret Position
+    tooltipEl.classList.remove("above", "below", "no-transform");
+    if (tooltipModel.yAlign) {
+      tooltipEl.classList.add(tooltipModel.yAlign);
+    } else {
+      tooltipEl.classList.add("no-transform");
+    }
+
+    function getBody(bodyItem) {
+      return bodyItem.lines;
+    }
+
+    // Set Text
+    if (tooltipModel.body) {
+      const bodyLines = tooltipModel.body.map(getBody);
+      let innerHtml = "<tbody>";
+      bodyLines.forEach(function (body, i) {
+        const colors = tooltipModel.labelColors[i];
+        let bodyValues = [];
+        if (body && body.length > 0) {
+          bodyValues = body[0].split("|");
+          const dataSetName = bodyValues[0],
+            xValue = bodyValues[1],
+            yValue = bodyValues[2];
+          let style = `display: inline-block; background: ${colors.borderColor};`;
+          style += `border-color: ${colors.borderColor};`;
+          style += "border-width: 2px; width: 10px; height: 10px; margin-right: 3px;";
+          let span = "";
+          span = `<tr><td><span style="${style}"></span><span>${dataSetName}</span></td></tr>`;
+          innerHtml += span;
+          innerHtml += `<tr><td>x=${xValue}(${defaultXUnit})</td></tr>`;
+          innerHtml += `<tr><td>y=${yValue}(${axisRef.current.yUnit || ""})</td></tr>`;
+        }
+      });
+      innerHtml += "</tbody>";
+
+      let tableRoot = tooltipEl.querySelector("table");
+      tableRoot.innerHTML = innerHtml;
+    }
+
+    const position = context.chart.canvas.getBoundingClientRect();
+    const windowWidth = $(window).width();
+    let suggestedX = position.left + window.pageXOffset + tooltipModel.caretX + 10,
+      tooltipWidth = $(tooltipEl).outerWidth();
+    if (suggestedX + tooltipWidth > windowWidth) {
+      suggestedX -= tooltipWidth + 10;
+    }
+
+    tooltipEl.style.opacity = 1;
+    tooltipEl.style.position = "absolute";
+    tooltipEl.style.left = `${suggestedX}px`;
+    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + "px";
+    tooltipEl.style.zIndex = 9999;
+    tooltipEl.style.fontFamily = "Arial";
+    tooltipEl.style.fontSize = "14px";
+    tooltipEl.style.padding = tooltipModel.padding + "px " + tooltipModel.padding + "px";
+    tooltipEl.style.pointerEvents = "none";
+  };
 };
 
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
   //log("widget:", widget);
-  //const { dataList, labelList } = props;
+  const { sensor } = widget;
   const chartEl = useRef(),
-    chartInstanceRef = useRef();
+    chartInstanceRef = useRef(),
+    sensorRef = useRef({}),
+    axisRef = useRef({
+      xUnit: "",
+      yUnit: "",
+      yMin: 0,
+      yMax: null,
+    });
 
-  let currentDataListRef = useRef([]),
-    currentLabelListRef = useRef([]),
-    lastDataRef = useRef({
-      x: null,
-      y: null,
-    }),
-    checkDataResult;
+  if (sensorRef.current.id != sensor?.id || sensorRef.current.index != sensor?.index) {
+    sensorRef.current = {
+      id: sensor?.id,
+      index: sensor?.index,
+    };
+    const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id),
+      sensorDetailData = existingSensorData.data[sensorRef.current.index];
+    sensorRef.current.sensorDetailData = sensorDetailData;
+    axisRef.current.yUnit = sensorDetailData.unit;
+    axisRef.current.yMin = sensorDetailData.min;
+    axisRef.current.yMax = sensorDetailData.max;
+  }
 
+  let valueContainerElRef = useRef(),
+    xElRef = useRef(),
+    yElRef = useRef();
 
-  // checkDataResult = checkDataChangeAndUpdate({
-  //     currentDataListRef,
-  //     currentLabelListRef,
-  //     newDataList: dataList,
-  //     newLabelList: labelList
-  // });
-  // if (checkDataResult.isUpdated && chartInstanceRef.current) {
-  //     updateChart({
-  //         chartInstance: chartInstanceRef.current,
-  //         newDataItemList: checkDataResult.newDataItemList,
-  //         newLabelItemList: checkDataResult.newLabelItemList
-  //     });
-  // }
   useImperativeHandle(ref, () => ({
     clearData: () => {},
     setCurrentData: ({ data }) => {
-      lastDataRef.current = data;
+      const xValue = roundAndGetSignificantDigitString({ n: data.x });
+      xElRef.current.innerText = `${xValue}(${defaultXUnit})`;
+      yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
     },
-    setChartData: ({ sensorId, xUnit, yUnit, maxHz, chartData = [] }) => {
+    setChartData: ({ xUnit, yUnit, chartData = [] }) => {
       /**
        * chartData = [
        * { name, data: [{x,y}, ...]}
        * ]
        */
+      //log("chart data:", chartData);
+      axisRef.current.xUnit = xUnit;
 
+      chartData = createChartDataAndParseXAxis({ chartData });
       updateChart({
         chartInstance: chartInstanceRef.current,
         data: chartData,
+        axisRef,
         xUnit,
         yUnit,
-        maxHz,
-      });
-    },
-    addOrUpdateChart: ({ name, data = [] }) => {
-      /**
-       * name: "run1"
-       * data: [{x,y}, ...]
-       */
-      addOrUpdateChart({
-        currentDataListRef,
-        chartInstanceRef,
-        dataSeries: {
-          name,
-          data,
-        },
       });
     },
   }));
@@ -309,8 +381,7 @@ let LineChart = (props, ref) => {
         },
       ],
     });
-    const chartJsPlugin = getChartJsPlugin({ lastDataRef });
-    //const myChartRef = chartEl.current.getContext("2d");
+    const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
       data: data,
@@ -319,25 +390,31 @@ let LineChart = (props, ref) => {
         animation: false,
         maintainAspectRatio: false,
         plugins: {
+          tooltip: {
+            enabled: false,
+            external: getCustomTooltipFunc({ axisRef }),
+            callbacks: {
+              label: function (context) {
+                const resultArr = [];
+                let label = context.dataset.label || "";
+                resultArr.push(label);
+
+                if (context.parsed.x !== null && context.parsed.y != null) {
+                  resultArr.push(context.parsed.x);
+                  resultArr.push(context.parsed.y);
+                }
+
+                return resultArr.join("|");
+              },
+            },
+          },
           zoom: {
             pan: {
               // pan options and/or events
               enabled: true,
               mode: "xy",
-              // onPanStart({ chart, point }) {
-              //     log("on pan");
-              //     const area = chart.chartArea;
-              //     const w25 = area.width * 0.25;
-              //     const h25 = area.height * 0.25;
-              //     if (point.x < area.left + w25 || point.x > area.right - w25
-              //         || point.y < area.top + h25 || point.y > area.bottom - h25) {
-              //         return false; // abort
-              //     }
-              // },
             },
             limits: {
-              // x: {min: 0, max: 200, minRange: 50},
-              // y: {min: 0, max: 200, minRange: 50}
               x: { min: 0 },
               y: { min: 0 },
             },
@@ -356,18 +433,37 @@ let LineChart = (props, ref) => {
       },
       plugins: [chartJsPlugin],
     });
+
+    updateChart({
+      chartInstance: chartInstanceRef.current,
+      data: [],
+      axisRef,
+      xUnit: defaultXUnit,
+      yUnit: "",
+    });
   }, []);
 
   return (
     <div className="line-chart-wapper">
-      <div className="sensor-select-container">
-        <SensorSelector
-          selectedSensor={widget.sensor}
-          onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-        ></SensorSelector>
+      <div className="sensor-selector-wrapper">
+        <div className="sensor-select-vertical-mount-container">
+          <SensorSelector
+            selectedSensor={widget.sensor}
+            onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+          ></SensorSelector>
+        </div>
       </div>
+
       <div className="canvas-container">
         <canvas ref={chartEl} />
+        <div className="current-value-sec" ref={valueContainerElRef}>
+          <div className="value-container">
+            x=<span ref={xElRef}></span>
+          </div>
+          <div className="value-container">
+            y=<span ref={yElRef}></span>
+          </div>
+        </div>
       </div>
     </div>
   );

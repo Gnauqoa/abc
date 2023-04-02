@@ -1,25 +1,8 @@
 import store from "store";
-import $ from "jquery";
 import { f7 } from "framework7-react";
 import dialog from "../components/dialog";
 
-import {
-  ARMBOT,
-  MYPET,
-  BATMAN,
-  YOLOBIT,
-  TANK,
-  XBOT,
-  XBUILD,
-  TRANSFORMBOT,
-  SPIDERBOT,
-  ROBOTWALLE,
-  CONTROLLERHANDLE,
-  MYROBOT,
-  ENTER_KEY,
-  SPACE_KEY,
-  CONNECT_BLE_TYPE,
-} from "../js/constants";
+import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
 
 let deviceHistory = [];
 
@@ -125,10 +108,7 @@ export function checkFwVersionOnCloud(productName, productVersion) {
 }
 
 export function vibrate(milliseconds = 200) {
-  if (selectedDevice() !== ARMBOT) {
-    console.log("vibrate");
-    navigator.vibrate(milliseconds);
-  }
+  navigator.vibrate(milliseconds);
 }
 
 export function closest(arr, num) {
@@ -319,37 +299,6 @@ export function isPressEnter(e, callback) {
   return false;
 }
 
-export function getDeviceName(id) {
-  switch (id) {
-    case ARMBOT:
-      return "ArmBot";
-    case MYPET:
-      return "PetBot";
-    case BATMAN:
-      return "BatmanBot";
-    case YOLOBIT:
-      return "Yolo:Bit";
-    case TANK:
-      return "TankBot";
-    case XBOT:
-      return "xBot";
-    case XBUILD:
-      return "xBuild";
-    case TRANSFORMBOT:
-      return "TransformBot";
-    case SPIDERBOT:
-      return "SpiderBot";
-    case ROBOTWALLE:
-      return "Robot Wall-E";
-    case CONTROLLERHANDLE:
-      return "Tay cầm điều khiển";
-    case MYROBOT:
-      return "My Robot";
-    default:
-      return id;
-  }
-}
-
 export function convertBlobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -408,13 +357,6 @@ export function displayImageByFileURL(fileEntry) {
   elem.src = fileEntry.toURL();
 }
 
-export function showWinAnimation() {
-  $(".win-notification-xbot").addClass("win-animation-xbot");
-  setTimeout(function () {
-    $(".win-notification-xbot").removeClass("win-animation-xbot");
-  }, 3000);
-}
-
 export function formatDisplay(value, format, option) {
   let displayFormat = "";
   let prefixFormat = "";
@@ -453,31 +395,6 @@ export function formatDisplay(value, format, option) {
       return value;
     }
   }
-}
-
-export function getLandingPage() {
-  let landingPage = "";
-  const selectedDev = selectedDevice();
-  const url = location.href;
-  if (url.includes("/#!/share/")) {
-    const params = url.split("/");
-    const sharedId = params[params.length - 1];
-    const device = params[params.length - 2];
-    landingPage = `/share/${device}/${sharedId}`;
-  } else if (store.get("active-menu") === "iot-panels") {
-    landingPage = "/iot-panels";
-  } else if (
-    store.get("active-menu") !== "devices" ||
-    !selectedDev ||
-    [CONTROLLERHANDLE, MYROBOT].includes(selectedDev) ||
-    ![ARMBOT, MYPET, BATMAN, YOLOBIT, TANK, XBOT, XBUILD, TRANSFORMBOT, SPIDERBOT, ROBOTWALLE].includes(selectedDev)
-  ) {
-    landingPage = "/landing";
-  } else {
-    landingPage = `/devices/${selectedDev}`;
-  }
-
-  return landingPage;
 }
 
 export function cloneCanvas(oldCanvas) {

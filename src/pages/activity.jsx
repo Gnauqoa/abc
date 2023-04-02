@@ -9,7 +9,6 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
-  SAMPLING_MANUAL_FREQUENCY,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -19,79 +18,88 @@ import storeService from "../services/store-service";
 import ActivityNav from "../components/activity-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
-import Number from "../components/widgets/number";
-import Table from "../components/widgets/table";
+import NumberWidget from "../components/widgets/number";
+import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 
 const activityService = new storeService("activity");
 
 export default ({ f7route, f7router }) => {
-  const layout = f7route.params.layout;
-  const id = f7route.params.id;
+  const selectedLayout = f7route.params.layout;
+  const selectedId = f7route.params.id;
+
   let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
-  if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout)) {
+  if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
     defaultWidgets = [
       { id: 0, sensor: { id: 1, index: 0 } },
       { id: 1, sensor: { id: 2, index: 0 } },
     ];
   }
 
-  let activity = {
-    id: uuidv4(),
+  const activity = {
+    id: selectedId || uuidv4(),
     name: "",
-    layout: layout,
+    layout: selectedLayout,
     frequency: 1,
     widgets: defaultWidgets,
+    dataRuns: [],
   };
-  if (id) {
-    const savedActivity = activityService.find(id);
+
+  const [activityId, setActivityId] = useState(activity.id);
+  const [name, setName] = useState(activity.name);
+  const [layout, setLayout] = useState(activity.layout);
+  const [frequency, setFrequency] = useState(activity.frequency);
+  const [widgets, setWidgets] = useState(activity.widgets);
+  const [dataRun, setDataRun] = useState([]);
+
+  const [isRunning, setIsRunning] = useState(false);
+  const [, setForceUpdate] = useState(0);
+  const lineChartRef = useRef();
+
+  useEffect(() => {
+    if (!activityId) return;
+
+    const savedActivity = activityService.find(activityId);
     if (!savedActivity) {
       f7router.navigate("/");
       return;
     }
 
-    activity = { ...activity, ...savedActivity };
-  }
+    const oldActivity = { ...activity, ...savedActivity };
 
-  const [name, setName] = useState(activity.name);
-  const [sampleMode, setSampleMode] = useState(activity.sampleMode);
-  const [frequency, setFrequency] = useState(activity.frequency);
-  const [widgets, setWidgets] = useState(activity.widgets);
+    DataManagerIST.importActivityDataRun(oldActivity.dataRuns);
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    if (dataRunPreviews.length > 0) {
+      const firstDataRunId = dataRunPreviews[0].id;
+      const dataRun = DataManagerIST.getDataRunData(firstDataRunId);
+      const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
+      const result = DataManagerIST.setCurrentDataRun(firstDataRunId);
+      result && setDataRun(parsedDataRun);
+    }
 
-  const [isRunning, setIsRunning] = useState(false);
-  const [dataRun, setDataRun] = useState([]);
-  const [, setForceUpdate] = useState(0);
-  const lineChartRef = useRef();
+    setName(oldActivity.name);
+    setLayout(oldActivity.layout);
+    setActivityId(oldActivity.id);
+    setFrequency(oldActivity.frequency);
+    setWidgets(oldActivity.widgets);
+  }, [selectedId, f7router, activityService]);
 
   useEffect(() => {
     let subscriberIds = [];
     DataManagerIST.setCollectingDataFrequency(frequency);
 
-    if (frequency === SAMPLING_MANUAL_FREQUENCY) {
-      if (isRunning) {
-        DataManagerIST.startCollectingData();
-      } else {
-        DataManagerIST.stopCollectingData();
-      }
-    } else {
-      if (isRunning) {
-        console.log(">>>>> Start DataManagerIST");
-        widgets.forEach((w) => {
-          const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-          subscriberIds.push(subscriberId);
-        });
-      } else {
-        if (subscriberIds.length) {
-          subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
-          subscriberIds = [];
-        }
-      }
+    if (subscriberIds.length) {
+      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     }
+    widgets.forEach((w) => {
+      const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
+      subscriberIds.push(subscriberId);
+    });
 
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
-  }, [isRunning, widgets]);
+  }, [widgets, isRunning]);
 
   function handleActivityNameChange(e) {
     setName(e.target.value);
@@ -102,7 +110,7 @@ export default ({ f7route, f7router }) => {
       "Xác nhận",
       `Bạn có chắc chắn muốn xóa hoạt động này không?`,
       () => {
-        activityService.delete(activity.id);
+        activityService.delete(activityId);
         f7router.navigate("/");
       },
       () => {}
@@ -110,7 +118,10 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleActivitySave() {
-    const updatedActivity = { ...activity, name, sampleMode, frequency, widgets };
+    // Collecting data from dataRuns
+    const dataRuns = DataManagerIST.getActivityDataRun();
+    const updatedActivity = { ...activity, layout, name, frequency, widgets, dataRuns: dataRuns };
+
     if (name.length) {
       activityService.save(updatedActivity);
       setForceUpdate((n) => n + 1);
@@ -133,10 +144,6 @@ export default ({ f7route, f7router }) => {
     result && setFrequency(frequency);
   }
 
-  function handleChangeSamplingMode(mode) {
-    setSampleMode(mode);
-  }
-
   function handleSensorChange(widgetId, sensor) {
     const updatedWidgets = widgets.map((w) => {
       if (w.id === widgetId) {
@@ -148,7 +155,13 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSampleClick() {
-    if (!isRunning) setDataRun(() => []);
+    if (!isRunning) {
+      DataManagerIST.setCollectingDataFrequency(frequency);
+      DataManagerIST.startCollectingData();
+      setDataRun(() => []);
+    } else {
+      DataManagerIST.stopCollectingData();
+    }
     setIsRunning(!isRunning);
   }
 
@@ -162,22 +175,9 @@ export default ({ f7route, f7router }) => {
     }
   }
 
-  function handleSamplingManual() {
-    widgets.map((w) => {
-      const sensorId = w.sensor.id;
-      const data = DataManagerIST.getIndividualSample(sensorId);
-      const time = data[1];
-      const values = data.slice(3);
-      if (values.length) {
-        setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
-      }
-      console.log(">>>>> MANUAL - data manager:", data);
-    });
-  }
-
   function getValueForNumber(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.pop()?.values[sensor.index] || "";
+    return sensorData.slice(-1)[0]?.values[sensor.index] || "";
   }
 
   function getDataForTable(sensor) {
@@ -188,18 +188,29 @@ export default ({ f7route, f7router }) => {
   function getDataForChart(sensor) {
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
-    lineChartRef.current &&
-      lineChartRef.current.setChartData({
-        chartData: [
-          {
-            name: "run1",
-            data: data,
-          },
-        ],
-        xUnit: "ms",
-        yUnit: "",
-        maxHz: 10,
+    if (lineChartRef.current && Object.keys(data).length !== 0) {
+      let currentData = data.slice(-1)[0];
+      if (!isRunning) {
+        currentData = { ...currentData, x: 0 };
+      }
+      lineChartRef.current.setCurrentData({
+        data: currentData,
       });
+
+      if (isRunning) {
+        lineChartRef.current.setChartData({
+          chartData: [
+            {
+              name: "run1",
+              data: data,
+            },
+          ],
+          xUnit: "ms",
+          yUnit: "",
+          maxHz: 10,
+        });
+      }
+    }
   }
 
   return (
@@ -218,18 +229,21 @@ export default ({ f7route, f7router }) => {
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
-          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
               <div className="__card __card-left">
-                {activity.layout === LAYOUT_TABLE_CHART && (
-                  <Table
+                {layout === LAYOUT_TABLE_CHART && (
+                  <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_TABLE_CHART}
+                    isRunning={isRunning}
+                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
-                {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
-                  <Number
+                {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
+                  <NumberWidget
                     value={getValueForNumber(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -237,7 +251,7 @@ export default ({ f7route, f7router }) => {
                 )}
               </div>
               <div className="__card __card-right">
-                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
+                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     data={getDataForChart(widgets[1].sensor)}
                     ref={lineChartRef}
@@ -245,19 +259,22 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                   />
                 )}
-                {activity.layout === LAYOUT_NUMBER_TABLE && (
-                  <Table
+                {layout === LAYOUT_NUMBER_TABLE && (
+                  <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
+                    chartLayout={LAYOUT_NUMBER_TABLE}
+                    isRunning={isRunning}
+                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(layout) && (
             <div className="__card">
-              {activity.layout === LAYOUT_CHART && (
+              {layout === LAYOUT_CHART && (
                 <LineChart
                   data={getDataForChart(widgets[0].sensor)}
                   ref={lineChartRef}
@@ -265,15 +282,18 @@ export default ({ f7route, f7router }) => {
                   handleSensorChange={handleSensorChange}
                 />
               )}
-              {activity.layout === LAYOUT_TABLE && (
-                <Table
+              {layout === LAYOUT_TABLE && (
+                <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
+                  chartLayout={LAYOUT_TABLE}
+                  isRunning={isRunning}
+                  samplingMode={DataManagerIST.getSamplingMode()}
                 />
               )}
-              {activity.layout === LAYOUT_NUMBER && (
-                <Number
+              {layout === LAYOUT_NUMBER && (
+                <NumberWidget
                   value={getValueForNumber(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
@@ -287,13 +307,11 @@ export default ({ f7route, f7router }) => {
             <SamplingSetting
               isRunning={isRunning}
               frequency={frequency}
-              handleSamplingManual={handleSamplingManual}
               handleFrequencySelect={handleFrequencySelect}
-              handleChangeSamplingMode={handleChangeSamplingMode}
             />
           </div>
           <div className="__toolbar-center">
-            <ActivityNav currentId={activity.id} isRunning={isRunning} />
+            <ActivityNav currentId={activityId} isRunning={isRunning} />
           </div>
           <div className="__toolbar-right">
             <Timer isRunning={isRunning} />

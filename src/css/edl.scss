@@ -22,7 +22,7 @@
 
 .activity-layout {
   width: 90%;
-  height: 90%;
+  height: calc(100% - 80px);
   margin: auto;
   display: flex;
   gap: 20px;
@@ -33,15 +33,24 @@
   }
   .__card-left {
     width: 33%;
+    .sensor-select-container-table-chart {
+      width: 47%;
+      .button {
+        font-size: 14px;
+      }
+    }
   }
   .__card-right {
+    .sensor-select-vertical-mount-container {
+      left: 37%
+    }
     width: 67%;
   }
 }
 
 .activity-footer {
   height: 60px;
-  padding-top: 20px;
+  padding-top: 10px;
   padding-left: 20px;
   padding-right: 20px;
   .__toolbar-right {

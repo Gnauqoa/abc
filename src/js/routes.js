@@ -1,7 +1,6 @@
 import EdlHome from "../pages/home";
 import EdlLayout from "../pages/layout";
 import EdlActivity from "../pages/activity";
-import Chart from "../pages/chart_demo/chart";
 
 var routes = [
   {
@@ -24,11 +23,6 @@ var routes = [
     path: "/edl/:id",
     component: EdlActivity,
   },
-  {
-    path: "/chart_test",
-    component: Chart,
-  },
-
   {
     path: "(.*)",
     component: EdlHome,
