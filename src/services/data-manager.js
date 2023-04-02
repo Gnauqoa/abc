@@ -466,7 +466,7 @@ class DataManager {
             }
 
             // Update total time collecting data
-            this.collectingDataTime += this.emitSubscribersInterval;
+            this.collectingDataTime += this.collectingDataInterval;
           }
         }
 
