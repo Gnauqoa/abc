@@ -13,8 +13,17 @@ export const MANUAL_FREQUENCY = 1;
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
  */
-class DataManager {
+export class DataManager {
   constructor() {
+    // Initialize variables
+    this.initializeVariables();
+
+    // calls two scheduler functions
+    this.runEmitSubscribersScheduler();
+    this.dummySensorData();
+  }
+
+  initializeVariables() {
     /**
      * Object containing subscriber information.
      * @type {Object.<string, {sensorId: number, subscription: EventEmitter.subscription}>}
@@ -29,7 +38,7 @@ class DataManager {
 
     /**
      * Object containing data run information.
-     * @type {Object.<string, {name: string, data: Array(string), activityId: string}>}
+     * @type {Object.<string, {name: string, data: Array(string)}>}
      */
     this.dataRuns = {};
 
@@ -89,10 +98,12 @@ class DataManager {
 
     this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = sensors.map((sensor) => sensor.id);
+  }
 
-    // calls two scheduler functions
+  init() {
+    this.stopEmitSubscribersScheduler();
+    this.initializeVariables();
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
   }
 
   /**
@@ -102,7 +113,6 @@ class DataManager {
   static getInstance() {
     if (!DataManager.instance) {
       DataManager.instance = new DataManager();
-      DataManager.instance.constructor = null;
     }
     return DataManager.instance;
   }
@@ -214,13 +224,12 @@ class DataManager {
   // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
-   * @param {string} activityId - The ID of the activity.
    * @returns {string} - Returns the curDataRunId.
    */
-  startCollectingData(activityId) {
+  startCollectingData() {
     this.collectingDataTime = 0;
     this.isCollectingData = true;
-    const dataRunId = this.createDataRun(null, activityId);
+    const dataRunId = this.createDataRun(null);
     return dataRunId;
   }
 
@@ -236,10 +245,9 @@ class DataManager {
    * Creates a new data run and sets it as the current data run.
    *
    * @param {string} [name] - The name of the data run. If not provided, a default name will be used.
-   * @param {string} [activityId] - The ID of the activity associated with the data run.
    * @returns {string} The ID of the newly created data run.
    */
-  createDataRun(name, activityId) {
+  createDataRun(name) {
     /**
      * A dictionary of data runs, where each key is a data run ID and the value is a `DataRun` object.
      * @typedef {Object.<string, DataRun>} DataRuns
@@ -249,7 +257,6 @@ class DataManager {
      * @typedef {Object} DataRun
      * @property {string} name - The name of the data run.
      * @property {Array} data - An array of sensor data collected during the data run.
-     * @property {string} [activityId] - The ID of the activity associated with the data run.
      */
 
     // TODO: Uncomment for support multiple data runs
@@ -269,7 +276,6 @@ class DataManager {
     this.dataRuns[this.curDataRunId] = {
       name: dataRunName,
       data: [],
-      activityId: activityId,
     };
     console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
     return this.curDataRunId;
@@ -321,43 +327,30 @@ class DataManager {
 
   /**
    * Returns an array of data run IDs and names associated with a given activity.
-   * @param {string} activityId - The ID of the activity to retrieve data runs for.
    * @returns {Array.<{id: string, name: string}>} An array of objects containing the data run ID and name.
    */
-  getActivityDataRunPreview(activityId) {
-    const dataRunInfos = Object.keys(this.dataRuns)
-      .map((dataRunId) => {
-        const dataRun = this.dataRuns[dataRunId];
-        if (dataRun.activityId === activityId) {
-          return { id: dataRunId, name: dataRun.name };
-        }
-        return false;
-      })
-      .filter(Boolean);
+  getActivityDataRunPreview() {
+    const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
+      const dataRun = this.dataRuns[dataRunId];
+      return { id: dataRunId, name: dataRun.name };
+    });
     return dataRunInfos;
   }
 
   /**
    * Returns an array of data runs associated with a given activity, each containing the data run ID, name, and data.
-   * @param {string} activityId - The ID of the activity to retrieve data runs for.
    * @returns {Array.<{id: string, name: string, data: Array}>} An array of objects containing the data run ID, name, and data.
    */
-  getActivityDataRun(activityId) {
-    const dataRunInfos = Object.keys(this.dataRuns)
-      .map((dataRunId) => {
-        const dataRun = this.dataRuns[dataRunId];
-        if (dataRun.activityId === activityId) {
-          return { id: dataRunId, name: dataRun.name, data: dataRun.data };
-        }
-        return false;
-      })
-      .filter(Boolean);
+  getActivityDataRun() {
+    const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
+      const dataRun = this.dataRuns[dataRunId];
+      return { id: dataRunId, name: dataRun.name, data: dataRun.data };
+    });
     return dataRunInfos;
   }
 
   /**
    * Import and store data runs of an activity in the data manager.
-   * @param {string} activityId - The ID of the activity.
    * @param {Array<Object>} dataRuns - The data runs of the activity.
    * Each data run object has the following properties:
    *   @param {string} id - The ID of the data run.
@@ -366,15 +359,14 @@ class DataManager {
    *     data points for a specific timestamp and sensor ID, in the following format:
    *     [[timestamp_1, sensor_1_value, sensor_2_value, ...], [timestamp_2, sensor_1_value, sensor_2_value, ...], ...].
    */
-  importActivityDataRun(activityId, dataRuns) {
+  importActivityDataRun(dataRuns) {
     for (const dataRun of dataRuns) {
       this.dataRuns[dataRun.id] = {
         name: dataRun.name,
         data: dataRun.data,
-        activityId: activityId,
       };
 
-      console.log(`DATA_MANAGER-importActivityDataRun-activityId_${activityId}-dataRunId_${dataRun.id}`);
+      console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
     }
   }
 
@@ -499,6 +491,8 @@ class DataManager {
       const sensorId = Number(splitData[1]);
       const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
+
+      console.log("this.DATA_RUN: ", this.dataRuns);
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
     }
@@ -570,9 +564,9 @@ class DataManager {
 
           if (this.isCollectingData) {
             if (this.samplingMode === SAMPLING_AUTO) {
-            const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
-            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
-          }
+              const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
+              this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
+            }
 
             // Update total time collecting data
             this.collectingDataTime += this.emitSubscribersInterval;

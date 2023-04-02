@@ -68,11 +68,12 @@ export default ({ f7route, f7router }) => {
 
     const oldActivity = { ...activity, ...savedActivity };
 
-    DataManagerIST.importActivityDataRun(oldActivity.id, oldActivity.dataRuns);
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview(oldActivity.id);
+    DataManagerIST.importActivityDataRun(oldActivity.dataRuns);
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     if (dataRunPreviews.length > 0) {
       const firstDataRunId = dataRunPreviews[0].id;
       const dataRun = DataManagerIST.getDataRunData(firstDataRunId);
+      console.log("dataRun", dataRun);
       const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
       const result = DataManagerIST.setCurrentDataRun(firstDataRunId);
       result && setInitialDataRun(parsedDataRun);
@@ -120,7 +121,7 @@ export default ({ f7route, f7router }) => {
 
   function handleActivitySave() {
     // Collecting data from dataRuns
-    const dataRuns = DataManagerIST.getActivityDataRun(activityId);
+    const dataRuns = DataManagerIST.getActivityDataRun();
     const updatedActivity = { ...activity, layout, name, frequency, widgets, dataRuns: dataRuns };
 
     if (name.length) {
@@ -158,7 +159,7 @@ export default ({ f7route, f7router }) => {
   function handleSampleClick() {
     if (!isRunning) {
       DataManagerIST.setCollectingDataFrequency(frequency);
-      DataManagerIST.startCollectingData(activityId);
+      DataManagerIST.startCollectingData();
       setDataRun(() => []);
       setInitialDataRun(() => []);
     } else {
@@ -227,7 +228,13 @@ export default ({ f7route, f7router }) => {
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton disabled={isRunning} icon="settings" />
+          <RoundButton
+            disabled={isRunning}
+            icon="settings"
+            onClick={() => {
+              DataManagerIST.init();
+            }}
+          />
         </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
