@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
-import { v4 as uuidv4 } from "uuid";
 import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
@@ -14,75 +13,73 @@ import {
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
 import dialog from "../components/dialog";
-import storeService from "../services/store-service";
-import ActivityNav from "../components/activity-nav";
+import ActivityPageNav from "../components/activity-page-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import NumberWidget from "../components/widgets/number";
 import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
+import { saveFile } from "../services/file-service";
+import storeService from "../services/store-service";
 
-const activityService = new storeService("activity");
+const recentFilesService = new storeService("recent-files");
 
-export default ({ f7route, f7router }) => {
+export default ({ f7route, f7router, filePath, content }) => {
   const selectedLayout = f7route.params.layout;
-  const selectedId = f7route.params.id;
+  let activity;
 
-  let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
-  if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
-    defaultWidgets = [
-      { id: 0, sensor: { id: 1, index: 0 } },
-      { id: 1, sensor: { id: 2, index: 0 } },
-    ];
+  if (selectedLayout) {
+    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
+      defaultWidgets = [
+        { id: 0, sensor: { id: 1, index: 0 } },
+        { id: 1, sensor: { id: 2, index: 0 } },
+      ];
+    }
+
+    activity = {
+      name: "",
+      pages: [
+        {
+          layout: selectedLayout,
+          widgets: defaultWidgets,
+          frequency: 1,
+        },
+      ],
+      dataRuns: [],
+    };
+  } else if (content) {
+    activity = content;
+  } else {
+    f7router.navigate("/");
+    return;
   }
 
-  const activity = {
-    id: selectedId || uuidv4(),
-    name: "",
-    layout: selectedLayout,
-    frequency: 1,
-    widgets: defaultWidgets,
-    dataRuns: [],
-  };
-
-  const [activityId, setActivityId] = useState(activity.id);
   const [name, setName] = useState(activity.name);
-  const [layout, setLayout] = useState(activity.layout);
-  const [frequency, setFrequency] = useState(activity.frequency);
-  const [widgets, setWidgets] = useState(activity.widgets);
+  const [pages, setPages] = useState(activity.pages);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const currentPage = pages[currentPageIndex];
+
+  const layout = currentPage.layout;
+  const [widgets, setWidgets] = useState(currentPage.widgets);
+  const [frequency, setFrequency] = useState(currentPage.frequency);
+  const [isRunning, setIsRunning] = useState(false);
+
   const [dataRun, setDataRun] = useState([]);
 
-  const [isRunning, setIsRunning] = useState(false);
-  const [, setForceUpdate] = useState(0);
   const lineChartRef = useRef();
 
   useEffect(() => {
-    if (!activityId) return;
-
-    const savedActivity = activityService.find(activityId);
-    if (!savedActivity) {
-      f7router.navigate("/");
-      return;
-    }
-
-    const oldActivity = { ...activity, ...savedActivity };
-
-    DataManagerIST.importActivityDataRun(oldActivity.dataRuns);
+    DataManagerIST.importActivityDataRun(activity.dataRuns);
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     if (dataRunPreviews.length > 0) {
-      const firstDataRunId = dataRunPreviews[0].id;
-      const dataRun = DataManagerIST.getDataRunData(firstDataRunId);
+      const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
+      const dataRun = DataManagerIST.getDataRunData(lastDataRunId);
       const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
-      const result = DataManagerIST.setCurrentDataRun(firstDataRunId);
+      const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
       result && setDataRun(parsedDataRun);
     }
-
-    setName(oldActivity.name);
-    setLayout(oldActivity.layout);
-    setActivityId(oldActivity.id);
-    setFrequency(oldActivity.frequency);
-    setWidgets(oldActivity.widgets);
-  }, [selectedId, f7router, activityService]);
+  }, []);
 
   useEffect(() => {
     let subscriberIds = [];
@@ -105,33 +102,29 @@ export default ({ f7route, f7router }) => {
     setName(e.target.value);
   }
 
-  function handleActivityDelete(e) {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        activityService.delete(activityId);
-        f7router.navigate("/");
-      },
-      () => {}
-    );
-  }
-
-  function handleActivitySave() {
+  async function handleActivitySave() {
     // Collecting data from dataRuns
-    const dataRuns = DataManagerIST.getActivityDataRun();
-    const updatedActivity = { ...activity, layout, name, frequency, widgets, dataRuns: dataRuns };
+    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, frequency, widgets };
+      } else {
+        return page;
+      }
+    });
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns };
 
     if (name.length) {
-      activityService.save(updatedActivity);
-      setForceUpdate((n) => n + 1);
+      const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
+      recentFilesService.save({ id: savedFilePath, activityName: name });
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
         "Tên hoạt động",
-        (name) => {
+        async (name) => {
           setName(name);
-          activityService.save({ ...updatedActivity, name });
+          const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+          recentFilesService.save({ id: savedFilePath, activityName: name });
         },
         () => {},
         name
@@ -213,13 +206,32 @@ export default ({ f7route, f7router }) => {
     }
   }
 
+  function handlePagePrev() {
+    console.log("TODO: handlePrevPage");
+  }
+
+  function handlePageNext() {
+    console.log("TODO: handleNextPage");
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        console.log("TODO: delete page");
+      },
+      () => {}
+    );
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
         <NavLeft>
           <BackButton link="/" />
           <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
-          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handleActivityDelete} />
+          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handlePageDelete} />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
@@ -311,7 +323,12 @@ export default ({ f7route, f7router }) => {
             />
           </div>
           <div className="__toolbar-center">
-            <ActivityNav currentId={activityId} isRunning={isRunning} />
+            <ActivityPageNav
+              navOrder={"1/1"}
+              isDisabled={isRunning}
+              onNextPage={handlePageNext}
+              onPrevPage={handlePagePrev}
+            />
           </div>
           <div className="__toolbar-right">
             <Timer isRunning={isRunning} />

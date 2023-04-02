@@ -202,21 +202,22 @@ ipcMain.handle("saveFile", async (_, filePath, content, option) => {
         if (err) {
           reject(err);
         } else {
-          resolve(null);
+          resolve(filePath);
         }
       });
     });
   } else {
     return dialog.showSaveDialog(option).then((data) => {
       return new Promise((resolve, reject) => {
-        if (!data.filePath) {
+        const filePath = data.filePath;
+        if (!filePath) {
           resolve(null);
         }
-        fs.writeFile(data.filePath, content, (err) => {
+        fs.writeFile(filePath, content, (err) => {
           if (err) {
             reject(err);
           } else {
-            resolve(null);
+            resolve(filePath);
           }
         });
       });
