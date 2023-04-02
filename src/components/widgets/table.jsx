@@ -62,7 +62,7 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
+const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
   const [unit, setUnit] = useState();
   const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
@@ -72,6 +72,8 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
+
+  const samplingMode = DataManagerIST.getSamplingMode();
 
   useEffect(() => {
     const handleClick = () => {
@@ -106,56 +108,51 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
       }
       return;
     }
-    let newData;
-    if (isCollectingDataPressed) {
-      newData = DataManagerIST.getManualSample(widget?.sensor?.id);
+
+    if (isRunning && samplingMode === SAMPLING_AUTO) {
+      const newRows = data.map((item) => ({
+        colum1:
+          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
+        colum2: item.value,
+      }));
+      setRows(
+        newRows.length < DEFAULT_ROWS ? [...newRows, ...defaultRows.slice(newRows.length, DEFAULT_ROWS)] : newRows
+      );
+      setNumRows(newRows.length);
     } else {
-      newData = data[data.length - 1];
-    }
-
-    newData = data[data.length - 1];
-    const { time, value } = newData;
-
-    if (isRunning) {
-      const newRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows] ? rows[numRows]["colum1"] : "",
-        colum2: value,
-      };
-
-      updateRows(newRow);
-    } else {
-      const newRow = {
-        colum1: numRows === 0 ? (firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows]["colum1"]) : "",
-        colum2: value,
-      };
-      updateRows(newRow);
-    }
-
-    scrollToRef(lastRowRef);
-  }, [data, isCollectingDataPressed]);
-
-  const updateRows = (newRow) => {
-    let newRows = [];
-    if (isRunning) {
-      newRows =
-        numRows < DEFAULT_ROWS
-          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
-          : [...rows.slice(0, numRows), newRow];
-
-      if (samplingMode === SAMPLING_AUTO) {
-        setNumRows((prevNumRows) => prevNumRows + 1);
-      } else if (samplingMode === SAMPLING_MANUAL && isCollectingDataPressed) {
-        setNumRows((prevNumRows) => prevNumRows + 1);
+      // TODO: Handle parse all data when first load and change data run
+      // For change dataRun, unsubscribe, set new data run, notify widget and subscribe again
+      let newData;
+      if (isCollectingDataPressed) {
+        newData = DataManagerIST.getManualSample(widget?.sensor?.id);
+        setNumRows((prev) => prev + 1);
         setIsCollectingDataPressed(false);
+      } else {
+        newData = data[data.length - 1];
       }
-    } else {
-      newRows =
-        numRows < DEFAULT_ROWS
-          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
-          : [...rows.slice(0, numRows), newRow];
+
+      const { time, value } = newData;
+      if (!time || time === "" || !value || value === "") return;
+
+      const newRow = {
+        colum1:
+          numRows === 0
+            ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT || isRunning
+              ? time
+              : rows[numRows]["colum1"]
+            : isRunning
+            ? time
+            : "",
+        colum2: value,
+      };
+
+      const oldRows = rows.slice(0, numRows);
+      oldRows.push(newRow);
+      setRows([...oldRows, ...defaultRows.slice(oldRows.length, DEFAULT_ROWS)]);
     }
-    setRows(newRows);
-  };
+
+    numRows !== 0 && scrollToRef(lastRowRef);
+  }, [data, isCollectingDataPressed]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);

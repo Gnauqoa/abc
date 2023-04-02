@@ -239,7 +239,6 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -266,7 +265,6 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
               </div>
@@ -289,7 +287,6 @@ export default ({ f7route, f7router }) => {
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
-                  samplingMode={DataManagerIST.getSamplingMode()}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
