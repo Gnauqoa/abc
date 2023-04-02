@@ -22,7 +22,7 @@
 
 .activity-layout {
   width: 90%;
-  height: 90%;
+  height: calc(100% - 80px);
   margin: auto;
   display: flex;
   gap: 20px;
@@ -50,7 +50,7 @@
 
 .activity-footer {
   height: 60px;
-  padding-top: 20px;
+  padding-top: 10px;
   padding-left: 20px;
   padding-right: 20px;
   .__toolbar-right {
