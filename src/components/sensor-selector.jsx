@@ -102,15 +102,11 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
   };
 
   const updateSensorStatus = () => {
-    f7.dialog.preloader();
     const activeSensors = DataManagerIST.getListActiveSensor();
     sensorListForDislpay.forEach((item) => {
       item.sensorStatus = activeSensors.includes(item.id.toString()) ? "online" : "offline";
     });
     sortSensorList();
-    setTimeout(() => {
-      f7.dialog.close();
-    }, 1000);
   };
 
   const sensorPopup = useRef(null);
@@ -163,7 +159,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
                               __activeDevice: sensorStatus === "online",
                               __default: sensorStatus === "offline",
                             })}
-                            title={`${s.name} (${s.unit})`}
+                            title={`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
                             onClick={() => {
                               changeHandler(id + "|" + s.id);
                             }}

@@ -9,7 +9,6 @@ import FormInitState from "../services/data-display-setting-service";
 const sensorList = sensors;
 
 export default function ({ sensorSettings, onSubmit = () => {} }) {
-  const [unitOfMeasureList, setUnitOfMeasureList] = useState([]);
   const [formField, setFormField] = React.useState({});
 
   const resetSettingOnChangeSensor = () => {
@@ -22,7 +21,6 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
 
   const resetSettings = () => {
     setFormField(FormInitState);
-    setUnitOfMeasureList([]);
   };
 
   const loadSensorSavedSetting = (sensorDetailId) => {
@@ -46,7 +44,6 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
     event.preventDefault();
     if (validate()) {
       setFormField(FormInitState);
-      setUnitOfMeasureList([]);
       onSubmit({
         sensorDetailId: formField.sensorDetailId,
         unitOfMeasure: formField.unitOfMeasure,
@@ -67,11 +64,6 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
       return false;
     }
 
-    if (formField.floatingPointPosition === "nan" || formField.floatingPointPosition === "nan") {
-      f7.dialog.alert(`Format số lẻ không được phép để trống`);
-      return false;
-    }
-
     return customFomularValidator(formField.transformFormula);
   };
 
@@ -84,10 +76,10 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
       const scope = {
         x: 3,
       };
-      const result = evaluate(trimmedFomular, scope);
+      evaluate(trimmedFomular, scope);
       return true;
     } catch (err) {
-      f7.dialog.alert(`CÔng thức không hợp lệ, vui lòng kiểm tra lại. Chi tiết lỗi: ${err.message}`);
+      f7.dialog.alert(`Công thức không hợp lệ, vui lòng kiểm tra lại. Chi tiết lỗi: ${err.message}`);
       return false;
     }
   };
@@ -98,17 +90,6 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
     if (selectedValueString) {
       const arr = selectedValueString.split("|");
       if (arr.length > 1) {
-        const sensorId = parseInt(arr[0]),
-          sensorDetailId = arr[1],
-          existingSensorData = sensorList.find((s) => s.id == sensorId),
-          sensorDetailData = _.find(existingSensorData.data, (item) => item.id === sensorDetailId),
-          altUnits = sensorDetailData["altUnits"];
-        console.log(!altUnits.find((e) => e.id === -1));
-        if (!altUnits.find((e) => e.id === -1)) {
-          altUnits.push({ id: -1, name: sensorDetailData.unit, cvtFomular: "" });
-        }
-        altUnits.sort().reverse();
-        setUnitOfMeasureList(altUnits);
         formFieldHandler(evt);
         loadSensorSavedSetting(selectedValueString);
       }
@@ -118,13 +99,12 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
   return (
     <Page>
       <Navbar className="sensor-select-title" title="Cài đặt hiển thị dữ liệu">
-        <NavRight>
-          <Link iconIos="material:close" iconMd="material:close" popupClose></Link>
-        </NavRight>
+        <NavRight>{/* <Link iconIos="material:close" iconMd="material:close" popupClose></Link> */}</NavRight>
       </Navbar>
       <List form noHairlinesMd inlineLabels>
         <ListInput
           outline
+          className="label-color-black input-stack-position"
           name="sensorDetailId"
           label="Chọn dữ liệu:"
           defaultValue=""
@@ -134,79 +114,58 @@ export default function ({ sensorSettings, onSubmit = () => {} }) {
           onChange={sensorChangeHandler}
         >
           <option key="nan" id="nan"></option>
-          {/* {sensorList.map(({ id, name, data }) =>
-            data.map((s) => <option key={id + "|" + s.id} value={id + "|" + s.id}>{`${name} - ${s.name}`}</option>)
-          )} */}
           {sensorList.map(({ id, name, data }) => (
             <optgroup label={name} key={id}>
               {data.map((s) => (
                 <option key={id + "|" + s.id} value={id + "|" + s.id}>
-                  {s.name}
+                  {`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
                 </option>
               ))}
             </optgroup>
           ))}
         </ListInput>
         <ListInput
+          className="display-setting-input label-color-black"
           outline
+          size={5}
           name="unitOfMeasure"
           label="Đơn vị đo:"
-          type="select"
+          type="text"
           onChange={formFieldHandler}
-          validate
+          validateOnBlur
           value={formField.unitOfMeasure || ""}
-        >
-          {unitOfMeasureList.map((altUnit) => (
-            <option key={altUnit.id} value={altUnit.id}>
-              {altUnit.name}
-            </option>
-          ))}
-        </ListInput>
+        ></ListInput>
         <ListInput
+          className="display-setting-input label-color-black"
           outline
+          size={1}
+          errorMessage="Chỉ nhập số"
+          pattern="[0-9]*"
           name="floatingPointPosition"
           label="Format số lẻ:"
-          type="select"
+          type="text"
           onChange={formFieldHandler}
-          validate
+          validateOnBlur
           value={formField.floatingPointPosition || ""}
-        >
-          <option value="nan"></option>
-          {(() => {
-            const arr = [];
-            for (let i = 1; i <= 5; i++) {
-              arr.push(
-                <option key={i} id={i}>
-                  {i}
-                </option>
-              );
-            }
-            return arr;
-          })()}
-        </ListInput>
+        ></ListInput>
         <ListInput
           outline
           name="transformFormula"
+          className="label-color-black input-stack-position"
           label="Công thức tính toán: "
           type="textarea"
           onChange={formFieldHandler}
           value={formField.transformFormula}
         />
       </List>
-      <Row className="form-button">
-        <Col></Col>
-        <Col></Col>
-        <Col>
-          <Button popupClose fill color="red" type="reset" onClick={resetSettings}>
-            Huỷ
-          </Button>
-        </Col>
-        <Col>
-          <Button type="reset" fill color="green" onClick={handleSubmit}>
-            Lưu cài đặt
-          </Button>
-        </Col>
-      </Row>
+      <div className="buttons">
+        <Button className="cancel-button" popupClose onClick={resetSettings}>
+          Bỏ qua
+        </Button>
+        <Button className="ok-button" type="reset" onClick={handleSubmit}>
+          Lưu
+        </Button>
+      </div>
     </Page>
   );
 }
