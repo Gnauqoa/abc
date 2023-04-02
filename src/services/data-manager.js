@@ -567,16 +567,16 @@ class DataManager {
         const curInterval = counter * this.emitSubscribersInterval;
         if (curInterval % this.collectingDataInterval === 0) {
           this.emitSubscribers();
-        }
 
-        if (this.isCollectingData) {
-          if (this.samplingMode === SAMPLING_AUTO) {
+          if (this.isCollectingData) {
+            if (this.samplingMode === SAMPLING_AUTO) {
             const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
             this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
           }
 
-          // Update total time collecting data
-          this.collectingDataTime += this.emitSubscribersInterval;
+            // Update total time collecting data
+            this.collectingDataTime += this.emitSubscribersInterval;
+          }
         }
 
         // Increment counter and loop back to 0 if greater than max interval
