@@ -17,7 +17,7 @@ var routes = [
   },
   {
     path: "/edl",
-    component: EdlHome,
+    component: EdlActivity,
   },
   {
     path: "/edl/:id",
