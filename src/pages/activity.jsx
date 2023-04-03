@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight } from "framework7-react";
+import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
 import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
@@ -19,6 +19,7 @@ import LineChart from "../components/widgets/line_chart";
 import NumberWidget from "../components/widgets/number";
 import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
+import DataDisplaySetting from "../components/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 
@@ -47,7 +48,9 @@ export default ({ f7route, f7router, filePath, content }) => {
         },
       ],
       dataRuns: [],
+    sensorSettings: [],
     };
+
   } else if (content) {
     activity = content;
   } else {
@@ -59,6 +62,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [pages, setPages] = useState(activity.pages);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const currentPage = pages[currentPageIndex];
+  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
 
   const layout = currentPage.layout;
   const [widgets, setWidgets] = useState(currentPage.widgets);
@@ -67,6 +71,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(null);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
+  const displaySettingPopup = useRef();
 
   const lineChartRef = useRef();
 
@@ -238,6 +243,41 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
+  function handleSensorSettingSubmit(setting) {
+    let sensorSettingsCpy = [ ...sensorSettings ];
+    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
+      sensorSettingsCpy.push({ ...setting });
+      console.log("New data pushed");
+    } else {
+      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
+      sensorSettingsCpy[foundIndex] = setting;
+      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
+    }
+
+    console.log(sensorSettings);
+    setSensorSettings(sensorSettingsCpy);
+    displaySettingPopup.current.f7Popup().close();
+  }
+
+  function handlePagePrev() {
+    console.log("TODO: handlePrevPage");
+  }
+
+  function handlePageNext() {
+    console.log("TODO: handleNextPage");
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        console.log("TODO: delete page");
+      },
+      () => {}
+    );
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
@@ -249,9 +289,26 @@ export default ({ f7route, f7router, filePath, content }) => {
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton disabled={isRunning} icon="settings" />
+          <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
         </NavRight>
       </Navbar>
+      <Popover className="setting-popover-menu">
+        <List>
+          <ListItem link="#" popoverClose title="Quản lý dữ liệu" />
+          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
+          <ListItem link="#" popoverClose title="Xuất ra Excel" />
+          <ListItem link="#" popoverClose title="Chia sẻ" />
+        </List>
+      </Popover>
+      <Popup
+        className="display-setting-popup"
+        ref={displaySettingPopup}
+      >
+        <DataDisplaySetting
+          sensorSettings={sensorSettings}
+          onSubmit={(setting) => handleSensorSettingSubmit(setting)}
+        />
+      </Popup>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (

@@ -160,7 +160,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
                               __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
                               __default: sensorStatus === SENSOR_STATUS_OFFLINE,
                             })}
-                            title={`${s.name} (${s.unit})`}
+                            title={`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
                             onClick={() => {
                               changeHandler(id + "|" + s.id);
                             }}

@@ -26,9 +26,9 @@
     "Samsung >= 12"
   ],
   "dependencies": {
-    "clsx": "^1.2.1",
     "chart.js": "^4.2.1",
     "chartjs-plugin-zoom": "^2.0.1",
+    "clsx": "^1.2.1",
     "dom7": "^4.0.6",
     "fbemitter": "^3.0.0",
     "framework7": "^7.1.5",
@@ -37,6 +37,7 @@
     "jquery": "^3.6.4",
     "lodash": "^4.17.21",
     "material-icons": "^1.13.2",
+    "mathjs": "^11.7.0",
     "moment": "^2.29.4",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
