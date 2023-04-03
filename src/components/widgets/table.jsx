@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
-import sensors from "../../services/sensor-service";
+import sensors, { getUnit } from "../../services/sensor-service";
 import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
@@ -63,55 +63,25 @@ const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
 const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning }) => {
-  const [unit, setUnit] = useState();
-  const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
-  // const [isInitialWithData, setIsInitialWithData] = useState(false);
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
   const samplingMode = DataManagerIST.getSamplingMode();
-  console.log("currentValue", currentValue);
-
-  useEffect(() => {
-    const handleClick = () => {
-      setIsCollectingDataPressed(true);
-    };
-
-    console.log(`TABLE_WIDGET-INIT-initialData_${data.length}`, data);
-    document.addEventListener("getIndividualSample", handleClick);
-    return () => {
-      document.removeEventListener("getIndividualSample", handleClick);
-    };
-  }, []);
-
-  useEffect(() => {
-    const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
-    const sensorDetail = sensor.data[widget.sensor.index];
-    setUnit(sensorDetail.unit);
-  }, [widget]);
 
   useEffect(() => {
     const transformedRows = data.map((item) => ({
       colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
       colum2: item.value,
     }));
-
     setNumRows(transformedRows.length);
 
-    if (!isRunning | (samplingMode === SAMPLING_MANUAL)) {
-      let time = isRunning ? DataManagerIST.getParsedCollectingDataTime() : "0.000";
-      let value = currentValue;
-
-      if (isCollectingDataPressed) {
-        [time, value] = DataManagerIST.getManualSample(widget?.sensor?.id);
-        setNumRows((prev) => prev + 1);
-        setIsCollectingDataPressed(false);
-      }
-      if (!value || value === "") return;
+    if (!isRunning || samplingMode === SAMPLING_MANUAL) {
+      const { time, value } = currentValue;
+      if (!time || time === "" || !value || value === "") return;
 
       const newRow = {
         colum1:
@@ -135,7 +105,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         : transformedRows
     );
     numRows !== 0 && scrollToRef(lastRowRef);
-  }, [data, isCollectingDataPressed]);
+  }, [data]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
@@ -147,18 +117,6 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     }
   };
 
-  const parseInitialDataRun = (dataRun) => {
-    const parsedRows = dataRun.map((data) => {
-      return {
-        colum1: data["time"],
-        colum2: data["value"],
-      };
-    });
-    const dataLength = dataRun.length;
-    setNumRows(dataLength);
-    console.log("dataRun in parseInitialDataRun: ", parsedRows);
-    setRows(dataLength < DEFAULT_ROWS ? [...parsedRows, ...rows.slice(dataLength, DEFAULT_ROWS)] : parsedRows);
-  };
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -199,7 +157,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                     ></SensorSelector>
                   </div>
                 </div>
-                <div className="header-unit">({unit})</div>
+                <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => {
@@ -208,7 +166,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                 ref = index === numRows ? lastRowRef : null;
               } else {
                 if (!isRunning) ref = index === numRows + 1 ? lastRowRef : null;
-                else ref = index === data.length + 1 ? lastRowRef : null;
+                else ref = index === data.length ? lastRowRef : null;
               }
 
               return (

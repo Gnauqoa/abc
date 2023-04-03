@@ -531,20 +531,10 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample(sensorId) {
-    if (!this.sensorIds.includes(Number(sensorId))) {
-      console.log(`getIndividualSample: sensorId ${sensorId} does not exist`);
-      return false;
-    }
-
+  getManualSample() {
     const dataRunId = this.curDataRunId;
     const parsedTime = this.getParsedCollectingDataTime();
-    const sensorData = this.buffer[Number(sensorId)] || [];
-
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
-
-    const returnedData = [parsedTime, ...sensorData];
-    return returnedData;
   }
 
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
