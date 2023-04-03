@@ -273,7 +273,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
-                    widget={widgets[0]}
+                    widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
