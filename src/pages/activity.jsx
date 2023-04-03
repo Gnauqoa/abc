@@ -157,7 +157,6 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handleSampleClick() {
     if (!isRunning) {
-      DataManagerIST.setCollectingDataFrequency(frequency);
       const dataRunId = DataManagerIST.startCollectingData();
       setCurrentDataRunId(dataRunId);
     } else {
@@ -178,8 +177,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
-  function getCurrentValue(sensor) {
-    return currentSensorValues[sensor.id]?.values[sensor.index] || "";
+  function getCurrentValue(sensor, isTable = false) {
+    if (!isTable) return currentSensorValues[sensor.id]?.values[sensor.index] || "";
+    const data = currentSensorValues[sensor.id];
+    return data ? { time: data.time, value: data.values[sensor.index] } : {};
   }
 
   function getDataForTable(sensor) {
@@ -241,7 +242,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     <Page className="bg-color-regal-blue activity">
       <Navbar>
         <NavLeft>
-          <BackButton link="/" />
+          <BackButton disabled={isRunning} link="/" />
           <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
           <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handlePageDelete} />
         </NavLeft>
@@ -259,7 +260,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
-                    currentValue={getCurrentValue(widgets[0].sensor)}
+                    currentValue={getCurrentValue(widgets[0].sensor, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
@@ -286,7 +287,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
-                    currentValue={getCurrentValue(widgets[0].sensor)}
+                    currentValue={getCurrentValue(widgets[0].sensor, true)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
@@ -309,7 +310,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {layout === LAYOUT_TABLE && (
                 <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
-                  currentValue={getCurrentValue(widgets[0].sensor)}
+                  currentValue={getCurrentValue(widgets[0].sensor, true)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}

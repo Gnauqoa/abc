@@ -531,20 +531,16 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample(sensorId) {
-    if (!this.sensorIds.includes(Number(sensorId))) {
-      console.log(`getIndividualSample: sensorId ${sensorId} does not exist`);
-      return false;
-    }
-
+  getManualSample() {
     const dataRunId = this.curDataRunId;
-    const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
-    const sensorData = this.buffer[Number(sensorId)] || [];
-
+    const parsedTime = this.getParsedCollectingDataTime();
     this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
+  }
 
-    const returnedData = [parsedTime, ...sensorData];
-    return returnedData;
+  // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
+  getParsedCollectingDataTime() {
+    const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
+    return parsedTime;
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
@@ -562,7 +558,7 @@ export class DataManager {
 
           if (this.isCollectingData) {
             if (this.samplingMode === SAMPLING_AUTO) {
-              const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
+              const parsedTime = this.getParsedCollectingDataTime();
               this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
             }
 
@@ -601,7 +597,7 @@ export class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      const parsedTime = this.isCollectingData ? (this.collectingDataTime / 1000).toFixed(3) : "0.000";
+      const parsedTime = this.isCollectingData ? this.getParsedCollectingDataTime() : "0.000";
       const sensorData = this.buffer[subscriber.sensorId] || [];
 
       // Notify subscriber

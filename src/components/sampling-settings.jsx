@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
 import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME } from "../js/constants";
+import DataManagerIST from "../services/data-manager";
 import dialog from "./dialog";
 
 export default ({ isRunning, frequency, handleFrequencySelect }) => {
@@ -30,6 +31,11 @@ export default ({ isRunning, frequency, handleFrequencySelect }) => {
     if (!isRunning) {
       dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
     }
+  };
+
+  const handleManualButtonClick = () => {
+    console.log(">>>>> MANUAL - data manager:");
+    DataManagerIST.getManualSample();
   };
 
   const onSelectFrequency = (frequency) => {
@@ -85,9 +91,7 @@ export default ({ isRunning, frequency, handleFrequencySelect }) => {
       {isManualMode && (
         <Button
           disabled={!isRunning}
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent("getIndividualSample"));
-          }}
+          onClick={handleManualButtonClick}
           iconIos={"material:done"}
           iconMd={"material:done"}
           iconAurora={"material:done"}

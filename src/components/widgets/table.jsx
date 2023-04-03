@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
-import sensors from "../../services/sensor-service";
+import sensors, { getUnit } from "../../services/sensor-service";
 import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
@@ -63,12 +63,9 @@ const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
 const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning }) => {
-  const [unit, setUnit] = useState();
-  const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
-  const [isInitialWithData, setIsInitialWithData] = useState(false);
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
@@ -76,62 +73,14 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const samplingMode = DataManagerIST.getSamplingMode();
 
   useEffect(() => {
-    const handleClick = () => {
-      setIsCollectingDataPressed(true);
-    };
+    const transformedRows = data.map((item) => ({
+      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
+      colum2: item.value,
+    }));
+    setNumRows(transformedRows.length);
 
-    console.log(`TABLE_WIDGET-INIT-initialData_${data.length}`, data);
-    document.addEventListener("getIndividualSample", handleClick);
-    if (data?.length !== 0) {
-      parseInitialDataRun(data);
-    }
-    setIsInitialWithData(true);
-    return () => {
-      document.removeEventListener("getIndividualSample", handleClick);
-    };
-  }, []);
-
-  useEffect(() => {
-    const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
-    const sensorDetail = sensor.data[widget.sensor.index];
-    setUnit(sensorDetail.unit);
-  }, [widget]);
-
-  useEffect(() => {
-    if (!isInitialWithData) return;
-
-    if (data.length === 0) {
-      if (numRows !== 0) {
-        setNumRows(0);
-        setRows(defaultRows);
-        scrollToRef(headerRowRef);
-      }
-      return;
-    }
-
-    if (isRunning && samplingMode === SAMPLING_AUTO) {
-      const newRows = data.map((item) => ({
-        colum1:
-          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
-        colum2: item.value,
-      }));
-      setRows(
-        newRows.length < DEFAULT_ROWS ? [...newRows, ...defaultRows.slice(newRows.length, DEFAULT_ROWS)] : newRows
-      );
-      setNumRows(newRows.length);
-    } else {
-      // TODO: Handle parse all data when first load and change data run
-      // For change dataRun, unsubscribe, set new data run, notify widget and subscribe again
-      let newData;
-      if (isCollectingDataPressed) {
-        newData = DataManagerIST.getManualSample(widget?.sensor?.id);
-        setNumRows((prev) => prev + 1);
-        setIsCollectingDataPressed(false);
-      } else {
-        newData = data[data.length - 1];
-      }
-
-      const { time, value } = newData;
+    if (!isRunning || samplingMode === SAMPLING_MANUAL) {
+      const { time, value } = currentValue;
       if (!time || time === "" || !value || value === "") return;
 
       const newRow = {
@@ -139,20 +88,24 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
           numRows === 0
             ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT || isRunning
               ? time
-              : rows[numRows]["colum1"]
+              : rows[numRows]
+              ? rows[numRows]["colum1"]
+              : ""
             : isRunning
             ? time
             : "",
         colum2: value,
       };
-
-      const oldRows = rows.slice(0, numRows);
-      oldRows.push(newRow);
-      setRows([...oldRows, ...defaultRows.slice(oldRows.length, DEFAULT_ROWS)]);
+      transformedRows.push(newRow);
     }
 
+    setRows(
+      transformedRows.length < DEFAULT_ROWS
+        ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
+        : transformedRows
+    );
     numRows !== 0 && scrollToRef(lastRowRef);
-  }, [data, isCollectingDataPressed]);
+  }, [data]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
@@ -164,18 +117,6 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     }
   };
 
-  const parseInitialDataRun = (dataRun) => {
-    const parsedRows = dataRun.map((data) => {
-      return {
-        colum1: data["time"],
-        colum2: data["value"],
-      };
-    });
-    const dataLength = dataRun.length;
-    setNumRows(dataLength);
-    console.log("dataRun in parseInitialDataRun: ", parsedRows);
-    setRows(dataLength < DEFAULT_ROWS ? [...parsedRows, ...rows.slice(dataLength, DEFAULT_ROWS)] : parsedRows);
-  };
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -216,23 +157,17 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                     ></SensorSelector>
                   </div>
                 </div>
-                <div className="header-unit">({unit})</div>
+                <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => {
-              const ref = !isRunning
-                ? index === numRows
-                  ? lastRowRef
-                  : null
-                : numRows < NUM_ROWS_FIT_TABLE || !isRunning
-                ? null
-                : numRows < DEFAULT_ROWS
-                ? index === numRows
-                  ? lastRowRef
-                  : null
-                : index === rows.length
-                ? lastRowRef
-                : null;
+              let ref;
+              if (isRunning && samplingMode === SAMPLING_AUTO) {
+                ref = index === numRows ? lastRowRef : null;
+              } else {
+                if (!isRunning) ref = index === numRows + 1 ? lastRowRef : null;
+                else ref = index === data.length ? lastRowRef : null;
+              }
 
               return (
                 <tr key={index} ref={ref}>
