@@ -125,6 +125,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
         {selectedSensorState === "" ? "----- Chọn một cảm biến bất kì -----" : selectedSensorState}
       </Button>
       <Popup
+        className="edl-popup"
         ref={sensorPopup}
         opened={sensorSelectPopupOpened}
         onPopupClosed={() => setSensorSelectPopupOpened(false)}

@@ -434,3 +434,11 @@
     margin-right: 15px;
   }
 }
+
+.edl-popup {
+	width: 400px;
+  height: 500px;
+  left: calc(50% - 200px);
+  top: calc(50% - 250px);
+  border-radius: 20px;
+}
