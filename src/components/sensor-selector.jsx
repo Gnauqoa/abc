@@ -17,6 +17,7 @@ import _ from "lodash";
 import sensorList from "../services/sensor-service";
 import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
+import { SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
 
 export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState("");
@@ -69,19 +70,19 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
 
   const appendSensorStatusKey = () => {
     Object.keys(sensorListForDislpay).forEach((key) => {
-      Object.assign(sensorListForDislpay[key], { sensorStatus: "offline" });
+      Object.assign(sensorListForDislpay[key], { sensorStatus: SENSOR_STATUS_OFFLINE });
     });
   };
 
   const sortSensorList = () => {
     sensorListForDislpay = sensorList.sort((a, b) => {
-      if (a.id === selectedSensorIdState) {
-        return -1;
-      }
+      // if (a.id === selectedSensorIdState) {
+      //   return -1;
+      // }
 
-      if (b.id === selectedSensorIdState) {
-        return 1;
-      }
+      // if (b.id === selectedSensorIdState) {
+      //   return 1;
+      // }
 
       if (a.sensorStatus === b.sensorStatus) {
         if (a.name < b.name) {
@@ -93,7 +94,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
         return 0;
       }
 
-      if (a.sensorStatus === "online") {
+      if (a.sensorStatus === SENSOR_STATUS_ONLINE) {
         return -1;
       } else {
         return 1;
@@ -104,7 +105,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
   const updateSensorStatus = () => {
     const activeSensors = DataManagerIST.getListActiveSensor();
     sensorListForDislpay.forEach((item) => {
-      item.sensorStatus = activeSensors.includes(item.id.toString()) ? "online" : "offline";
+      item.sensorStatus = activeSensors.includes(item.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
     });
     sortSensorList();
   };
@@ -140,13 +141,13 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
                 {sensorListForDislpay.map(({ id, name, data, sensorStatus }) => (
                   <ListItem
                     className={clsx("sensor-select-device", {
-                      __activeDevice: sensorStatus === "online",
-                      __default: sensorStatus === "offline",
+                      __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
+                      __default: sensorStatus === SENSOR_STATUS_OFFLINE,
                     })}
                     accordionItem
                     key={id}
                     title={name}
-                    accordionItemOpened={sensorStatus === "online" ? true : false}
+                    accordionItemOpened={sensorStatus === SENSOR_STATUS_ONLINE ? true : false}
                   >
                     <AccordionContent>
                       <List>
@@ -156,8 +157,8 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
                             popupClose
                             key={id + "|" + s.id}
                             className={clsx("sensor-select-measurement", {
-                              __activeDevice: sensorStatus === "online",
-                              __default: sensorStatus === "offline",
+                              __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
+                              __default: sensorStatus === SENSOR_STATUS_OFFLINE,
                             })}
                             title={`${s.name} (${s.unit})`}
                             onClick={() => {

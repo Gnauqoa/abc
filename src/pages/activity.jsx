@@ -116,7 +116,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
-      recentFilesService.save({ id: savedFilePath, activityName: name });
+      savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -124,7 +124,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         async (name) => {
           setName(name);
           const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
-          recentFilesService.save({ id: savedFilePath, activityName: name });
+          savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
         },
         () => {},
         name
@@ -251,7 +251,6 @@ export default ({ f7route, f7router, filePath, content }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -274,11 +273,10 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
-                    widget={widgets[0]}
+                    widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
               </div>
@@ -301,7 +299,6 @@ export default ({ f7route, f7router, filePath, content }) => {
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
-                  samplingMode={DataManagerIST.getSamplingMode()}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
