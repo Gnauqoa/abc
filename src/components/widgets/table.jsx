@@ -68,12 +68,13 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
-  const [isInitialWithData, setIsInitialWithData] = useState(false);
+  // const [isInitialWithData, setIsInitialWithData] = useState(false);
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
   const samplingMode = DataManagerIST.getSamplingMode();
+  console.log("currentValue", currentValue);
 
   useEffect(() => {
     const handleClick = () => {
@@ -82,10 +83,6 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
 
     console.log(`TABLE_WIDGET-INIT-initialData_${data.length}`, data);
     document.addEventListener("getIndividualSample", handleClick);
-    if (data?.length !== 0) {
-      parseInitialDataRun(data);
-    }
-    setIsInitialWithData(true);
     return () => {
       document.removeEventListener("getIndividualSample", handleClick);
     };
@@ -98,59 +95,45 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   }, [widget]);
 
   useEffect(() => {
-    if (!isInitialWithData) return;
+    const transformedRows = data.map((item) => ({
+      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
+      colum2: item.value,
+    }));
 
-    if (data.length === 0) {
-      if (numRows !== 0) {
-        setNumRows(0);
-        setRows(defaultRows);
-        scrollToRef(headerRowRef);
-      }
-      return;
-    }
+    setNumRows(transformedRows.length);
 
-    if (isRunning && samplingMode === SAMPLING_AUTO) {
-      const newRows = data.map((item) => ({
-        colum1:
-          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
-        colum2: item.value,
-      }));
-      setRows(
-        newRows.length < DEFAULT_ROWS ? [...newRows, ...defaultRows.slice(newRows.length, DEFAULT_ROWS)] : newRows
-      );
-      setNumRows(newRows.length);
-    } else {
-      // TODO: Handle parse all data when first load and change data run
-      // For change dataRun, unsubscribe, set new data run, notify widget and subscribe again
-      let newData;
+    if (!isRunning | (samplingMode === SAMPLING_MANUAL)) {
+      let time = isRunning ? DataManagerIST.getParsedCollectingDataTime() : "0.000";
+      let value = currentValue;
+
       if (isCollectingDataPressed) {
-        newData = DataManagerIST.getManualSample(widget?.sensor?.id);
+        [time, value] = DataManagerIST.getManualSample(widget?.sensor?.id);
         setNumRows((prev) => prev + 1);
         setIsCollectingDataPressed(false);
-      } else {
-        newData = data[data.length - 1];
       }
-
-      const { time, value } = newData;
-      if (!time || time === "" || !value || value === "") return;
+      if (!value || value === "") return;
 
       const newRow = {
         colum1:
           numRows === 0
             ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT || isRunning
               ? time
-              : rows[numRows]["colum1"]
+              : rows[numRows]
+              ? rows[numRows]["colum1"]
+              : ""
             : isRunning
             ? time
             : "",
         colum2: value,
       };
-
-      const oldRows = rows.slice(0, numRows);
-      oldRows.push(newRow);
-      setRows([...oldRows, ...defaultRows.slice(oldRows.length, DEFAULT_ROWS)]);
+      transformedRows.push(newRow);
     }
 
+    setRows(
+      transformedRows.length < DEFAULT_ROWS
+        ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
+        : transformedRows
+    );
     numRows !== 0 && scrollToRef(lastRowRef);
   }, [data, isCollectingDataPressed]);
 
@@ -220,19 +203,13 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => {
-              const ref = !isRunning
-                ? index === numRows
-                  ? lastRowRef
-                  : null
-                : numRows < NUM_ROWS_FIT_TABLE || !isRunning
-                ? null
-                : numRows < DEFAULT_ROWS
-                ? index === numRows
-                  ? lastRowRef
-                  : null
-                : index === rows.length
-                ? lastRowRef
-                : null;
+              let ref;
+              if (isRunning && samplingMode === SAMPLING_AUTO) {
+                ref = index === numRows ? lastRowRef : null;
+              } else {
+                if (!isRunning) ref = index === numRows + 1 ? lastRowRef : null;
+                else ref = index === data.length + 1 ? lastRowRef : null;
+              }
 
               return (
                 <tr key={index} ref={ref}>
