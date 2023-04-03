@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
-import { v4 as uuidv4 } from "uuid";
 import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
@@ -9,64 +8,83 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
-  SAMPLING_MANUAL_FREQUENCY,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
 import RoundButton from "../components/round-button";
 import dialog from "../components/dialog";
-import storeService from "../services/store-service";
-import ActivityNav from "../components/activity-nav";
+import ActivityPageNav from "../components/activity-page-nav";
 import Timer from "../components/timer";
 import LineChart from "../components/widgets/line_chart";
 import NumberWidget from "../components/widgets/number";
 import TableWidget from "../components/widgets/table";
 import SamplingSetting from "../components/sampling-settings";
 import DataDisplaySetting from "../components/data-display-setting";
+import { saveFile } from "../services/file-service";
+import storeService from "../services/store-service";
 
-const activityService = new storeService("activity");
+const recentFilesService = new storeService("recent-files");
 
-export default ({ f7route, f7router }) => {
-  const layout = f7route.params.layout;
-  const id = f7route.params.id;
-  let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
-  if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout)) {
-    defaultWidgets = [
-      { id: 0, sensor: { id: 1, index: 0 } },
-      { id: 1, sensor: { id: 2, index: 0 } },
-    ];
-  }
+export default ({ f7route, f7router, filePath, content }) => {
+  const selectedLayout = f7route.params.layout;
+  let activity;
 
-  let activity = {
-    id: uuidv4(),
-    name: "",
-    layout: layout,
-    frequency: 1,
-    widgets: defaultWidgets,
-    sensorSettings: [],
-  };
-
-  if (id) {
-    const savedActivity = activityService.find(id);
-    if (!savedActivity) {
-      f7router.navigate("/");
-      return;
+  if (selectedLayout) {
+    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
+      defaultWidgets = [
+        { id: 0, sensor: { id: 1, index: 0 } },
+        { id: 1, sensor: { id: 2, index: 0 } },
+      ];
     }
 
-    activity = { ...activity, ...savedActivity };
+    activity = {
+      name: "",
+      pages: [
+        {
+          layout: selectedLayout,
+          widgets: defaultWidgets,
+          frequency: 1,
+        },
+      ],
+      dataRuns: [],
+    sensorSettings: [],
+    };
+
+  } else if (content) {
+    activity = content;
+  } else {
+    f7router.navigate("/");
+    return;
   }
 
   const [name, setName] = useState(activity.name);
-  const [sampleMode, setSampleMode] = useState(activity.sampleMode);
-  const [frequency, setFrequency] = useState(activity.frequency);
-  const [widgets, setWidgets] = useState(activity.widgets);
+  const [pages, setPages] = useState(activity.pages);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const currentPage = pages[currentPageIndex];
   const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
 
+  const layout = currentPage.layout;
+  const [widgets, setWidgets] = useState(currentPage.widgets);
+  const [frequency, setFrequency] = useState(currentPage.frequency);
   const [isRunning, setIsRunning] = useState(false);
+
   const [dataRun, setDataRun] = useState([]);
   const [, setForceUpdate] = useState(0);
   const displaySettingPopup = useRef();
   const lineChartRef = useRef();
+
+  useEffect(() => {
+    DataManagerIST.importActivityDataRun(activity.dataRuns);
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    if (dataRunPreviews.length > 0) {
+      const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
+      const dataRun = DataManagerIST.getDataRunData(lastDataRunId);
+      const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
+      const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
+      result && setDataRun(parsedDataRun);
+    }
+  }, []);
 
   useEffect(() => {
     let subscriberIds = [];
@@ -89,30 +107,29 @@ export default ({ f7route, f7router }) => {
     setName(e.target.value);
   }
 
-  function handleActivityDelete(e) {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        activityService.delete(activity.id);
-        f7router.navigate("/");
-      },
-      () => {}
-    );
-  }
+  async function handleActivitySave() {
+    // Collecting data from dataRuns
+    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, frequency, widgets };
+      } else {
+        return page;
+      }
+    });
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns };
 
-  function handleActivitySave() {
-    const updatedActivity = { ...activity, name, sampleMode, frequency, widgets };
     if (name.length) {
-      activityService.save(updatedActivity);
-      setForceUpdate((n) => n + 1);
+      const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
+      savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
         "Tên hoạt động",
-        (name) => {
+        async (name) => {
           setName(name);
-          activityService.save({ ...updatedActivity, name });
+          const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+          savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
         },
         () => {},
         name
@@ -123,10 +140,6 @@ export default ({ f7route, f7router }) => {
   function handleFrequencySelect(frequency) {
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
     result && setFrequency(frequency);
-  }
-
-  function handleChangeSamplingMode(mode) {
-    setSampleMode(mode);
   }
 
   function handleSensorChange(widgetId, sensor) {
@@ -199,7 +212,7 @@ export default ({ f7route, f7router }) => {
   }
 
   function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = sensorSettings;
+    let sensorSettingsCpy = [ ...sensorSettings ];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
       sensorSettingsCpy.push({ ...setting });
       console.log("New data pushed");
@@ -214,13 +227,32 @@ export default ({ f7route, f7router }) => {
     displaySettingPopup.current.f7Popup().close();
   }
 
+  function handlePagePrev() {
+    console.log("TODO: handlePrevPage");
+  }
+
+  function handlePageNext() {
+    console.log("TODO: handleNextPage");
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        console.log("TODO: delete page");
+      },
+      () => {}
+    );
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
         <NavLeft>
           <BackButton link="/" />
           <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
-          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handleActivityDelete} />
+          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handlePageDelete} />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
@@ -247,20 +279,19 @@ export default ({ f7route, f7router }) => {
       </Popup>
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
-          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
               <div className="__card __card-left">
-                {activity.layout === LAYOUT_TABLE_CHART && (
+                {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
-                {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(activity.layout) && (
+                {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
                     value={getValueForNumber(widgets[0].sensor)}
                     widget={widgets[0]}
@@ -269,7 +300,7 @@ export default ({ f7route, f7router }) => {
                 )}
               </div>
               <div className="__card __card-right">
-                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(activity.layout) && (
+                {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     data={getDataForChart(widgets[1].sensor)}
                     ref={lineChartRef}
@@ -277,22 +308,21 @@ export default ({ f7route, f7router }) => {
                     handleSensorChange={handleSensorChange}
                   />
                 )}
-                {activity.layout === LAYOUT_NUMBER_TABLE && (
+                {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
-                    widget={widgets[0]}
+                    widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
-                    samplingMode={DataManagerIST.getSamplingMode()}
                   />
                 )}
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(activity.layout) && (
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(layout) && (
             <div className="__card">
-              {activity.layout === LAYOUT_CHART && (
+              {layout === LAYOUT_CHART && (
                 <LineChart
                   data={getDataForChart(widgets[0].sensor)}
                   ref={lineChartRef}
@@ -300,17 +330,16 @@ export default ({ f7route, f7router }) => {
                   handleSensorChange={handleSensorChange}
                 />
               )}
-              {activity.layout === LAYOUT_TABLE && (
+              {layout === LAYOUT_TABLE && (
                 <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
-                  samplingMode={DataManagerIST.getSamplingMode()}
                 />
               )}
-              {activity.layout === LAYOUT_NUMBER && (
+              {layout === LAYOUT_NUMBER && (
                 <NumberWidget
                   value={getValueForNumber(widgets[0].sensor)}
                   widget={widgets[0]}
@@ -326,11 +355,15 @@ export default ({ f7route, f7router }) => {
               isRunning={isRunning}
               frequency={frequency}
               handleFrequencySelect={handleFrequencySelect}
-              handleChangeSamplingMode={handleChangeSamplingMode}
             />
           </div>
           <div className="__toolbar-center">
-            <ActivityNav currentId={activity.id} isRunning={isRunning} />
+            <ActivityPageNav
+              navOrder={"1/1"}
+              isDisabled={isRunning}
+              onNextPage={handlePageNext}
+              onPrevPage={handlePagePrev}
+            />
           </div>
           <div className="__toolbar-right">
             <Timer isRunning={isRunning} />

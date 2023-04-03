@@ -3,7 +3,9 @@
     "fullscreen": false,
     "autoHideMenuBar": false,
     "webPreferences": {
-      "nodeIntegration": true
+      "nodeIntegration": true,
+      "enableRemoteModule": true,
+      "contextIsolation": false
     }
   }
 }

@@ -4,12 +4,18 @@ import { Page, Navbar, NavRight, List, ListInput, Link, Row, Col, Button, Popup,
 import _ from "lodash";
 import sensors from "../services/sensor-service";
 import { evaluate } from "mathjs";
-import FormInitState from "../services/data-display-setting-service";
 
 const sensorList = sensors;
 
 export default function ({ sensorSettings, onSubmit = () => {} }) {
   const [formField, setFormField] = React.useState({});
+
+  const FormInitState = {
+    sensorDetailId: "",
+    unitOfMeasure: "",
+    floatingPointPosition: "",
+    transformFormula: "",
+  };
 
   const resetSettingOnChangeSensor = () => {
     setFormField({
