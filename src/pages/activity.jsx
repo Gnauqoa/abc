@@ -116,7 +116,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
-      recentFilesService.save({ id: savedFilePath, activityName: name });
+      savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -124,7 +124,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         async (name) => {
           setName(name);
           const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
-          recentFilesService.save({ id: savedFilePath, activityName: name });
+          savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
         },
         () => {},
         name

@@ -1,28 +1,50 @@
-import React from "react";
-import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavTitle } from "framework7-react";
+import React, { useRef } from "react";
+import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavTitle, f7 } from "framework7-react";
 
 import newImg from "../img/home/new-activity.png";
 import openImg from "../img/home/open-activity.png";
 import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
+import { fileReadAsTextAsync } from "../utils/core";
 
 const recentFilesService = new storeService("recent-files");
 
 export default ({ f7router }) => {
   const files = recentFilesService.all();
+  const inputFile = useRef(null);
 
   async function handleFileOpen(filePath) {
-    const file = await openFile(filePath);
-    if (file) {
-      const content = JSON.parse(file.content);
-      recentFilesService.save({ id: file.filePath, activityName: content.name });
-      f7router.navigate("/edl", {
-        props: {
-          filePath: file.filePath,
-          content,
-        },
-      });
+    if (f7.device.electron) {
+      const file = await openFile(filePath);
+      if (file) {
+        const content = JSON.parse(file.content);
+        recentFilesService.save({ id: file.filePath, activityName: content.name });
+        f7router.navigate("/edl", {
+          props: {
+            filePath: file.filePath,
+            content,
+          },
+        });
+      }
+    } else if (f7.device.desktop) {
+      inputFile.current.click();
     }
+  }
+
+  function handleFileUpload(event) {
+    const file = event.target.files[0];
+    fileReadAsTextAsync(file).then((content) => {
+      try {
+        f7router.navigate("/edl", {
+          props: {
+            filePath: "",
+            content: JSON.parse(content),
+          },
+        });
+      } catch (error) {
+        console.error("Import failed", error.message);
+      }
+    });
   }
 
   return (
@@ -63,6 +85,7 @@ export default ({ f7router }) => {
           </div>
         )}
       </div>
+      <input type="file" id="activity-file" ref={inputFile} style={{ display: "none" }} onChange={handleFileUpload} />
     </Page>
   );
 };
