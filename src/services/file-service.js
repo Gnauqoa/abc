@@ -1,10 +1,14 @@
+import { f7 } from "framework7-react";
+
 function openFile(
   filePath,
   option = {
     filters: [{ name: "EDL", extensions: ["edl"] }],
   }
 ) {
-  return window.fileApi.open(filePath, option);
+  if (f7.device.electron) {
+    return window.fileApi.open(filePath, option);
+  }
 }
 
 function saveFile(
@@ -14,7 +18,9 @@ function saveFile(
     filters: [{ name: "EDL", extensions: ["edl"] }],
   }
 ) {
-  return window.fileApi.save(filePath, content, option);
+  if (f7.device.electron) {
+    return window.fileApi.save(filePath, content, option);
+  }
 }
 
 export { openFile, saveFile };
