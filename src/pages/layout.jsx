@@ -24,7 +24,7 @@ export default () => (
       <NavLeft>
         <BackButton link="/" />
       </NavLeft>
-      <NavTitle>Hoạt động mới</NavTitle>
+      <NavTitle>Tạo trang mới</NavTitle>
     </Navbar>
     <div className="full-height display-flex justify-content-center align-items-center">
       <Block>
