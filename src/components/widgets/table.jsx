@@ -62,7 +62,7 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning }) => {
+const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning }) => {
   const [unit, setUnit] = useState();
   const [isCollectingDataPressed, setIsCollectingDataPressed] = useState(false);
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);

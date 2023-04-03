@@ -68,10 +68,11 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [widgets, setWidgets] = useState(currentPage.widgets);
   const [frequency, setFrequency] = useState(currentPage.frequency);
   const [isRunning, setIsRunning] = useState(false);
-
-  const [dataRun, setDataRun] = useState([]);
-  const [, setForceUpdate] = useState(0);
+  const [currentDataRunId, setCurrentDataRunId] = useState(null);
+  const [currentSensorValues, setCurrentSensorValues] = useState({});
+  const dataRun = getDataRun(currentDataRunId);
   const displaySettingPopup = useRef();
+
   const lineChartRef = useRef();
 
   useEffect(() => {
@@ -79,10 +80,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     if (dataRunPreviews.length > 0) {
       const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
-      const dataRun = DataManagerIST.getDataRunData(lastDataRunId);
-      const parsedDataRun = DataManagerIST.parseActivityDataRun(dataRun);
       const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
-      result && setDataRun(parsedDataRun);
+      result && setCurrentDataRunId(lastDataRunId);
     }
   }, []);
 
@@ -101,10 +100,19 @@ export default ({ f7route, f7router, filePath, content }) => {
     return () => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     };
-  }, [widgets, isRunning]);
+  }, [widgets]);
 
   function handleActivityNameChange(e) {
     setName(e.target.value);
+  }
+
+  function getDataRun(dataRunId) {
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    if (dataRunPreviews.length > 0) {
+      const dataRun = DataManagerIST.getDataRunData(dataRunId);
+      return DataManagerIST.parseActivityDataRun(dataRun);
+    }
+    return [];
   }
 
   async function handleActivitySave() {
@@ -155,8 +163,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleSampleClick() {
     if (!isRunning) {
       DataManagerIST.setCollectingDataFrequency(frequency);
-      DataManagerIST.startCollectingData();
-      setDataRun(() => []);
+      const dataRunId = DataManagerIST.startCollectingData();
+      setCurrentDataRunId(dataRunId);
     } else {
       DataManagerIST.stopCollectingData();
     }
@@ -168,14 +176,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     const time = data[1];
     const sensorId = data[2];
     const values = data.slice(3);
+    const updatedSensorValues = { ...currentSensorValues };
+    updatedSensorValues[sensorId] = { time, sensorId, values };
     if (values.length) {
-      setDataRun((dataRun) => [...dataRun, { time, sensorId, values }]);
+      setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
     }
   }
 
-  function getValueForNumber(sensor) {
-    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.slice(-1)[0]?.values[sensor.index] || "";
+  function getCurrentValue(sensor) {
+    return currentSensorValues[sensor.id]?.values[sensor.index] || "";
   }
 
   function getDataForTable(sensor) {
@@ -184,31 +193,53 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function getDataForChart(sensor) {
+    if (!lineChartRef.current) return;
+
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
-    if (lineChartRef.current && Object.keys(data).length !== 0) {
-      let currentData = data.slice(-1)[0];
+    const sensorValue = currentSensorValues[sensor.id];
+    if (sensorValue) {
+      let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] };
       if (!isRunning) {
         currentData = { ...currentData, x: 0 };
       }
       lineChartRef.current.setCurrentData({
         data: currentData,
       });
-
-      if (isRunning) {
-        lineChartRef.current.setChartData({
-          chartData: [
-            {
-              name: "run1",
-              data: data,
-            },
-          ],
-          xUnit: "ms",
-          yUnit: "",
-          maxHz: 10,
-        });
-      }
     }
+
+    if (Object.keys(data).length !== 0) {
+      lineChartRef.current.setChartData({
+        chartData: [
+          {
+            name: "run1",
+            data: data,
+          },
+        ],
+        xUnit: "ms",
+        yUnit: "",
+        maxHz: 10,
+      });
+    }
+  }
+
+  function handlePagePrev() {
+    console.log("TODO: handlePrevPage");
+  }
+
+  function handlePageNext() {
+    console.log("TODO: handleNextPage");
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        console.log("TODO: delete page");
+      },
+      () => {}
+    );
   }
 
   function handleSensorSettingSubmit(setting) {
@@ -285,6 +316,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     data={getDataForTable(widgets[0].sensor)}
+                    currentValue={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
@@ -293,7 +325,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
-                    value={getValueForNumber(widgets[0].sensor)}
+                    value={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -311,6 +343,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
                     data={getDataForTable(widgets[1].sensor)}
+                    currentValue={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
@@ -333,6 +366,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {layout === LAYOUT_TABLE && (
                 <TableWidget
                   data={getDataForTable(widgets[0].sensor)}
+                  currentValue={getCurrentValue(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
@@ -341,7 +375,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
-                  value={getValueForNumber(widgets[0].sensor)}
+                  value={getCurrentValue(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
