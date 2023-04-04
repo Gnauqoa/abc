@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
+import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
@@ -48,9 +49,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         },
       ],
       dataRuns: [],
-    sensorSettings: [],
+      sensorSettings: [],
     };
-
   } else if (content) {
     activity = content;
   } else {
@@ -74,6 +74,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const displaySettingPopup = useRef();
 
   const lineChartRef = useRef();
+  let prevChartDataRef = useRef();
 
   useEffect(() => {
     DataManagerIST.importActivityDataRun(activity.dataRuns);
@@ -209,7 +210,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       });
     }
 
-    if (Object.keys(data).length !== 0) {
+    if (data.length > 0) {
+      if (_.isEqual(data, prevChartDataRef.current)) return;
+      prevChartDataRef.current = data;
       lineChartRef.current.setChartData({
         chartData: [
           {
@@ -244,7 +247,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [ ...sensorSettings ];
+    let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
       sensorSettingsCpy.push({ ...setting });
       console.log("New data pushed");
@@ -300,10 +303,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           <ListItem link="#" popoverClose title="Chia sẻ" />
         </List>
       </Popover>
-      <Popup
-        className="display-setting-popup"
-        ref={displaySettingPopup}
-      >
+      <Popup className="display-setting-popup" ref={displaySettingPopup}>
         <DataDisplaySetting
           sensorSettings={sensorSettings}
           onSubmit={(setting) => handleSensorSettingSubmit(setting)}
