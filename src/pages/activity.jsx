@@ -22,6 +22,7 @@ import SamplingSetting from "../components/sampling-settings";
 import DataDisplaySetting from "../components/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
+import NewPagePopup from "../components/new-page";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -48,9 +49,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         },
       ],
       dataRuns: [],
-    sensorSettings: [],
+      sensorSettings: [],
     };
-
   } else if (content) {
     activity = content;
   } else {
@@ -72,8 +72,10 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
   const displaySettingPopup = useRef();
-
+  const newPagePopup = useRef();
   const lineChartRef = useRef();
+
+  console.log(Object.keys(DataManagerIST.subscribers).length);
 
   useEffect(() => {
     DataManagerIST.importActivityDataRun(activity.dataRuns);
@@ -225,11 +227,35 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handlePagePrev() {
-    console.log("TODO: handlePrevPage");
+    const numPages = pages.length;
+    const nextPageIndex = (currentPageIndex - 1 + numPages) % numPages;
+    setCurrentPageIndex(nextPageIndex);
   }
 
   function handlePageNext() {
-    console.log("TODO: handleNextPage");
+    const numPages = pages.length;
+    const nextPageIndex = (currentPageIndex + 1) % numPages;
+    setCurrentPageIndex(nextPageIndex);
+  }
+
+  function handleNewPage(chartType) {
+    if (!chartType) return;
+    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
+      defaultWidgets = [
+        { id: 0, sensor: { id: 1, index: 0 } },
+        { id: 1, sensor: { id: 2, index: 0 } },
+      ];
+    }
+    const newPage = {
+      layout: chartType,
+      widgets: defaultWidgets,
+      frequency: 1,
+    };
+
+    setWidgets(defaultWidgets);
+    setPages((prev) => [...prev, newPage]);
+    setCurrentPageIndex((prev) => prev + 1);
   }
 
   function handlePageDelete() {
@@ -237,14 +263,19 @@ export default ({ f7route, f7router, filePath, content }) => {
       "Xác nhận",
       `Bạn có chắc chắn muốn xóa hoạt động này không?`,
       () => {
-        console.log("TODO: delete page");
+        const numPages = pages.length;
+        const deletedPageIndex = currentPageIndex;
+        const newPages = pages.filter((page, index) => index !== deletedPageIndex);
+        const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
+        setPages(newPages);
+        setCurrentPageIndex(newPageIndex);
       },
       () => {}
     );
   }
 
   function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [ ...sensorSettings ];
+    let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
       sensorSettingsCpy.push({ ...setting });
       console.log("New data pushed");
@@ -254,28 +285,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
     }
 
-    console.log(sensorSettings);
     setSensorSettings(sensorSettingsCpy);
     displaySettingPopup.current.f7Popup().close();
-  }
-
-  function handlePagePrev() {
-    console.log("TODO: handlePrevPage");
-  }
-
-  function handlePageNext() {
-    console.log("TODO: handleNextPage");
-  }
-
-  function handlePageDelete() {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        console.log("TODO: delete page");
-      },
-      () => {}
-    );
   }
 
   return (
@@ -283,8 +294,20 @@ export default ({ f7route, f7router, filePath, content }) => {
       <Navbar>
         <NavLeft>
           <BackButton disabled={isRunning} link="/" />
-          <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
-          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handlePageDelete} />
+          <RoundButton
+            disabled={isRunning}
+            icon="add"
+            color="#42C63F"
+            popupOpen=".new-page-popup"
+            popoverClose
+            title="Cài đặt dữ liệu hiển thị"
+          />
+          <RoundButton
+            disabled={isRunning || pages?.length === 1}
+            icon="close"
+            color="#FF0000"
+            onClick={handlePageDelete}
+          />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
@@ -300,15 +323,16 @@ export default ({ f7route, f7router, filePath, content }) => {
           <ListItem link="#" popoverClose title="Chia sẻ" />
         </List>
       </Popover>
-      <Popup
-        className="display-setting-popup"
-        ref={displaySettingPopup}
-      >
+      <Popup className="display-setting-popup" ref={displaySettingPopup}>
         <DataDisplaySetting
           sensorSettings={sensorSettings}
           onSubmit={(setting) => handleSensorSettingSubmit(setting)}
         />
       </Popup>
+      <Popup className="new-page-popup" ref={newPagePopup}>
+        <NewPagePopup handleNewPage={handleNewPage}></NewPagePopup>
+      </Popup>
+
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -394,7 +418,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           </div>
           <div className="__toolbar-center">
             <ActivityPageNav
-              navOrder={"1/1"}
+              navOrder={`${currentPageIndex + 1}/${pages.length}`}
               isDisabled={isRunning}
               onNextPage={handlePageNext}
               onPrevPage={handlePagePrev}

@@ -42,7 +42,7 @@
   }
   .__card-right {
     .sensor-select-vertical-mount-container {
-      left: 37%
+      left: 37%;
     }
     width: 67%;
   }
@@ -137,4 +137,11 @@
       color: #cccccc;
     }
   }
+}
+
+.new-page-popup {
+  width: 60%;
+  height: 70%;
+  left: 20%;
+  border-radius: 20px;
 }
