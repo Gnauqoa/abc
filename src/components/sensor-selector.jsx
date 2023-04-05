@@ -19,7 +19,7 @@ import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
 import { SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
 
-export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChange = () => {} }) {
+export default function SensorSelector({ disabled, selectedSensor, hideDisplayUnit, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState("");
   const [selectedSensorIdState, setSelectedSensorIdState] = useState("");
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
@@ -115,6 +115,7 @@ export default function SensorSelector({ selectedSensor, hideDisplayUnit, onChan
   return (
     <div>
       <Button
+        disabled={disabled}
         fill
         round
         onClick={() => {
