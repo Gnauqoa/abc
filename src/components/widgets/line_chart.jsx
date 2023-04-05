@@ -317,7 +317,6 @@ const getCustomTooltipFunc = ({ axisRef }) => {
 
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
-  //log("widget:", widget);
   const { sensor } = widget;
   const chartEl = useRef(),
     chartInstanceRef = useRef(),
@@ -334,12 +333,14 @@ let LineChart = (props, ref) => {
       id: sensor?.id,
       index: sensor?.index,
     };
-    const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id),
-      sensorDetailData = existingSensorData.data[sensorRef.current.index];
-    sensorRef.current.sensorDetailData = sensorDetailData;
-    axisRef.current.yUnit = sensorDetailData.unit;
-    axisRef.current.yMin = sensorDetailData.min;
-    axisRef.current.yMax = sensorDetailData.max;
+    const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id);
+    if (existingSensorData) {
+      const sensorDetailData = existingSensorData.data[sensorRef.current.index];
+      sensorRef.current.sensorDetailData = sensorDetailData;
+      axisRef.current.yUnit = sensorDetailData.unit;
+      axisRef.current.yMin = sensorDetailData.min;
+      axisRef.current.yMax = sensorDetailData.max;
+    }
   }
 
   let valueContainerElRef = useRef(),
