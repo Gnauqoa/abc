@@ -281,6 +281,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
+  function handleExportExcel() {
+    DataManagerIST.exportToCSV();
+  }
+
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
@@ -299,7 +303,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         <List>
           <ListItem link="#" popoverClose title="Quản lý dữ liệu" />
           <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" />
+          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
           <ListItem link="#" popoverClose title="Chia sẻ" />
         </List>
       </Popover>

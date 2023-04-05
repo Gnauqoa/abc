@@ -1,6 +1,7 @@
 import store from "store";
 import { f7 } from "framework7-react";
 import dialog from "../components/dialog";
+import { openFile, saveFile } from "../services/file-service";
 
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
 
@@ -511,24 +512,26 @@ export function exportToCSV(filename, rows) {
   };
 
   let csvFile = "";
-  for (let i = 0; i < rows.length; i++) {
-    csvFile += processRow(rows[i]);
-  }
+  rows.forEach((row) => {
+    csvFile += processRow(row);
+  });
 
-  const blob = new Blob([csvFile], { type: "text/csv;charset=utf-8;" });
-  if (navigator.msSaveBlob) {
-    navigator.msSaveBlob(blob, filename);
-  } else {
-    const link = document.createElement("a");
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      console.log("url: ", url);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      //   document.body.removeChild(link);
-    }
-  }
+  exportFileToPc(csvFile, filename, {
+    EXT: ".csv",
+    TYPE: "text/csv;charset=utf-8;",
+  });
+}
+
+export async function exportToEXCEL() {
+  const f = await (await fetch("https://sheetjs.com/pres.xlsx")).arrayBuffer();
+  const wb = read(f);
+  const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+  const ws = utils.json_to_sheet(data);
+  const wbW = utils.book_new();
+  utils.book_append_sheet(wbW, ws, "Data");
+  const excelBuffer = writeFile(wbW, "filename.xlsx", { bookType: "xlsx", type: "array" });
+  exportFileToPc(excelBuffer, "filename", {
+    EXT: ".xlsx",
+    TYPE: TYPE,
+  });
 }

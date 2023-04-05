@@ -1,9 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
-import StoreService from "./store-service";
 import { findGCD, getLCM, exportToCSV } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
 import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
+
+import { read, utils, writeFileXLSX, writeFile } from "xlsx";
+import { exportFileToPc } from "../utils/core";
 
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 export const SAMPLING_AUTO = 0;
@@ -38,7 +40,7 @@ export class DataManager {
 
     /**
      * Object containing data run information.
-     * @type {Object.<string, {name: string, data: Array(string)}>}
+     * @type {Object.<string, {name: string, data: Array(string)}, interval: number>}
      */
     this.dataRuns = {};
 
@@ -269,6 +271,7 @@ export class DataManager {
 
     if (this.curDataRunId) {
       this.dataRuns[this.curDataRunId].data = [];
+      this.dataRuns[this.curDataRunId].interval = this.collectingDataInterval;
       return this.curDataRunId;
     }
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
@@ -276,6 +279,7 @@ export class DataManager {
     this.dataRuns[this.curDataRunId] = {
       name: dataRunName,
       data: [],
+      interval: this.collectingDataInterval,
     };
     console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
     return this.curDataRunId;
@@ -322,6 +326,7 @@ export class DataManager {
       console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
       return;
     }
+
     dataRun.data.push(sensorsData);
   }
 
@@ -344,7 +349,7 @@ export class DataManager {
   getActivityDataRun() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name, data: dataRun.data };
+      return { id: dataRunId, name: dataRun.name, data: dataRun.data, interval: dataRun.interval };
     });
     return dataRunInfos;
   }
@@ -364,6 +369,7 @@ export class DataManager {
       this.dataRuns[dataRun.id] = {
         name: dataRun.name,
         data: dataRun.data,
+        interval: dataRun.interval,
       };
 
       console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
@@ -430,46 +436,95 @@ export class DataManager {
    * @memberof ClassName
    * @returns {void}
    */
-  exportCSVDataRun() {
-    // TODO: Support multiple data runs in future
-    if (!this.dataRuns[this.curDataRunId]) {
-      console.log(`exportCSVDataRun: Can not export data run CSV`);
-      return;
-    }
+  // exportCSVDataRun() {
+  //   // TODO: Support multiple data runs in future
+  //   if (!this.dataRuns[this.curDataRunId]) {
+  //     console.log(`exportCSVDataRun: Can not export data run CSV`);
+  //     return;
+  //   }
+  //   let maxTime = 0;
+  //   const rowNames = [];
+  //   const rows = [];
+  //   const invertedSensorIds = {};
+  //   let currentIndex = 0;
+  //   const setSensorsRecord = new Set();
+  //   const listDataRunsInfo = Object.keys(this.dataRuns).map((dataRunId) => ({
+  //     dataRunId: dataRunId,
+  //     index: 0,
+  //     dataName: this.dataRuns[dataRunId].name,
+  //   }));
 
-    const rowNames = [];
-    const rows = [];
-    const invertedSensorIds = {};
-    let currentIndex = 0;
+  //   // Get all sensor IDs in all data runs
+  //   for (const dataRun of Object.values(this.dataRuns)) {
+  //     for (const sample of dataRun.data) {
+  //       if (sample?.[0]?.[0]) {
+  //         const timeStamp = parseInt(sample[0][0]);
+  //         maxTime = timeStamp > maxTime ? timeStamp : maxTime;
+  //       }
+  //       Object.keys(sample).forEach((sensorId) => {
+  //         setSensorsRecord.add(parseInt(sensorId));
+  //       });
+  //     }
+  //   }
 
-    for (const sensor of sensors) {
-      const sensorDataIds = Object.keys(sensor.data);
-      invertedSensorIds[sensor.id] = {
-        name: sensor.name,
-        index: currentIndex,
-        numValues: sensorDataIds.length,
-      };
-      currentIndex += sensorDataIds.length;
+  //   // Create Row Names with all sensor that had been recorded
+  //   listDataRunsInfo.forEach((dataRun) => {
+  //     for (const sensorId of setSensorsRecord) {
+  //       const sensorInfo = sensors[sensorId];
+  //       const sensorDataIds = Object.keys(sensorInfo.data);
+  //       invertedSensorIds[sensorId] = {
+  //         name: sensorInfo.name,
+  //         index: currentIndex,
+  //         numValues: sensorDataIds.length,
+  //       };
+  //       currentIndex += sensorDataIds.length;
 
-      for (const id of sensorDataIds) {
-        rowNames.push(`${sensor.data[id].name} (${sensor.data[id].unit})`);
-      }
-    }
+  //       if (parseInt(sensorId) === 0) {
+  //         rowNames.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRun.dataName}`);
+  //         continue;
+  //       }
+  //       for (const id of sensorDataIds) {
+  //         rowNames.push(`${sensorInfo.data[id].name} (${sensorInfo.data[id].unit})`);
+  //       }
+  //     }
+  //   });
 
-    rows.push(rowNames);
-    for (const datas of this.dataRuns[this.curDataRunId].data) {
-      const rowData = new Array(rowNames.length).fill(null);
-      for (const key of Object.keys(datas)) {
-        const data = datas[key];
-        const invertedSensorId = invertedSensorIds[key];
-        for (let i = 0; i < invertedSensorId.numValues; i++) {
-          rowData[invertedSensorId.index + i] = data[i];
-        }
-      }
-      rows.push(rowData);
-    }
-    exportToCSV("test.csv", rows);
-  }
+  //   rows.push(rowNames);
+
+  //   // Calculate the LCM timeStamp of all data runs for looping
+  //   const dataRunIntervals = Object.values(this.dataRuns).map((dataRun) => dataRun.interval);
+  //   const lcm = getLCM(dataRunIntervals);
+
+  //   for (let curTimeStamp = 0; curTimeStamp <= maxTime; curTimeStamp += lcm) {
+  //     const curRowData = [];
+  //     listDataRunsInfo.forEach((dataRunInfo) => {
+  //       const dataRun = this.dataRuns[dataRunInfo.dataRunId];
+  //       if (dataRun.index >= dataRun.length) return;
+
+  //       const rowData = new Array(setSensorsRecord.size).fill(0.0);
+  //       const dataRunData = dataRun.data;
+  //       const dataRunDataAtIndex = dataRunData[dataRunInfo.index];
+  //       const parsedTimeStamp = curTimeStamp.toFixed(3);
+
+  //       console.log(dataRunDataAtIndex[0][0], parsedTimeStamp);
+  //       if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
+  //         for (const sensorId of Object.keys(dataRunDataAtIndex)) {
+  //           const sensorData = dataRunDataAtIndex[sensorId];
+  //           const invertedSensorId = invertedSensorIds[sensorId];
+  //           for (let i = 0; i < invertedSensorId.numValues; i++) {
+  //             rowData[invertedSensorId.index + i] = sensorData[i];
+  //           }
+  //         }
+  //         dataRunInfo.index += 1;
+  //       }
+  //       curRowData.push(...rowData);
+  //     });
+  //     rows.push(curRowData);
+  //   }
+
+  //   // exportToCSV("test.csv", rows);
+
+  // }
 
   // -------------------------------- Read sensor data -------------------------------- //
 
