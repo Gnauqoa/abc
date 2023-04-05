@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
+import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
@@ -74,6 +75,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
   const lineChartRef = useRef();
+  let prevChartDataRef = useRef();
 
   console.log(Object.keys(DataManagerIST.subscribers).length);
 
@@ -211,7 +213,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       });
     }
 
-    if (Object.keys(data).length !== 0) {
+    if (data.length > 0) {
+      if (_.isEqual(data, prevChartDataRef.current)) return;
+      prevChartDataRef.current = data;
       lineChartRef.current.setChartData({
         chartData: [
           {

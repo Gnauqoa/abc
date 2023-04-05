@@ -21,7 +21,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      fontSize: "24px",
+      fontSize: "18px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -31,7 +31,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "97%",
-      fontSize: "18px",
+      fontSize: "14px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -41,7 +41,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "76%",
-      fontSize: "24px",
+      fontSize: "18px",
     },
   },
 };
@@ -66,6 +66,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
+  const [userInputs, setUserInputs] = useState({});
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
@@ -73,8 +74,8 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const samplingMode = DataManagerIST.getSamplingMode();
 
   useEffect(() => {
-    const transformedRows = data.map((item) => ({
-      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : rows[numRows] ? rows[numRows]["colum1"] : "",
+    const transformedRows = data.map((item, index) => ({
+      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
       colum2: item.value,
     }));
     setNumRows(transformedRows.length);
@@ -84,16 +85,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       if (!time || time === "" || !value || value === "") return;
 
       const newRow = {
-        colum1:
-          numRows === 0
-            ? firstColumnOption === FIRST_COLUMN_DEFAULT_OPT || isRunning
-              ? time
-              : rows[numRows]
-              ? rows[numRows]["colum1"]
-              : ""
-            : isRunning
-            ? time
-            : "",
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
         colum2: value,
       };
       transformedRows.push(newRow);
@@ -105,7 +97,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         : transformedRows
     );
     numRows !== 0 && scrollToRef(lastRowRef);
-  }, [data]);
+  }, [data, firstColumnOption]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
@@ -117,6 +109,14 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     }
   };
 
+  const userInputHandler = (event) => {
+    const inputRow = event.target.id;
+    const inputValue = event.target.value;
+    setUserInputs((prev) => {
+      return { ...prev, [inputRow]: inputValue };
+    });
+  };
+
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -126,6 +126,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
               <td>
                 <div className="header-name">
                   <select
+                    disabled={isRunning}
                     value={firstColumnOption}
                     className="custom-select"
                     onChange={handleFirstColumSelector}
@@ -151,6 +152,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                 <div className="header-name">
                   <div className="sensor-select-container-table-chart">
                     <SensorSelector
+                      disabled={isRunning}
                       selectedSensor={widget.sensor}
                       hideDisplayUnit={true}
                       onChange={(sensor) => handleSensorChange(widget.id, sensor)}
@@ -162,21 +164,27 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
             </tr>
             {[...rows, emptyRow].map((row, index) => {
               let ref;
-              if (isRunning && samplingMode === SAMPLING_AUTO) {
+              if (!isRunning) ref = null;
+              else if (samplingMode === SAMPLING_AUTO) {
                 ref = index === numRows ? lastRowRef : null;
               } else {
-                if (!isRunning) ref = index === numRows + 1 ? lastRowRef : null;
-                else ref = index === data.length ? lastRowRef : null;
+                ref = index === data.length ? lastRowRef : null;
               }
 
               return (
                 <tr key={index} ref={ref}>
                   <td>
-                    <input
-                      type="text"
-                      defaultValue={row.colum1}
-                      disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
-                    />
+                    {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
+                      <span className="span-input">{row.colum1}</span>
+                    ) : (
+                      <input
+                        id={index}
+                        type="text"
+                        value={userInputs[index] || ""}
+                        onChange={userInputHandler}
+                        disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                      />
+                    )}
                   </td>
                   <td>
                     <span>{row.colum2}</span>
