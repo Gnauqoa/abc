@@ -36,7 +36,17 @@ const hostname = cdvElectronSettings.hostname;
 const isFileProtocol = scheme === "file";
 
 const { SerialPort } = require("serialport");
-const { ReadlineParser } = require("@serialport/parser-readline");
+const { DelimiterParser } = require('@serialport/parser-delimiter')
+
+// CP2104
+const VID = '10C4'
+const PID = 'EA60';
+
+// CH340
+//const VID = '1A86'
+//const PID = '7523';
+
+
 
 /**
  * The base url path.
@@ -240,7 +250,7 @@ async function listSerialPorts() {
     if (ports.length > 0) {
       ports.forEach((port) => {
         //console.log(port);
-        if (port.vendorId != "1A86" && port.productId != "7523") return;
+        if (port.vendorId != VID && port.productId != PID) return;
         //console.log(portsList[port.path]);
         if (portsList[port.path] === undefined) {
           // try open first port
@@ -267,11 +277,42 @@ async function listSerialPorts() {
               portsList[port.path] = undefined;
             });
 
-            const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\r\n" }));
+            const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xBB] }))
             parser.on("data", function (data) {
-              //console.log(data);
-              portsList[port.path].lastDdata = data;
-              mainWindow.webContents.send("device-data", data);
+              if (data[0] != 0xAA) {
+                // Invalid data, ignore
+                return;
+              }
+            
+              var sensorId = data[1];
+              var sensorSerial = data[2]; // TODO: Will use later
+              var checksum = data[data.dataLength-1]; // TODO: Will use later
+              var dataLength = data[3];
+              var dataRead = 0;
+              var sensorData = [];
+            
+              while (dataRead < dataLength) {
+                // read next 4 bytes
+                var rawBytes = data.slice(dataRead+4, dataRead+8);
+            
+                var view = new DataView(new ArrayBuffer(4));
+            
+                rawBytes.forEach(function (b, i) {
+                    view.setUint8(3-i, b);
+                });
+
+                sensorData.push(view.getFloat32(0).toFixed(3));
+                dataRead += 4;
+              }
+
+              var dataString = `@,${sensorId}`;
+              sensorData.forEach(function (d, i) {
+                dataString += `,${d}`
+              });
+              dataString += ",*";
+
+              portsList[port.path].lastDdata = dataString;
+              mainWindow.webContents.send("device-data", dataString);
             });
 
             portsList[port.path] = {
