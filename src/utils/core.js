@@ -249,6 +249,10 @@ export const FORMAT_MAP = {
     EXT: ".csv",
     TYPE: "text/csv;charset=utf-8;",
   },
+  EDL: {
+    EXT: ".edl",
+    TYPE: "text/json",
+  },
 };
 
 export function exportFileToPc(data, filename, format) {

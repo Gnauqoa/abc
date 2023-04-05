@@ -3,8 +3,8 @@ import ReactDOM from "react-dom";
 
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
-import sensors from "../../services/sensor-service";
-import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
+import sensors, { getUnit } from "../../services/sensor-service";
+import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
@@ -21,7 +21,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      fontSize: "24px",
+      fontSize: "18px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -31,7 +31,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "97%",
-      fontSize: "18px",
+      fontSize: "14px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -41,7 +41,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "76%",
-      fontSize: "24px",
+      fontSize: "18px",
     },
   },
 };
@@ -54,7 +54,7 @@ const FIRST_COLUMN_OPTIONS = [
   },
   {
     id: FIRST_COLUMN_CUSTOM_OPT,
-    name: "Custom",
+    name: "Người dùng nhập",
     unit: <input id={FIRST_COLUMN_CUSTOM_OPT} className="header-unit__input" type="text" placeholder="--------" />,
   },
 ];
@@ -62,80 +62,42 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
-  const [unit, setUnit] = useState();
+const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning }) => {
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
+  const [userInputs, setUserInputs] = useState({});
+
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
-  useEffect(() => {
-    const handleClick = () => {
-      setNumRows((prev) => prev + 1);
-    };
-    document.addEventListener("getIndividualSample", handleClick);
-    return () => {
-      document.removeEventListener("getIndividualSample", handleClick);
-    };
-  }, []);
+  const samplingMode = DataManagerIST.getSamplingMode();
 
   useEffect(() => {
-    const sensor = sensors.find((sensorId) => sensorId.id === widget.sensor.id);
-    const sensorDetail = sensor.data[widget.sensor.index];
-    setUnit(sensorDetail.unit);
-  }, [widget]);
+    const transformedRows = data.map((item, index) => ({
+      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
+      colum2: item.value,
+    }));
+    setNumRows(transformedRows.length);
 
-  useEffect(() => {
-    if (data.length === 0) {
-      if (numRows !== 0) {
-        setNumRows(0);
-        setRows(defaultRows);
-        scrollToRef(headerRowRef);
-      }
-      return;
-    }
-    const newData = data[data.length - 1];
-    const { time, value } = newData;
+    if (!isRunning || samplingMode === SAMPLING_MANUAL) {
+      const { time, value } = currentValue;
+      if (!time || time === "" || !value || value === "") return;
 
-    if (isRunning) {
       const newRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows] ? rows[numRows]["colum1"] : "",
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
         colum2: value,
       };
-
-      updateRows(newRow);
-    } else {
-      const newRow = {
-        colum1: numRows === 0 ? (firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : rows[numRows]["colum1"]) : "",
-        colum2: value,
-      };
-      updateRows(newRow);
+      transformedRows.push(newRow);
     }
 
-    scrollToRef(lastRowRef);
-  }, [data]);
-
-  const updateRows = (newRow) => {
-    let newRows = [];
-
-    if (isRunning) {
-      newRows =
-        numRows < DEFAULT_ROWS
-          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
-          : [...rows, newRow];
-
-      if (samplingMode === SAMPLING_AUTO) {
-        setNumRows((prevNumRows) => prevNumRows + 1);
-      }
-    } else {
-      newRows =
-        numRows < DEFAULT_ROWS
-          ? [...rows.slice(0, numRows), newRow, ...rows.slice(numRows + 1, DEFAULT_ROWS)]
-          : [...rows.slice(0, numRows), newRow];
-    }
-    setRows(newRows);
-  };
+    setRows(
+      transformedRows.length < DEFAULT_ROWS
+        ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
+        : transformedRows
+    );
+    numRows !== 0 && scrollToRef(lastRowRef);
+  }, [data, firstColumnOption]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
@@ -147,6 +109,14 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
     }
   };
 
+  const userInputHandler = (event) => {
+    const inputRow = event.target.id;
+    const inputValue = event.target.value;
+    setUserInputs((prev) => {
+      return { ...prev, [inputRow]: inputValue };
+    });
+  };
+
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -156,6 +126,7 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
               <td>
                 <div className="header-name">
                   <select
+                    disabled={isRunning}
                     value={firstColumnOption}
                     className="custom-select"
                     onChange={handleFirstColumSelector}
@@ -181,42 +152,46 @@ const TableWidget = ({ data, widget, handleSensorChange, chartLayout, isRunning,
                 <div className="header-name">
                   <div className="sensor-select-container-table-chart">
                     <SensorSelector
+                      disabled={isRunning}
                       selectedSensor={widget.sensor}
                       hideDisplayUnit={true}
                       onChange={(sensor) => handleSensorChange(widget.id, sensor)}
                     ></SensorSelector>
                   </div>
                 </div>
-                <div className="header-unit">({unit})</div>
+                <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
               </td>
             </tr>
-            {[...rows, emptyRow].map((row, index) => (
-              <tr
-                key={index}
-                ref={
-                  numRows < NUM_ROWS_FIT_TABLE || !isRunning
-                    ? null
-                    : numRows < DEFAULT_ROWS
-                    ? index === numRows
-                      ? lastRowRef
-                      : null
-                    : index === rows.length
-                    ? lastRowRef
-                    : null
-                }
-              >
-                <td>
-                  <input
-                    type="text"
-                    defaultValue={row.colum1}
-                    disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
-                  />
-                </td>
-                <td>
-                  <span>{row.colum2}</span>
-                </td>
-              </tr>
-            ))}
+            {[...rows, emptyRow].map((row, index) => {
+              let ref;
+              if (!isRunning) ref = null;
+              else if (samplingMode === SAMPLING_AUTO) {
+                ref = index === numRows ? lastRowRef : null;
+              } else {
+                ref = index === data.length ? lastRowRef : null;
+              }
+
+              return (
+                <tr key={index} ref={ref}>
+                  <td>
+                    {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
+                      <span className="span-input">{row.colum1}</span>
+                    ) : (
+                      <input
+                        id={index}
+                        type="text"
+                        value={userInputs[index] || ""}
+                        onChange={userInputHandler}
+                        disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                      />
+                    )}
+                  </td>
+                  <td>
+                    <span>{row.colum2}</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

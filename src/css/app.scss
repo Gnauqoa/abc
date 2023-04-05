@@ -369,3 +369,76 @@
 .text-uppercase {
   text-transform: uppercase;
 }
+
+.form-button {
+  padding: 20px;
+}
+
+.display-setting-input {
+  .item-title.item-label {
+    margin-right: 300px;
+  }
+  // .item-input-wrap {
+  // }
+}
+
+.label-color-black {
+  .item-title.item-label {
+    color: black;
+  }
+}
+
+.display-setting-popup.popup.modal-in {
+    border-radius: 15px;
+}
+
+
+.input-stack-position {
+  .item-input-wrap {
+    margin-top:40px;
+    left: -217px;
+    textarea {
+      width: 600px;
+      height: 150px;
+    }
+    select {
+      width: 600px;
+    }
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .ok-button {
+    background: #09a8fa;
+    color: white;
+    width: fit-content;
+    border-radius: 9999px;
+    min-width: 100px;
+    margin-right: 15px;
+
+    &.delete-mode {
+      background: #ff3b30;
+    }
+  }
+  .cancel-button {
+    background: #b2b2b2;
+    color: white;
+    width: fit-content;
+    border-radius: 9999px;
+    min-width: 100px;
+    float: left;
+    margin-right: 15px;
+  }
+}
+
+.edl-popup {
+	width: 400px;
+  height: 500px;
+  left: calc(50% - 200px);
+  top: calc(50% - 250px);
+  border-radius: 20px;
+}
