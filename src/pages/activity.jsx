@@ -25,6 +25,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import NewPagePopup from "../components/new-page";
 
+const DEFAULT_SENSOR_ID = -1;
 const recentFilesService = new storeService("recent-files");
 
 export default ({ f7route, f7router, filePath, content }) => {
@@ -32,11 +33,11 @@ export default ({ f7route, f7router, filePath, content }) => {
   let activity;
 
   if (selectedLayout) {
-    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: 1, index: 0 } },
-        { id: 1, sensor: { id: 2, index: 0 } },
+        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
       ];
     }
 
@@ -77,8 +78,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   const lineChartRef = useRef();
   let prevChartDataRef = useRef();
 
-  console.log(Object.keys(DataManagerIST.subscribers).length);
-
   useEffect(() => {
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
@@ -97,6 +96,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
     }
     widgets.forEach((w) => {
+      if (w.sensor.id === DEFAULT_SENSOR_ID) return;
       const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
       subscriberIds.push(subscriberId);
     });
@@ -165,6 +165,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handleSampleClick() {
+    // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
       setCurrentDataRunId(dataRunId);
@@ -244,11 +245,11 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handleNewPage(chartType) {
     if (!chartType) return;
-    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: 1, index: 0 } },
-        { id: 1, sensor: { id: 2, index: 0 } },
+        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
       ];
     }
     const newPage = {
