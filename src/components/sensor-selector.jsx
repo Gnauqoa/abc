@@ -112,7 +112,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
   const sensorPopup = useRef(null);
 
   return (
-    <div>
+    <div className="sensor-selector ">
       <Button
         disabled={disabled}
         fill
@@ -122,7 +122,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
           sensorPopup.current.f7Popup().open();
         }}
       >
-        {selectedSensorState === "" ? "----- Chọn một cảm biến bất kì -----" : selectedSensorState}
+        {selectedSensorState === "" ? "----- Chọn cảm biến -----" : selectedSensorState}
       </Button>
       <Popup
         className="edl-popup"

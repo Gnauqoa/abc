@@ -7,6 +7,7 @@ import sensors, { getUnit } from "../../services/sensor-service";
 import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
+import { DEFAULT_SENSOR_ID } from "../../pages/activity";
 
 const DEFAULT_ROWS = 15;
 const NUM_ROWS_FIT_TABLE = 7;
@@ -74,6 +75,9 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const samplingMode = DataManagerIST.getSamplingMode();
 
   useEffect(() => {
+    // reset table before
+    setRows(defaultRows);
+
     const transformedRows = data.map((item, index) => ({
       colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
       colum2: item.value,
@@ -159,7 +163,10 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                     ></SensorSelector>
                   </div>
                 </div>
-                <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
+
+                {widget.sensor.id !== DEFAULT_SENSOR_ID && (
+                  <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
+                )}
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => {
