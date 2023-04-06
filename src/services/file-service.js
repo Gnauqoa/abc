@@ -20,7 +20,6 @@ function saveFile(
     defaultPath: JSON.parse(content).name,
   }
 ) {
-  console.log("saveFile", filePath, option);
   if (f7.device.electron) {
     return window.fileApi.save(filePath, content, option);
   } else if (f7.device.desktop) {
