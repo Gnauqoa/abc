@@ -522,7 +522,7 @@ export class DataManager {
     }
 
     console.log("------------- Start to export data run -------------");
-    exportToExcel("ReportDataRun", rows);
+    exportToExcel(null, "ReportDataRun", rows);
   }
 
   // -------------------------------- Read sensor data -------------------------------- //

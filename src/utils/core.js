@@ -530,9 +530,8 @@ export async function exportToExcel(filePath, fileName, rows) {
   const ws = utils.aoa_to_sheet(rows);
   const workbook = utils.book_new();
   utils.book_append_sheet(workbook, ws, sheetName);
-  const excelBuffer = write(workbook, { bookType: "xlsx", type: "array" });
+  const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
 
-  console.log("f7.device: ", f7.device);
   if (f7.device.electron) {
     const option = {
       filters: [{ name: fileName, extensions: [fileExt] }],
