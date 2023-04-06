@@ -1,8 +1,8 @@
 {
-  "name": "EDL App",
-  "short_name": "EDL App",
-  "description": "EDL App",
-  "lang": "en-US",
+  "name": "InnoLab",
+  "short_name": "InnoLab",
+  "description": "InnoLab",
+  "lang": "vi-VN",
   "start_url": "/",
   "display": "standalone",
   "orientation": "landscape",

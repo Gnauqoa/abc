@@ -1,4 +1,4 @@
-# EDL App
+# InnoLab App
 
 
 ## Code Editor
