@@ -39,5 +39,34 @@
     "platforms": [
       "electron"
     ]
+  },
+  "build": {
+    "extraFiles": [
+    ],
+    "appId": "vn.ohstem.edl_app",
+    "nsis": {
+      "perMachine": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "squirrelWindows": {},
+    "appx": {
+      "identityName": "InnoLab",
+      "publisherDisplayName": "OhStem Education",
+      "applicationId": "vn.ohstem.edl_app",
+      "displayName": "InnoLab"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "nodeGypRebuild": "false",
+    "npmRebuild": "false"
   }
 }
