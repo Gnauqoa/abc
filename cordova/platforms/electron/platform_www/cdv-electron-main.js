@@ -39,12 +39,12 @@ const { SerialPort } = require("serialport");
 const { DelimiterParser } = require('@serialport/parser-delimiter')
 
 // CP2104
-const VID = '10C4'
-const PID = 'EA60';
+//const VID = '10C4'
+//const PID = 'EA60';
 
 // CH340
-//const VID = '1A86'
-//const PID = '7523';
+const VID = '1A86'
+const PID = '7523';
 
 
 
@@ -279,6 +279,7 @@ async function listSerialPorts() {
 
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xBB] }))
             parser.on("data", function (data) {
+              //console.log(data);
               if (data[0] != 0xAA) {
                 // Invalid data, ignore
                 return;

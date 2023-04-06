@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="vn.ohstem.edl_app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>EDL App</name>
+    <name>InnoLab</name>
     <description>Ứng dụng thu nhận và phân tích dữ liệu thí nghiệm.</description>
     <author email="contact@ohstem.vn" href="https://www.ohstem.vn">
-        OhStem Education Team
+        OhStem Education
     </author>
     <content src="index.html" />
     <allow-intent href="http://*/*" />

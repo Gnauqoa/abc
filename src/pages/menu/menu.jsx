@@ -40,7 +40,7 @@ export default () => {
                   </ListItem>
                   <ListItem
                     radio
-                    title="Về EDL App"
+                    title="Về InnoLab"
                     value="about"
                     name="radio-menu"
                     onChange={handleChange}
