@@ -73,6 +73,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const lastRowRef = useRef(null);
 
   const samplingMode = DataManagerIST.getSamplingMode();
+  const sensorUnit = widget.sensor.id === DEFAULT_SENSOR_ID ? "" : getUnit(widget.sensor.id, widget.sensor.index);
 
   useEffect(() => {
     // reset table before
@@ -164,9 +165,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                   </div>
                 </div>
 
-                {widget.sensor.id !== DEFAULT_SENSOR_ID && (
-                  <div className="header-unit">({getUnit(widget.sensor.id, widget.sensor.index)})</div>
-                )}
+                {sensorUnit !== "" && <div className="header-unit">({sensorUnit})</div>}
               </td>
             </tr>
             {[...rows, emptyRow].map((row, index) => {

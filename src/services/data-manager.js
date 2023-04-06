@@ -506,14 +506,15 @@ export class DataManager {
         const dataRunDataAtIndex = dataRunData[dataRunInfo.index];
         const parsedTimeStamp = (curTimeStamp / 1000).toFixed(3);
 
-        if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
-          for (const sensorId of Object.keys(dataRunDataAtIndex)) {
-            const sensorData = dataRunDataAtIndex[sensorId];
-            const invertedSensorId = invertedSensorIds[sensorId];
-            for (let i = 0; i < invertedSensorId.numValues; i++) {
-              rowData[invertedSensorId.index + i] = sensorData[i];
-            }
+        for (const sensorId of Object.keys(dataRunDataAtIndex)) {
+          const sensorData = dataRunDataAtIndex[sensorId];
+          const invertedSensorId = invertedSensorIds[sensorId];
+          for (let i = 0; i < invertedSensorId.numValues; i++) {
+            rowData[invertedSensorId.index + i] = sensorData[i];
           }
+        }
+
+        if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
           dataRunInfo.index += 1;
         }
         curRowData.push(...rowData);
