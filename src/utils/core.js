@@ -1,8 +1,8 @@
 import store from "store";
 import { f7 } from "framework7-react";
 import dialog from "../components/dialog";
-import { openFile, saveFile } from "../services/file-service";
 
+import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
 
 let deviceHistory = [];
@@ -522,16 +522,28 @@ export function exportToCSV(filename, rows) {
   });
 }
 
-export async function exportToEXCEL() {
-  const f = await (await fetch("https://sheetjs.com/pres.xlsx")).arrayBuffer();
-  const wb = read(f);
-  const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-  const ws = utils.json_to_sheet(data);
-  const wbW = utils.book_new();
-  utils.book_append_sheet(wbW, ws, "Data");
-  const excelBuffer = writeFile(wbW, "filename.xlsx", { bookType: "xlsx", type: "array" });
-  exportFileToPc(excelBuffer, "filename", {
-    EXT: ".xlsx",
-    TYPE: TYPE,
-  });
+export async function exportToExcel(filePath, fileName, rows) {
+  const fileExt = ".xlsx";
+  const sheetName = "Data Run Report";
+  const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+
+  const ws = utils.aoa_to_sheet(rows);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, ws, sheetName);
+  const excelBuffer = write(workbook, { bookType: "xlsx", type: "array" });
+
+  console.log("f7.device: ", f7.device);
+  if (f7.device.electron) {
+    const option = {
+      filters: [{ name: fileName, extensions: [fileExt] }],
+      defaultPath: fileName,
+    };
+    return window.fileApi.save(filePath, excelBuffer, option);
+  } else if (f7.device.desktop) {
+    exportFileToPc(excelBuffer, fileName, {
+      EXT: fileExt,
+      TYPE: fileType,
+    });
+    return;
+  }
 }

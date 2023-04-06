@@ -290,6 +290,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
+  function handleExportExcel() {
+    DataManagerIST.exportDataRunExcel();
+  }
+
   function handleSensorSettingSubmit(setting) {
     let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
