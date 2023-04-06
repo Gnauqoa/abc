@@ -438,92 +438,99 @@ export class DataManager {
   exportDataRunExcel() {
     // TODO: Support multiple data runs in future
     if (!this.dataRuns[this.curDataRunId]) {
-      console.log(`exportCSVDataRun: Can not export data run CSV`);
       return;
     }
-    let maxTime = 0;
-    const rowNames = [];
-    const rows = [];
-    const invertedSensorIds = {};
+    const recordedSensors = new Set();
+    const invertedSensorsInfo = {};
+    const headers = [];
+    const exportedRows = [];
+    let maxRecordingTime = 0;
     let currentIndex = 0;
-    const setSensorsRecord = new Set();
-    const listDataRunsInfo = Object.keys(this.dataRuns).map((dataRunId) => ({
-      dataRunId: dataRunId,
-      index: 0,
-      dataName: this.dataRuns[dataRunId].name,
+    const listDataRunsInfo = Object.keys(this.dataRuns).map((id) => ({
+      id: id,
+      dataIndex: 0,
+      dataName: this.dataRuns[id].name,
     }));
 
-    // Get all sensor IDs in all data runs
+    // Get all sensor IDs in all data runs and find max record time
     for (const dataRun of Object.values(this.dataRuns)) {
       for (const sample of dataRun.data) {
         if (sample?.[0]?.[0]) {
           const timeStamp = parseFloat(sample[0][0]);
-          maxTime = timeStamp > maxTime ? timeStamp : maxTime;
+          maxRecordingTime = timeStamp > maxRecordingTime ? timeStamp : maxRecordingTime;
         }
         Object.keys(sample).forEach((sensorId) => {
-          setSensorsRecord.add(parseInt(sensorId));
+          recordedSensors.add(parseInt(sensorId));
         });
       }
     }
 
     // Create Row Names with all sensor that had been recorded
-    listDataRunsInfo.forEach((dataRun) => {
-      for (const sensorId of setSensorsRecord) {
+    listDataRunsInfo.forEach((dataRunInfo) => {
+      for (const sensorId of recordedSensors) {
         const sensorInfo = sensors[sensorId];
-        const sensorDataIds = Object.keys(sensorInfo.data);
-        invertedSensorIds[sensorId] = {
+        const subSensorIds = Object.keys(sensorInfo.data);
+        invertedSensorsInfo[sensorId] = {
           name: sensorInfo.name,
-          index: currentIndex,
-          numValues: sensorDataIds.length,
+          sensorIndexInRow: currentIndex,
+          numSubSensor: subSensorIds.length,
         };
-        currentIndex += sensorDataIds.length;
+        currentIndex += subSensorIds.length;
 
         if (parseInt(sensorId) === 0) {
-          rowNames.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRun.dataName}`);
+          headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRunInfo.dataName}`);
           continue;
         }
-        for (const id of sensorDataIds) {
-          rowNames.push(`${sensorInfo.data[id].name} (${sensorInfo.data[id].unit})`);
+        for (const subSensorId of subSensorIds) {
+          headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
         }
       }
     });
 
-    rows.push(rowNames);
+    exportedRows.push(headers);
 
     // Calculate the LCM timeStamp of all data runs for looping
+    const maxRecordingTimeMs = parseInt(maxRecordingTime * 1000);
     const dataRunIntervals = Object.values(this.dataRuns).map((dataRun) => dataRun.interval);
     const lcm = getLCM(dataRunIntervals);
-    const maxTimeMs = parseInt(maxTime * 1000);
 
-    for (let curTimeStamp = 0; curTimeStamp <= maxTimeMs; curTimeStamp += lcm) {
+    // Currently, we support export multiple data runs into a single sheet. Therefore:
+    //  - First, we have to find the LCM between interval of all data runs
+    //  - Then, we loop from timeStamp = 0 to the maximum recording time between all data runs
+    //    and each step is the LCM interval
+    //  - At each time step, if it maths with current data time of one of data runs, we append
+    //    this data into curRowData, and increase the dataIndex of this data run.
+    //  - Otherwise, we still get the data at the dataIndex of the data run
+    for (let curTimeStamp = 0; curTimeStamp <= maxRecordingTimeMs; curTimeStamp += lcm) {
       const curRowData = [];
       listDataRunsInfo.forEach((dataRunInfo) => {
-        const dataRun = this.dataRuns[dataRunInfo.dataRunId];
-        if (dataRun.index >= dataRun.length) return;
-
-        const rowData = new Array(setSensorsRecord.size).fill(0.0);
+        const dataRun = this.dataRuns[dataRunInfo.id];
         const dataRunData = dataRun.data;
-        const dataRunDataAtIndex = dataRunData[dataRunInfo.index];
+        // If this data run has dataIndex >= dataRunData.length, it means that
+        // we have collected all the data in this data run. Then continue
+        if (dataRunInfo.dataIndex >= dataRunData.length) return;
+
+        const rowData = new Array(recordedSensors.size).fill(0.0);
+        const dataRunDataAtIndex = dataRunData[dataRunInfo.dataIndex];
         const parsedTimeStamp = (curTimeStamp / 1000).toFixed(3);
 
         for (const sensorId of Object.keys(dataRunDataAtIndex)) {
           const sensorData = dataRunDataAtIndex[sensorId];
-          const invertedSensorId = invertedSensorIds[sensorId];
-          for (let i = 0; i < invertedSensorId.numValues; i++) {
-            rowData[invertedSensorId.index + i] = sensorData[i];
+          const invertedSensor = invertedSensorsInfo[sensorId];
+          for (let i = 0; i < invertedSensor.numSubSensor; i++) {
+            rowData[invertedSensor.sensorIndexInRow + i] = sensorData[i];
           }
         }
 
         if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
-          dataRunInfo.index += 1;
+          dataRunInfo.dataIndex += 1;
         }
         curRowData.push(...rowData);
       });
-      rows.push(curRowData);
+      exportedRows.push(curRowData);
     }
 
-    console.log("------------- Start to export data run -------------");
-    exportToExcel(null, "ReportDataRun", rows);
+    exportToExcel(null, "ReportDataRun", exportedRows);
   }
 
   // -------------------------------- Read sensor data -------------------------------- //
