@@ -16,7 +16,7 @@ const MyApp = () => {
   const device = getDevice();
   // Framework7 Parameters
   const f7params = {
-    name: "EDL App", // App name
+    name: "InnoLab", // App name
     theme: "auto", // Automatic theme detection
 
     id: "vn.ohstem.edl_app", // App bundle ID
