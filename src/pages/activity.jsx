@@ -110,17 +110,29 @@ export default ({ f7route, f7router, filePath, content }) => {
     };
   }, [widgets]);
 
+  // =========================== Functions associate with Activity ===========================
   function handleActivityNameChange(e) {
     setName(e.target.value);
   }
 
-  function getDataRun(dataRunId) {
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const dataRun = DataManagerIST.getDataRunData(dataRunId);
-      return DataManagerIST.parseActivityDataRun(dataRun);
+  function handleSensorSettingSubmit(setting) {
+    let sensorSettingsCpy = [...sensorSettings];
+    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
+      sensorSettingsCpy.push({ ...setting });
+      console.log("New data pushed");
+    } else {
+      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
+      sensorSettingsCpy[foundIndex] = setting;
+      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
     }
-    return [];
+
+    setSensorSettings(sensorSettingsCpy);
+    displaySettingPopup.current.f7Popup().close();
+  }
+
+  function handleFrequencySelect(frequency) {
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result && setFrequency(frequency);
   }
 
   async function handleActivitySave() {
@@ -153,12 +165,57 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
-  function handleFrequencySelect(frequency) {
-    const result = DataManagerIST.setCollectingDataFrequency(frequency);
-    result && setFrequency(frequency);
+  // =========================== Functions associate with Page ===========================
+  function handleNewPage(chartType) {
+    if (!chartType) return;
+    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
+      defaultWidgets = [
+        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+      ];
+    }
+    const newPage = {
+      layout: chartType,
+      widgets: defaultWidgets,
+      frequency: 1,
+    };
+    const newPages = [...pages, newPage];
+
+    setPages(newPages);
+    setCurrentPageIndex(newPages.length - 1);
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      () => {
+        const numPages = pages.length;
+        const deletedPageIndex = currentPageIndex;
+        const newPages = pages.filter((page, index) => index !== deletedPageIndex);
+        const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
+        setPages(newPages);
+        setCurrentPageIndex(newPageIndex);
+      },
+      () => {}
+    );
+  }
+
+  function handlePagePrev() {
+    const numPages = pages.length;
+    const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
+    setCurrentPageIndex(prevPageIndex);
+  }
+
+  function handlePageNext() {
+    const numPages = pages.length;
+    const nextPageIndex = (currentPageIndex + 1) % numPages;
+    setCurrentPageIndex(nextPageIndex);
   }
 
   function handleSensorChange(widgetId, sensor) {
+    console.log(widgetId, sensor);
     const updatedWidgets = widgets.map((w) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
@@ -172,7 +229,21 @@ export default ({ f7route, f7router, filePath, content }) => {
       return page;
     });
     console.log(">>>>> updatePage:", updatePages);
-    setPages([...updatePages]);
+    setPages(updatePages);
+  }
+
+  // =========================== Functions associate with DataRun ===========================
+  function getDataRun(dataRunId) {
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    if (dataRunPreviews.length > 0) {
+      const dataRun = DataManagerIST.getDataRunData(dataRunId);
+      return DataManagerIST.parseActivityDataRun(dataRun);
+    }
+    return [];
+  }
+
+  function handleExportExcel() {
+    DataManagerIST.exportDataRunExcel();
   }
 
   function handleSampleClick() {
@@ -240,73 +311,6 @@ export default ({ f7route, f7router, filePath, content }) => {
         maxHz: 10,
       });
     }
-  }
-
-  function handlePagePrev() {
-    const numPages = pages.length;
-    const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
-    setCurrentPageIndex(prevPageIndex);
-  }
-
-  function handlePageNext() {
-    const numPages = pages.length;
-    const nextPageIndex = (currentPageIndex + 1) % numPages;
-    setCurrentPageIndex(nextPageIndex);
-  }
-
-  function handleNewPage(chartType) {
-    if (!chartType) return;
-    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
-    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
-      defaultWidgets = [
-        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-      ];
-    }
-    const newPage = {
-      layout: chartType,
-      widgets: defaultWidgets,
-      frequency: 1,
-    };
-    const newPages = [...pages, newPage];
-
-    setPages(newPages);
-    setCurrentPageIndex(newPages.length - 1);
-  }
-
-  function handlePageDelete() {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        const numPages = pages.length;
-        const deletedPageIndex = currentPageIndex;
-        const newPages = pages.filter((page, index) => index !== deletedPageIndex);
-        const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
-        setPages(newPages);
-        setCurrentPageIndex(newPageIndex);
-      },
-      () => {}
-    );
-  }
-
-  function handleExportExcel() {
-    DataManagerIST.exportDataRunExcel();
-  }
-
-  function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [...sensorSettings];
-    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-      sensorSettingsCpy.push({ ...setting });
-      console.log("New data pushed");
-    } else {
-      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-      sensorSettingsCpy[foundIndex] = setting;
-      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
-    }
-
-    setSensorSettings(sensorSettingsCpy);
-    displaySettingPopup.current.f7Popup().close();
   }
 
   return (
