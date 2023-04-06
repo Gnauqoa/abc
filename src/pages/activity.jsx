@@ -290,6 +290,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
+  function handleExportExcel() {
+    DataManagerIST.exportDataRunExcel();
+  }
+
   function handleSensorSettingSubmit(setting) {
     let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
@@ -335,7 +339,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         <List>
           <ListItem link="#" popoverClose title="Quản lý dữ liệu" />
           <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" />
+          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
           <ListItem link="#" popoverClose title="Chia sẻ" />
         </List>
       </Popover>

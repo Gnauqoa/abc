@@ -2,6 +2,7 @@ import store from "store";
 import { f7 } from "framework7-react";
 import dialog from "../components/dialog";
 
+import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
 
 let deviceHistory = [];
@@ -511,24 +512,37 @@ export function exportToCSV(filename, rows) {
   };
 
   let csvFile = "";
-  for (let i = 0; i < rows.length; i++) {
-    csvFile += processRow(rows[i]);
-  }
+  rows.forEach((row) => {
+    csvFile += processRow(row);
+  });
 
-  const blob = new Blob([csvFile], { type: "text/csv;charset=utf-8;" });
-  if (navigator.msSaveBlob) {
-    navigator.msSaveBlob(blob, filename);
-  } else {
-    const link = document.createElement("a");
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      console.log("url: ", url);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      //   document.body.removeChild(link);
-    }
+  exportFileToPc(csvFile, filename, {
+    EXT: ".csv",
+    TYPE: "text/csv;charset=utf-8;",
+  });
+}
+
+export async function exportToExcel(filePath, fileName, rows) {
+  const fileExt = ".xlsx";
+  const sheetName = "Data Run Report";
+  const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+
+  const ws = utils.aoa_to_sheet(rows);
+  const workbook = utils.book_new();
+  utils.book_append_sheet(workbook, ws, sheetName);
+  const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
+
+  if (f7.device.electron) {
+    const option = {
+      filters: [{ name: fileName, extensions: [fileExt] }],
+      defaultPath: fileName,
+    };
+    return window.fileApi.save(filePath, excelBuffer, option);
+  } else if (f7.device.desktop) {
+    exportFileToPc(excelBuffer, fileName, {
+      EXT: fileExt,
+      TYPE: fileType,
+    });
+    return;
   }
 }
