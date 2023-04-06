@@ -25,7 +25,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import NewPagePopup from "../components/new-page";
 
-const DEFAULT_SENSOR_ID = -1;
+export const DEFAULT_SENSOR_ID = -1;
 const recentFilesService = new storeService("recent-files");
 
 export default ({ f7route, f7router, filePath, content }) => {
@@ -47,9 +47,9 @@ export default ({ f7route, f7router, filePath, content }) => {
         {
           layout: selectedLayout,
           widgets: defaultWidgets,
-          frequency: 1,
         },
       ],
+      frequency: 1,
       dataRuns: [],
       sensorSettings: [],
     };
@@ -60,19 +60,23 @@ export default ({ f7route, f7router, filePath, content }) => {
     return;
   }
 
+  // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
+  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
+  const [frequency, setFrequency] = useState(activity.frequency);
+
+  // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const currentPage = pages[currentPageIndex];
-  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
-
   const layout = currentPage.layout;
-  const [widgets, setWidgets] = useState(currentPage.widgets);
-  const [frequency, setFrequency] = useState(currentPage.frequency);
+  const widgets = currentPage.widgets;
+
   const [isRunning, setIsRunning] = useState(false);
   const [currentDataRunId, setCurrentDataRunId] = useState(null);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
+
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
   const lineChartRef = useRef();
@@ -161,7 +165,14 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return w;
     });
-    setWidgets(updatedWidgets);
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+    console.log(">>>>> updatePage:", updatePages);
+    setPages([...updatePages]);
   }
 
   function handleSampleClick() {
@@ -233,8 +244,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handlePagePrev() {
     const numPages = pages.length;
-    const nextPageIndex = (currentPageIndex - 1 + numPages) % numPages;
-    setCurrentPageIndex(nextPageIndex);
+    const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
+    setCurrentPageIndex(prevPageIndex);
   }
 
   function handlePageNext() {
@@ -257,10 +268,10 @@ export default ({ f7route, f7router, filePath, content }) => {
       widgets: defaultWidgets,
       frequency: 1,
     };
+    const newPages = [...pages, newPage];
 
-    setWidgets(defaultWidgets);
-    setPages((prev) => [...prev, newPage]);
-    setCurrentPageIndex((prev) => prev + 1);
+    setPages(newPages);
+    setCurrentPageIndex(newPages.length - 1);
   }
 
   function handlePageDelete() {

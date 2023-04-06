@@ -129,7 +129,7 @@ export class DataManager {
       const hasEmitFunction = typeof emitFunction === "function";
       const validSensorId = this.sensorIds.includes(Number(sensorId)) && Number(sensorId) !== 0;
       if (!hasEmitFunction || !validSensorId) {
-        console.log(`SUBSCRIBE: Invalid parameters emitFunction_${emitFunction}-sensorId_${sensorId}`);
+        console.log(`DATA_MANAGER-subscribe-INVALID-emitFunction_${emitFunction}-sensorId_${sensorId}`);
         return false;
       }
 
@@ -141,7 +141,7 @@ export class DataManager {
         subscription: subscription,
       };
 
-      console.log(`SUBSCRIBE: subscriberId_${subscriberId}-sensorId_${sensorId}`);
+      console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorId_${sensorId}`);
 
       return subscriberId;
     } catch (error) {
@@ -161,10 +161,10 @@ export class DataManager {
       if (subscriberId && this.subscribers.hasOwnProperty(subscriberId)) {
         this.subscribers[subscriberId].subscription.remove();
         delete this.subscribers[subscriberId];
-        console.log(`UNSUBSCRIBED: subscriberId_${subscriberId}`);
+        console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
         return true;
       } else {
-        console.error(`UNSUBSCRIBED: Invalid subscriberId_${subscriberId}`);
+        console.log(`DATA_MANAGER-unsubscribe-NOT_EXIST_${subscriberId}`);
         return false;
       }
     } catch (error) {
@@ -192,7 +192,7 @@ export class DataManager {
     const isValidFrequency = FREQUENCIES.includes(frequency) || frequency === 0;
 
     if (!isValidFrequency) {
-      console.error(`Invalid frequency: ${frequency}`);
+      console.error(`DATA_MANAGER-setCollectingDataFrequency-INVALID_${frequency}`);
       return false;
     }
 
@@ -200,13 +200,13 @@ export class DataManager {
       this.samplingMode = SAMPLING_MANUAL;
       this.collectingDataInterval = (1 / MANUAL_FREQUENCY) * 1000;
       console.log(
-        `Frequency set to ${MANUAL_FREQUENCY}Hz - ${this.collectingDataInterval}ms. Switching to manual-sampling mode.`
+        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`
       );
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
       console.log(
-        `Frequency set to ${frequency}Hz - ${this.collectingDataInterval}ms. Switching to auto-sampling mode.`
+        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`
       );
     }
 
