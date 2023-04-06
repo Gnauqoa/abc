@@ -523,7 +523,7 @@ export function exportToCSV(filename, rows) {
 }
 
 export async function exportToExcel(filePath, fileName, rows) {
-  const fileExt = ".xlsx";
+  const fileExt = "xlsx";
   const sheetName = "Data Run Report";
   const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
 
@@ -540,7 +540,7 @@ export async function exportToExcel(filePath, fileName, rows) {
     return window.fileApi.save(filePath, excelBuffer, option);
   } else if (f7.device.desktop) {
     exportFileToPc(excelBuffer, fileName, {
-      EXT: fileExt,
+      EXT: `.${fileExt}`,
       TYPE: fileType,
     });
     return;
