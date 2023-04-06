@@ -277,6 +277,12 @@
   padding: 0;
 }
 
+.sensor-selector {
+  .button {
+    text-transform: none;
+  }
+}
+
 .sensor-select-title {
   color: #007ff5;
   .title {
@@ -389,13 +395,12 @@
 }
 
 .display-setting-popup.popup.modal-in {
-    border-radius: 15px;
+  border-radius: 15px;
 }
-
 
 .input-stack-position {
   .item-input-wrap {
-    margin-top:40px;
+    margin-top: 40px;
     left: -217px;
     textarea {
       width: 600px;
@@ -436,7 +441,7 @@
 }
 
 .edl-popup {
-	width: 400px;
+  width: 400px;
   height: 500px;
   left: calc(50% - 200px);
   top: calc(50% - 250px);
