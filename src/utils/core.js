@@ -534,10 +534,19 @@ export async function exportToExcel(filePath, fileName, rows) {
 
   if (f7.device.electron) {
     const option = {
-      filters: [{ name: fileName, extensions: [fileExt] }],
+      filters: [{ name: "Excel Workbook", extensions: [fileExt] }],
       defaultPath: fileName,
     };
-    return window.fileApi.save(filePath, excelBuffer, option);
+    try {
+      return await window.fileApi.save(filePath, excelBuffer, option);
+    } catch (error) {
+      console.log("Save file error", error);
+      dialog.alert(
+        "Lỗi không thể lưu",
+        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        () => {}
+      );
+    }
   } else if (f7.device.desktop) {
     exportFileToPc(excelBuffer, fileName, {
       EXT: `.${fileExt}`,

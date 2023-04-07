@@ -1,5 +1,6 @@
 import { f7 } from "framework7-react";
 import { exportFileToPc } from "../utils/core";
+import dialog from "../components/dialog";
 
 function openFile(
   filePath,
@@ -12,7 +13,7 @@ function openFile(
   }
 }
 
-function saveFile(
+async function saveFile(
   filePath,
   content,
   option = {
@@ -21,7 +22,16 @@ function saveFile(
   }
 ) {
   if (f7.device.electron) {
-    return window.fileApi.save(filePath, content, option);
+    try {
+      return await window.fileApi.save(filePath, content, option);
+    } catch (err) {
+      console.log("Save file error", err);
+      dialog.alert(
+        "Lỗi không thể lưu",
+        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        () => {}
+      );
+    }
   } else if (f7.device.desktop) {
     exportFileToPc(content, JSON.parse(content).name, {
       EXT: ".edl",
