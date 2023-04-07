@@ -171,7 +171,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       layout: chartType,
       widgets: defaultWidgets,
       frequency: 1,
-      lastDataRunId: null
+      lastDataRunId: null,
     };
     const newPages = [...pages, newPage];
 
@@ -369,6 +369,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[0].sensor)}
                     currentValue={getCurrentValue(widgets[0].sensor, true)}
                     widget={widgets[0]}
@@ -379,6 +380,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
+                    key={`${currentPageIndex}_number`}
                     value={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -388,6 +390,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
+                    key={`${currentPageIndex}_chart`}
                     data={getDataForChart(widgets[1].sensor)}
                     ref={lineChartRef}
                     widget={widgets[1]}
@@ -396,6 +399,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 )}
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[1].sensor)}
                     currentValue={getCurrentValue(widgets[1].sensor, true)}
                     widget={widgets[1]}
@@ -411,6 +415,7 @@ export default ({ f7route, f7router, filePath, content }) => {
             <div className="__card">
               {layout === LAYOUT_CHART && (
                 <LineChart
+                  key={`${currentPageIndex}_chart`}
                   data={getDataForChart(widgets[0].sensor)}
                   ref={lineChartRef}
                   widget={widgets[0]}
@@ -419,6 +424,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {layout === LAYOUT_TABLE && (
                 <TableWidget
+                  key={`${currentPageIndex}_table`}
                   data={getDataForTable(widgets[0].sensor)}
                   currentValue={getCurrentValue(widgets[0].sensor, true)}
                   widget={widgets[0]}
@@ -429,6 +435,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
+                  key={`${currentPageIndex}_number`}
                   value={getCurrentValue(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
