@@ -6,6 +6,7 @@ import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 
 import { exportToExcel } from "./../utils/core";
 
+const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 export const SAMPLING_AUTO = 0;
 export const SAMPLING_MANUAL = 1;
@@ -423,9 +424,9 @@ export class DataManager {
    */
   exportDataRunExcel() {
     // TODO: Support multiple data runs in future
-    if (!this.dataRuns[this.curDataRunId]) {
-      return;
-    }
+    // if (!this.dataRuns[this.curDataRunId]) {
+    //   return;
+    // }
     const recordedSensors = new Set();
     const invertedSensorsInfo = {};
     const headers = [];
@@ -454,16 +455,16 @@ export class DataManager {
     // Create Row Names with all sensor that had been recorded
     listDataRunsInfo.forEach((dataRunInfo) => {
       for (const sensorId of recordedSensors) {
-        const sensorInfo = sensors[sensorId];
+        const sensorInfo = sensors[parseInt(sensorId)];
         const subSensorIds = Object.keys(sensorInfo.data);
-        invertedSensorsInfo[sensorId] = {
+        invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`] = {
           name: sensorInfo.name,
           sensorIndexInRow: currentIndex,
           numSubSensor: subSensorIds.length,
         };
         currentIndex += subSensorIds.length;
 
-        if (parseInt(sensorId) === 0) {
+        if (parseInt(sensorId) === TIME_STAMP_ID) {
           headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRunInfo.dataName}`);
           continue;
         }
@@ -472,23 +473,23 @@ export class DataManager {
         }
       }
     });
-
     exportedRows.push(headers);
 
     // Calculate the LCM timeStamp of all data runs for looping
     const maxRecordingTimeMs = parseInt(maxRecordingTime * 1000);
     const dataRunIntervals = Object.values(this.dataRuns).map((dataRun) => dataRun.interval);
-    const lcm = getLCM(dataRunIntervals);
+    const lcm = findGCD(dataRunIntervals);
 
     // Currently, we support export multiple data runs into a single sheet. Therefore:
-    //  - First, we have to find the LCM between interval of all data runs
+    //  - First, we have to find the GCD between interval of all data runs
     //  - Then, we loop from timeStamp = 0 to the maximum recording time between all data runs
     //    and each step is the LCM interval
     //  - At each time step, if it maths with current data time of one of data runs, we append
     //    this data into curRowData, and increase the dataIndex of this data run.
     //  - Otherwise, we still get the data at the dataIndex of the data run
+    const numColumns = recordedSensors.size * listDataRunsInfo.length;
     for (let curTimeStamp = 0; curTimeStamp <= maxRecordingTimeMs; curTimeStamp += lcm) {
-      const curRowData = [];
+      const rowData = new Array(numColumns).fill("");
       listDataRunsInfo.forEach((dataRunInfo) => {
         const dataRun = this.dataRuns[dataRunInfo.id];
         const dataRunData = dataRun.data;
@@ -496,13 +497,16 @@ export class DataManager {
         // we have collected all the data in this data run. Then continue
         if (dataRunInfo.dataIndex >= dataRunData.length) return;
 
-        const rowData = new Array(recordedSensors.size).fill(0.0);
         const dataRunDataAtIndex = dataRunData[dataRunInfo.dataIndex];
         const parsedTimeStamp = (curTimeStamp / 1000).toFixed(3);
 
         for (const sensorId of Object.keys(dataRunDataAtIndex)) {
-          const sensorData = dataRunDataAtIndex[sensorId];
-          const invertedSensor = invertedSensorsInfo[sensorId];
+          const sensorData = dataRunDataAtIndex[parseInt(sensorId)];
+          const invertedSensor = invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`];
+          if (parseInt(sensorId) === TIME_STAMP_ID) {
+            rowData[invertedSensor.sensorIndexInRow] = curTimeStamp;
+            continue;
+          }
           for (let i = 0; i < invertedSensor.numSubSensor; i++) {
             rowData[invertedSensor.sensorIndexInRow + i] = sensorData[i];
           }
@@ -511,9 +515,8 @@ export class DataManager {
         if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
           dataRunInfo.dataIndex += 1;
         }
-        curRowData.push(...rowData);
       });
-      exportedRows.push(curRowData);
+      exportedRows.push(rowData);
     }
 
     exportToExcel(null, "ReportDataRun", exportedRows);
