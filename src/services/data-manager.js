@@ -479,7 +479,6 @@ export class DataManager {
     const maxRecordingTimeMs = parseInt(maxRecordingTime * 1000);
     const dataRunIntervals = Object.values(this.dataRuns).map((dataRun) => dataRun.interval);
     const lcm = findGCD(dataRunIntervals);
-    console.log(dataRunIntervals, lcm, maxRecordingTimeMs);
 
     // Currently, we support export multiple data runs into a single sheet. Therefore:
     //  - First, we have to find the GCD between interval of all data runs
