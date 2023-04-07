@@ -58,7 +58,7 @@ export default ({ f7router }) => {
     <Page className="bg-color-regal-blue home">
       <Navbar>
         <NavLeft>
-          <Link iconIos="material:menu" iconMd="material:menu" panelOpen="left" />
+          <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
         <NavTitle>EDL</NavTitle>
       </Navbar>

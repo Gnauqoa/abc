@@ -7,7 +7,7 @@ import AboutMenu from "./about";
 import aboutusImg from "../../img/menu/about-ohstem.png";
 
 export default () => {
-  const [activeMenu, setActiveMenu] = useState(store.get("active-menu") || "settings");
+  const [activeMenu, setActiveMenu] = useState(store.get("active-menu") || "about");
 
   function handleChange(e) {
     const activeMenu = e.target.value;
@@ -25,10 +25,10 @@ export default () => {
                 <List>
                   <Navbar transparent>
                     <NavLeft>
-                      <Link iconIos="material:close" iconMd="material:close" panelClose />
+                      <Link iconIos="material:close" iconMd="material:close" iconAurora="material:close" panelClose />
                     </NavLeft>
                   </Navbar>
-                  <ListItem
+                  {/* <ListItem
                     radio
                     title="Cài đặt"
                     value="settings"
@@ -37,7 +37,7 @@ export default () => {
                     className={activeMenu === "settings" ? "m-menu-active" : ""}
                   >
                     <Icon slot="media" ios="material:settings" md="material:settings" size="36px"></Icon>
-                  </ListItem>
+                  </ListItem> */}
                   <ListItem
                     radio
                     title="Về InnoLab"
