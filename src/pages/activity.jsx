@@ -73,7 +73,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const widgets = currentPage.widgets;
 
   const [isRunning, setIsRunning] = useState(false);
-  const [currentDataRunId, setCurrentDataRunId] = useState(null);
+  const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
 
@@ -84,12 +84,6 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   useEffect(() => {
     DataManagerIST.importActivityDataRun(activity.dataRuns);
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
-      const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
-      result && setCurrentDataRunId(lastDataRunId);
-    }
   }, []);
 
   useEffect(() => {
@@ -119,11 +113,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
       sensorSettingsCpy.push({ ...setting });
-      console.log("New data pushed");
     } else {
       var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
       sensorSettingsCpy[foundIndex] = setting;
-      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
     }
 
     setSensorSettings(sensorSettingsCpy);
@@ -179,11 +171,13 @@ export default ({ f7route, f7router, filePath, content }) => {
       layout: chartType,
       widgets: defaultWidgets,
       frequency: 1,
+      lastDataRunId: null
     };
     const newPages = [...pages, newPage];
 
     setPages(newPages);
     setCurrentPageIndex(newPages.length - 1);
+    setCurrentDataRunId(null);
   }
 
   function handlePageDelete() {
@@ -197,6 +191,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
         setPages(newPages);
         setCurrentPageIndex(newPageIndex);
+        setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
+        prevChartDataRef.current = null;
       },
       () => {}
     );
@@ -206,16 +202,19 @@ export default ({ f7route, f7router, filePath, content }) => {
     const numPages = pages.length;
     const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
     setCurrentPageIndex(prevPageIndex);
+    setCurrentDataRunId(pages[prevPageIndex].lastDataRunId);
+    prevChartDataRef.current = null;
   }
 
   function handlePageNext() {
     const numPages = pages.length;
     const nextPageIndex = (currentPageIndex + 1) % numPages;
     setCurrentPageIndex(nextPageIndex);
+    setCurrentDataRunId(pages[nextPageIndex].lastDataRunId);
+    prevChartDataRef.current = null;
   }
 
   function handleSensorChange(widgetId, sensor) {
-    console.log(widgetId, sensor);
     const updatedWidgets = widgets.map((w) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
@@ -228,7 +227,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return page;
     });
-    console.log(">>>>> updatePage:", updatePages);
     setPages(updatePages);
   }
 
@@ -246,11 +244,18 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.exportDataRunExcel();
   }
 
+  function setLastDataRunIdForCurrentPage(dataRunId) {
+    let updatedPages = _.cloneDeep(pages);
+    updatedPages[currentPageIndex].lastDataRunId = dataRunId;
+    setPages(() => updatedPages);
+  }
+
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
       setCurrentDataRunId(dataRunId);
+      setLastDataRunIdForCurrentPage(dataRunId);
     } else {
       DataManagerIST.stopCollectingData();
     }
