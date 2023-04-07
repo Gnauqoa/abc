@@ -73,23 +73,18 @@ export default ({ f7route, f7router, filePath, content }) => {
   const widgets = currentPage.widgets;
 
   const [isRunning, setIsRunning] = useState(false);
-  const [currentDataRunId, setCurrentDataRunId] = useState(null);
+  const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
 
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
-  const lineChartRef = useRef();
-  let prevChartDataRef = useRef();
+  const lineChartRef = useRef([]);
+  let prevChartDataRef = useRef([]);
 
   useEffect(() => {
+    DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
-      const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
-      result && setCurrentDataRunId(lastDataRunId);
-    }
   }, []);
 
   useEffect(() => {
@@ -119,11 +114,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     let sensorSettingsCpy = [...sensorSettings];
     if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
       sensorSettingsCpy.push({ ...setting });
-      console.log("New data pushed");
     } else {
       var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
       sensorSettingsCpy[foundIndex] = setting;
-      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
     }
 
     setSensorSettings(sensorSettingsCpy);
@@ -179,11 +172,13 @@ export default ({ f7route, f7router, filePath, content }) => {
       layout: chartType,
       widgets: defaultWidgets,
       frequency: 1,
+      lastDataRunId: null,
     };
     const newPages = [...pages, newPage];
 
     setPages(newPages);
     setCurrentPageIndex(newPages.length - 1);
+    setCurrentDataRunId(null);
   }
 
   function handlePageDelete() {
@@ -197,6 +192,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
         setPages(newPages);
         setCurrentPageIndex(newPageIndex);
+        setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
+        prevChartDataRef.current[currentPageIndex] = null;
       },
       () => {}
     );
@@ -206,16 +203,19 @@ export default ({ f7route, f7router, filePath, content }) => {
     const numPages = pages.length;
     const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
     setCurrentPageIndex(prevPageIndex);
+    setCurrentDataRunId(pages[prevPageIndex].lastDataRunId);
+    prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handlePageNext() {
     const numPages = pages.length;
     const nextPageIndex = (currentPageIndex + 1) % numPages;
     setCurrentPageIndex(nextPageIndex);
+    setCurrentDataRunId(pages[nextPageIndex].lastDataRunId);
+    prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handleSensorChange(widgetId, sensor) {
-    console.log(widgetId, sensor);
     const updatedWidgets = widgets.map((w) => {
       if (w.id === widgetId) {
         return { ...w, sensor };
@@ -228,7 +228,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return page;
     });
-    console.log(">>>>> updatePage:", updatePages);
     setPages(updatePages);
   }
 
@@ -246,11 +245,18 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.exportDataRunExcel();
   }
 
+  function setLastDataRunIdForCurrentPage(dataRunId) {
+    let updatedPages = _.cloneDeep(pages);
+    updatedPages[currentPageIndex].lastDataRunId = dataRunId;
+    setPages(() => updatedPages);
+  }
+
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
       setCurrentDataRunId(dataRunId);
+      setLastDataRunIdForCurrentPage(dataRunId);
     } else {
       DataManagerIST.stopCollectingData();
     }
@@ -281,7 +287,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function getDataForChart(sensor) {
-    if (!lineChartRef.current) return;
+    if (!lineChartRef.current[currentPageIndex]) return;
 
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
@@ -291,15 +297,15 @@ export default ({ f7route, f7router, filePath, content }) => {
       if (!isRunning) {
         currentData = { ...currentData, x: 0 };
       }
-      lineChartRef.current.setCurrentData({
+      lineChartRef.current[currentPageIndex].setCurrentData({
         data: currentData,
       });
     }
 
     if (data.length > 0) {
-      if (_.isEqual(data, prevChartDataRef.current)) return;
-      prevChartDataRef.current = data;
-      lineChartRef.current.setChartData({
+      if (_.isEqual(data, prevChartDataRef.current[currentPageIndex])) return;
+      prevChartDataRef.current[currentPageIndex] = data;
+      lineChartRef.current[currentPageIndex].setChartData({
         chartData: [
           {
             name: "run1",
@@ -364,6 +370,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[0].sensor)}
                     currentValue={getCurrentValue(widgets[0].sensor, true)}
                     widget={widgets[0]}
@@ -374,6 +381,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
+                    key={`${currentPageIndex}_number`}
                     value={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -383,14 +391,16 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
+                    key={`${currentPageIndex}_chart`}
                     data={getDataForChart(widgets[1].sensor)}
-                    ref={lineChartRef}
+                    ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                   />
                 )}
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[1].sensor)}
                     currentValue={getCurrentValue(widgets[1].sensor, true)}
                     widget={widgets[1]}
@@ -406,14 +416,16 @@ export default ({ f7route, f7router, filePath, content }) => {
             <div className="__card">
               {layout === LAYOUT_CHART && (
                 <LineChart
+                  key={`${currentPageIndex}_chart`}
                   data={getDataForChart(widgets[0].sensor)}
-                  ref={lineChartRef}
+                  ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
               )}
               {layout === LAYOUT_TABLE && (
                 <TableWidget
+                  key={`${currentPageIndex}_table`}
                   data={getDataForTable(widgets[0].sensor)}
                   currentValue={getCurrentValue(widgets[0].sensor, true)}
                   widget={widgets[0]}
@@ -424,6 +436,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
+                  key={`${currentPageIndex}_number`}
                   value={getCurrentValue(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
