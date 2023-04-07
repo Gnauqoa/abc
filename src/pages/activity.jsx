@@ -83,6 +83,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   let prevChartDataRef = useRef([]);
 
   useEffect(() => {
+    DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
   }, []);
 
