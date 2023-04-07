@@ -259,19 +259,6 @@ export class DataManager {
      * @property {string} name - The name of the data run.
      * @property {Array} data - An array of sensor data collected during the data run.
      */
-
-    // TODO: Uncomment for support multiple data runs
-    // const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
-    // this.curDataRunId = uuidv4();
-    // this.dataRuns[this.curDataRunId] = {
-    //   name: dataRunName,
-    //   data: [],
-    // };
-
-    if (this.curDataRunId) {
-      delete this.dataRuns[this.curDataRunId];
-    }
-
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
