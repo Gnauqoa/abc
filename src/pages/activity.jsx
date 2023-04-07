@@ -79,8 +79,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
-  const lineChartRef = useRef();
-  let prevChartDataRef = useRef();
+  const lineChartRef = useRef([]);
+  let prevChartDataRef = useRef([]);
 
   useEffect(() => {
     DataManagerIST.importActivityDataRun(activity.dataRuns);
@@ -192,7 +192,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         setPages(newPages);
         setCurrentPageIndex(newPageIndex);
         setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
-        prevChartDataRef.current = null;
+        prevChartDataRef.current[currentPageIndex] = null;
       },
       () => {}
     );
@@ -203,7 +203,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
     setCurrentPageIndex(prevPageIndex);
     setCurrentDataRunId(pages[prevPageIndex].lastDataRunId);
-    prevChartDataRef.current = null;
+    prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handlePageNext() {
@@ -211,7 +211,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const nextPageIndex = (currentPageIndex + 1) % numPages;
     setCurrentPageIndex(nextPageIndex);
     setCurrentDataRunId(pages[nextPageIndex].lastDataRunId);
-    prevChartDataRef.current = null;
+    prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handleSensorChange(widgetId, sensor) {
@@ -286,7 +286,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function getDataForChart(sensor) {
-    if (!lineChartRef.current) return;
+    if (!lineChartRef.current[currentPageIndex]) return;
 
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
     const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
@@ -296,15 +296,15 @@ export default ({ f7route, f7router, filePath, content }) => {
       if (!isRunning) {
         currentData = { ...currentData, x: 0 };
       }
-      lineChartRef.current.setCurrentData({
+      lineChartRef.current[currentPageIndex].setCurrentData({
         data: currentData,
       });
     }
 
     if (data.length > 0) {
-      if (_.isEqual(data, prevChartDataRef.current)) return;
-      prevChartDataRef.current = data;
-      lineChartRef.current.setChartData({
+      if (_.isEqual(data, prevChartDataRef.current[currentPageIndex])) return;
+      prevChartDataRef.current[currentPageIndex] = data;
+      lineChartRef.current[currentPageIndex].setChartData({
         chartData: [
           {
             name: "run1",
@@ -392,7 +392,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <LineChart
                     key={`${currentPageIndex}_chart`}
                     data={getDataForChart(widgets[1].sensor)}
-                    ref={lineChartRef}
+                    ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -417,7 +417,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <LineChart
                   key={`${currentPageIndex}_chart`}
                   data={getDataForChart(widgets[0].sensor)}
-                  ref={lineChartRef}
+                  ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
