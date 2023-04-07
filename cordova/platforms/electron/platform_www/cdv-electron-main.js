@@ -194,12 +194,16 @@ ipcMain.handle("openFile", async (_, filePath, option) => {
     return dialog.showOpenDialog(option).then((data) => {
       return new Promise((resolve, reject) => {
         const filePath = data.filePaths[0];
-        fs.readFile(filePath, "utf-8", (err, content) => {
-          if (err) {
-            reject(err);
-          }
-          resolve({ filePath, content });
-        });
+        if (filePath) {
+          fs.readFile(filePath, "utf-8", (err, content) => {
+            if (err) {
+              reject(err);
+            }
+            resolve({ filePath, content });
+          });
+        } else {
+          resolve(null);
+        }
       });
     });
   }
@@ -284,20 +288,20 @@ async function listSerialPorts() {
                 // Invalid data, ignore
                 return;
               }
-            
+
               var sensorId = data[1];
               var sensorSerial = data[2]; // TODO: Will use later
               var checksum = data[data.dataLength-1]; // TODO: Will use later
               var dataLength = data[3];
               var dataRead = 0;
               var sensorData = [];
-            
+
               while (dataRead < dataLength) {
                 // read next 4 bytes
                 var rawBytes = data.slice(dataRead+4, dataRead+8);
-            
+
                 var view = new DataView(new ArrayBuffer(4));
-            
+
                 rawBytes.forEach(function (b, i) {
                     view.setUint8(3-i, b);
                 });

@@ -22,7 +22,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "70%",
-      fontSize: "18px",
+      fontSize: "16px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -32,7 +32,7 @@ const PAGE_SETTINGS = {
     },
     "custom-select": {
       width: "97%",
-      fontSize: "14px",
+      fontSize: "16px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
