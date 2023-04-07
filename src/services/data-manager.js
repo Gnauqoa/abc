@@ -269,10 +269,9 @@ export class DataManager {
     // };
 
     if (this.curDataRunId) {
-      this.dataRuns[this.curDataRunId].data = [];
-      this.dataRuns[this.curDataRunId].interval = this.collectingDataInterval;
-      return this.curDataRunId;
+      delete this.dataRuns[this.curDataRunId];
     }
+
     const dataRunName = name || `Run ${Object.keys(this.dataRuns).length + 1}`;
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
