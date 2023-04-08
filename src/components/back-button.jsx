@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "framework7-react";
 
-export default ({ link, disabled }) => {
+export default ({ link, disabled, onClick }) => {
   return (
     <Link
       iconIos="material:arrow_back"
@@ -9,6 +9,7 @@ export default ({ link, disabled }) => {
       iconAurora="material:arrow_back"
       className="back-icon margin-right"
       {...(disabled ? {} : { href: link })}
+      onClick={onClick}
     />
   );
 };

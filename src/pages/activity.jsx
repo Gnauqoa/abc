@@ -48,6 +48,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         {
           layout: selectedLayout,
           widgets: defaultWidgets,
+          lastDataRunId: null,
         },
       ],
       frequency: 1,
@@ -72,7 +73,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const currentPage = pages[currentPageIndex];
   const layout = currentPage.layout;
-  const widgets = currentPage.widgets;
+  const [widgets, setWidgets] = useState(currentPage.widgets);
 
   const [isRunning, setIsRunning] = useState(false);
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
@@ -134,12 +135,12 @@ export default ({ f7route, f7router, filePath, content }) => {
     const updatedDataRuns = DataManagerIST.getActivityDataRun();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
-        return { ...page, frequency, widgets };
+        return { ...page, widgets };
       } else {
         return page;
       }
     });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns };
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
@@ -159,6 +160,34 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
+  async function handleActivityBack() {
+    // Collecting data from dataRuns
+    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets };
+      } else {
+        return page;
+      }
+    });
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+
+    dialog.prompt(
+      "Bạn có muốn lưu lại những thay đổi này không?",
+      "Tên hoạt động",
+      async (name) => {
+        setName(name);
+        const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+        savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+        f7router.navigate("/");
+      },
+      () => {
+        f7router.navigate("/");
+      },
+      name
+    );
+  }
+
   // =========================== Functions associate with Page ===========================
   function handleNewPage(chartType) {
     if (!chartType) return;
@@ -172,12 +201,12 @@ export default ({ f7route, f7router, filePath, content }) => {
     const newPage = {
       layout: chartType,
       widgets: defaultWidgets,
-      frequency: 1,
       lastDataRunId: null,
     };
     const newPages = [...pages, newPage];
 
     setPages(newPages);
+    setWidgets(defaultWidgets);
     setCurrentPageIndex(newPages.length - 1);
     setCurrentDataRunId(null);
   }
@@ -193,6 +222,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
         setPages(newPages);
         setCurrentPageIndex(newPageIndex);
+        setWidgets(newPages[newPageIndex].widgets);
         setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
         prevChartDataRef.current[currentPageIndex] = null;
       },
@@ -201,16 +231,18 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handlePagePrev() {
-    const numPages = pages.length;
-    const prevPageIndex = (currentPageIndex - 1 + numPages) % numPages;
+    if (currentPageIndex === 0) return;
+    const prevPageIndex = currentPageIndex - 1;
+    setWidgets(pages[prevPageIndex].widgets);
     setCurrentPageIndex(prevPageIndex);
     setCurrentDataRunId(pages[prevPageIndex].lastDataRunId);
     prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handlePageNext() {
-    const numPages = pages.length;
-    const nextPageIndex = (currentPageIndex + 1) % numPages;
+    if (currentPageIndex === pages.length - 1) return;
+    const nextPageIndex = currentPageIndex + 1;
+    setWidgets(pages[nextPageIndex].widgets);
     setCurrentPageIndex(nextPageIndex);
     setCurrentDataRunId(pages[nextPageIndex].lastDataRunId);
     prevChartDataRef.current[currentPageIndex] = null;
@@ -229,6 +261,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return page;
     });
+    setWidgets(updatedWidgets);
     setPages(updatePages);
   }
 
@@ -325,7 +358,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     <Page className="bg-color-regal-blue activity">
       <Navbar>
         <NavLeft>
-          <BackButton disabled={isRunning} link="/" />
+          <BackButton disabled={isRunning} onClick={handleActivityBack} />
           <RoundButton
             disabled={isRunning}
             icon="add"
