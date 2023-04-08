@@ -419,20 +419,6 @@ export class DataManager {
     return false;
   }
 
-  updateDataManualAtIndex(sensorId, dataIndex, value) {
-    const dataRunData = this.dataRuns[this.curDataRunId].data;
-    const newDataRunData = dataRunData
-      .map((data, index) => {
-        if (index === dataRunData.length - 1) return false;
-        else if (index !== dataIndex) return data;
-        const newData = { ...data, [parseInt(sensorId)]: [value] };
-        return newData;
-      })
-      .filter((data) => data);
-
-    this.dataRuns[this.curDataRunId].data = newDataRunData;
-  }
-
   // -------------------------------- Export -------------------------------- //
   /** Export the current data run to a CSV file.
    * @function
@@ -549,8 +535,8 @@ export class DataManager {
       const sensorSerialId = data[1]; // Ignore for now
       const dataLength = data[2];
       const sensorsData = [];
-      for (let i=0; i< dataLength; i++) {
-        sensorsData.push(data[3+i]);
+      for (let i = 0; i < dataLength; i++) {
+        sensorsData.push(data[3 + i]);
       }
 
       this.buffer[sensorId] = sensorsData;
@@ -589,10 +575,22 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample() {
+  getManualSample(sensorId, sensorIndex, isAppend = true) {
     const dataRunId = this.curDataRunId;
     const parsedTime = this.getParsedCollectingDataTime();
-    this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
+    isAppend && this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
+    return isAppend ? this.buffer[parseInt(sensorId)][sensorIndex] : { ...this.buffer };
+  }
+
+  updateDataRunDataAtIndex(selectedIndex, curBuffer) {
+    const newDataRunData = this.dataRuns[this.curDataRunId].data.map((data, index) => {
+      if (index === selectedIndex) {
+        return { ...curBuffer, 0: data[0] };
+      } else {
+        return data;
+      }
+    });
+    this.dataRuns[this.curDataRunId].data = [...newDataRunData];
   }
 
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
