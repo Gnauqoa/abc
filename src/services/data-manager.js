@@ -536,19 +536,17 @@ export class DataManager {
    */
   callbackReadSensor(data) {
     try {
-      const parseData = String(data).trim();
-      const splitData = parseData.split(/\s*,\s*/);
-      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
-      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
-        console.log(`callbackReadSensor: Invalid sensor data format ${parseData}`);
-        return;
+      const sensorId = data[0];
+      const sensorSerialId = data[1]; // Ignore for now
+      const dataLength = data[2];
+      const sensorsData = [];
+      for (let i=0; i< dataLength; i++) {
+        sensorsData.push(data[3+i]);
       }
 
-      const sensorId = Number(splitData[1]);
-      const sensorsData = splitData.splice(2, splitData.length - NUM_NON_DATA_SENSORS_CALLBACK);
       this.buffer[sensorId] = sensorsData;
     } catch (e) {
-      console.error(`callbackReadSensor: ${e.message} at ${parseData}`);
+      console.error(`callbackReadSensor: ${e.message}`);
     }
   }
 
@@ -559,21 +557,16 @@ export class DataManager {
    */
   callbackSensorDisconnected(data) {
     try {
-      const parseData = String(data).trim();
-      const splitData = parseData.split(/\s*,\s*/);
-      const validSensorId = this.sensorIds.includes(Number(splitData[1]));
-      if (splitData[0] !== "@" || splitData[splitData.length - 1] !== "*" || !validSensorId) {
-        console.log(`callbackSensorDisconnected: Unecognized sensor data format ${parseData}`);
-        return;
-      }
+      const sensorId = data[0];
+      //const sensorSerialId = data[1]; // Ignore for now
 
-      const sensorId = Number(splitData[1]);
       console.log("Sensor ", sensorId, " has been disconnected");
       // safe way to remove this sensor data from data buffer dictionary
       const { [sensorId]: buff, ...bufferWithoutSensorId } = this.buffer;
       this.buffer = bufferWithoutSensorId;
+      console.log(buffer);
     } catch (e) {
-      console.error(`callbackSensorDisconnected: ${e.message} at ${parseData}`);
+      console.error(`callbackSensorDisconnected: ${e.message}`);
     }
   }
 
@@ -672,16 +665,15 @@ export class DataManager {
   dummySensorData() {
     setInterval(() => {
       const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
+      const sensorSerialId = 0;
 
-      const datas = [];
       const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
+      var dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);
-        datas.push(data);
+        dummyData.push(data);
       }
-      const sensorData = datas.join(",");
-      const dummyData = `@,${sensorId},${sensorData}, *`;
 
       this.callbackReadSensor(dummyData);
     }, 1000);

@@ -310,14 +310,14 @@ async function listSerialPorts() {
                 dataRead += 4;
               }
 
-              var dataString = `@,${sensorId}`;
+              var dataArray = [sensorId, sensorSerial, dataLength]
               sensorData.forEach(function (d, i) {
-                dataString += `,${d}`
+                dataArray.push(d);
               });
-              dataString += ",*";
 
-              portsList[port.path].lastDdata = dataString;
-              mainWindow.webContents.send("device-data", dataString);
+              portsList[port.path].lastDdata = dataArray;
+
+              mainWindow.webContents.send("device-data", dataArray);
             });
 
             portsList[port.path] = {
