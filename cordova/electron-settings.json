@@ -1,11 +1,14 @@
 {
   "browserWindow": {
-    "fullscreen": false,
-    "autoHideMenuBar": false,
+    "fullscreen": true,
+    "height": 800,
+    "width": 1280,
+    "autoHideMenuBar": true,
     "webPreferences": {
       "nodeIntegration": true,
       "enableRemoteModule": true,
-      "contextIsolation": false
+      "contextIsolation": false,
+      "devTools": false
     }
   }
 }
