@@ -80,15 +80,15 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   useEffect(() => {
     setFirstColumnOption(samplingMode === SAMPLING_AUTO ? FIRST_COLUMN_DEFAULT_OPT : FIRST_COLUMN_CUSTOM_OPT);
 
-    const onSamplingManual = () => {
+    const onSamplingManualPressed = () => {
       setIsPressing(true);
     };
 
     const samplingManualButton = document.getElementById("samplingManualButton");
-    samplingManualButton && samplingManualButton.addEventListener("click", onSamplingManual);
+    samplingManualButton && samplingManualButton.addEventListener("click", onSamplingManualPressed);
 
     return () => {
-      samplingManualButton && samplingManualButton.removeEventListener("click", onSamplingManual);
+      samplingManualButton && samplingManualButton.removeEventListener("click", onSamplingManualPressed);
     };
   }, [samplingMode]);
 
@@ -113,15 +113,10 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
         colum2: value,
       };
-      const lastRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
-        colum2: "---",
-      };
 
       if (!isRunning) {
         transformedRows.push(newRow);
       } else {
-        let curSelectedRow = selectedRow;
         if (isPressing) {
           if (numRows === 0 || selectedRow === transformedRows.length) {
             DataManagerIST.getManualSample(widget.sensor.id, widget.sensor.index);
@@ -133,10 +128,10 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
           }
         }
         transformedRows = [
-          ...transformedRows.slice(0, curSelectedRow),
+          ...transformedRows.slice(0, selectedRow),
           newRow,
-          ...transformedRows.slice(curSelectedRow + 1),
-          curSelectedRow < numRows && lastRow,
+          ...transformedRows.slice(selectedRow + 1),
+          selectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
         ];
       }
     }
@@ -231,7 +226,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
             </tr>
             {[...rows, emptyRow].map((row, index) => {
               let ref;
-              if (!isRunning) ref = null;
+              if (!isRunning || samplingMode === SAMPLING_MANUAL) ref = null;
               else if (samplingMode === SAMPLING_AUTO) {
                 ref = index === numRows ? lastRowRef : null;
               } else {
@@ -254,7 +249,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                     )}
                   </td>
                   <td id={index} onClick={handleChangeSelectedColumn}>
-                    <span className="span-value" style={index === selectedRow ? { color: "#11b444" } : {}}>
+                    <span className="span-value " style={index === selectedRow ? { color: "#11b444" } : {}}>
                       {row.colum2}
                     </span>
                   </td>
