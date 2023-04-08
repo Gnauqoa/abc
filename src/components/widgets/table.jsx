@@ -93,10 +93,14 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   }, [samplingMode]);
 
   useEffect(() => {
+    // Preventing re-render when set isPressing = False
     if (prevIsPressing && !isPressing) {
       setPrevIsPressing(isPressing);
       return;
     }
+
+    // Preventing loosing selection row when move from auto to manual.
+    // As the the selected rows is still the last row from auto
     if (data.length === 0) setSelectedRow(0);
     setRows(defaultRows);
 
