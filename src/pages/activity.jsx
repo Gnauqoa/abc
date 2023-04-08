@@ -88,20 +88,18 @@ export default ({ f7route, f7router, filePath, content }) => {
   }, []);
 
   useEffect(() => {
-    let subscriberIds = [];
+    let subscriberId = null;
     DataManagerIST.setCollectingDataFrequency(frequency);
+    subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
-    if (subscriberIds.length) {
-      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
-    }
-    widgets.forEach((w) => {
-      if (w.sensor.id === DEFAULT_SENSOR_ID) return;
-      const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-      subscriberIds.push(subscriberId);
-    });
+    const subscribedSensorIds = widgets
+      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? widget.sensor.id : false))
+      .filter(Boolean);
+
+    subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
 
     return () => {
-      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
+      subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
   }, [widgets]);
 
@@ -263,16 +261,17 @@ export default ({ f7route, f7router, filePath, content }) => {
     setIsRunning(!isRunning);
   }
 
-  function handleDataManagerCallback(data) {
-    console.log(">>>>> AUTO - data manager:", data);
-    const time = data[1];
-    const sensorId = data[2];
-    const values = data.slice(3);
+  function handleDataManagerCallback(emittedDatas) {
+    console.log(">>>>> AUTO - data manager:", emittedDatas);
     const updatedSensorValues = { ...currentSensorValues };
-    updatedSensorValues[sensorId] = { time, sensorId, values };
-    if (values.length) {
-      setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
-    }
+    emittedDatas.forEach((data) => {
+      const time = data[1];
+      const sensorId = data[2];
+      const values = data.slice(3);
+      const sensorValues = { time, sensorId, values };
+      updatedSensorValues[sensorId] = sensorValues;
+    });
+    setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
   }
 
   function getCurrentValue(sensor, isTable = false) {
@@ -347,10 +346,10 @@ export default ({ f7route, f7router, filePath, content }) => {
       </Navbar>
       <Popover className="setting-popover-menu">
         <List>
-          <ListItem link="#" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
+          {/* <ListItem link="#" popoverClose title="Quản lý dữ liệu" /> */}
+          {/* <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" /> */}
           <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
-          <ListItem link="#" popoverClose title="Chia sẻ" />
+          {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
         </List>
       </Popover>
       <Popup className="display-setting-popup" ref={displaySettingPopup}>
