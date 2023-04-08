@@ -134,7 +134,6 @@ export class DataManager {
           .map((sensorId) => this.sensorIds.includes(parseInt(sensorId)) && parseInt(sensorId) !== 0)
           .reduce((accumulator, currentValue) => accumulator && currentValue, true) && sensorIds.length;
 
-      console.log(validSensorId, sensorIds);
       if (!hasEmitFunction || !validSensorId) {
         console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
         return false;
@@ -420,6 +419,20 @@ export class DataManager {
     return false;
   }
 
+  updateDataManualAtIndex(sensorId, dataIndex, value) {
+    const dataRunData = this.dataRuns[this.curDataRunId].data;
+    const newDataRunData = dataRunData
+      .map((data, index) => {
+        if (index === dataRunData.length - 1) return false;
+        else if (index !== dataIndex) return data;
+        const newData = { ...data, [parseInt(sensorId)]: [value] };
+        return newData;
+      })
+      .filter((data) => data);
+
+    this.dataRuns[this.curDataRunId].data = newDataRunData;
+  }
+
   // -------------------------------- Export -------------------------------- //
   /** Export the current data run to a CSV file.
    * @function
@@ -428,10 +441,6 @@ export class DataManager {
    * @returns {void}
    */
   exportDataRunExcel() {
-    // TODO: Support multiple data runs in future
-    // if (!this.dataRuns[this.curDataRunId]) {
-    //   return;
-    // }
     const recordedSensors = new Set();
     const invertedSensorsInfo = {};
     const headers = [];

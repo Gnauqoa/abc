@@ -63,23 +63,27 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning }) => {
-  const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
+const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
   const [userInputs, setUserInputs] = useState({});
+  const [selectedRow, setSelectedRow] = useState(0);
+  const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
 
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
-  const samplingMode = DataManagerIST.getSamplingMode();
   const sensorUnit = widget.sensor.id === DEFAULT_SENSOR_ID ? "" : getUnit(widget.sensor.id, widget.sensor.index);
+
+  useEffect(() => {
+    setFirstColumnOption(samplingMode === SAMPLING_AUTO ? FIRST_COLUMN_DEFAULT_OPT : FIRST_COLUMN_CUSTOM_OPT);
+  }, [samplingMode]);
 
   useEffect(() => {
     // reset table before
     setRows(defaultRows);
 
-    const transformedRows = data.map((item, index) => ({
+    let transformedRows = data.map((item, index) => ({
       colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
       colum2: item.value,
     }));
@@ -93,7 +97,44 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
         colum2: value,
       };
-      transformedRows.push(newRow);
+      const lastRow = {
+        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
+        colum2: "---",
+      };
+
+      if (!isRunning) {
+        transformedRows.push(newRow);
+      } else {
+        let curSelectedRow = selectedRow;
+        if (data.length > numRows) {
+          if (numRows === 0 || selectedRow === transformedRows.length - 1) {
+            curSelectedRow = transformedRows.length;
+            setSelectedRow(curSelectedRow);
+          }
+        }
+        // Check if is running and the data.length > numRows => had sampling manual
+        //   if (data.length > numRows) {
+        //     if (numRows === 0 || selectedRow === transformedRows.length - 1) {
+        //       transformedRows.push(newRow);
+        //       setSelectedRow(transformedRows.length - 1);
+        //     } else {
+        //       DataManagerIST.updateDataManualAtIndex(widget.sensor.id, selectedRow, currentValue.value);
+        //       transformedRows = [
+        //         ...transformedRows.slice(0, selectedRow),
+        //         newRow,
+        //         ...transformedRows.slice(selectedRow + 1, numRows),
+        //       ];
+        //     }
+        //   } else {
+        //   }
+
+        transformedRows = [
+          ...transformedRows.slice(0, curSelectedRow),
+          newRow,
+          ...transformedRows.slice(curSelectedRow + 1),
+          curSelectedRow < numRows && lastRow,
+        ];
+      }
     }
 
     setRows(
@@ -101,11 +142,25 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
         : transformedRows
     );
+
+    if (samplingMode === SAMPLING_AUTO || !isRunning) {
+      setSelectedRow(numRows);
+    }
+
     numRows !== 0 && scrollToRef(lastRowRef);
-  }, [data, firstColumnOption]);
+  }, [data, firstColumnOption, selectedRow]);
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
+  };
+
+  const handleChangeSelectedColumn = (event) => {
+    const selectedRow = event.currentTarget.id;
+    isRunning &&
+      samplingMode === SAMPLING_MANUAL &&
+      selectedRow &&
+      parseInt(selectedRow) <= numRows &&
+      setSelectedRow(parseInt(selectedRow));
   };
 
   const scrollToRef = (ref) => {
@@ -192,8 +247,10 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                       />
                     )}
                   </td>
-                  <td>
-                    <span>{row.colum2}</span>
+                  <td id={index} onClick={handleChangeSelectedColumn}>
+                    <span className="span-value" style={index === selectedRow ? { color: "#11b444" } : {}}>
+                      {row.colum2}{" "}
+                    </span>
                   </td>
                 </tr>
               );

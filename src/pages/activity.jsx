@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
 import _ from "lodash";
-import DataManagerIST from "../services/data-manager";
+import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../services/data-manager";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -9,6 +9,7 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
+  SAMPLING_MANUAL_FREQUENCY,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -65,6 +66,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [pages, setPages] = useState(activity.pages);
   const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
   const [frequency, setFrequency] = useState(activity.frequency);
+  const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
 
   // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -122,6 +124,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handleFrequencySelect(frequency) {
+    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
     result && setFrequency(frequency);
   }
@@ -376,6 +379,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
+                    samplingMode={samplingMode}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -406,6 +410,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
+                    samplingMode={samplingMode}
                   />
                 )}
               </div>
@@ -431,6 +436,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
+                  samplingMode={samplingMode}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
