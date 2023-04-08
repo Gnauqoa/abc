@@ -130,6 +130,7 @@ export class DataManager {
       const isSensorIdsArray = Array.isArray(sensorIds);
       const validSensorId =
         isSensorIdsArray &&
+        sensorIds.length &&
         sensorIds.every(
           (sensorId) => Number.isInteger(sensorId) && this.sensorIds.includes(sensorId) && sensorId !== 0
         );

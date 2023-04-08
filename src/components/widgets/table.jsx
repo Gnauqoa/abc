@@ -112,11 +112,11 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
 
     if (!isRunning || samplingMode === SAMPLING_MANUAL) {
       const { time, value } = currentValue;
-      if (!time || time === "" || !value || value === "") return;
 
       const newRow = {
-        colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
-        colum2: value,
+        colum1:
+          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "",
+        colum2: value || "",
       };
 
       if (!isRunning) {
