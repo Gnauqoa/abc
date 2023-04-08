@@ -28,7 +28,7 @@ export class DataManager {
   initializeVariables() {
     /**
      * Object containing subscriber information.
-     * @type {Object.<string, {sensorId: number, subscription: EventEmitter.subscription}>}
+     * @type {Object.<string, {sensorIds: number, subscription: EventEmitter.subscription}>}
      */
     this.subscribers = {};
 
@@ -123,15 +123,20 @@ export class DataManager {
   /**
    * Subscribes to a sensor data emitter.
    * @param {function} emitFunction - The function to be called when a sensor data emitter is triggered.
-   * @param {string} sensorId - The ID of the sensor.
+   * @param {string} sensorIds - The list ID of the sensor.
    * @returns {(string|boolean)} - The ID of the subscriber if successful; otherwise, false.
    */
-  subscribe(emitFunction, sensorId) {
+  subscribe(emitFunction, sensorIds) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-      const validSensorId = this.sensorIds.includes(Number(sensorId)) && Number(sensorId) !== 0;
+      const validSensorId =
+        sensorIds
+          .map((sensorId) => this.sensorIds.includes(parseInt(sensorId)) && parseInt(sensorId) !== 0)
+          .reduce((accumulator, currentValue) => accumulator && currentValue, true) && sensorIds.length;
+
+      console.log(validSensorId, sensorIds);
       if (!hasEmitFunction || !validSensorId) {
-        console.log(`DATA_MANAGER-subscribe-INVALID-emitFunction_${emitFunction}-sensorId_${sensorId}`);
+        console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
         return false;
       }
 
@@ -139,11 +144,11 @@ export class DataManager {
       const subscription = this.emitter.addListener(subscriberId, emitFunction);
 
       this.subscribers[subscriberId] = {
-        sensorId: Number(sensorId),
+        sensorIds: sensorIds.map((sensorId) => parseInt(sensorId)),
         subscription: subscription,
       };
 
-      console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorId_${sensorId}`);
+      console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorIds_${sensorIds}`);
 
       return subscriberId;
     } catch (error) {
@@ -504,7 +509,7 @@ export class DataManager {
           const sensorData = dataRunDataAtIndex[parseInt(sensorId)];
           const invertedSensor = invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`];
           if (parseInt(sensorId) === TIME_STAMP_ID) {
-            rowData[invertedSensor.sensorIndexInRow] = curTimeStamp;
+            rowData[invertedSensor.sensorIndexInRow] = parsedTimeStamp;
             continue;
           }
           for (let i = 0; i < invertedSensor.numSubSensor; i++) {
@@ -635,7 +640,7 @@ export class DataManager {
      * @typedef {Array} EmittedData
      * @property {number | string} 0 - The data run ID, or -1 if not collecting data.
      * @property {string} 1 - The time elapsed since data collection began, formatted as a string (e.g. "0.000").
-     * @property {string} 2 - The ID of the sensor.
+     * @property {number} 2 - The ID of the sensor.
      * @property {Array} 3 - An array of sensor data values.
      */
 
@@ -649,11 +654,13 @@ export class DataManager {
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
       const parsedTime = this.isCollectingData ? this.getParsedCollectingDataTime() : "0.000";
-      const sensorData = this.buffer[subscriber.sensorId] || [];
 
+      const emittedDatas = subscriber.sensorIds.map((sensorId) => {
+        const sensorData = this.buffer[sensorId] || [];
+        return [dataRunId, parsedTime, sensorId, ...sensorData];
+      });
       // Notify subscriber
-      const emittedData = [dataRunId, parsedTime, subscriber.sensorId, ...sensorData];
-      this.emitter.emit(subscriberId, emittedData);
+      this.emitter.emit(subscriberId, emittedDatas);
     }
   }
 

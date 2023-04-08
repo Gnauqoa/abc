@@ -6,7 +6,7 @@ export const sensors = [
       {
         id: "sens-time-00",
         name: "Thời gian",
-        unit: "ms",
+        unit: "s",
       },
     ],
   },
