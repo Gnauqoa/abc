@@ -1,10 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
-import { findGCD, getLCM } from "./../utils/core";
+import { findGCD, getLCM, exportToExcel } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
 import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
-
-import { exportToExcel } from "./../utils/core";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
@@ -121,18 +119,21 @@ export class DataManager {
 
   // -------------------------------- SUBSCRIBER -------------------------------- //
   /**
-   * Subscribes to a sensor data emitter.
-   * @param {function} emitFunction - The function to be called when a sensor data emitter is triggered.
-   * @param {string} sensorIds - The list ID of the sensor.
-   * @returns {(string|boolean)} - The ID of the subscriber if successful; otherwise, false.
+   * Subscribe to data updates for the specified sensor IDs.
+   * @param {Function} emitFunction - A function to be called whenever data is updated for any of the specified sensors.
+   * @param {number[]} sensorIds - An array of integers representing the IDs of the sensors to subscribe to.
+   * @returns {string|false} - A unique subscriber ID if the subscription is successful, false otherwise.
    */
   subscribe(emitFunction, sensorIds) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
+      const isSensorIdsArray = Array.isArray(sensorIds);
       const validSensorId =
-        sensorIds
-          .map((sensorId) => this.sensorIds.includes(parseInt(sensorId)) && parseInt(sensorId) !== 0)
-          .reduce((accumulator, currentValue) => accumulator && currentValue, true) && sensorIds.length;
+        isSensorIdsArray &&
+        sensorIds.length &&
+        sensorIds.every(
+          (sensorId) => Number.isInteger(sensorId) && this.sensorIds.includes(sensorId) && sensorId !== 0
+        );
 
       if (!hasEmitFunction || !validSensorId) {
         console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
@@ -143,7 +144,7 @@ export class DataManager {
       const subscription = this.emitter.addListener(subscriberId, emitFunction);
 
       this.subscribers[subscriberId] = {
-        sensorIds: sensorIds.map((sensorId) => parseInt(sensorId)),
+        sensorIds: sensorIds,
         subscription: subscription,
       };
 
@@ -164,7 +165,7 @@ export class DataManager {
    */
   unsubscribe(subscriberId) {
     try {
-      if (subscriberId && this.subscribers.hasOwnProperty(subscriberId)) {
+      if (subscriberId && subscriberId in this.subscribers) {
         this.subscribers[subscriberId].subscription.remove();
         delete this.subscribers[subscriberId];
         console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
@@ -190,9 +191,9 @@ export class DataManager {
 
   // -------------------------------- SAMPLING SETTING -------------------------------- //
   /**
-   * Sets the frequency at which data is collected in auto-sampling mode.
-   * @param frequency - The frequency at which data should be collected in Hz.
-   * @returns A boolean indicating whether the frequency was set successfully.
+   * Sets the frequency at which data is collected.
+   * @param {number} frequency - The frequency at which data is collected.
+   * @returns {boolean} - Returns true if the frequency is valid and was successfully set.
    */
   setCollectingDataFrequency(frequency) {
     const isValidFrequency = FREQUENCIES.includes(frequency) || frequency === 0;
@@ -384,11 +385,12 @@ export class DataManager {
     dataRun.forEach((sample) => {
       const sensorDatas = Object.keys(sample)
         .map((sensorId) => {
-          if (parseInt(sensorId) === 0) return false;
+          const parsedSensorId = parseInt(sensorId);
+          if (parsedSensorId === 0) return false;
           return {
             time: sample[0][0],
-            sensorId: parseInt(sensorId),
-            values: sample[sensorId],
+            sensorId: parsedSensorId,
+            values: sample[parsedSensorId],
           };
         })
         .filter(Boolean);
@@ -447,7 +449,7 @@ export class DataManager {
           maxRecordingTime = timeStamp > maxRecordingTime ? timeStamp : maxRecordingTime;
         }
         Object.keys(sample).forEach((sensorId) => {
-          recordedSensors.add(parseInt(sensorId));
+          recordedSensors.add(sensorId);
         });
       }
     }
@@ -455,7 +457,7 @@ export class DataManager {
     // Create Row Names with all sensor that had been recorded
     listDataRunsInfo.forEach((dataRunInfo) => {
       for (const sensorId of recordedSensors) {
-        const sensorInfo = sensors[parseInt(sensorId)];
+        const sensorInfo = sensors[sensorId];
         const subSensorIds = Object.keys(sensorInfo.data);
         invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`] = {
           name: sensorInfo.name,
@@ -464,7 +466,7 @@ export class DataManager {
         };
         currentIndex += subSensorIds.length;
 
-        if (parseInt(sensorId) === TIME_STAMP_ID) {
+        if (sensorId === TIME_STAMP_ID) {
           headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRunInfo.dataName}`);
           continue;
         }
@@ -501,9 +503,9 @@ export class DataManager {
         const parsedTimeStamp = (curTimeStamp / 1000).toFixed(3);
 
         for (const sensorId of Object.keys(dataRunDataAtIndex)) {
-          const sensorData = dataRunDataAtIndex[parseInt(sensorId)];
+          const sensorData = dataRunDataAtIndex[sensorId];
           const invertedSensor = invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`];
-          if (parseInt(sensorId) === TIME_STAMP_ID) {
+          if (sensorId === TIME_STAMP_ID) {
             rowData[invertedSensor.sensorIndexInRow] = parsedTimeStamp;
             continue;
           }
@@ -532,14 +534,12 @@ export class DataManager {
   callbackReadSensor(data) {
     try {
       const sensorId = data[0];
-      const sensorSerialId = data[1]; // Ignore for now
       const dataLength = data[2];
       const sensorsData = [];
       for (let i = 0; i < dataLength; i++) {
-        sensorsData.push(data[3 + i]);
+        sensorsData.push(data[NUM_NON_DATA_SENSORS_CALLBACK + i]);
       }
-
-      this.buffer[sensorId] = sensorsData;
+      this.buffer[parseInt(sensorId)] = sensorsData;
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }
@@ -553,13 +553,9 @@ export class DataManager {
   callbackSensorDisconnected(data) {
     try {
       const sensorId = data[0];
-      //const sensorSerialId = data[1]; // Ignore for now
-
-      console.log("Sensor ", sensorId, " has been disconnected");
-      // safe way to remove this sensor data from data buffer dictionary
-      const { [sensorId]: buff, ...bufferWithoutSensorId } = this.buffer;
-      this.buffer = bufferWithoutSensorId;
-      console.log(buffer);
+      console.log(this.buffer);
+      delete this.buffer[parseInt(sensorId)];
+      console.log(this.buffer);
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -579,7 +575,7 @@ export class DataManager {
     const dataRunId = this.curDataRunId;
     const parsedTime = this.getParsedCollectingDataTime();
     isAppend && this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
-    return isAppend ? this.buffer[parseInt(sensorId)][sensorIndex] : { ...this.buffer };
+    return isAppend ? this.buffer[sensorId][sensorIndex] : { ...this.buffer };
   }
 
   updateDataRunDataAtIndex(selectedIndex, curBuffer) {
@@ -675,7 +671,7 @@ export class DataManager {
       const sensorSerialId = 0;
 
       const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
-      var dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
+      const dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);

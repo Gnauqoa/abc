@@ -33,11 +33,6 @@ export default ({ isRunning, frequency, handleFrequencySelect }) => {
     }
   };
 
-  // const handleManualButtonClick = () => {
-  //   console.log(">>>>> MANUAL - data manager:");
-  //   DataManagerIST.getManualSample();
-  // };
-
   const onSelectFrequency = (frequency) => {
     if (frequency === SAMPLING_MANUAL_NAME) {
       handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
@@ -92,7 +87,6 @@ export default ({ isRunning, frequency, handleFrequencySelect }) => {
         <Button
           id="samplingManualButton"
           disabled={!isRunning}
-          // onClick={handleManualButtonClick}
           iconIos={"material:done"}
           iconMd={"material:done"}
           iconAurora={"material:done"}

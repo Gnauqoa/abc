@@ -92,11 +92,10 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   useEffect(() => {
     let subscriberId = null;
-    DataManagerIST.setCollectingDataFrequency(frequency);
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
     const subscribedSensorIds = widgets
-      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? widget.sensor.id : false))
+      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? parseInt(widget.sensor.id) : false))
       .filter(Boolean);
 
     subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
@@ -325,10 +324,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     if (!lineChartRef.current[currentPageIndex]) return;
 
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
+    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
     const sensorValue = currentSensorValues[sensor.id];
     if (sensorValue) {
-      let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] };
+      let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
       if (!isRunning) {
         currentData = { ...currentData, x: 0 };
       }
