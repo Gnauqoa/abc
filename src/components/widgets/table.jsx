@@ -97,6 +97,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       setPrevIsPressing(isPressing);
       return;
     }
+    if (data.length === 0) setSelectedRow(0);
     setRows(defaultRows);
 
     let transformedRows = data.map((item, index) => ({
@@ -109,7 +110,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       const { time, value } = currentValue;
       if (!time || time === "" || !value || value === "") return;
 
-      let newRow = {
+      const newRow = {
         colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time : "") : userInputs[numRows] || "",
         colum2: value,
       };
@@ -124,9 +125,10 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
           } else {
             const curBuffer = DataManagerIST.getManualSample(widget.sensor.id, widget.sensor.index, false);
             DataManagerIST.updateDataRunDataAtIndex(selectedRow, curBuffer);
-            setSelectedRow(selectedRow + 1);
+            setSelectedRow((prev) => prev + 1);
           }
         }
+
         transformedRows = [
           ...transformedRows.slice(0, selectedRow),
           newRow,
