@@ -410,13 +410,13 @@ export default ({ f7route, f7router, filePath, content }) => {
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
+          <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
+          <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
           <RoundButton
             disabled={isRunning}
             icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
             onClick={handleFullScreen}
           />
-          <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
         </NavRight>
       </Navbar>
       <Popover className="setting-popover-menu">
