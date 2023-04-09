@@ -1,6 +1,6 @@
 {
   "browserWindow": {
-    "fullscreen": true,
+    "fullscreen": false,
     "height": 800,
     "width": 1280,
     "autoHideMenuBar": true,

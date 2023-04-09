@@ -60,7 +60,7 @@ export default ({ f7router }) => {
         <NavLeft>
           <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
-        <NavTitle>InnoLab - OhStem Education</NavTitle>
+        <NavTitle>InnoLab</NavTitle>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-around">
         <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>

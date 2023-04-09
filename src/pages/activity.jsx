@@ -274,12 +274,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   // =========================== Functions associate with DataRun ===========================
   function getDataRun(dataRunId) {
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const dataRun = DataManagerIST.getDataRunData(dataRunId);
-      return DataManagerIST.parseActivityDataRun(dataRun);
-    }
-    return [];
+    const dataRun = DataManagerIST.getDataRunData(dataRunId);
+    return DataManagerIST.parseActivityDataRun(dataRun);
   }
 
   function handleExportExcel() {
@@ -357,7 +353,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       lineChartRef.current[currentPageIndex].setChartData({
         chartData: [
           {
-            name: "run1",
+            name: `Lần ${DataManagerIST.dataRunsSize()}`,
             data: data,
           },
         ],

@@ -4,7 +4,7 @@ export const sensors = [
     name: "Thời gian",
     data: [
       {
-        id: "sens-time-00",
+        id: "inno-000-time-00",
         name: "Thời gian",
         unit: "s",
       },
@@ -19,7 +19,7 @@ export const sensors = [
         name: "Nồng độ khí CO2",
         unit: "ppm",
         min: 0,
-        max: 50000,
+        max: 5000,
       },
     ],
   },
@@ -35,15 +35,15 @@ export const sensors = [
   },
   {
     id: 4,
-    name: "Cảm biến nhiệt độ không khí",
+    name: "Cảm biến nhiệt độ",
     data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125 }],
   },
   {
     id: 5,
-    name: "Cảm biến nhiệt độ và độ ẩm SHT30",
+    name: "Cảm biến nhiệt độ và độ ẩm không khí",
     data: [
-      { id: "inno-005-hum-00", name: "Nhiệt độ", unit: "°C", min: -40, max: 80 },
-      { id: "inno-005-hum-01", name: "Độ ẩm", unit: "%", min: 0, max: 100 },
+      { id: "inno-005-hum-00", name: "Nhiệt độ", unit: "°C", min: 0, max: 80 },
+      { id: "inno-005-temp-01", name: "Độ ẩm", unit: "%", min: 0, max: 100 },
     ],
   },
   {
@@ -52,7 +52,7 @@ export const sensors = [
     data: [
       { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50 },
       {
-        id: "inno-006-sal-01",
+        id: "inno-006-ec-01",
         name: "Độ dẫn điện",
         unit: "mS/cm",
         min: 0,
@@ -68,12 +68,12 @@ export const sensors = [
   {
     id: 8,
     name: "Cảm biến cường độ âm thanh",
-    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 40, max: 130 }],
+    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150 }],
   },
   {
     id: 9,
     name: "Cảm biến áp suất khí",
-    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: 0, max: 700 }],
+    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: 0, max: 50 }],
   },
 ];
 
