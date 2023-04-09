@@ -2,14 +2,17 @@ import { v4 as uuidv4 } from "uuid";
 import { findGCD, getLCM, exportDataRunsToExcel } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
-import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
+import {
+  FREQUENCIES,
+  SAMPLING_MANUAL_FREQUENCY,
+  EMIT_DATA_MANUAL_FREQUENCY,
+  TIMER_INTERVAL,
+  SAMPLING_AUTO,
+  SAMPLING_MANUAL,
+} from "../js/constants";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
-export const SAMPLING_AUTO = 0;
-export const SAMPLING_MANUAL = 1;
-export const MANUAL_FREQUENCY = 1;
-export const TIMER_INTERVAL = 100;
 
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
@@ -99,7 +102,10 @@ export class DataManager {
 
     this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = sensors.map((sensor) => sensor.id);
+
+    // Parameters for Timer
     this.timerCollectingTime = 0;
+    this.timerSubscriber = {};
   }
 
   init() {
@@ -159,6 +165,49 @@ export class DataManager {
     }
   }
 
+  subscribeTimer(emitFunction, stopTime) {
+    try {
+      const hasEmitFunction = typeof emitFunction === "function";
+
+      if (!hasEmitFunction) {
+        // console.log("DATA_MANAGER-subscribeTimer-INVALID-emitFunction");
+        return false;
+      }
+
+      const subscriberTimerId = "TIMER_SUBSCRIBER";
+      const subscription = this.emitter.addListener(subscriberTimerId, emitFunction);
+
+      this.timerSubscriber = {
+        subscriberTimerId: subscriberTimerId,
+        stopTime: stopTime,
+        subscription: subscription,
+      };
+      // console.log(`DATA_MANAGER-subscribeTimer-subscriberTimerId_${subscriberTimerId}-stopTime_${stopTime}`);
+
+      return subscriberTimerId;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
+  unsubscribeTimer() {
+    try {
+      if (this.timerSubscriber && this.timerSubscriber.subscription) {
+        this.timerSubscriber.subscription.remove();
+        // console.log(`DATA_MANAGER-unsubscribeTimer-ID_${this.timerSubscriber.subscriberTimerId}`);
+        this.timerSubscriber = {};
+        return true;
+      } else {
+        // console.log("DATA_MANAGER-unsubscribeTimer-ID_NOT_FOUND");
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
+
   /**
    * Removes a subscriber from the list of subscribers.
    * @param {string} subscriberId - The ID of the subscriber to remove.
@@ -207,8 +256,8 @@ export class DataManager {
 
     if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       this.samplingMode = SAMPLING_MANUAL;
-      this.collectingDataInterval = (1 / MANUAL_FREQUENCY) * 1000;
-      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
+      this.collectingDataInterval = (1 / EMIT_DATA_MANUAL_FREQUENCY) * 1000;
+      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${EMIT_DATA_MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
@@ -593,6 +642,10 @@ export class DataManager {
 
         if (curInterval % TIMER_INTERVAL === 0) {
           this.timerCollectingTime += TIMER_INTERVAL;
+          if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
+            this.emitter.emit(this.timerSubscriber.subscriberTimerId);
+            this.unsubscribeTimer();
+          }
         }
         // Increment counter and loop back to 0 if greater than max interval
         counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);

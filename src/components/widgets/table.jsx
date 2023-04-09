@@ -4,9 +4,15 @@ import ReactDOM from "react-dom";
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
 import sensors, { getUnit } from "../../services/sensor-service";
-import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../services/data-manager";
+import DataManagerIST from "../../services/data-manager";
 
-import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
+import {
+  LAYOUT_TABLE,
+  LAYOUT_TABLE_CHART,
+  LAYOUT_NUMBER_TABLE,
+  SAMPLING_AUTO,
+  SAMPLING_MANUAL,
+} from "../../js/constants";
 import { DEFAULT_SENSOR_ID } from "../../pages/activity";
 
 const DEFAULT_ROWS = 15;

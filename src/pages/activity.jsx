@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
 import _ from "lodash";
-import DataManagerIST, { SAMPLING_AUTO, SAMPLING_MANUAL } from "../services/data-manager";
+import DataManagerIST from "../services/data-manager";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -10,6 +10,9 @@ import {
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
   SAMPLING_MANUAL_FREQUENCY,
+  SAMPLING_AUTO,
+  SAMPLING_MANUAL,
+  TIMER_NO_STOP,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -67,6 +70,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [pages, setPages] = useState(activity.pages);
   const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
   const [frequency, setFrequency] = useState(activity.frequency);
+  const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
 
   // Belong to Page
@@ -127,6 +131,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
     result && setFrequency(frequency);
+  }
+
+  function handleSetTimerInMs(timerNumber) {
+    setTimerStopTime(timerNumber);
   }
 
   async function handleActivitySave() {
@@ -284,13 +292,20 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(() => updatedPages);
   }
 
+  function handleStopCollecting() {
+    DataManagerIST.stopCollectingData();
+    setIsRunning(false);
+  }
+
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
+      timerStopTime !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopTime);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
     } else {
+      DataManagerIST.unsubscribeTimer();
       DataManagerIST.stopCollectingData();
     }
     setIsRunning(!isRunning);
@@ -488,6 +503,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               isRunning={isRunning}
               frequency={frequency}
               handleFrequencySelect={handleFrequencySelect}
+              handleSetTimerInMs={handleSetTimerInMs}
             />
           </div>
           <div className="__toolbar-center">
