@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   onDeviceDisconnected: (callback) => ipcRenderer.on("device-disconnected", callback),
 
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
+
+  quitApp: () => ipcRenderer.invoke("quitApp"),
 });
 
 contextBridge.exposeInMainWorld("fileApi", {

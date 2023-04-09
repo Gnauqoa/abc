@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Panel, Navbar, Page, NavLeft, Link, Block, Row, Col, List, ListItem, Icon } from "framework7-react";
+import { View, Panel, Navbar, Page, NavLeft, Link, Block, Row, Col, List, ListItem, Icon, f7 } from "framework7-react";
 import store from "store";
 
 import SettingsMenu from "./settings";
@@ -48,6 +48,17 @@ export default () => {
                   >
                     <img slot="media" src={aboutusImg} className="menu-icon" />
                   </ListItem>
+                  {f7.device.electron && (
+                    <ListItem radio title="Thoát" name="radio-menu" onClick={() => window._cdvElectronIpc.quitApp()}>
+                      <Icon
+                        slot="media"
+                        ios="material:exit_to_app"
+                        md="material:exit_to_app"
+                        aurora="material:exit_to_app"
+                        size="36px"
+                      ></Icon>
+                    </ListItem>
+                  )}
                 </List>
               </Col>
               <Col width="60" className="main-menu-right">
