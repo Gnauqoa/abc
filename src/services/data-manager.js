@@ -136,7 +136,7 @@ export class DataManager {
         );
 
       if (!hasEmitFunction || !validSensorId) {
-        console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
+        // console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
         return false;
       }
 
@@ -148,7 +148,7 @@ export class DataManager {
         subscription: subscription,
       };
 
-      console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorIds_${sensorIds}`);
+      // console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorIds_${sensorIds}`);
 
       return subscriberId;
     } catch (error) {
@@ -168,10 +168,10 @@ export class DataManager {
       if (subscriberId && subscriberId in this.subscribers) {
         this.subscribers[subscriberId].subscription.remove();
         delete this.subscribers[subscriberId];
-        console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
+        // console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
         return true;
       } else {
-        console.log(`DATA_MANAGER-unsubscribe-NOT_EXIST_${subscriberId}`);
+        // console.log(`DATA_MANAGER-unsubscribe-NOT_EXIST_${subscriberId}`);
         return false;
       }
     } catch (error) {
@@ -206,15 +206,11 @@ export class DataManager {
     if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       this.samplingMode = SAMPLING_MANUAL;
       this.collectingDataInterval = (1 / MANUAL_FREQUENCY) * 1000;
-      console.log(
-        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`
-      );
+      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
-      console.log(
-        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`
-      );
+      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`);
     }
 
     return true;
@@ -272,7 +268,7 @@ export class DataManager {
       data: [],
       interval: this.collectingDataInterval,
     };
-    console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
+    // console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
     return this.curDataRunId;
   }
 
@@ -285,7 +281,7 @@ export class DataManager {
   updateDataRun(dataRunId, dataRunName) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun || !dataRun.name) {
-      console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     dataRun.name = dataRunName;
@@ -299,7 +295,7 @@ export class DataManager {
    */
   deleteDataRun(dataRunId) {
     if (!this.dataRuns[dataRunId]) {
-      console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     delete this.dataRuns[dataRunId];
@@ -314,7 +310,7 @@ export class DataManager {
   appendDataRun(dataRunId, sensorsData) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
-      console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
       return;
     }
 
@@ -363,7 +359,7 @@ export class DataManager {
         interval: dataRun.interval,
       };
 
-      console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
+      // console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
     }
   }
 
@@ -415,7 +411,7 @@ export class DataManager {
   setCurrentDataRun(dataRunId) {
     if (this.dataRuns.hasOwnProperty(dataRunId)) {
       this.curDataRunId = dataRunId;
-      console.log(`DATA_MANAGER-setCurrentDataRun-${dataRunId}`);
+      // console.log(`DATA_MANAGER-setCurrentDataRun-${dataRunId}`);
       return true;
     }
     return false;
@@ -524,9 +520,7 @@ export class DataManager {
   callbackSensorDisconnected(data) {
     try {
       const sensorId = data[0];
-      console.log(this.buffer);
       delete this.buffer[parseInt(sensorId)];
-      console.log(this.buffer);
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -615,7 +609,7 @@ export class DataManager {
       const subscriber = this.subscribers[subscriberId];
       if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
-        console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
+        // console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
         continue;
       }
 

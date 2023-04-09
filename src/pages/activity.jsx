@@ -297,7 +297,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function handleDataManagerCallback(emittedDatas) {
-    console.log(">>>>> AUTO - data manager:", emittedDatas);
+    // console.log(">>>>> AUTO - data manager:", emittedDatas);
     const updatedSensorValues = { ...currentSensorValues };
     emittedDatas.forEach((data) => {
       const time = data[1];
