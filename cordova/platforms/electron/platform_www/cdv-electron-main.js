@@ -39,12 +39,12 @@ const { SerialPort } = require("serialport");
 const { DelimiterParser } = require('@serialport/parser-delimiter')
 
 // CP2104
-//const VID = '10C4'
-//const PID = 'EA60';
+const VID = '10C4'
+const PID = 'EA60';
 
 // CH340
-const VID = '1A86'
-const PID = '7523';
+const VID_CH = '1A86'
+const PID_CH = '7523';
 
 
 
@@ -258,7 +258,7 @@ async function listSerialPorts() {
     if (ports.length > 0) {
       ports.forEach((port) => {
         //console.log(port);
-        if (port.vendorId != VID && port.productId != PID) return;
+        if ((port.vendorId != VID && port.productId != PID) && (port.vendorId != VID_CH && port.productId != PID_CH))  return;
         //console.log(portsList[port.path]);
         if (portsList[port.path] === undefined) {
           // try open first port
