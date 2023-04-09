@@ -73,7 +73,7 @@ export const sensors = [
   {
     id: 9,
     name: "Cảm biến áp suất khí",
-    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: 0, max: 50 }],
+    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -20, max: 50 }],
   },
 ];
 

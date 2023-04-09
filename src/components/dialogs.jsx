@@ -249,11 +249,11 @@ export default class extends Component {
                   <input
                     type="text"
                     className="input"
-                    value={this.state.samplingTime}
-                    onChange={this.handleSamplingTimeChange}
+                    value={this.state.inputText}
+                    onChange={this.handleInputTextChange}
                     onKeyDown={this.handleOkByEnter}
                   />
-                  <Icon ios="material:backspace" md="material:backspace" className="clear-button"></Icon>
+                  <Icon ios="material:backspace" md="material:backspace" className="clear-button prevent-select"></Icon>
                 </div>
               </div>
               <div className="buttons">
@@ -344,7 +344,7 @@ export default class extends Component {
               <div className="text-1">
                 <div className="form-group">
                   <input className="input" readOnly type="text" ref={this.inputNumpad} />
-                  <Icon f7="clear" className="clear-button"></Icon>
+                  <Icon f7="clear" className="clear-button prevent-select"></Icon>
                 </div>
                 <div className="numpad-content">
                   <Row>

@@ -57,11 +57,13 @@
       "displayName": "InnoLab"
     },
     "win": {
+      "icon": "res/icon/electron/installer.png",
       "target": [
         {
           "target": "nsis",
           "arch": [
-            "ia32"
+            "ia32",
+            "x64"
           ]
         }
       ]
