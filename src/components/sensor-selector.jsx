@@ -36,10 +36,10 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
         existingSensorData = sensorList.find((s) => s.id == sensorId),
         sensorDetailData = existingSensorData?.data[sensorIndex];
 
-      sensorDetailData &&
-        setSelectedSensorState(
-          hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
-        );
+      if (sensorDetailData) {
+        const { name, unit } = sensorDetailData;
+        setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
+      }
     }
   };
 
@@ -54,9 +54,10 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
           sensorDetailData = existingSensorData.data.find((s) => s.id == sensorDetailId),
           sensorIndex = _.findIndex(existingSensorData.data, (item) => item.id === sensorDetailId);
 
-        setSelectedSensorState(
-          hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
-        );
+        if (sensorDetailData) {
+          const { name, unit } = sensorDetailData;
+          setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
+        }
         onChange({
           id: sensorId,
           index: sensorIndex,
