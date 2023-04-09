@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { findGCD, getLCM, exportToExcel } from "./../utils/core";
+import { findGCD, getLCM, exportDataRunsToExcel } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
 import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
@@ -136,7 +136,7 @@ export class DataManager {
         );
 
       if (!hasEmitFunction || !validSensorId) {
-        console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
+        // console.log(`DATA_MANAGER-subscribe-INVALID-sensorIds_${sensorIds}`);
         return false;
       }
 
@@ -148,7 +148,7 @@ export class DataManager {
         subscription: subscription,
       };
 
-      console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorIds_${sensorIds}`);
+      // console.log(`DATA_MANAGER-subscribe-subscriberId_${subscriberId}-sensorIds_${sensorIds}`);
 
       return subscriberId;
     } catch (error) {
@@ -168,10 +168,10 @@ export class DataManager {
       if (subscriberId && subscriberId in this.subscribers) {
         this.subscribers[subscriberId].subscription.remove();
         delete this.subscribers[subscriberId];
-        console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
+        // console.log(`DATA_MANAGER-unsubscribe-ID_${subscriberId}`);
         return true;
       } else {
-        console.log(`DATA_MANAGER-unsubscribe-NOT_EXIST_${subscriberId}`);
+        // console.log(`DATA_MANAGER-unsubscribe-NOT_EXIST_${subscriberId}`);
         return false;
       }
     } catch (error) {
@@ -206,15 +206,11 @@ export class DataManager {
     if (frequency === SAMPLING_MANUAL_FREQUENCY) {
       this.samplingMode = SAMPLING_MANUAL;
       this.collectingDataInterval = (1 / MANUAL_FREQUENCY) * 1000;
-      console.log(
-        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`
-      );
+      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
     } else {
       this.collectingDataInterval = (1 / frequency) * 1000;
       this.samplingMode = SAMPLING_AUTO;
-      console.log(
-        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`
-      );
+      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`);
     }
 
     return true;
@@ -272,7 +268,7 @@ export class DataManager {
       data: [],
       interval: this.collectingDataInterval,
     };
-    console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
+    // console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
     return this.curDataRunId;
   }
 
@@ -285,7 +281,7 @@ export class DataManager {
   updateDataRun(dataRunId, dataRunName) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun || !dataRun.name) {
-      console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     dataRun.name = dataRunName;
@@ -299,7 +295,7 @@ export class DataManager {
    */
   deleteDataRun(dataRunId) {
     if (!this.dataRuns[dataRunId]) {
-      console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     delete this.dataRuns[dataRunId];
@@ -314,7 +310,7 @@ export class DataManager {
   appendDataRun(dataRunId, sensorsData) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
-      console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
       return;
     }
 
@@ -363,7 +359,7 @@ export class DataManager {
         interval: dataRun.interval,
       };
 
-      console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
+      // console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
     }
   }
 
@@ -415,7 +411,7 @@ export class DataManager {
   setCurrentDataRun(dataRunId) {
     if (this.dataRuns.hasOwnProperty(dataRunId)) {
       this.curDataRunId = dataRunId;
-      console.log(`DATA_MANAGER-setCurrentDataRun-${dataRunId}`);
+      // console.log(`DATA_MANAGER-setCurrentDataRun-${dataRunId}`);
       return true;
     }
     return false;
@@ -432,22 +428,17 @@ export class DataManager {
     const recordedSensors = new Set();
     const invertedSensorsInfo = {};
     const headers = [];
-    const exportedRows = [];
-    let maxRecordingTime = 0;
     let currentIndex = 0;
-    const listDataRunsInfo = Object.keys(this.dataRuns).map((id) => ({
+
+    const dataRunsInfo = Object.keys(this.dataRuns).map((id) => ({
       id: id,
-      dataIndex: 0,
-      dataName: this.dataRuns[id].name,
+      sheetRows: [],
+      sheetName: this.dataRuns[id].name,
     }));
 
     // Get all sensor IDs in all data runs and find max record time
     for (const dataRun of Object.values(this.dataRuns)) {
       for (const sample of dataRun.data) {
-        if (sample?.[0]?.[0]) {
-          const timeStamp = parseFloat(sample[0][0]);
-          maxRecordingTime = timeStamp > maxRecordingTime ? timeStamp : maxRecordingTime;
-        }
         Object.keys(sample).forEach((sensorId) => {
           recordedSensors.add(sensorId);
         });
@@ -455,73 +446,49 @@ export class DataManager {
     }
 
     // Create Row Names with all sensor that had been recorded
-    listDataRunsInfo.forEach((dataRunInfo) => {
-      for (const sensorId of recordedSensors) {
-        const sensorInfo = sensors[sensorId];
-        const subSensorIds = Object.keys(sensorInfo.data);
-        invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`] = {
-          name: sensorInfo.name,
-          sensorIndexInRow: currentIndex,
-          numSubSensor: subSensorIds.length,
-        };
-        currentIndex += subSensorIds.length;
+    for (const sensorId of recordedSensors) {
+      const sensorInfo = sensors[sensorId];
+      const subSensorIds = Object.keys(sensorInfo.data);
+      invertedSensorsInfo[sensorId] = {
+        name: sensorInfo.name,
+        sensorIndexInRow: currentIndex,
+        numSubSensor: subSensorIds.length,
+      };
+      currentIndex += subSensorIds.length;
 
-        if (sensorId === TIME_STAMP_ID) {
-          headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit}) - ${dataRunInfo.dataName}`);
-          continue;
-        }
-        for (const subSensorId of subSensorIds) {
-          headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
-        }
+      if (sensorId === TIME_STAMP_ID) {
+        headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit})`);
+        continue;
       }
-    });
-    exportedRows.push(headers);
-
-    // Calculate the LCM timeStamp of all data runs for looping
-    const maxRecordingTimeMs = parseInt(maxRecordingTime * 1000);
-    const dataRunIntervals = Object.values(this.dataRuns).map((dataRun) => dataRun.interval);
-    const lcm = findGCD(dataRunIntervals);
-
-    // Currently, we support export multiple data runs into a single sheet. Therefore:
-    //  - First, we have to find the GCD between interval of all data runs
-    //  - Then, we loop from timeStamp = 0 to the maximum recording time between all data runs
-    //    and each step is the LCM interval
-    //  - At each time step, if it maths with current data time of one of data runs, we append
-    //    this data into curRowData, and increase the dataIndex of this data run.
-    //  - Otherwise, we still get the data at the dataIndex of the data run
-    const numColumns = recordedSensors.size * listDataRunsInfo.length;
-    for (let curTimeStamp = 0; curTimeStamp <= maxRecordingTimeMs; curTimeStamp += lcm) {
-      const rowData = new Array(numColumns).fill("");
-      listDataRunsInfo.forEach((dataRunInfo) => {
-        const dataRun = this.dataRuns[dataRunInfo.id];
-        const dataRunData = dataRun.data;
-        // If this data run has dataIndex >= dataRunData.length, it means that
-        // we have collected all the data in this data run. Then continue
-        if (dataRunInfo.dataIndex >= dataRunData.length) return;
-
-        const dataRunDataAtIndex = dataRunData[dataRunInfo.dataIndex];
-        const parsedTimeStamp = (curTimeStamp / 1000).toFixed(3);
-
-        for (const sensorId of Object.keys(dataRunDataAtIndex)) {
-          const sensorData = dataRunDataAtIndex[sensorId];
-          const invertedSensor = invertedSensorsInfo[`${sensorId}-${dataRunInfo.id}`];
-          if (sensorId === TIME_STAMP_ID) {
-            rowData[invertedSensor.sensorIndexInRow] = parsedTimeStamp;
-            continue;
-          }
-          for (let i = 0; i < invertedSensor.numSubSensor; i++) {
-            rowData[invertedSensor.sensorIndexInRow + i] = sensorData[i];
-          }
-        }
-
-        if (dataRunDataAtIndex[0][0] === parsedTimeStamp) {
-          dataRunInfo.dataIndex += 1;
-        }
-      });
-      exportedRows.push(rowData);
+      for (const subSensorId of subSensorIds) {
+        headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
+      }
     }
 
-    exportToExcel(null, "ReportDataRun", exportedRows);
+    dataRunsInfo.forEach((dataRunInfo) => {
+      const dataRunData = this.dataRuns[dataRunInfo.id].data;
+      dataRunInfo.sheetRows.push(headers);
+
+      dataRunData.forEach((sample) => {
+        const row = new Array(headers.length).fill("");
+        Object.keys(sample).forEach((sensorId) => {
+          const invertedSensor = invertedSensorsInfo[sensorId];
+          const sensorData = sample[sensorId];
+
+          if (sensorId === TIME_STAMP_ID) {
+            const parsedTimeStamp = (sensorData / 1000).toFixed(3);
+            row[invertedSensor.sensorIndexInRow] = parsedTimeStamp;
+            return;
+          }
+          for (let i = 0; i < invertedSensor.numSubSensor; i++) {
+            row[invertedSensor.sensorIndexInRow + i] = sensorData[i];
+          }
+        });
+        dataRunInfo.sheetRows.push(row);
+      });
+    });
+
+    exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
   }
 
   // -------------------------------- Read sensor data -------------------------------- //
@@ -553,9 +520,7 @@ export class DataManager {
   callbackSensorDisconnected(data) {
     try {
       const sensorId = data[0];
-      console.log(this.buffer);
       delete this.buffer[parseInt(sensorId)];
-      console.log(this.buffer);
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -644,7 +609,7 @@ export class DataManager {
       const subscriber = this.subscribers[subscriberId];
       if (!subscriber.subscription.subscriber) {
         delete this.subscribers[subscriberId];
-        console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
+        // console.log(`emitSubscribersScheduler: Remove subscriberId_${subscriberId}`);
         continue;
       }
 
