@@ -213,7 +213,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handlePageDelete() {
     dialog.question(
       "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
+      `Bạn có chắc chắn muốn xóa trang này không?`,
       () => {
         const numPages = pages.length;
         const deletedPageIndex = currentPageIndex;

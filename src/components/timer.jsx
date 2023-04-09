@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
-
+import DataManagerIST, { TIMER_INTERVAL } from "./../services/data-manager";
 export default ({ isRunning }) => {
   const [count, setCount] = useState(0);
 
@@ -9,8 +9,8 @@ export default ({ isRunning }) => {
     if (isRunning) {
       setCount(0);
       id = setInterval(() => {
-        setCount((c) => c + 100);
-      }, 100);
+        setCount(DataManagerIST.getTimerCollectingTime());
+      }, TIMER_INTERVAL);
     } else {
       clearInterval(id);
     }

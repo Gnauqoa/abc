@@ -9,6 +9,7 @@ const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 export const SAMPLING_AUTO = 0;
 export const SAMPLING_MANUAL = 1;
 export const MANUAL_FREQUENCY = 1;
+export const TIMER_INTERVAL = 100;
 
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
@@ -98,6 +99,7 @@ export class DataManager {
 
     this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = sensors.map((sensor) => sensor.id);
+    this.timerCollectingTime = 0;
   }
 
   init() {
@@ -231,6 +233,7 @@ export class DataManager {
    */
   startCollectingData() {
     this.collectingDataTime = 0;
+    this.timerCollectingTime = 0;
     this.isCollectingData = true;
     const dataRunId = this.createDataRun(null);
     return dataRunId;
@@ -560,6 +563,10 @@ export class DataManager {
     return parsedTime;
   }
 
+  getTimerCollectingTime() {
+    return this.timerCollectingTime;
+  }
+
   // -------------------------------- SCHEDULERS -------------------------------- //
   /**
    * Runs a scheduler that emits data to subscribers at regular intervals.
@@ -584,6 +591,9 @@ export class DataManager {
           }
         }
 
+        if (curInterval % TIMER_INTERVAL === 0) {
+          this.timerCollectingTime += TIMER_INTERVAL;
+        }
         // Increment counter and loop back to 0 if greater than max interval
         counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
       } catch (e) {
