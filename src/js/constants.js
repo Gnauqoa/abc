@@ -181,7 +181,8 @@ export const ENTER_KEY = 13;
 export const SPACE_KEY = 32;
 
 // Frequency
-export const FREQUENCIES = [1, 2, 5, 10, 50, 100];
+export const FREQUENCY_UNIT = "Hz";
+export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
 export const SAMPLING_MANUAL_NAME = "Thủ công";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const EMIT_DATA_MANUAL_FREQUENCY = 1;
