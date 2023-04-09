@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
+import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7ready, f7 } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import {
@@ -72,6 +72,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [frequency, setFrequency] = useState(activity.frequency);
   const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -193,6 +194,29 @@ export default ({ f7route, f7router, filePath, content }) => {
       },
       name
     );
+  }
+
+  function handleFullScreen() {
+    try {
+      if (f7.device.electron) {
+      } else if (f7.device.desktop) {
+        if (!document.fullscreenEnabled) {
+          setIsFullScreen(false);
+          return;
+        }
+
+        if (isFullScreen) {
+          document.exitFullscreen();
+        } else {
+          const appEl = f7.el;
+          appEl.requestFullscreen();
+        }
+        setIsFullScreen(!isFullScreen);
+      }
+    } catch (e) {
+      console.log(e);
+      setIsFullScreen(false);
+    }
   }
 
   // =========================== Functions associate with Page ===========================
@@ -386,6 +410,11 @@ export default ({ f7route, f7router, filePath, content }) => {
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
+          <RoundButton
+            disabled={isRunning}
+            icon={isFullScreen ? "fullscreen" : "fullscreen_exit"}
+            onClick={handleFullScreen}
+          />
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
           <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
         </NavRight>
