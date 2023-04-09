@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
-import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME } from "../js/constants";
-import DataManagerIST from "../services/data-manager";
+import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME, TIMER_NO_STOP } from "../js/constants";
 import dialog from "./dialog";
-
-export default ({ isRunning, frequency, handleFrequencySelect }) => {
+export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInMs }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
       const { frequency, time } = samplingSettings;
-      // TODO: Handle time stop and check if it is not valid, notify user
-      const timeNumber = Number(time);
+      handleSetTimerInMs(isNaN(Number(time)) || time <= 0 ? TIMER_NO_STOP : time * 1000);
 
       if (frequency === SAMPLING_MANUAL_NAME) {
         handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);

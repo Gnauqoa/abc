@@ -184,6 +184,15 @@ export const SPACE_KEY = 32;
 export const FREQUENCIES = [1, 2, 5, 10, 50, 100];
 export const SAMPLING_MANUAL_NAME = "Thủ công";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
+export const EMIT_DATA_MANUAL_FREQUENCY = 1;
+
+// SAMPLING MODE
+export const SAMPLING_AUTO = 0;
+export const SAMPLING_MANUAL = 1;
+
+// TIMER
+export const TIMER_INTERVAL = 100;
+export const TIMER_NO_STOP = -1;
 
 // Sensor
 export const SENSOR_STATUS_ONLINE = "online";
