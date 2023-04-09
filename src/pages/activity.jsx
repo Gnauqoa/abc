@@ -412,7 +412,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         <NavRight>
           <RoundButton
             disabled={isRunning}
-            icon={isFullScreen ? "fullscreen" : "fullscreen_exit"}
+            icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
             onClick={handleFullScreen}
           />
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
