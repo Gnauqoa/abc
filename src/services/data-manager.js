@@ -64,23 +64,23 @@ export class DataManager {
      */
     this.emitter = new EventEmitter();
 
-    /**
-     * Intervals for emitting subscribers.
-     * @type {number[]}
-     */
-    this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
+    // /**
+    //  * Intervals for emitting subscribers.
+    //  * @type {number[]}
+    //  */
+    // this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
 
-    /**
-     * Maximum interval for emitting subscribers.
-     * @type {number}
-     */
-    this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
+    // /**
+    //  * Maximum interval for emitting subscribers.
+    //  * @type {number}
+    //  */
+    // this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
 
-    /**
-     * Interval for emitting subscribers.
-     * @type {number}
-     */
-    this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
+    // /**
+    //  * Interval for emitting subscribers.
+    //  * @type {number}
+    //  */
+    // this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
 
     /**
      * Total time for collecting data.
@@ -263,6 +263,10 @@ export class DataManager {
       this.samplingMode = SAMPLING_AUTO;
       // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`);
     }
+
+    // Clear and create new job according to new frequency
+    this.stopEmitSubscribersScheduler();
+    this.runEmitSubscribersScheduler();
 
     return true;
   }
@@ -621,39 +625,74 @@ export class DataManager {
    * Runs a scheduler that emits data to subscribers at regular intervals.
    * This function also handles data collection when in "collecting data mode".
    */
+  // runEmitSubscribersScheduler() {
+  //   let counter = 0;
+  //   this.emitSubscribersIntervalId = setInterval(() => {
+  //     try {
+  //       const curInterval = counter * this.emitSubscribersInterval;
+  //       if (curInterval % this.collectingDataInterval === 0) {
+  //         this.emitSubscribers();
+
+  //         if (this.isCollectingData) {
+  //           if (this.samplingMode === SAMPLING_AUTO) {
+  //             const parsedTime = this.getParsedCollectingDataTime();
+  //             this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
+  //           }
+
+  //           // Update total time collecting data
+  //           this.collectingDataTime += this.collectingDataInterval;
+  //         }
+  //       }
+
+  //       if (curInterval % TIMER_INTERVAL === 0) {
+  //         this.timerCollectingTime += TIMER_INTERVAL;
+  //         if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
+  //           this.emitter.emit(this.timerSubscriber.subscriberTimerId);
+  //           this.unsubscribeTimer();
+  //         }
+  //       }
+  //       // Increment counter and loop back to 0 if greater than max interval
+  //       counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
+  //     } catch (e) {
+  //       const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
+  //       log.error(schedulerError);
+  //     }
+  //   }, this.emitSubscribersInterval);
+  // }
   runEmitSubscribersScheduler() {
-    let counter = 0;
     this.emitSubscribersIntervalId = setInterval(() => {
       try {
-        const curInterval = counter * this.emitSubscribersInterval;
-        if (curInterval % this.collectingDataInterval === 0) {
-          this.emitSubscribers();
+        this.emitSubscribers();
 
-          if (this.isCollectingData) {
-            if (this.samplingMode === SAMPLING_AUTO) {
-              const parsedTime = this.getParsedCollectingDataTime();
-              this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
-            }
-
-            // Update total time collecting data
-            this.collectingDataTime += this.collectingDataInterval;
+        if (this.isCollectingData) {
+          if (this.samplingMode === SAMPLING_AUTO) {
+            const parsedTime = this.getParsedCollectingDataTime();
+            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
           }
+
+          // Update total time collecting data
+          this.collectingDataTime += this.collectingDataInterval;
         }
 
-        if (curInterval % TIMER_INTERVAL === 0) {
-          this.timerCollectingTime += TIMER_INTERVAL;
-          if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
-            this.emitter.emit(this.timerSubscriber.subscriberTimerId);
-            this.unsubscribeTimer();
-          }
+        this.timerCollectingTime += this.collectingDataInterval;
+        if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
+          this.emitter.emit(this.timerSubscriber.subscriberTimerId);
+          this.unsubscribeTimer();
         }
-        // Increment counter and loop back to 0 if greater than max interval
-        counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
       } catch (e) {
         const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
         log.error(schedulerError);
       }
-    }, this.emitSubscribersInterval);
+    }, this.collectingDataInterval);
+    // console.log(
+    //   `DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`
+    // );
+  }
+
+  // TODO: stop EmitSubscribersScheduler when object is destroyed. Otherwise leading to leak memory
+  stopEmitSubscribersScheduler() {
+    // console.log(`DATA_MANAGER-stopEmitSubscribersScheduler-${this.emitSubscribersIntervalId}`);
+    clearInterval(this.emitSubscribersIntervalId);
   }
 
   /**
@@ -686,11 +725,6 @@ export class DataManager {
       // Notify subscriber
       this.emitter.emit(subscriberId, emittedDatas);
     }
-  }
-
-  // TODO: stop EmitSubscribersScheduler when object is destroyed. Otherwise leading to leak memory
-  stopEmitSubscribersScheduler() {
-    clearInterval(this.emitSubscribersIntervalId);
   }
 
   dummySensorData() {

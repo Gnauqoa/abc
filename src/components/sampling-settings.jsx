@@ -1,8 +1,20 @@
 import React from "react";
 import clockFreImg from "../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
-import { FREQUENCIES, SAMPLING_MANUAL_FREQUENCY, SAMPLING_MANUAL_NAME, TIMER_NO_STOP } from "../js/constants";
+import {
+  FREQUENCIES,
+  SAMPLING_MANUAL_FREQUENCY,
+  SAMPLING_MANUAL_NAME,
+  TIMER_NO_STOP,
+  FREQUENCY_UNIT,
+} from "../js/constants";
 import dialog from "./dialog";
+
+const FREQUENCY_UNITS = {
+  "": 1,
+  k: 1000,
+};
+
 export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInMs }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
 
@@ -14,10 +26,10 @@ export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInM
       if (frequency === SAMPLING_MANUAL_NAME) {
         handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
       } else {
-        const frequencyNormalized = String(frequency).replace("HZ", "").trim();
-        const frequencyNumber = Number(frequencyNormalized);
-
-        handleFrequencySelect(frequencyNumber);
+        const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
+        const frequencyNumber = Number(frequencySplit[0]);
+        const subUnit = frequencySplit[1];
+        handleFrequencySelect(frequencyNumber * FREQUENCY_UNITS[subUnit]);
       }
     } catch (error) {
       console.log("Sampling-settings: ", error);
@@ -34,9 +46,10 @@ export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInM
     if (frequency === SAMPLING_MANUAL_NAME) {
       handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
     } else {
-      const frequencyNormalized = String(frequency).replace("HZ", "").trim();
-      const frequencyNumber = Number(frequencyNormalized);
-      handleFrequencySelect(frequencyNumber);
+      const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
+      const frequencyNumber = Number(frequencySplit[0]);
+      const subUnit = frequencySplit[1];
+      handleFrequencySelect(frequencyNumber * FREQUENCY_UNITS[subUnit]);
     }
     f7.popover.close();
   };
@@ -53,19 +66,24 @@ export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInM
         textColor="black"
         bgColor="white"
         style={{
-          width: "120px",
+          width: "140px",
           height: "44px",
           ...(isManualMode ? { borderRadius: "0px" } : { borderRadius: "0 10px 10px 0" }),
         }}
         raised
         popoverOpen=".popover-frequency"
       >
-        {isManualMode ? SAMPLING_MANUAL_NAME : `Định kỳ: ${frequency}Hz`}
+        {isManualMode ? SAMPLING_MANUAL_NAME : `Định kỳ: ${frequency} ${FREQUENCY_UNIT}`}
       </Button>
       <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
-        <List className="test">
+        <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-            const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f}HZ`;
+            const frequency =
+              f === SAMPLING_MANUAL_FREQUENCY
+                ? SAMPLING_MANUAL_NAME
+                : f < 1000
+                ? `${f} ${FREQUENCY_UNIT}`
+                : `${f / 1000} kHz`;
             return (
               <Button
                 key={frequency}
@@ -74,7 +92,7 @@ export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInM
                   onSelectFrequency(frequency);
                 }}
               >
-                {frequency}
+                <span style={{ textTransform: "none" }}>{frequency}</span>
               </Button>
             );
           })}
