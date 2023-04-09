@@ -199,6 +199,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleFullScreen() {
     try {
       if (f7.device.electron) {
+        window._cdvElectronIpc.setFullscreen(!isFullScreen);
+        setIsFullScreen(!isFullScreen);
       } else if (f7.device.desktop) {
         if (!document.fullscreenEnabled) {
           setIsFullScreen(false);

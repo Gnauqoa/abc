@@ -243,6 +243,16 @@ ipcMain.handle("quitApp", () => {
   app.quit();
 });
 
+ipcMain.handle("setFullscreen", (_, isFullscreen) => {
+  if (isFullscreen) {
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
+    mainWindow.setFullScreen(true);
+  } else {
+    mainWindow.setFullScreen(false);
+    mainWindow.setAlwaysOnTop(true, "floating");
+  }
+});
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 

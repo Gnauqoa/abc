@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
 
   quitApp: () => ipcRenderer.invoke("quitApp"),
+
+  setFullscreen: (isFullscreen) => ipcRenderer.invoke("setFullscreen", isFullscreen),
 });
 
 contextBridge.exposeInMainWorld("fileApi", {
