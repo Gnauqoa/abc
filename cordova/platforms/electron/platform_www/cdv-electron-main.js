@@ -245,11 +245,9 @@ ipcMain.handle("quitApp", () => {
 
 ipcMain.handle("setFullscreen", (_, isFullscreen) => {
   if (isFullscreen) {
-    mainWindow.setAlwaysOnTop(true, "screen-saver");
     mainWindow.setFullScreen(true);
   } else {
     mainWindow.setFullScreen(false);
-    mainWindow.setAlwaysOnTop(true, "floating");
   }
 });
 
