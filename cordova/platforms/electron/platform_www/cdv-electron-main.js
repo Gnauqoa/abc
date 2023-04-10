@@ -295,7 +295,16 @@ async function listSerialPorts() {
 
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xBB] }))
             parser.on("data", function (data) {
-              //console.log(data);
+              /* Each sensor data record has following structure
+                0xAA - start byte
+                Sensor ID - 1 byte
+                Sensor Serial ID - 1 byte
+                Data length - 1 byte
+                Sensor data [0..len] - 4 byte per data
+                Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
+                0xBB - stop byte (already cut off by serial delimiter parser)
+              */
+
               if (data[0] != 0xAA) {
                 // Invalid data, ignore
                 return;
@@ -303,8 +312,18 @@ async function listSerialPorts() {
 
               var sensorId = data[1];
               var sensorSerial = data[2]; // TODO: Will use later
-              var checksum = data[data.dataLength-1]; // TODO: Will use later
               var dataLength = data[3];
+              var checksum = data[4 + dataLength];
+              var calculatedChecksum = 0xFF;
+              for (var i=0; i<(dataLength+4); i++) {
+                calculatedChecksum = calculatedChecksum ^ data[i];
+              }
+
+              if (calculatedChecksum != checksum) {
+                console.log('Invalid data received');
+                return;
+              }
+
               var dataRead = 0;
               var sensorData = [];
 
