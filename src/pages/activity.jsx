@@ -397,14 +397,14 @@ export default ({ f7route, f7router, filePath, content }) => {
           <BackButton disabled={isRunning} onClick={handleActivityBack} />
           <RoundButton
             disabled={isRunning}
-            customIcon="page_add"
+            icon="add_chart"
             popupOpen=".new-page-popup"
             popoverClose
             title="Cài đặt dữ liệu hiển thị"
           />
           <RoundButton
             disabled={isRunning || pages?.length === 1}
-            customIcon="page_delete"
+            icon="delete_forever"
             onClick={handlePageDelete}
           />
         </NavLeft>
