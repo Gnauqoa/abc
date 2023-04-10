@@ -320,7 +320,7 @@ async function listSerialPorts() {
                     view.setUint8(3-i, b);
                 });
 
-                sensorData.push(view.getFloat32(0).toFixed(3));
+                sensorData.push(view.getFloat32(0).toFixed(2));
                 dataRead += 4;
               }
 
