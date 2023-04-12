@@ -43,8 +43,8 @@ const VID = '10C4'
 const PID = 'EA60';
 
 // CH340
-//const VID = '1A86'
-//const PID = '7523';
+const VID_CH = '1A86'
+const PID_CH = '7523';
 
 
 
@@ -194,12 +194,16 @@ ipcMain.handle("openFile", async (_, filePath, option) => {
     return dialog.showOpenDialog(option).then((data) => {
       return new Promise((resolve, reject) => {
         const filePath = data.filePaths[0];
-        fs.readFile(filePath, "utf-8", (err, content) => {
-          if (err) {
-            reject(err);
-          }
-          resolve({ filePath, content });
-        });
+        if (filePath) {
+          fs.readFile(filePath, "utf-8", (err, content) => {
+            if (err) {
+              reject(err);
+            }
+            resolve({ filePath, content });
+          });
+        } else {
+          resolve(null);
+        }
       });
     });
   }
@@ -235,6 +239,18 @@ ipcMain.handle("saveFile", async (_, filePath, content, option) => {
   }
 });
 
+ipcMain.handle("quitApp", () => {
+  app.quit();
+});
+
+ipcMain.handle("setFullscreen", (_, isFullscreen) => {
+  if (isFullscreen) {
+    mainWindow.setFullScreen(true);
+  } else {
+    mainWindow.setFullScreen(false);
+  }
+});
+
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
@@ -250,7 +266,7 @@ async function listSerialPorts() {
     if (ports.length > 0) {
       ports.forEach((port) => {
         //console.log(port);
-        if (port.vendorId != VID && port.productId != PID) return;
+        if ((port.vendorId != VID && port.productId != PID) && (port.vendorId != VID_CH && port.productId != PID_CH))  return;
         //console.log(portsList[port.path]);
         if (portsList[port.path] === undefined) {
           // try open first port
@@ -279,40 +295,60 @@ async function listSerialPorts() {
 
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xBB] }))
             parser.on("data", function (data) {
+              /* Each sensor data record has following structure
+                0xAA - start byte
+                Sensor ID - 1 byte
+                Sensor Serial ID - 1 byte
+                Data length - 1 byte
+                Sensor data [0..len] - 4 byte per data
+                Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
+                0xBB - stop byte (already cut off by serial delimiter parser)
+              */
+
               if (data[0] != 0xAA) {
                 // Invalid data, ignore
                 return;
               }
-            
+
               var sensorId = data[1];
               var sensorSerial = data[2]; // TODO: Will use later
-              var checksum = data[data.dataLength-1]; // TODO: Will use later
               var dataLength = data[3];
+              var checksum = data[4 + dataLength];
+              var calculatedChecksum = 0xFF;
+              for (var i=0; i<(dataLength+4); i++) {
+                calculatedChecksum = calculatedChecksum ^ data[i];
+              }
+
+              if (calculatedChecksum != checksum) {
+                console.log('Invalid data received');
+                return;
+              }
+
               var dataRead = 0;
               var sensorData = [];
-            
+
               while (dataRead < dataLength) {
                 // read next 4 bytes
                 var rawBytes = data.slice(dataRead+4, dataRead+8);
-            
+
                 var view = new DataView(new ArrayBuffer(4));
-            
+
                 rawBytes.forEach(function (b, i) {
                     view.setUint8(3-i, b);
                 });
 
-                sensorData.push(view.getFloat32(0).toFixed(3));
+                sensorData.push(view.getFloat32(0).toFixed(2));
                 dataRead += 4;
               }
 
-              var dataString = `@,${sensorId}`;
+              var dataArray = [sensorId, sensorSerial, dataLength]
               sensorData.forEach(function (d, i) {
-                dataString += `,${d}`
+                dataArray.push(d);
               });
-              dataString += ",*";
 
-              portsList[port.path].lastDdata = dataString;
-              mainWindow.webContents.send("device-data", dataString);
+              portsList[port.path].lastDdata = dataArray;
+
+              mainWindow.webContents.send("device-data", dataArray);
             });
 
             portsList[port.path] = {

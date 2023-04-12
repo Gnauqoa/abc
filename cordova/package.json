@@ -1,8 +1,14 @@
 {
   "name": "vn.ohstem.edl_app",
-  "displayName": "EDL App",
+  "displayName": "InnoLab",
   "version": "1.0.0",
-  "description": "A sample Apache Cordova application that responds to the deviceready event.",
+  "description": "Ứng dụng thu nhận và phân tích dữ liệu thí nghiệm.",
+  "homepage": "https://www.ohstem.vn",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "OhStem Education",
+    "email": "contact@ohstem.vn"
+  },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,8 +16,6 @@
   "keywords": [
     "ecosystem:cordova"
   ],
-  "author": "Apache Cordova Team",
-  "license": "Apache-2.0",
   "devDependencies": {
     "cordova-android": "^10.1.2",
     "cordova-electron": "^3.1.0",
@@ -33,9 +37,38 @@
       "cordova-plugin-splashscreen": {}
     },
     "platforms": [
-      "ios",
-      "android",
       "electron"
     ]
+  },
+  "build": {
+    "extraFiles": [
+    ],
+    "appId": "vn.ohstem.edl_app",
+    "nsis": {
+      "perMachine": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "squirrelWindows": {},
+    "appx": {
+      "identityName": "InnoLab",
+      "publisherDisplayName": "OhStem Education",
+      "applicationId": "vn.ohstem.edl_app",
+      "displayName": "InnoLab"
+    },
+    "win": {
+      "icon": "res/icon/electron/installer.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nodeGypRebuild": "false",
+    "npmRebuild": "false"
   }
 }

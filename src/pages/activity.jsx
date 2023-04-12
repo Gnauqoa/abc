@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup } from "framework7-react";
+import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7ready, f7 } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import {
@@ -9,6 +9,10 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
+  SAMPLING_MANUAL_FREQUENCY,
+  SAMPLING_AUTO,
+  SAMPLING_MANUAL,
+  TIMER_NO_STOP,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -23,7 +27,9 @@ import SamplingSetting from "../components/sampling-settings";
 import DataDisplaySetting from "../components/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
+import NewPagePopup from "../components/new-page";
 
+export const DEFAULT_SENSOR_ID = -1;
 const recentFilesService = new storeService("recent-files");
 
 export default ({ f7route, f7router, filePath, content }) => {
@@ -31,11 +37,11 @@ export default ({ f7route, f7router, filePath, content }) => {
   let activity;
 
   if (selectedLayout) {
-    let defaultWidgets = [{ id: 0, sensor: { id: 1, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: 1, index: 0 } },
-        { id: 1, sensor: { id: 2, index: 0 } },
+        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
       ];
     }
 
@@ -45,9 +51,10 @@ export default ({ f7route, f7router, filePath, content }) => {
         {
           layout: selectedLayout,
           widgets: defaultWidgets,
-          frequency: 1,
+          lastDataRunId: null,
         },
       ],
+      frequency: 1,
       dataRuns: [],
       sensorSettings: [],
     };
@@ -58,62 +65,77 @@ export default ({ f7route, f7router, filePath, content }) => {
     return;
   }
 
+  // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
+  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
+  const [frequency, setFrequency] = useState(activity.frequency);
+  const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
+  const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const currentPage = pages[currentPageIndex];
-  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
-
   const layout = currentPage.layout;
   const [widgets, setWidgets] = useState(currentPage.widgets);
-  const [frequency, setFrequency] = useState(currentPage.frequency);
+
   const [isRunning, setIsRunning] = useState(false);
-  const [currentDataRunId, setCurrentDataRunId] = useState(null);
+  const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
   const dataRun = getDataRun(currentDataRunId);
-  const displaySettingPopup = useRef();
 
-  const lineChartRef = useRef();
-  let prevChartDataRef = useRef();
+  const displaySettingPopup = useRef();
+  const newPagePopup = useRef();
+  const lineChartRef = useRef([]);
+  let prevChartDataRef = useRef([]);
 
   useEffect(() => {
+    DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const lastDataRunId = dataRunPreviews[dataRunPreviews.length - 1].id;
-      const result = DataManagerIST.setCurrentDataRun(lastDataRunId);
-      result && setCurrentDataRunId(lastDataRunId);
-    }
   }, []);
 
   useEffect(() => {
-    let subscriberIds = [];
-    DataManagerIST.setCollectingDataFrequency(frequency);
+    let subscriberId = null;
+    subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
-    if (subscriberIds.length) {
-      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
-    }
-    widgets.forEach((w) => {
-      const subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, w.sensor.id);
-      subscriberIds.push(subscriberId);
-    });
+    const subscribedSensorIds = widgets
+      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? parseInt(widget.sensor.id) : false))
+      .filter(Boolean);
+
+    subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
 
     return () => {
-      subscriberIds.forEach((id) => DataManagerIST.unsubscribe(id));
+      subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
   }, [widgets]);
 
+  // =========================== Functions associate with Activity ===========================
   function handleActivityNameChange(e) {
     setName(e.target.value);
   }
 
-  function getDataRun(dataRunId) {
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    if (dataRunPreviews.length > 0) {
-      const dataRun = DataManagerIST.getDataRunData(dataRunId);
-      return DataManagerIST.parseActivityDataRun(dataRun);
+  function handleSensorSettingSubmit(setting) {
+    let sensorSettingsCpy = [...sensorSettings];
+    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
+      sensorSettingsCpy.push({ ...setting });
+    } else {
+      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
+      sensorSettingsCpy[foundIndex] = setting;
     }
-    return [];
+
+    setSensorSettings(sensorSettingsCpy);
+    displaySettingPopup.current.f7Popup().close();
+  }
+
+  function handleFrequencySelect(frequency) {
+    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result && setFrequency(frequency);
+  }
+
+  function handleSetTimerInMs(timerNumber) {
+    setTimerStopTime(timerNumber);
   }
 
   async function handleActivitySave() {
@@ -121,12 +143,12 @@ export default ({ f7route, f7router, filePath, content }) => {
     const updatedDataRuns = DataManagerIST.getActivityDataRun();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
-        return { ...page, frequency, widgets };
+        return { ...page, widgets };
       } else {
         return page;
       }
     });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns };
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
@@ -146,9 +168,117 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
-  function handleFrequencySelect(frequency) {
-    const result = DataManagerIST.setCollectingDataFrequency(frequency);
-    result && setFrequency(frequency);
+  async function handleActivityBack() {
+    // Collecting data from dataRuns
+    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets };
+      } else {
+        return page;
+      }
+    });
+    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+
+    dialog.prompt(
+      "Bạn có muốn lưu lại những thay đổi này không?",
+      "Tên hoạt động",
+      async (name) => {
+        setName(name);
+        const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+        savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+        f7router.navigate("/");
+      },
+      () => {
+        f7router.navigate("/");
+      },
+      name
+    );
+  }
+
+  function handleFullScreen() {
+    try {
+      if (f7.device.electron) {
+        window._cdvElectronIpc.setFullscreen(!isFullScreen);
+        setIsFullScreen(!isFullScreen);
+      } else if (f7.device.desktop) {
+        if (!document.fullscreenEnabled) {
+          setIsFullScreen(false);
+          return;
+        }
+
+        if (isFullScreen) {
+          document.exitFullscreen();
+        } else {
+          const appEl = f7.el;
+          appEl.requestFullscreen();
+        }
+        setIsFullScreen(!isFullScreen);
+      }
+    } catch (e) {
+      console.log(e);
+      setIsFullScreen(false);
+    }
+  }
+
+  // =========================== Functions associate with Page ===========================
+  function handleNewPage(chartType) {
+    if (!chartType) return;
+    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
+      defaultWidgets = [
+        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+      ];
+    }
+    const newPage = {
+      layout: chartType,
+      widgets: defaultWidgets,
+      lastDataRunId: null,
+    };
+    const newPages = [...pages, newPage];
+
+    setPages(newPages);
+    setWidgets(defaultWidgets);
+    setCurrentPageIndex(newPages.length - 1);
+    setCurrentDataRunId(null);
+  }
+
+  function handlePageDelete() {
+    dialog.question(
+      "Xác nhận",
+      `Bạn có chắc chắn muốn xóa trang này không?`,
+      () => {
+        const numPages = pages.length;
+        const deletedPageIndex = currentPageIndex;
+        const newPages = pages.filter((page, index) => index !== deletedPageIndex);
+        const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
+        setPages(newPages);
+        setCurrentPageIndex(newPageIndex);
+        setWidgets(newPages[newPageIndex].widgets);
+        setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
+        prevChartDataRef.current[currentPageIndex] = null;
+      },
+      () => {}
+    );
+  }
+
+  function handlePagePrev() {
+    if (currentPageIndex === 0) return;
+    const prevPageIndex = currentPageIndex - 1;
+    setWidgets(pages[prevPageIndex].widgets);
+    setCurrentPageIndex(prevPageIndex);
+    setCurrentDataRunId(pages[prevPageIndex].lastDataRunId);
+    prevChartDataRef.current[currentPageIndex] = null;
+  }
+
+  function handlePageNext() {
+    if (currentPageIndex === pages.length - 1) return;
+    const nextPageIndex = currentPageIndex + 1;
+    setWidgets(pages[nextPageIndex].widgets);
+    setCurrentPageIndex(nextPageIndex);
+    setCurrentDataRunId(pages[nextPageIndex].lastDataRunId);
+    prevChartDataRef.current[currentPageIndex] = null;
   }
 
   function handleSensorChange(widgetId, sensor) {
@@ -158,29 +288,62 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return w;
     });
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
     setWidgets(updatedWidgets);
+    setPages(updatePages);
+  }
+
+  // =========================== Functions associate with DataRun ===========================
+  function getDataRun(dataRunId) {
+    const dataRun = DataManagerIST.getDataRunData(dataRunId);
+    return DataManagerIST.parseActivityDataRun(dataRun);
+  }
+
+  function handleExportExcel() {
+    DataManagerIST.exportDataRunExcel();
+  }
+
+  function setLastDataRunIdForCurrentPage(dataRunId) {
+    let updatedPages = _.cloneDeep(pages);
+    updatedPages[currentPageIndex].lastDataRunId = dataRunId;
+    setPages(() => updatedPages);
+  }
+
+  function handleStopCollecting() {
+    DataManagerIST.stopCollectingData();
+    setIsRunning(false);
   }
 
   function handleSampleClick() {
+    // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
+      timerStopTime !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopTime);
       setCurrentDataRunId(dataRunId);
+      setLastDataRunIdForCurrentPage(dataRunId);
     } else {
+      DataManagerIST.unsubscribeTimer();
       DataManagerIST.stopCollectingData();
     }
     setIsRunning(!isRunning);
   }
 
-  function handleDataManagerCallback(data) {
-    console.log(">>>>> AUTO - data manager:", data);
-    const time = data[1];
-    const sensorId = data[2];
-    const values = data.slice(3);
+  function handleDataManagerCallback(emittedDatas) {
+    // console.log(">>>>> AUTO - data manager:", emittedDatas);
     const updatedSensorValues = { ...currentSensorValues };
-    updatedSensorValues[sensorId] = { time, sensorId, values };
-    if (values.length) {
-      setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
-    }
+    emittedDatas.forEach((data) => {
+      const time = data[1];
+      const sensorId = data[2];
+      const values = data.slice(3);
+      const sensorValues = { time, sensorId, values };
+      updatedSensorValues[sensorId] = sensorValues;
+    });
+    setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
   }
 
   function getCurrentValue(sensor, isTable = false) {
@@ -195,28 +358,28 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function getDataForChart(sensor) {
-    if (!lineChartRef.current) return;
+    if (!lineChartRef.current[currentPageIndex]) return;
 
     const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] })) || [];
+    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
     const sensorValue = currentSensorValues[sensor.id];
     if (sensorValue) {
-      let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] };
+      let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
       if (!isRunning) {
         currentData = { ...currentData, x: 0 };
       }
-      lineChartRef.current.setCurrentData({
+      lineChartRef.current[currentPageIndex].setCurrentData({
         data: currentData,
       });
     }
 
     if (data.length > 0) {
-      if (_.isEqual(data, prevChartDataRef.current)) return;
-      prevChartDataRef.current = data;
-      lineChartRef.current.setChartData({
+      if (_.isEqual(data, prevChartDataRef.current[currentPageIndex])) return;
+      prevChartDataRef.current[currentPageIndex] = data;
+      lineChartRef.current[currentPageIndex].setChartData({
         chartData: [
           {
-            name: "run1",
+            name: `Lần ${DataManagerIST.dataRunsSize()}`,
             data: data,
           },
         ],
@@ -227,80 +390,41 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
-  function handlePagePrev() {
-    console.log("TODO: handlePrevPage");
-  }
-
-  function handlePageNext() {
-    console.log("TODO: handleNextPage");
-  }
-
-  function handlePageDelete() {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        console.log("TODO: delete page");
-      },
-      () => {}
-    );
-  }
-
-  function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [...sensorSettings];
-    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-      sensorSettingsCpy.push({ ...setting });
-      console.log("New data pushed");
-    } else {
-      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-      sensorSettingsCpy[foundIndex] = setting;
-      console.log(`setting of sensor ${setting.sensorDetailId} had been updated`);
-    }
-
-    console.log(sensorSettings);
-    setSensorSettings(sensorSettingsCpy);
-    displaySettingPopup.current.f7Popup().close();
-  }
-
-  function handlePagePrev() {
-    console.log("TODO: handlePrevPage");
-  }
-
-  function handlePageNext() {
-    console.log("TODO: handleNextPage");
-  }
-
-  function handlePageDelete() {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa hoạt động này không?`,
-      () => {
-        console.log("TODO: delete page");
-      },
-      () => {}
-    );
-  }
-
   return (
     <Page className="bg-color-regal-blue activity">
       <Navbar>
         <NavLeft>
-          <BackButton disabled={isRunning} link="/" />
-          <RoundButton disabled={isRunning} icon="add" color="#42C63F" onClick={() => f7router.navigate("/layout")} />
-          <RoundButton disabled={isRunning} icon="close" color="#FF0000" onClick={handlePageDelete} />
+          <BackButton disabled={isRunning} onClick={handleActivityBack} />
+          <RoundButton
+            disabled={isRunning}
+            icon="add_chart"
+            popupOpen=".new-page-popup"
+            popoverClose
+            title="Cài đặt dữ liệu hiển thị"
+          />
+          <RoundButton
+            disabled={isRunning || pages?.length === 1}
+            icon="delete_forever"
+            onClick={handlePageDelete}
+          />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
           <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
+          <RoundButton
+            disabled={isRunning}
+            icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
+            onClick={handleFullScreen}
+          />
         </NavRight>
       </Navbar>
       <Popover className="setting-popover-menu">
         <List>
-          <ListItem link="#" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" />
-          <ListItem link="#" popoverClose title="Chia sẻ" />
+          {/* <ListItem link="#" popoverClose title="Quản lý dữ liệu" /> */}
+          {/* <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" /> */}
+          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
+          {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
         </List>
       </Popover>
       <Popup className="display-setting-popup" ref={displaySettingPopup}>
@@ -309,6 +433,10 @@ export default ({ f7route, f7router, filePath, content }) => {
           onSubmit={(setting) => handleSensorSettingSubmit(setting)}
         />
       </Popup>
+      <Popup className="new-page-popup" ref={newPagePopup}>
+        <NewPagePopup handleNewPage={handleNewPage}></NewPagePopup>
+      </Popup>
+
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -316,16 +444,19 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[0].sensor)}
                     currentValue={getCurrentValue(widgets[0].sensor, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
+                    samplingMode={samplingMode}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
+                    key={`${currentPageIndex}_number`}
                     value={getCurrentValue(widgets[0].sensor)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
@@ -335,20 +466,23 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
+                    key={`${currentPageIndex}_chart`}
                     data={getDataForChart(widgets[1].sensor)}
-                    ref={lineChartRef}
+                    ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                   />
                 )}
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
+                    key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[1].sensor)}
-                    currentValue={getCurrentValue(widgets[0].sensor, true)}
+                    currentValue={getCurrentValue(widgets[1].sensor, true)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
+                    samplingMode={samplingMode}
                   />
                 )}
               </div>
@@ -358,24 +492,28 @@ export default ({ f7route, f7router, filePath, content }) => {
             <div className="__card">
               {layout === LAYOUT_CHART && (
                 <LineChart
+                  key={`${currentPageIndex}_chart`}
                   data={getDataForChart(widgets[0].sensor)}
-                  ref={lineChartRef}
+                  ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
               )}
               {layout === LAYOUT_TABLE && (
                 <TableWidget
+                  key={`${currentPageIndex}_table`}
                   data={getDataForTable(widgets[0].sensor)}
                   currentValue={getCurrentValue(widgets[0].sensor, true)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
+                  samplingMode={samplingMode}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
+                  key={`${currentPageIndex}_number`}
                   value={getCurrentValue(widgets[0].sensor)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
@@ -390,11 +528,12 @@ export default ({ f7route, f7router, filePath, content }) => {
               isRunning={isRunning}
               frequency={frequency}
               handleFrequencySelect={handleFrequencySelect}
+              handleSetTimerInMs={handleSetTimerInMs}
             />
           </div>
           <div className="__toolbar-center">
             <ActivityPageNav
-              navOrder={"1/1"}
+              navOrder={`${currentPageIndex + 1}/${pages.length}`}
               isDisabled={isRunning}
               onNextPage={handlePageNext}
               onPrevPage={handlePagePrev}

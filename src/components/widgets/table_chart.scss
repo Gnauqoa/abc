@@ -92,7 +92,7 @@
           font-size: 22px;
           width: 50%;
 
-          span,
+          .span-value,
           input {
             display: block;
             width: 100%;
@@ -124,10 +124,4 @@
   position: absolute;
   display: block;
   width: 35%;
-  .button {
-    background-color: #ffbb02;
-    font-size: 12px;
-    color: black;
-    border-radius: 5px;
-  }
 }

@@ -26,6 +26,9 @@
     .title {
       color: #ffffff;
     }
+    .button--round i {
+      color: #91a7b5 !important;
+    }
   }
 }
 
@@ -277,6 +280,16 @@
   padding: 0;
 }
 
+.sensor-selector {
+  .button {
+    text-transform: none;
+    font-size: 16px;
+    background-color: #ffbb02;
+    color: var(--f7-theme-color-text-color) !important;
+    border-radius: 5px;
+  }
+}
+
 .sensor-select-title {
   color: #007ff5;
   .title {
@@ -341,6 +354,7 @@
   padding: 5px 5px;
   position: absolute;
   top: 800px;
+  font-weight: var(--f7-button-font-weight);
 }
 
 .custom-select option {
@@ -389,13 +403,12 @@
 }
 
 .display-setting-popup.popup.modal-in {
-    border-radius: 15px;
+  border-radius: 15px;
 }
-
 
 .input-stack-position {
   .item-input-wrap {
-    margin-top:40px;
+    margin-top: 40px;
     left: -217px;
     textarea {
       width: 600px;
@@ -436,9 +449,37 @@
 }
 
 .edl-popup {
-	width: 400px;
+  width: 400px;
   height: 500px;
   left: calc(50% - 200px);
   top: calc(50% - 250px);
   border-radius: 20px;
+}
+
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.page_delete:after {
+  content: "";
+  display: block;
+  height: 22px;
+  width: 18px;
+  position: absolute;
+  top: -11px;
+  left: -9px;
+  background: url("./page_delete.png") no-repeat 0px 0px;
+}
+
+.page_add:after {
+  content: "";
+  display: block;
+  height: 20px;
+  width: 20px;
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  background: url("./page_add.png") no-repeat 0px 0px;
 }

@@ -4,7 +4,7 @@
     "pwa",
     "cordova"
   ],
-  "name": "EDL App",
+  "name": "InnoLab",
   "framework": "react",
   "template": "single-view",
   "bundler": "vite",

@@ -21,10 +21,8 @@ import { SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
 
 export default function SensorSelector({ disabled, selectedSensor, hideDisplayUnit, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState("");
-  const [selectedSensorIdState, setSelectedSensorIdState] = useState("");
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
-
-  let sensorListForDislpay = sensorList;
+  const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
 
   useEffect(() => {
     appendSensorStatusKey();
@@ -36,11 +34,12 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
       const sensorId = parseInt(selectedSensor.id),
         sensorIndex = parseInt(selectedSensor.index),
         existingSensorData = sensorList.find((s) => s.id == sensorId),
-        sensorDetailData = existingSensorData.data[sensorIndex];
-      setSelectedSensorState(
-        hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
-      );
-      setSelectedSensorIdState(sensorId);
+        sensorDetailData = existingSensorData?.data[sensorIndex];
+
+      if (sensorDetailData) {
+        const { name, unit } = sensorDetailData;
+        setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
+      }
     }
   };
 
@@ -55,27 +54,25 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
           sensorDetailData = existingSensorData.data.find((s) => s.id == sensorDetailId),
           sensorIndex = _.findIndex(existingSensorData.data, (item) => item.id === sensorDetailId);
 
-        setSelectedSensorState(
-          hideDisplayUnit ? sensorDetailData.name : `${sensorDetailData.name} (${sensorDetailData.unit})`
-        );
-        setSelectedSensorIdState(sensorId);
+        if (sensorDetailData) {
+          const { name, unit } = sensorDetailData;
+          setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
+        }
         onChange({
           id: sensorId,
           index: sensorIndex,
         });
       }
     }
-    // console.log("Selected sensor with Id: 👉️", selectedValueString);
   };
 
   const appendSensorStatusKey = () => {
-    Object.keys(sensorListForDislpay).forEach((key) => {
-      Object.assign(sensorListForDislpay[key], { sensorStatus: SENSOR_STATUS_OFFLINE });
-    });
+    const sensorListForDisplay = sensorList.map((sensor) => ({ ...sensor, sensorStatus: SENSOR_STATUS_OFFLINE }));
+    setSensorListForDisplay(sensorListForDisplay);
   };
 
-  const sortSensorList = () => {
-    sensorListForDislpay = sensorList.sort((a, b) => {
+  const sortSensorList = (sensors) => {
+    const sortedSensors = sensors.sort((a, b) => {
       // if (a.id === selectedSensorIdState) {
       //   return -1;
       // }
@@ -100,20 +97,23 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
         return 1;
       }
     });
+    return sortedSensors;
   };
 
   const updateSensorStatus = () => {
     const activeSensors = DataManagerIST.getListActiveSensor();
-    sensorListForDislpay.forEach((item) => {
-      item.sensorStatus = activeSensors.includes(item.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
+    const updatedStatusSensors = sensorListForDisplay.map((item) => {
+      const sensorStatus = activeSensors.includes(item.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
+      return { ...item, sensorStatus };
     });
-    sortSensorList();
+    const sortedSensors = sortSensorList(updatedStatusSensors);
+    setSensorListForDisplay(sortedSensors);
   };
 
   const sensorPopup = useRef(null);
 
   return (
-    <div>
+    <div className="sensor-selector ">
       <Button
         disabled={disabled}
         fill
@@ -123,7 +123,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
           sensorPopup.current.f7Popup().open();
         }}
       >
-        {selectedSensorState === "" ? "----- Chọn một cảm biến bất kì -----" : selectedSensorState}
+        {selectedSensorState === "" ? "----- Chọn cảm biến -----" : selectedSensorState}
       </Button>
       <Popup
         className="edl-popup"
@@ -140,7 +140,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
           <PageContent className="invisible-scrollbar zero-padding">
             <Block>
               <List>
-                {sensorListForDislpay.map(({ id, name, data, sensorStatus }) => (
+                {sensorListForDisplay.map(({ id, name, data, sensorStatus }) => (
                   <ListItem
                     className={clsx("sensor-select-device", {
                       __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,

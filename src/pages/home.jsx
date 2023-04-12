@@ -6,6 +6,7 @@ import openImg from "../img/home/open-activity.png";
 import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
+import dialog from "../components/dialog";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -15,16 +16,21 @@ export default ({ f7router }) => {
 
   async function handleFileOpen(filePath) {
     if (f7.device.electron) {
-      const file = await openFile(filePath);
-      if (file) {
-        const content = JSON.parse(file.content);
-        recentFilesService.save({ id: file.filePath, activityName: content.name });
-        f7router.navigate("/edl", {
-          props: {
-            filePath: file.filePath,
-            content,
-          },
-        });
+      try {
+        const file = await openFile(filePath);
+        if (file) {
+          const content = JSON.parse(file.content);
+          recentFilesService.save({ id: file.filePath, activityName: content.name });
+          f7router.navigate("/edl", {
+            props: {
+              filePath: file.filePath,
+              content,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Import failed", error.message);
+        dialog.alert("Lỗi không thể mở file", "Nội dung file không hợp lệ. Vui lòng tạo hoạt động mới.", () => {});
       }
     } else if (f7.device.desktop) {
       inputFile.current.click();
@@ -43,6 +49,7 @@ export default ({ f7router }) => {
         });
       } catch (error) {
         console.error("Import failed", error.message);
+        dialog.alert("Lỗi không thể mở file", "Nội dung file không hợp lệ. Vui lòng tạo hoạt động mới.", () => {});
       }
     });
   }
@@ -51,9 +58,9 @@ export default ({ f7router }) => {
     <Page className="bg-color-regal-blue home">
       <Navbar>
         <NavLeft>
-          <Link iconIos="material:menu" iconMd="material:menu" panelOpen="left" />
+          <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
-        <NavTitle>EDL</NavTitle>
+        <NavTitle>InnoLab</NavTitle>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-around">
         <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>

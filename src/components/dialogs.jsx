@@ -5,7 +5,7 @@ import $ from "jquery";
 import DataManagerIST from "../services/data-manager";
 import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
 
-import { DEFAULT_CODE_NAME } from "../js/constants";
+import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../js/constants";
 import * as core from "../utils/core";
 
 export default class extends Component {
@@ -159,10 +159,13 @@ export default class extends Component {
                     className="button"
                     raised
                     popoverOpen=".popover-frequency-advanced"
+                    style={{ textTransform: "none" }}
                   >
                     {this.state.samplingFrequency === SAMPLING_MANUAL_FREQUENCY
                       ? SAMPLING_MANUAL_NAME
-                      : `${this.state.samplingFrequency}HZ`}
+                      : this.state.samplingFrequency < 1000
+                      ? `${this.state.samplingFrequency} ${FREQUENCY_UNIT}`
+                      : `${this.state.samplingFrequency / 1000} k${FREQUENCY_UNIT}`}
                   </Button>
                 </div>
 
@@ -192,7 +195,12 @@ export default class extends Component {
           >
             <List className="test">
               {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-                const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f}HZ`;
+                const frequency =
+                  f === SAMPLING_MANUAL_FREQUENCY
+                    ? SAMPLING_MANUAL_NAME
+                    : f < 1000
+                    ? `${f} ${FREQUENCY_UNIT}`
+                    : `${f / 1000} kHz`;
                 return (
                   <Button
                     key={f}
@@ -205,7 +213,7 @@ export default class extends Component {
                       f7.popover.close();
                     }}
                   >
-                    {frequency}
+                    <span style={{ textTransform: "none" }}>{frequency}</span>
                   </Button>
                 );
               })}
@@ -249,11 +257,11 @@ export default class extends Component {
                   <input
                     type="text"
                     className="input"
-                    value={this.state.samplingTime}
-                    onChange={this.handleSamplingTimeChange}
+                    value={this.state.inputText}
+                    onChange={this.handleInputTextChange}
                     onKeyDown={this.handleOkByEnter}
                   />
-                  <Icon ios="material:backspace" md="material:backspace" className="clear-button"></Icon>
+                  <Icon ios="material:backspace" md="material:backspace" className="clear-button prevent-select"></Icon>
                 </div>
               </div>
               <div className="buttons">
@@ -344,7 +352,7 @@ export default class extends Component {
               <div className="text-1">
                 <div className="form-group">
                   <input className="input" readOnly type="text" ref={this.inputNumpad} />
-                  <Icon f7="clear" className="clear-button"></Icon>
+                  <Icon f7="clear" className="clear-button prevent-select"></Icon>
                 </div>
                 <div className="numpad-content">
                   <Row>

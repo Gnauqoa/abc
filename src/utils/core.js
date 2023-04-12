@@ -2,6 +2,7 @@ import store from "store";
 import { f7 } from "framework7-react";
 import dialog from "../components/dialog";
 
+import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
 
 let deviceHistory = [];
@@ -511,24 +512,47 @@ export function exportToCSV(filename, rows) {
   };
 
   let csvFile = "";
-  for (let i = 0; i < rows.length; i++) {
-    csvFile += processRow(rows[i]);
-  }
+  rows.forEach((row) => {
+    csvFile += processRow(row);
+  });
 
-  const blob = new Blob([csvFile], { type: "text/csv;charset=utf-8;" });
-  if (navigator.msSaveBlob) {
-    navigator.msSaveBlob(blob, filename);
-  } else {
-    const link = document.createElement("a");
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      console.log("url: ", url);
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      //   document.body.removeChild(link);
+  exportFileToPc(csvFile, filename, {
+    EXT: ".csv",
+    TYPE: "text/csv;charset=utf-8;",
+  });
+}
+
+export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
+  const fileExt = "xlsx";
+  const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+
+  const workbook = utils.book_new();
+  dataRunsInfo.forEach((dataRunInfo) => {
+    const workSheet = utils.aoa_to_sheet(dataRunInfo.sheetRows);
+    utils.book_append_sheet(workbook, workSheet, dataRunInfo.sheetName);
+  });
+  const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
+
+  if (f7.device.electron) {
+    const option = {
+      filters: [{ name: "Excel Workbook", extensions: [fileExt] }],
+      defaultPath: fileName,
+    };
+    try {
+      return await window.fileApi.save(filePath, excelBuffer, option);
+    } catch (error) {
+      console.log("Save file error", error);
+      dialog.alert(
+        "Lỗi không thể lưu",
+        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        () => {}
+      );
     }
+  } else if (f7.device.desktop) {
+    exportFileToPc(excelBuffer, fileName, {
+      EXT: `.${fileExt}`,
+      TYPE: fileType,
+    });
+    return;
   }
 }
