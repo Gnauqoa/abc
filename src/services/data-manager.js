@@ -592,11 +592,11 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample(sensorId, sensorIndex, isAppend = true) {
+  getManualSample(isAppend = true) {
     const dataRunId = this.curDataRunId;
     const parsedTime = this.getParsedCollectingDataTime();
     isAppend && this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
-    return isAppend ? this.buffer[sensorId][sensorIndex] : { ...this.buffer };
+    return { ...this.buffer };
   }
 
   updateDataRunDataAtIndex(selectedIndex, curBuffer) {

@@ -130,13 +130,19 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       } else {
         if (isPressing) {
           if (numRows === 0 || selectedRow === transformedRows.length) {
-            DataManagerIST.getManualSample(widget.sensor.id, widget.sensor.index);
+            DataManagerIST.getManualSample();
             setSelectedRow(transformedRows.length + 1);
           } else {
-            const curBuffer = DataManagerIST.getManualSample(widget.sensor.id, widget.sensor.index, false);
+            const curBuffer = DataManagerIST.getManualSample(false);
             DataManagerIST.updateDataRunDataAtIndex(selectedRow, curBuffer);
-            setSelectedRow((prev) => prev + 1);
+            setSelectedRow((prev) => {
+              if (prev + 1 >= transformedRows.length) {
+                return transformedRows.length - 1;
+              }
+              return prev + 1;
+            });
           }
+          console.log(selectedRow);
         }
 
         transformedRows = [
