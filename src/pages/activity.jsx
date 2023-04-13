@@ -83,7 +83,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
-  const dataRun = getDataRun(currentDataRunId);
+  // const dataRun = getDataRun(currentDataRunId);
 
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
@@ -140,7 +140,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   async function handleActivitySave() {
     // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page, widgets };
@@ -170,7 +170,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   async function handleActivityBack() {
     // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.getActivityDataRun();
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page, widgets };
@@ -299,11 +299,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   // =========================== Functions associate with DataRun ===========================
-  function getDataRun(dataRunId) {
-    const dataRun = DataManagerIST.getDataRunData(dataRunId);
-    return DataManagerIST.parseActivityDataRun(dataRun);
-  }
-
   function handleExportExcel() {
     DataManagerIST.exportDataRunExcel();
   }
@@ -349,19 +344,20 @@ export default ({ f7route, f7router, filePath, content }) => {
   function getCurrentValue(sensor, isTable = false) {
     if (!isTable) return currentSensorValues[sensor.id]?.values[sensor.index] || "";
     const data = currentSensorValues[sensor.id];
-    return data ? { time: data.time, value: data.values[sensor.index] } : {};
+    return data ? { time: data.time, values: data.values } : {};
   }
 
   function getDataForTable(sensor) {
-    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    return sensorData.map((d) => ({ time: d.time, value: d.values[sensor.index] })) || [];
+    const tableData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
+    return tableData;
   }
 
   function getDataForChart(sensor) {
     if (!lineChartRef.current[currentPageIndex]) return;
 
-    const sensorData = dataRun.filter((d) => d.sensorId === sensor.id);
-    const data = sensorData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+    const chartData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
+    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+
     const sensorValue = currentSensorValues[sensor.id];
     if (sensorValue) {
       let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
@@ -402,11 +398,7 @@ export default ({ f7route, f7router, filePath, content }) => {
             popoverClose
             title="Cài đặt dữ liệu hiển thị"
           />
-          <RoundButton
-            disabled={isRunning || pages?.length === 1}
-            icon="delete_forever"
-            onClick={handlePageDelete}
-          />
+          <RoundButton disabled={isRunning || pages?.length === 1} icon="delete_forever" onClick={handlePageDelete} />
         </NavLeft>
         <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
         <NavRight>

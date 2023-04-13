@@ -108,21 +108,21 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     // Preventing loosing selection row when move from auto to manual.
     // As the the selected rows is still the last row from auto
     if (data.length === 0) setSelectedRow(0);
-    setRows(defaultRows);
+    // setRows(defaultRows);
 
     let transformedRows = data.map((item, index) => ({
       colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
-      colum2: item.value,
+      colum2: item.values[widget.sensor.index],
     }));
     setNumRows(transformedRows.length);
 
     if (!isRunning || samplingMode === SAMPLING_MANUAL) {
-      const { time, value } = currentValue;
-
+      const { time, values } = currentValue;
+      if (!time || !values) return;
       const newRow = {
         colum1:
           firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "",
-        colum2: value || "",
+        colum2: values[widget.sensor.index] || "",
       };
 
       if (!isRunning) {
