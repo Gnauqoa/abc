@@ -128,29 +128,34 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       if (!isRunning) {
         transformedRows.push(newRow);
       } else {
+        let curSelectedRow = selectedRow;
+        let displayedSelectedRow = selectedRow;
+
         if (isPressing) {
           if (numRows === 0 || selectedRow === transformedRows.length) {
-            DataManagerIST.getManualSample();
-            setSelectedRow(transformedRows.length + 1);
+            DataManagerIST.appendManualSample(widget.sensor.id, values);
+            transformedRows.push(newRow);
+            curSelectedRow = transformedRows.length;
+
+            // set the displayedSelectedRow = next current selected row
+            displayedSelectedRow = curSelectedRow;
           } else {
-            const curBuffer = DataManagerIST.getManualSample(false);
-            DataManagerIST.updateDataRunDataAtIndex(selectedRow, curBuffer);
-            setSelectedRow((prev) => {
-              if (prev + 1 >= transformedRows.length) {
-                return transformedRows.length - 1;
-              }
-              return prev + 1;
-            });
+            DataManagerIST.updateDataRunDataAtIndex(selectedRow, widget.sensor.id, currentValue);
+            curSelectedRow = selectedRow + 1 >= transformedRows.length ? transformedRows.length : selectedRow + 1;
+
+            // We set the displayedSelectedRow = the current selected row
+            displayedSelectedRow = selectedRow;
           }
-          console.log(selectedRow);
         }
 
         transformedRows = [
-          ...transformedRows.slice(0, selectedRow),
+          ...transformedRows.slice(0, displayedSelectedRow),
           newRow,
-          ...transformedRows.slice(selectedRow + 1),
-          selectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
+          ...transformedRows.slice(displayedSelectedRow + 1),
+          displayedSelectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
         ];
+
+        setSelectedRow(curSelectedRow);
       }
     }
 

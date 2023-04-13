@@ -587,23 +587,21 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample(isAppend = true) {
+  appendManualSample(sensorId, sensorValues) {
     const curBuffer = { ...this.buffer };
     const parsedTime = this.getParsedCollectingDataTime();
 
-    isAppend && this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+    curBuffer[sensorId] = sensorValues;
+
+    this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
     return { ...this.buffer };
   }
 
-  updateDataRunDataAtIndex(selectedIndex, curBuffer) {
-    const newDataRunData = this.dataRuns[this.curDataRunId].data.map((data, index) => {
-      if (index === selectedIndex) {
-        return { ...curBuffer, 0: data[0] };
-      } else {
-        return data;
-      }
-    });
-    this.dataRuns[this.curDataRunId].data = [...newDataRunData];
+  updateDataRunDataAtIndex(selectedIndex, sensorId, sensorData) {
+    const dataRunData = this.dataRuns[this.curDataRunId].data;
+    if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex]) {
+      dataRunData[sensorId][selectedIndex] = sensorData;
+    }
   }
 
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
