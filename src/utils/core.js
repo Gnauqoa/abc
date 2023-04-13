@@ -528,8 +528,9 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
 
   const workbook = utils.book_new();
   dataRunsInfo.forEach((dataRunInfo) => {
-    const workSheet = utils.aoa_to_sheet(dataRunInfo.sheetRows);
-    utils.book_append_sheet(workbook, workSheet, dataRunInfo.sheetName);
+    const { sheetName, sheetRows } = dataRunInfo;
+    const workSheet = utils.aoa_to_sheet(sheetRows);
+    utils.book_append_sheet(workbook, workSheet, sheetName);
   });
   const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
 
