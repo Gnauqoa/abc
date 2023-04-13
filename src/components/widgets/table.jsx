@@ -1,9 +1,8 @@
-import React, { forwardRef, useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
+import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
-import sensors, { getUnit } from "../../services/sensor-service";
+import { getUnit } from "../../services/sensor-service";
 import DataManagerIST from "../../services/data-manager";
 
 import {
@@ -16,7 +15,6 @@ import {
 import { DEFAULT_SENSOR_ID } from "../../pages/activity";
 
 const DEFAULT_ROWS = 15;
-const NUM_ROWS_FIT_TABLE = 7;
 const FIRST_COLUMN_DEFAULT_OPT = "time";
 const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
@@ -69,13 +67,12 @@ const FIRST_COLUMN_OPTIONS = [
 const emptyRow = { colum1: "", colum2: "" };
 const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
-const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning, samplingMode }) => {
+const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning, samplingMode }, ref) => {
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
   const [userInputs, setUserInputs] = useState({});
   const [selectedRow, setSelectedRow] = useState(0);
-  const [isPressing, setIsPressing] = useState(false);
-  const [prevIsPressing, setPrevIsPressing] = useState(false);
+
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
 
   const headerRowRef = useRef(null);
@@ -83,79 +80,76 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
 
   const sensorUnit = widget.sensor.id === DEFAULT_SENSOR_ID ? "" : getUnit(widget.sensor.id, widget.sensor.index);
 
+  useImperativeHandle(ref, () => ({
+    handleSamplingManual() {
+      let transformedRows = convertDataToTableRows(data);
+      const newRow = convertCurrentValueToTableRow(currentValue);
+      if (!newRow) return;
+
+      setNumRows(transformedRows.length);
+      let curSelectedRow = selectedRow;
+      let displayedSelectedRow = selectedRow;
+
+      if (selectedRow === transformedRows.length) {
+        DataManagerIST.appendManualSample(widget.sensor.id, currentValue.values);
+        // transformedRows.push(newRow);
+        curSelectedRow = transformedRows.length + 1;
+
+        // set the displayedSelectedRow = next current selected row
+        displayedSelectedRow = curSelectedRow;
+      } else {
+        DataManagerIST.updateDataRunDataAtIndex(selectedRow, widget.sensor.id, currentValue.values);
+        curSelectedRow = selectedRow + 1 >= transformedRows.length ? transformedRows.length : selectedRow + 1;
+
+        // We set the displayedSelectedRow = the current selected row
+        displayedSelectedRow = selectedRow;
+      }
+      setSelectedRow(curSelectedRow);
+
+      transformedRows = [
+        ...transformedRows.slice(0, displayedSelectedRow),
+        newRow,
+        ...transformedRows.slice(displayedSelectedRow + 1),
+        displayedSelectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
+      ];
+
+      setRows(
+        transformedRows.length < DEFAULT_ROWS
+          ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
+          : transformedRows
+      );
+
+      scrollToRef(lastRowRef);
+    },
+  }));
+
   useEffect(() => {
     setFirstColumnOption(samplingMode === SAMPLING_AUTO ? FIRST_COLUMN_DEFAULT_OPT : FIRST_COLUMN_CUSTOM_OPT);
-
-    const onSamplingManualPressed = () => {
-      setIsPressing(true);
-    };
-
-    const samplingManualButton = document.getElementById("samplingManualButton");
-    samplingManualButton && samplingManualButton.addEventListener("click", onSamplingManualPressed);
-
-    return () => {
-      samplingManualButton && samplingManualButton.removeEventListener("click", onSamplingManualPressed);
-    };
   }, [samplingMode]);
 
   useEffect(() => {
-    // Preventing re-render when set isPressing = False
-    if (prevIsPressing && !isPressing) {
-      setPrevIsPressing(isPressing);
-      return;
-    }
-
-    // Preventing loosing selection row when move from auto to manual.
-    // As the the selected rows is still the last row from auto
-    if (data.length === 0) setSelectedRow(0);
-    // setRows(defaultRows);
-
-    let transformedRows = data.map((item, index) => ({
-      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
-      colum2: item.values[widget.sensor.index],
-    }));
+    let transformedRows = convertDataToTableRows(data);
     setNumRows(transformedRows.length);
 
     if (!isRunning || samplingMode === SAMPLING_MANUAL) {
-      const { time, values } = currentValue;
-      if (!time || !values) return;
-      const newRow = {
-        colum1:
-          firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "",
-        colum2: values[widget.sensor.index] || "",
-      };
+      const newRow = convertCurrentValueToTableRow(currentValue);
+      if (!newRow) return;
 
       if (!isRunning) {
         transformedRows.push(newRow);
       } else {
-        let curSelectedRow = selectedRow;
-        let displayedSelectedRow = selectedRow;
-
-        if (isPressing) {
-          if (numRows === 0 || selectedRow === transformedRows.length) {
-            DataManagerIST.appendManualSample(widget.sensor.id, values);
-            transformedRows.push(newRow);
-            curSelectedRow = transformedRows.length;
-
-            // set the displayedSelectedRow = next current selected row
-            displayedSelectedRow = curSelectedRow;
-          } else {
-            DataManagerIST.updateDataRunDataAtIndex(selectedRow, widget.sensor.id, currentValue);
-            curSelectedRow = selectedRow + 1 >= transformedRows.length ? transformedRows.length : selectedRow + 1;
-
-            // We set the displayedSelectedRow = the current selected row
-            displayedSelectedRow = selectedRow;
-          }
+        // Preventing loosing selection row when move from auto to manual.
+        // As the the selected rows is still the last row from auto
+        if (data.length === 0) {
+          setSelectedRow(0);
         }
 
         transformedRows = [
-          ...transformedRows.slice(0, displayedSelectedRow),
+          ...transformedRows.slice(0, selectedRow),
           newRow,
-          ...transformedRows.slice(displayedSelectedRow + 1),
-          displayedSelectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
+          ...transformedRows.slice(selectedRow + 1),
+          selectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
         ];
-
-        setSelectedRow(curSelectedRow);
       }
     }
 
@@ -169,10 +163,28 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
       setSelectedRow(transformedRows.length - 1);
     }
 
-    numRows !== 0 && scrollToRef(lastRowRef);
-    setPrevIsPressing(isPressing);
-    setIsPressing(false);
-  }, [data, firstColumnOption, selectedRow, isPressing]);
+    isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
+  }, [data, firstColumnOption]);
+
+  const convertDataToTableRows = (data) => {
+    const transformedRows = data.map((item, index) => ({
+      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
+      colum2: item.values[widget.sensor.index],
+    }));
+    return transformedRows;
+  };
+
+  const convertCurrentValueToTableRow = (currentValue) => {
+    const { time, values } = currentValue;
+    if (!time || !values) return false;
+
+    const newRow = {
+      colum1:
+        firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "",
+      colum2: values[widget.sensor.index] || "",
+    };
+    return newRow;
+  };
 
   const handleFirstColumSelector = ({ target: { value } }) => {
     setFirstColumnOption(value);
@@ -247,13 +259,13 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                 {sensorUnit !== "" && <div className="header-unit">({sensorUnit})</div>}
               </td>
             </tr>
-            {[...rows, emptyRow].map((row, index) => {
+            {[...rows, emptyRow, emptyRow].map((row, index) => {
               let ref;
-              if (!isRunning || samplingMode === SAMPLING_MANUAL) ref = null;
+              if (!isRunning) ref = null;
               else if (samplingMode === SAMPLING_AUTO) {
-                ref = index === numRows ? lastRowRef : null;
-              } else {
-                ref = index === data.length ? lastRowRef : null;
+                ref = index === numRows + 1 ? lastRowRef : null;
+              } else if (samplingMode === SAMPLING_MANUAL) {
+                ref = index === selectedRow + 1 ? lastRowRef : null;
               }
 
               return (
@@ -286,4 +298,4 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   );
 };
 
-export default TableWidget;
+export default forwardRef(TableWidget);

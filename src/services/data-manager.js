@@ -447,96 +447,91 @@ export class DataManager {
    * @returns {void}
    */
   exportDataRunExcel() {
-    const recordedSensors = new Set([TIME_STAMP_ID]);
-    const invertedSensorsInfo = {};
-    const headers = [];
-    let currentIndex = 0;
-
     const dataRunsInfo = Object.entries(this.dataRuns).map(([id, { interval, name }]) => ({
-      id: id,
-      interval: interval,
+      id,
+      interval,
       maxTimeStamp: 0,
+      headers: [],
       sheetRows: [],
       sheetName: name,
+      recordedSensors: new Set([TIME_STAMP_ID]),
+      invertedSensorsInfo: {},
     }));
 
-    // Collect all sensor IDs and find max record time for each data run
     for (const dataRunInfo of dataRunsInfo) {
+      let currentIndex = 0;
       const dataRunData = this.dataRuns[dataRunInfo.id].data;
-      let maxTimeStamp = 0;
-      for (const [sensorId, sensorData] of Object.entries(dataRunData)) {
-        // Collect all recorded sensors
-        recordedSensors.add(sensorId);
 
-        // Get last timeStamp for this sensor
+      // Collect all sensor IDs and find max record time for each data run
+      for (const [sensorId, sensorData] of Object.entries(dataRunData)) {
+        dataRunInfo.recordedSensors.add(sensorId);
+
         const lastSensorData = sensorData[sensorData.length - 1];
         const lastSensorDataTime = lastSensorData.time && parseInt(parseFloat(lastSensorData.time) * 1000);
-        maxTimeStamp = Math.max(maxTimeStamp, lastSensorDataTime || 0);
+        dataRunInfo.maxTimeStamp = Math.max(dataRunInfo.maxTimeStamp, lastSensorDataTime || 0);
       }
-      dataRunInfo.maxTimeStamp = maxTimeStamp;
-    }
 
-    // Create Row Names with all sensor that had been recorded
-    for (const sensorId of recordedSensors) {
-      const sensorInfo = sensors[sensorId];
-      const subSensorIds = Object.keys(sensorInfo.data);
-      invertedSensorsInfo[sensorId] = {
-        name: sensorInfo.name,
-        sensorIndexInRow: currentIndex,
-        numSubSensor: subSensorIds.length,
-      };
-      currentIndex += subSensorIds.length;
-      if (sensorId === TIME_STAMP_ID) {
-        headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit})`);
-        continue;
-      }
-      for (const subSensorId of subSensorIds) {
-        headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
+      // Create Row Names with all sensor that had been recorded
+      for (const sensorId of dataRunInfo.recordedSensors) {
+        const sensorInfo = sensors[sensorId];
+        const subSensorIds = Object.keys(sensorInfo.data);
+        dataRunInfo.invertedSensorsInfo[sensorId] = {
+          name: sensorInfo.name,
+          sensorIndexInRow: currentIndex,
+          numSubSensor: subSensorIds.length,
+        };
+        currentIndex += subSensorIds.length;
+
+        if (sensorId === TIME_STAMP_ID) {
+          dataRunInfo.headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit})`);
+          continue;
+        }
+        for (const subSensorId of subSensorIds) {
+          dataRunInfo.headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
+        }
       }
     }
 
     dataRunsInfo.forEach((dataRunInfo) => {
+      const { headers, interval: stepInterval, maxTimeStamp, recordedSensors, invertedSensorsInfo, id } = dataRunInfo;
       // dataRunData: {sensorId: [sensorData]}
-      const maxTimeStamp = dataRunInfo.maxTimeStamp;
-      const dataRunData = this.dataRuns[dataRunInfo.id].data;
-      dataRunInfo.sheetRows.push(headers);
-
-      // At the time each sensor has value is different
+      const dataRunData = this.dataRuns[id].data;
+      const sheetRows = [headers];
       const sensorDataIndices = {};
       recordedSensors.forEach((sensorId) => {
         sensorDataIndices[sensorId] = 0;
       });
 
-      for (let timeStamp = 0; timeStamp <= maxTimeStamp; timeStamp += dataRunInfo.interval) {
+      for (let timeStamp = 0; timeStamp <= maxTimeStamp; timeStamp += stepInterval) {
         // Create default rows, Assign timeStamp for each row
         let hasData = false;
         const row = new Array(headers.length).fill("");
         row[TIME_STAMP_ID] = (timeStamp / 1000).toFixed(3);
 
-        recordedSensors.forEach((sensorId) => {
+        for (const sensorId of recordedSensors) {
           const invertedSensor = invertedSensorsInfo[sensorId];
           const sensorDataIndex = sensorDataIndices[sensorId];
 
-          if (
-            sensorId === TIME_STAMP_ID ||
-            dataRunData[sensorId].length === 0 ||
-            sensorDataIndex >= dataRunData[sensorId].length
-          )
-            return;
+          if (sensorId === TIME_STAMP_ID || !dataRunData[sensorId] || sensorDataIndex >= dataRunData[sensorId].length) {
+            continue;
+          }
 
-          const sensorDataAtIndex = dataRunData[sensorId][sensorDataIndex];
-          const sensorDataTime = parseInt(parseFloat(sensorDataAtIndex.time) * 1000);
+          const sensorData = dataRunData[sensorId][sensorDataIndex];
+          const sensorDataTime = parseInt(parseFloat(sensorData.time) * 1000);
 
           if (sensorDataTime === timeStamp) {
-            sensorDataIndices[sensorId] += 1;
+            sensorDataIndices[sensorId] = sensorDataIndex + 1;
             hasData = true;
             for (let i = 0; i < invertedSensor.numSubSensor; i++) {
-              row[invertedSensor.sensorIndexInRow + i] = sensorDataAtIndex.values[i];
+              row[invertedSensor.sensorIndexInRow + i] = sensorData.values[i];
             }
           }
-        });
-        hasData && dataRunInfo.sheetRows.push(row);
+        }
+        if (hasData) {
+          sheetRows.push([...row]);
+        }
       }
+      dataRunInfo.sheetRows = sheetRows;
     });
 
     exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
@@ -591,16 +586,18 @@ export class DataManager {
     const curBuffer = { ...this.buffer };
     const parsedTime = this.getParsedCollectingDataTime();
 
-    curBuffer[sensorId] = sensorValues;
+    if (sensorId && sensorValues) {
+      curBuffer[sensorId] = sensorValues;
+    }
 
     this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
     return { ...this.buffer };
   }
 
-  updateDataRunDataAtIndex(selectedIndex, sensorId, sensorData) {
+  updateDataRunDataAtIndex(selectedIndex, sensorId, sensorValues) {
     const dataRunData = this.dataRuns[this.curDataRunId].data;
     if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex]) {
-      dataRunData[sensorId][selectedIndex] = sensorData;
+      dataRunData[sensorId][selectedIndex].values = sensorValues;
     }
   }
 

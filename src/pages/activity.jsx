@@ -83,12 +83,12 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
-  // const dataRun = getDataRun(currentDataRunId);
 
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
   const lineChartRef = useRef([]);
   let prevChartDataRef = useRef([]);
+  const tableRef = useRef();
 
   useEffect(() => {
     DataManagerIST.init();
@@ -314,6 +314,14 @@ export default ({ f7route, f7router, filePath, content }) => {
     setIsRunning(false);
   }
 
+  function handleGetManualSample() {
+    if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(layout)) {
+      tableRef.current.handleSamplingManual();
+    } else {
+      DataManagerIST.appendManualSample();
+    }
+  }
+
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
@@ -436,6 +444,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               <div className="__card __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
+                    ref={tableRef}
                     key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[0].sensor)}
                     currentValue={getCurrentValue(widgets[0].sensor, true)}
@@ -467,6 +476,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 )}
                 {layout === LAYOUT_NUMBER_TABLE && (
                   <TableWidget
+                    ref={tableRef}
                     key={`${currentPageIndex}_table`}
                     data={getDataForTable(widgets[1].sensor)}
                     currentValue={getCurrentValue(widgets[1].sensor, true)}
@@ -493,6 +503,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {layout === LAYOUT_TABLE && (
                 <TableWidget
+                  ref={tableRef}
                   key={`${currentPageIndex}_table`}
                   data={getDataForTable(widgets[0].sensor)}
                   currentValue={getCurrentValue(widgets[0].sensor, true)}
@@ -521,6 +532,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               frequency={frequency}
               handleFrequencySelect={handleFrequencySelect}
               handleSetTimerInMs={handleSetTimerInMs}
+              handleGetManualSample={handleGetManualSample}
             />
           </div>
           <div className="__toolbar-center">
