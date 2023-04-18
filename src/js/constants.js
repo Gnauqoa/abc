@@ -198,3 +198,5 @@ export const TIMER_NO_STOP = -1;
 // Sensor
 export const SENSOR_STATUS_ONLINE = "online";
 export const SENSOR_STATUS_OFFLINE = "offline";
+
+export const DEFAULT_SENSOR_ID = -1;

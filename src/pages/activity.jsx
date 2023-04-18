@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7ready, f7 } from "framework7-react";
+import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7 } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import {
@@ -13,6 +13,7 @@ import {
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
   TIMER_NO_STOP,
+  DEFAULT_SENSOR_ID,
 } from "../js/constants";
 
 import BackButton from "../components/back-button";
@@ -28,8 +29,8 @@ import DataDisplaySetting from "../components/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import NewPagePopup from "../components/new-page";
+import DataRunManagementPopup from "../components/datarun-management";
 
-export const DEFAULT_SENSOR_ID = -1;
 const recentFilesService = new storeService("recent-files");
 
 export default ({ f7route, f7router, filePath, content }) => {
@@ -86,6 +87,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   const displaySettingPopup = useRef();
   const newPagePopup = useRef();
+  const dataRunManagementPopup = useRef();
   const lineChartRef = useRef([]);
   let prevChartDataRef = useRef([]);
   const tableRef = useRef();
@@ -309,6 +311,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(() => updatedPages);
   }
 
+  function handleChangeDataRun() {
+    console.log("handleChangeDataRun");
+  }
+
   function handleStopCollecting() {
     DataManagerIST.stopCollectingData();
     setIsRunning(false);
@@ -421,8 +427,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       </Navbar>
       <Popover className="setting-popover-menu">
         <List>
-          {/* <ListItem link="#" popoverClose title="Quản lý dữ liệu" /> */}
-          {/* <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" /> */}
+          <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
+          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
           <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
           {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
         </List>
@@ -435,6 +441,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       </Popup>
       <Popup className="new-page-popup" ref={newPagePopup}>
         <NewPagePopup handleNewPage={handleNewPage}></NewPagePopup>
+      </Popup>
+      <Popup className="data-run-management-popup" ref={dataRunManagementPopup}>
+        <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun}></DataRunManagementPopup>
       </Popup>
 
       <div className="full-height display-flex flex-direction-column justify-content-space-between">

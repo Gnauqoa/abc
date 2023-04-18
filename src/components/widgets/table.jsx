@@ -11,8 +11,8 @@ import {
   LAYOUT_NUMBER_TABLE,
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
+  DEFAULT_SENSOR_ID,
 } from "../../js/constants";
-import { DEFAULT_SENSOR_ID } from "../../pages/activity";
 
 const DEFAULT_ROWS = 15;
 const FIRST_COLUMN_DEFAULT_OPT = "time";
@@ -84,7 +84,12 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     handleSamplingManual() {
       let transformedRows = convertDataToTableRows(data);
       const newRow = convertCurrentValueToTableRow(currentValue);
-      if (!newRow) return;
+      if (!newRow) {
+        // if the user is not select sensor and manually
+        // sampling, just put the current buffer to dataRuns
+        DataManagerIST.appendManualSample();
+        return;
+      }
 
       setNumRows(transformedRows.length);
       let curSelectedRow = selectedRow;

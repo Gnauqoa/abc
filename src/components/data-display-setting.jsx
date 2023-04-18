@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Page, Navbar, NavRight, List, ListInput, Link, Row, Col, Button, Popup, Icon, f7 } from "framework7-react";
+import React from "react";
+import { Page, Navbar, NavRight, List, ListInput, Button, f7 } from "framework7-react";
 
 import _ from "lodash";
 import sensors from "../services/sensor-service";

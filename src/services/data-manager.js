@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { findGCD, getLCM, exportDataRunsToExcel } from "./../utils/core";
+import { exportDataRunsToExcel } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import { sensors } from "./sensor-service";
 import {
@@ -62,24 +62,6 @@ export class DataManager {
      * @type {EventEmitter}
      */
     this.emitter = new EventEmitter();
-
-    // /**
-    //  * Intervals for emitting subscribers.
-    //  * @type {number[]}
-    //  */
-    // this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
-
-    // /**
-    //  * Maximum interval for emitting subscribers.
-    //  * @type {number}
-    //  */
-    // this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
-
-    // /**
-    //  * Interval for emitting subscribers.
-    //  * @type {number}
-    //  */
-    // this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
 
     /**
      * Total time for collecting data.
@@ -335,7 +317,7 @@ export class DataManager {
   updateDataRun(dataRunId, dataRunName) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun || !dataRun.name) {
-      // console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`DATA_MANAGER-updateDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     dataRun.name = dataRunName;
@@ -348,8 +330,9 @@ export class DataManager {
    * @returns {boolean} - Returns true if the data run was successfully deleted, false otherwise.
    */
   deleteDataRun(dataRunId) {
-    if (!this.dataRuns[dataRunId]) {
-      // console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-deleteDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     delete this.dataRuns[dataRunId];
@@ -362,7 +345,12 @@ export class DataManager {
    * @param {object} sensorsData - An object containing the data from all sensors.
    */
   appendDataRun(dataRunId, parsedTime, curBuffer) {
-    const dataRunData = this.dataRuns[dataRunId].data;
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-appendDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+    const dataRunData = dataRun.data;
 
     Object.keys(curBuffer).forEach((sensorId) => {
       const sensorData = {
@@ -424,10 +412,12 @@ export class DataManager {
   }
 
   getWidgetDataRunData(currentDataRunId, sensorId) {
-    const dataRunData = this.dataRuns[currentDataRunId]?.data;
-    if (!dataRunData) return [];
-
-    const widgetData = dataRunData[sensorId];
+    const dataRun = this.dataRuns[currentDataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-getWidgetDataRunData: dataRunId ${currentDataRunId} does not exist`);
+      return [];
+    }
+    const widgetData = dataRun.data[sensorId];
     return widgetData ? [...widgetData] : [];
   }
 
@@ -595,7 +585,7 @@ export class DataManager {
   }
 
   updateDataRunDataAtIndex(selectedIndex, sensorId, sensorValues) {
-    const dataRunData = this.dataRuns[this.curDataRunId].data;
+    const dataRunData = this.dataRuns[this.curDataRunId]?.data;
     if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex]) {
       dataRunData[sensorId][selectedIndex].values = sensorValues;
     }
