@@ -1,6 +1,6 @@
 import React from "react";
 import { f7, Button } from "framework7-react";
-import { Page, Link, Navbar, NavTitle, Row, Col, NavLeft, Block, NavRight } from "framework7-react";
+import { Page, Link, Navbar, NavTitle, Row, Col, NavLeft, Block } from "framework7-react";
 
 import {
   LAYOUT_CHART,

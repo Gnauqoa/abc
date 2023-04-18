@@ -11,25 +11,19 @@ import {
   ListItem,
   AccordionContent,
   PageContent,
-  f7,
 } from "framework7-react";
 import _ from "lodash";
 import sensorList from "../services/sensor-service";
 import clsx from "clsx";
 import DataManagerIST from "../services/data-manager";
-import { SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
+import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
 
 export default function SensorSelector({ disabled, selectedSensor, hideDisplayUnit, onChange = () => {} }) {
-  const [selectedSensorState, setSelectedSensorState] = useState("");
-  const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
+  const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
+  const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
 
   useEffect(() => {
-    appendSensorStatusKey();
-    setInitSelectedSensor();
-  }, [""]);
-
-  const setInitSelectedSensor = () => {
     if (Object.keys(selectedSensor).length != 0) {
       const sensorId = parseInt(selectedSensor.id),
         sensorIndex = parseInt(selectedSensor.index),
@@ -41,7 +35,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
         setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
       }
     }
-  };
+  }, []);
 
   const changeHandler = (value) => {
     const selectedValueString = value;
@@ -66,21 +60,19 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
     }
   };
 
-  const appendSensorStatusKey = () => {
-    const sensorListForDisplay = sensorList.map((sensor) => ({ ...sensor, sensorStatus: SENSOR_STATUS_OFFLINE }));
-    setSensorListForDisplay(sensorListForDisplay);
+  const handleOpenPopup = () => {
+    const activeSensors = DataManagerIST.getListActiveSensor();
+    const sensorListForDisplay = sensorList.map((sensor) => {
+      const sensorStatus = activeSensors.includes(sensor.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
+      return { ...sensor, sensorStatus };
+    });
+    const sortedSensors = sortSensorList(sensorListForDisplay);
+    setSensorListForDisplay(sortedSensors);
+    sensorPopup.current.f7Popup().open();
   };
 
   const sortSensorList = (sensors) => {
     const sortedSensors = sensors.sort((a, b) => {
-      // if (a.id === selectedSensorIdState) {
-      //   return -1;
-      // }
-
-      // if (b.id === selectedSensorIdState) {
-      //   return 1;
-      // }
-
       if (a.sensorStatus === b.sensorStatus) {
         if (a.name < b.name) {
           return -1;
@@ -100,30 +92,12 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
     return sortedSensors;
   };
 
-  const updateSensorStatus = () => {
-    const activeSensors = DataManagerIST.getListActiveSensor();
-    const updatedStatusSensors = sensorListForDisplay.map((item) => {
-      const sensorStatus = activeSensors.includes(item.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
-      return { ...item, sensorStatus };
-    });
-    const sortedSensors = sortSensorList(updatedStatusSensors);
-    setSensorListForDisplay(sortedSensors);
-  };
-
   const sensorPopup = useRef(null);
 
   return (
     <div className="sensor-selector ">
-      <Button
-        disabled={disabled}
-        fill
-        round
-        onClick={() => {
-          updateSensorStatus();
-          sensorPopup.current.f7Popup().open();
-        }}
-      >
-        {selectedSensorState === "" ? "----- Chọn cảm biến -----" : selectedSensorState}
+      <Button disabled={disabled} fill round onClick={handleOpenPopup}>
+        {selectedSensor.id === DEFAULT_SENSOR_ID ? "----- Chọn cảm biến -----" : selectedSensorState}
       </Button>
       <Popup
         className="edl-popup"
