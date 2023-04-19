@@ -1,6 +1,6 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 
-import "./table_chart.scss";
+import "./index.scss";
 import SensorSelector from "../sensor-selector";
 import { getUnit } from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";

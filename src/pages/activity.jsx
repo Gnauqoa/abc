@@ -23,7 +23,7 @@ import ActivityPageNav from "../components/molecules/activity-page-nav";
 import Timer from "../components/atoms/timer";
 import LineChart from "../components/molecules/line-widget/line_chart";
 import NumberWidget from "../components/molecules/number-widget/number";
-import TableWidget from "../components/molecules/table-widget/table";
+import TableWidget from "../components/molecules/table-widget";
 import SamplingSetting from "../components/molecules/sampling-settings";
 import DataDisplaySetting from "../components/molecules/data-display-setting";
 import { saveFile } from "../services/file-service";
