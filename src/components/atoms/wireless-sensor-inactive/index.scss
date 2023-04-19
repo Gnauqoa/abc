@@ -1,0 +1,42 @@
+.__inactive {
+  display: inline-block;
+  height: 100%;
+  cursor: pointer;
+  border-radius: inherit;
+
+  .__icon {
+    height: 70%;
+    width: 100%;
+
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+
+    color: #d9d9d9 !important;
+  }
+
+  .__text {
+    height: 30%;
+    width: 100%;
+    line-height: 20px;
+    color: #000000;
+    text-align: center;
+    font-family: Inter;
+    font-size: 18px;
+  }
+}
+
+.__inactive:active {
+  background: #d9d9d9;
+
+  .__icon {
+    height: 70%;
+    width: 100%;
+
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+
+    color: #ffffff !important;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { Navbar, Button, Page } from "framework7-react";
-import DataManagerIST from "../services/data-manager";
+import DataManagerIST from "../../../services/data-manager";
 
 const DataRunManagementPopup = ({ handleChangeDataRun }) => {
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();

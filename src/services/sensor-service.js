@@ -1,3 +1,12 @@
+import o2SensorIcon from "../img/sensor-info/o2.png";
+import doSensorIcon from "../img/sensor-info/do.png";
+import co2SensorIcon from "../img/sensor-info/co2.png";
+import phSensorIcon from "../img/sensor-info/ph.png";
+import humiditySensorIcon from "../img/sensor-info/temp-humidity.png";
+import soundSensorIcon from "../img/sensor-info/sound.png";
+import salinitySensorIcon from "../img/sensor-info/salinity.png";
+import tempSensorIcon from "../img/sensor-info/temp.png";
+
 export const sensors = [
   {
     id: 0,
@@ -77,8 +86,84 @@ export const sensors = [
   },
 ];
 
+const sensorIcons = {
+  1: [
+    {
+      icon: co2SensorIcon,
+      label: "CO2",
+      width: 60,
+    },
+  ],
+  2: [
+    {
+      icon: doSensorIcon,
+      label: "DO",
+      width: 60,
+    },
+  ],
+  3: [
+    {
+      icon: o2SensorIcon,
+      label: "O2",
+      width: 60,
+    },
+  ],
+  4: [
+    {
+      icon: tempSensorIcon,
+      label: "Nhiệt độ",
+      width: 40,
+    },
+  ],
+  5: [
+    {
+      icon: tempSensorIcon,
+      label: "Nhiệt độ",
+      width: 40,
+    },
+    {
+      icon: humiditySensorIcon,
+      label: "Độ ẩm",
+      width: 60,
+    },
+  ],
+  6: [
+    {
+      icon: salinitySensorIcon,
+      label: "Nồng độ mặn",
+      width: 60,
+    },
+  ],
+  7: [
+    {
+      icon: phSensorIcon,
+      label: "HP",
+      width: 60,
+    },
+  ],
+  8: [
+    {
+      icon: soundSensorIcon,
+      label: "Âm thanh",
+      width: 60,
+    },
+  ],
+  9: [
+    {
+      icon: soundSensorIcon,
+      label: "Áp suất khí",
+      width: 60,
+    },
+  ],
+};
+
 export function getUnit(sensorId, dataIndex) {
   return sensors.filter((s) => s.id === sensorId)[0]?.data[dataIndex]?.unit || "";
+}
+
+export function getSensorIcon(sensorId, dataIndex) {
+  const sensorIcon = sensorIcons[sensorId]?.[dataIndex];
+  return sensorIcon !== undefined ? sensorIcon : {};
 }
 
 export default sensors;

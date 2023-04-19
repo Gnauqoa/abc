@@ -2,7 +2,7 @@ import React from "react";
 import { Page, Navbar, NavRight, List, ListInput, Button, f7 } from "framework7-react";
 
 import _ from "lodash";
-import sensors from "../services/sensor-service";
+import sensors from "../../../services/sensor-service";
 import { evaluate } from "mathjs";
 
 const sensorList = sensors;

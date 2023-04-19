@@ -13,10 +13,10 @@ import {
   PageContent,
 } from "framework7-react";
 import _ from "lodash";
-import sensorList from "../services/sensor-service";
+import sensorList from "../../../services/sensor-service";
 import clsx from "clsx";
-import DataManagerIST from "../services/data-manager";
-import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../js/constants";
+import DataManagerIST from "../../../services/data-manager";
+import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../../../js/constants";
 
 export default function SensorSelector({ disabled, selectedSensor, hideDisplayUnit, onChange = () => {} }) {
   const [selectedSensorState, setSelectedSensorState] = useState();

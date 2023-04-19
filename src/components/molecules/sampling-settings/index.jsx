@@ -1,5 +1,5 @@
 import React from "react";
-import clockFreImg from "../img/activity/clock-frequency.png";
+import clockFreImg from "../../../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
 import {
   FREQUENCIES,
@@ -7,8 +7,8 @@ import {
   SAMPLING_MANUAL_NAME,
   TIMER_NO_STOP,
   FREQUENCY_UNIT,
-} from "../js/constants";
-import dialog from "./dialog";
+} from "../../../js/constants";
+import dialog from "../dialog/dialog";
 
 const FREQUENCY_UNITS = {
   "": 1,

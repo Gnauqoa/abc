@@ -7,7 +7,7 @@ import $ from "jquery";
 Chart.register(zoomPlugin);
 
 import SensorSelector from "../sensor-selector";
-import sensorList from "../../services/sensor-service";
+import sensorList from "../../../services/sensor-service";
 
 const defaultXUnit = "s",
   roundX = 3;

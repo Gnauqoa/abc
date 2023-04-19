@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import $ from "jquery";
-import { getUnit } from "../../services/sensor-service";
+import { getUnit } from "../../../services/sensor-service";
 import "./number.scss";
 import SensorSelector from "../sensor-selector";
 

@@ -2,7 +2,7 @@ import * as WebSerialUtil from "./webserial-utils";
 import * as BluetoothUtil from "./bluetooth-utils";
 import * as sharedDataUtils from "./shared-data-utils";
 import * as core from "./core";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 import {
   YOLOBIT,

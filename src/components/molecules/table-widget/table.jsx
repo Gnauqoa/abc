@@ -2,8 +2,8 @@ import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } f
 
 import "./table_chart.scss";
 import SensorSelector from "../sensor-selector";
-import { getUnit } from "../../services/sensor-service";
-import DataManagerIST from "../../services/data-manager";
+import { getUnit } from "../../../services/sensor-service";
+import DataManagerIST from "../../../services/data-manager";
 
 import {
   LAYOUT_TABLE,
@@ -12,7 +12,7 @@ import {
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
   DEFAULT_SENSOR_ID,
-} from "../../js/constants";
+} from "../../../js/constants";
 
 const DEFAULT_ROWS = 15;
 const FIRST_COLUMN_DEFAULT_OPT = "time";

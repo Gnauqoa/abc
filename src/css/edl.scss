@@ -21,28 +21,42 @@
 }
 
 .activity-layout {
-  width: 90%;
+  width: 98%;
   height: calc(100% - 80px);
   margin: auto;
   display: flex;
-  gap: 20px;
-  .__card {
-    background-color: #ffffff;
-    border-radius: 15px;
-    width: 100%;
+  gap: 1%;
+
+  .__card-sensors {
+    width: 15%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4%;
   }
+
+  .__card-widget {
+    border-radius: 15px;
+    width: 85%;
+    background-color: #ffffff;
+  }
+
   .__card-left {
-    width: 33%;
+    width: 27%;
     .sensor-select-container-table-chart {
       width: 47%;
     }
   }
   .__card-right {
+    width: 57%;
     .sensor-select-vertical-mount-container {
       left: 37%;
     }
-    width: 67%;
   }
+}
+
+.activity-sensors {
+  background-color: #000000;
 }
 
 .activity-footer {

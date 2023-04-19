@@ -6,7 +6,7 @@ import openImg from "../img/home/open-activity.png";
 import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 const recentFilesService = new storeService("recent-files");
 

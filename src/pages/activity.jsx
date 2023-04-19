@@ -16,20 +16,21 @@ import {
   DEFAULT_SENSOR_ID,
 } from "../js/constants";
 
-import BackButton from "../components/back-button";
-import RoundButton from "../components/round-button";
-import dialog from "../components/dialog";
-import ActivityPageNav from "../components/activity-page-nav";
-import Timer from "../components/timer";
-import LineChart from "../components/widgets/line_chart";
-import NumberWidget from "../components/widgets/number";
-import TableWidget from "../components/widgets/table";
-import SamplingSetting from "../components/sampling-settings";
-import DataDisplaySetting from "../components/data-display-setting";
+import BackButton from "../components/atoms/back-button";
+import RoundButton from "../components/atoms/round-button";
+import dialog from "../components/molecules/dialog/dialog";
+import ActivityPageNav from "../components/molecules/activity-page-nav";
+import Timer from "../components/atoms/timer";
+import LineChart from "../components/molecules/line-widget/line_chart";
+import NumberWidget from "../components/molecules/number-widget/number";
+import TableWidget from "../components/molecules/table-widget/table";
+import SamplingSetting from "../components/molecules/sampling-settings";
+import DataDisplaySetting from "../components/molecules/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import NewPagePopup from "../components/new-page";
-import DataRunManagementPopup from "../components/datarun-management";
+import NewPagePopup from "../components/molecules/new-page";
+import DataRunManagementPopup from "../components/molecules/data-run-management";
+import WirelessSensorContainer from "../components/molecules/wireless-sensor-container";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -448,9 +449,10 @@ export default ({ f7route, f7router, filePath, content }) => {
 
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
+          <WirelessSensorContainer></WirelessSensorContainer>
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
-              <div className="__card __card-left">
+              <div className="__card-widget __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     ref={tableRef}
@@ -473,7 +475,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   />
                 )}
               </div>
-              <div className="__card __card-right">
+              <div className="__card-widget __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
@@ -500,7 +502,7 @@ export default ({ f7route, f7router, filePath, content }) => {
             </>
           )}
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(layout) && (
-            <div className="__card">
+            <div className="__card-widget">
               {layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}

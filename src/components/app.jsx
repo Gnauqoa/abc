@@ -5,10 +5,10 @@ import cordovaApp from "../js/cordova-app";
 
 import routes from "../js/routes";
 import store from "../js/store";
-import { ConnectContextProvider } from "./connect/connect-context";
+import { ConnectContextProvider } from "./molecules/connect/connect-context";
 import logger from "../services/logger-service";
 import MainMenu from "../pages/menu/menu";
-import Dialogs from "./dialogs";
+import Dialogs from "./molecules/dialog/dialogs";
 
 import dataManager from "../services/data-manager";
 
@@ -74,11 +74,11 @@ const MyApp = () => {
     // Call F7 APIs here
     if (f7.device.electron) {
       window._cdvElectronIpc.onDeviceData((event, value) => {
-          dataManager.callbackReadSensor(value);
+        dataManager.callbackReadSensor(value);
       });
       window._cdvElectronIpc.onDeviceDisconnected((event, value) => {
         dataManager.callbackSensorDisconnected(value);
-    })
+      });
     }
   });
 

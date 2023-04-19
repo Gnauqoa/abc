@@ -9,14 +9,14 @@ import {
   LAYOUT_TABLE_CHART,
   LAYOUT_NUMBER_CHART,
   LAYOUT_NUMBER_TABLE,
-} from "../js/constants";
+} from "../../../js/constants";
 
-import chartImg from "../img/layout/chart.png";
-import numberChartImg from "../img/layout/number-chart.png";
-import numberTableImg from "../img/layout/number-table.png";
-import numberImg from "../img/layout/number.png";
-import tableChartImg from "../img/layout/table-chart.png";
-import tableImg from "../img/layout/table.png";
+import chartImg from "../../../img/layout/chart.png";
+import numberChartImg from "../../../img/layout/number-chart.png";
+import numberTableImg from "../../../img/layout/number-table.png";
+import numberImg from "../../../img/layout/number.png";
+import tableChartImg from "../../../img/layout/table-chart.png";
+import tableImg from "../../../img/layout/table.png";
 
 const NewPagePopup = ({ handleNewPage }) => {
   const conSelectHandler = (event) => {

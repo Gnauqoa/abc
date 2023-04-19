@@ -1,5 +1,5 @@
 import { f7 } from "framework7-react";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 import * as sharedDataUtils from "./shared-data-utils";
 import store from "store";
 

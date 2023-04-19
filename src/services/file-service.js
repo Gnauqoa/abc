@@ -1,6 +1,6 @@
 import { f7 } from "framework7-react";
 import { exportFileToPc } from "../utils/core";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 function openFile(
   filePath,
