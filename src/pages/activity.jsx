@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7 } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
+import SensorServices, { defaultSensors } from "../services/sensor-service";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -29,7 +30,7 @@ import SamplingSetting from "../components/molecules/popup-sampling-settings";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import NewPagePopup from "../components/molecules/popup-new-page";
-import DataRunManagementPopup from "../components/molecules/data-run-management";
+import DataRunManagementPopup from "../components/molecules/popup-data-run-management";
 import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
 
 const recentFilesService = new storeService("recent-files");
@@ -59,6 +60,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       frequency: 1,
       dataRuns: [],
       sensorSettings: [],
+      sensors: defaultSensors,
+      customSensors: [],
     };
   } else if (content) {
     activity = content;
@@ -86,7 +89,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
 
-  const displaySettingPopup = useRef();
+  // const displaySettingPopup = useRef();
   const newPagePopup = useRef();
   const dataRunManagementPopup = useRef();
   const lineChartRef = useRef([]);
@@ -96,6 +99,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   useEffect(() => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
+    SensorServices.importSensors(activity.sensors, activity.customSensors);
   }, []);
 
   useEffect(() => {
@@ -118,18 +122,18 @@ export default ({ f7route, f7router, filePath, content }) => {
     setName(e.target.value);
   }
 
-  function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [...sensorSettings];
-    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-      sensorSettingsCpy.push({ ...setting });
-    } else {
-      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-      sensorSettingsCpy[foundIndex] = setting;
-    }
+  // function handleSensorSettingSubmit(setting) {
+  //   let sensorSettingsCpy = [...sensorSettings];
+  //   if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
+  //     sensorSettingsCpy.push({ ...setting });
+  //   } else {
+  //     var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
+  //     sensorSettingsCpy[foundIndex] = setting;
+  //   }
 
-    setSensorSettings(sensorSettingsCpy);
-    displaySettingPopup.current.f7Popup().close();
-  }
+  //   setSensorSettings(sensorSettingsCpy);
+  //   displaySettingPopup.current.f7Popup().close();
+  // }
 
   function handleFrequencySelect(frequency) {
     setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
@@ -141,7 +145,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     setTimerStopTime(timerNumber);
   }
 
-  async function handleActivitySave() {
+  const saveActivity = () => {
     // Collecting data from dataRuns
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
     const updatedPage = pages.map((page, index) => {
@@ -151,7 +155,22 @@ export default ({ f7route, f7router, filePath, content }) => {
         return page;
       }
     });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServices.exportSensors();
+    const updatedActivity = {
+      ...activity,
+      name,
+      pages: updatedPage,
+      dataRuns: updatedDataRuns,
+      frequency: frequency,
+      sensors: sensors,
+      customSensors: customSensors,
+    };
+
+    return updatedActivity;
+  };
+  async function handleActivitySave() {
+    const updatedActivity = saveActivity();
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
@@ -172,16 +191,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   async function handleActivityBack() {
-    // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets };
-      } else {
-        return page;
-      }
-    });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+    const updatedActivity = saveActivity();
 
     dialog.prompt(
       "Bạn có muốn lưu lại những thay đổi này không?",

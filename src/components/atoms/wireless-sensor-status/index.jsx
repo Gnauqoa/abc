@@ -5,18 +5,13 @@ import batteryIcon from "../../../img/battery/100.png";
 import SensorServices from "../../../services/sensor-service";
 import "./index.scss";
 
-const WirelessSensorActive = ({ onClick, sensorId }) => {
-  const { icon, label, width } = SensorServices.getSensorIcon(8, 0);
-  const unit = SensorServices.getUnit(8, 0);
-
-  const onClickHandler = () => {
-    onClick(sensorId);
-  };
+const WirelessSensorActive = ({ sensorId }) => {
+  const { icon, label, width, unit } = SensorServices.getSensorIcon(sensorId);
 
   return (
     <>
       {sensorId !== -1 ? (
-        <div className="__active" onClick={onClickHandler}>
+        <div className="__active">
           <div className="__icon">
             <div className="__sensor-icon">
               <img src={icon || ""} alt={label} style={width ? { width: width } : {}} />
@@ -41,7 +36,7 @@ const WirelessSensorActive = ({ onClick, sensorId }) => {
           </div>
         </div>
       ) : (
-        <div className="__inactive" onClick={onClickHandler}>
+        <div className="__inactive">
           <div className="__icon">
             <Icon material="error" size="60"></Icon>
           </div>

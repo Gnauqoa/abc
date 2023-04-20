@@ -1,43 +1,43 @@
-import React, { forwardRef } from "react";
-import { Page, Navbar, NavRight, List, ListInput, Button, f7, Popup } from "framework7-react";
+import React, { forwardRef, useEffect } from "react";
+import { Page, Navbar, List, ListInput, Button, f7, Popup, Popover } from "framework7-react";
 
-import _ from "lodash";
 import SensorServices from "../../../services/sensor-service";
-import { evaluate } from "mathjs";
+import _ from "lodash";
 
-const sensorList = SensorServices.getSensors();
+import "./index.scss";
 
-const SensorSettingSettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) => {
+const SensorSettingSettingPopup = ({ sensorId, onModifySensor }, ref) => {
+  const sensorInfo = SensorServices.getSensorInfo(sensorId);
   const [formField, setFormField] = React.useState({});
 
-  const FormInitState = {
-    sensorDetailId: "",
-    unitOfMeasure: "",
-    floatingPointPosition: "",
-    transformFormula: "",
-  };
-
-  const resetSettingOnChangeSensor = () => {
-    setFormField({
-      unitOfMeasure: "",
-      floatingPointPosition: "",
-      transformFormula: "",
-    });
-  };
-
-  const resetSettings = () => {
-    setFormField(FormInitState);
-  };
-
-  const loadSensorSavedSetting = (sensorDetailId) => {
-    const foundSavedSetting = sensorSettings.find((e) => e.sensorDetailId === sensorDetailId);
-    if (foundSavedSetting != undefined) {
+  useEffect(() => {
+    if (!sensorInfo) return;
+    const unitInfos = sensorInfo.data;
+    if (Array.isArray(unitInfos) && unitInfos.length > 0) {
+      const unitInfo = unitInfos[0];
       setFormField({
-        unitOfMeasure: foundSavedSetting.unitOfMeasure,
-        floatingPointPosition: foundSavedSetting.floatingPointPosition,
-        transformFormula: foundSavedSetting.transformFormula,
+        unitId: unitInfo.id,
+        unitName: unitInfo.name || "",
+        displayedNamed: unitInfo.name || "",
+        unitOfMeasure: unitInfo.unit || "",
+        minValue: unitInfo.min || "0",
+        maxValue: unitInfo.max || "0",
+        formatFloatingPoint: unitInfo.formatFloatingPoint || "0",
       });
     }
+  }, [sensorId]);
+
+  const onChangeSensorUnit = (unitInfo) => {
+    setFormField({
+      unitId: unitInfo.id,
+      unitName: unitInfo.name,
+      displayedNamed: unitInfo.name,
+      unitOfMeasure: unitInfo.unit,
+      minValue: unitInfo.min,
+      maxValue: unitInfo.max,
+      formatFloatingPoint: unitInfo.formatFloatingPoint || 0,
+    });
+    f7.popover.close();
   };
 
   const formFieldHandler = (e) => {
@@ -46,132 +46,152 @@ const SensorSettingSettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref)
     setFormField((values) => ({ ...values, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const validate = (sensorUnitInfo) => {
+    if (sensorUnitInfo.name === "") {
+      f7.dialog.alert("Thông tin hiển thị không được phép để trống");
+      return false;
+    }
+
+    if (Number.isNaN(sensorUnitInfo.min)) {
+      f7.dialog.alert("Giá trị tối thiểu phải là số");
+      return false;
+    }
+
+    if (Number.isNaN(sensorUnitInfo.max)) {
+      f7.dialog.alert("Giá trị tối đa phải là số");
+      return false;
+    }
+
+    if (Number.isNaN(sensorUnitInfo.formatFloatingPoint)) {
+      f7.dialog.alert("Giá trị định dạng phải là số");
+      return false;
+    }
+
+    return true;
+  };
+
+  const onSaveHandler = (event) => {
     event.preventDefault();
-    if (validate()) {
-      setFormField(FormInitState);
-      onSubmit({
-        sensorDetailId: formField.sensorDetailId,
-        unitOfMeasure: formField.unitOfMeasure,
-        floatingPointPosition: formField.floatingPointPosition,
-        transformFormula: formField.transformFormula,
-      });
-    }
-  };
 
-  const validate = () => {
-    if (formField.sensorDetailId === "") {
-      f7.dialog.alert("Không có cảm biến nào được chọn");
-      return false;
-    }
+    const parsedMinValue = Number(formField.minValue || "0");
+    const parsedMaxValue = Number(formField.maxValue || "0");
+    const parsedFormatFloatingPoint = Number(formField.formatFloatingPoint || "0");
+    const newSensorUnitInfo = {
+      id: formField.unitId,
+      name: formField.displayedNamed,
+      unit: formField.unitOfMeasure,
+      min: parsedMinValue,
+      max: parsedMaxValue,
+      formatFloatingPoint: parsedFormatFloatingPoint,
+    };
 
-    if (formField.unitOfMeasure === "nan" || formField.unitOfMeasure === "") {
-      f7.dialog.alert(`Đơn vị đo không được phép để trống`);
-      return false;
-    }
-
-    return customFomularValidator(formField.transformFormula);
-  };
-
-  const customFomularValidator = (transformFormula) => {
-    if (transformFormula.length === 0 || transformFormula === "undefined") {
-      return true;
-    }
-    try {
-      const trimmedFomular = transformFormula.trim();
-      const scope = {
-        x: 3,
-      };
-      evaluate(trimmedFomular, scope);
-      return true;
-    } catch (err) {
-      f7.dialog.alert(`Công thức không hợp lệ, vui lòng kiểm tra lại. Chi tiết lỗi: ${err.message}`);
-      return false;
-    }
-  };
-
-  const sensorChangeHandler = (evt) => {
-    resetSettingOnChangeSensor();
-    const selectedValueString = evt.target.value;
-    if (selectedValueString) {
-      const arr = selectedValueString.split("|");
-      if (arr.length > 1) {
-        formFieldHandler(evt);
-        loadSensorSavedSetting(selectedValueString);
-      }
+    if (validate(newSensorUnitInfo)) {
+      onModifySensor(newSensorUnitInfo);
+      f7.popup.close();
     }
   };
 
   return (
-    <Popup className="display-setting-popup" ref={ref}>
-      <Page>
-        <Navbar className="sensor-select-title" title="Cài đặt hiển thị dữ liệu">
-          <NavRight>{/* <Link iconIos="material:close" iconMd="material:close" popupClose></Link> */}</NavRight>
-        </Navbar>
-        <List form noHairlinesMd inlineLabels>
-          <ListInput
-            outline
-            className="label-color-black input-stack-position"
-            name="sensorDetailId"
-            label="Chọn dữ liệu:"
-            defaultValue=""
-            value={formField.sensorDetailId}
-            type="select"
-            validate
-            onChange={sensorChangeHandler}
-          >
-            <option key="nan" id="nan"></option>
-            {sensorList.map(({ id, name, data }) => (
-              <optgroup label={name} key={id}>
-                {data.map((s) => (
-                  <option key={id + "|" + s.id} value={id + "|" + s.id}>
-                    {`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </ListInput>
-          <ListInput
-            className="display-setting-input label-color-black"
-            outline
-            size={5}
-            name="unitOfMeasure"
-            label="Đơn vị đo:"
-            type="text"
-            onChange={formFieldHandler}
-            validateOnBlur
-            value={formField.unitOfMeasure || ""}
-          ></ListInput>
-          <ListInput
-            className="display-setting-input label-color-black"
-            outline
-            size={1}
-            errorMessage="Chỉ nhập số"
-            pattern="[0-9]*"
-            name="floatingPointPosition"
-            label="Format số lẻ:"
-            type="text"
-            onChange={formFieldHandler}
-            validateOnBlur
-            value={formField.floatingPointPosition || ""}
-          ></ListInput>
-          <ListInput
-            outline
-            name="transformFormula"
-            className="label-color-black input-stack-position"
-            label="Công thức tính toán: "
-            type="textarea"
-            onChange={formFieldHandler}
-            value={formField.transformFormula}
-          />
-        </List>
-        <div className="buttons">
-          <Button className="cancel-button" popupClose onClick={resetSettings}>
-            Bỏ qua
-          </Button>
-          <Button className="ok-button" type="reset" onClick={handleSubmit}>
-            Lưu
-          </Button>
+    <Popup className="sensor-setting-popup" ref={ref}>
+      <Page className="sensor-setting">
+        <Navbar className="__header" title={sensorInfo?.name} />
+        <div className="__content">
+          <div className="__navbar"></div>
+
+          <List className="__setting-content" form noHairlinesMd inlineLabels>
+            <div className="display-setting-input label-color-black input-color-blue">
+              <div className="item-content item-input item-input-outline item-input-with-value">
+                <div className="item-inner">
+                  <div className="item-title item-label">Thông tin sensor:</div>
+
+                  <div className="item-input-wrap">
+                    <Button
+                      className="button"
+                      textColor="black"
+                      bgColor="white"
+                      text={formField.unitName || "Chọn đơn vị đo"}
+                      popoverOpen=".popover-choose-sensor-unit-sensor-setting"
+                    ></Button>
+                    <Popover className="popover-choose-sensor-unit-sensor-setting popover-choose-sensor-unit">
+                      <List className="list-frequency">
+                        {sensorInfo?.data?.map((sensorUnit) => {
+                          return (
+                            <Button
+                              key={sensorInfo?.id + "|" + sensorUnit.id}
+                              onClick={() => onChangeSensorUnit(sensorUnit)}
+                            >
+                              <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
+                            </Button>
+                          );
+                        })}
+                      </List>
+                    </Popover>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <ListInput
+              className="display-setting-input label-color-black"
+              outline
+              size={5}
+              name="displayedNamed"
+              label="Thông tin hiển thị:"
+              type="text"
+              validateOnBlur
+              value={formField.displayedNamed}
+              onChange={formFieldHandler}
+            ></ListInput>
+            <ListInput
+              className="display-setting-input label-color-black"
+              outline
+              size={5}
+              name="unitOfMeasure"
+              label="Đơn vị đo:"
+              type="text"
+              validateOnBlur
+              value={formField.unitOfMeasure}
+              onChange={formFieldHandler}
+            ></ListInput>
+            <ListInput
+              className="display-setting-input label-color-black"
+              outline
+              size={5}
+              name="minValue"
+              label="Giá trị min:"
+              type="text"
+              validateOnBlur
+              value={formField.minValue}
+              onChange={formFieldHandler}
+            ></ListInput>
+            <ListInput
+              className="display-setting-input label-color-black"
+              outline
+              size={5}
+              name="maxValue"
+              label="Giá trị max:"
+              type="text"
+              validateOnBlur
+              value={formField.maxValue}
+              onChange={formFieldHandler}
+            ></ListInput>
+            <ListInput
+              className="display-setting-input label-color-black"
+              outline
+              size={5}
+              name="formatFloatingPoint"
+              label="Format số lẻ:"
+              type="text"
+              validateOnBlur
+              value={formField.formatFloatingPoint}
+              onChange={formFieldHandler}
+            ></ListInput>
+            <div className="buttons">
+              <Button className="save-button" onClick={onSaveHandler}>
+                Lưu
+              </Button>
+            </div>
+          </List>
         </div>
       </Page>
     </Popup>

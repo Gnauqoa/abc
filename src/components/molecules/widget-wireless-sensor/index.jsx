@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { f7 } from "framework7-react";
 import WirelessSensorStatus from "../../atoms/wireless-sensor-status";
@@ -8,30 +8,39 @@ import SensorSettingSettingPopup from "../popup-sensor-setting";
 import "./index.scss";
 
 const WirelessSensorContainer = () => {
-  const dummySensorIds = [-1, 2];
-  const sensorSettingPopup = useRef(null);
+  const dummySensorIds = [-1, 2, 5];
+  const sensorSettingPopup = useRef();
+  const [selectedSensorId, setSelectedSensorId] = useState();
 
-  const onClick = (sensorId) => {
-    console.log("onClick: ", sensorId);
+  const onChooseSensorHandler = (event) => {
+    const sensorId = parseInt(event.currentTarget.id);
     if (sensorId === -1) {
-    } else {
-      const sensorInfo = SensorServices.getSensorInfo(sensorId);
-      console.log("sensorInfo: ", JSON.stringify(sensorInfo));
+    } else if (sensorId >= 1) {
+      setSelectedSensorId(sensorId);
 
       if (sensorSettingPopup.current) {
-        sensorSettingPopup.current = f7.popup.create({ el: ".display-setting-popup", animate: true });
+        sensorSettingPopup.current = f7.popup.create({ el: ".sensor-setting-popup", animate: true });
         sensorSettingPopup.current.open();
       }
     }
   };
+
+  const onModifySensorHandler = useCallback((newSensorUnitInfo) => {
+    SensorServices.updateSensorSetting(selectedSensorId, newSensorUnitInfo);
+  });
+
   return (
     <div className="__card-sensors">
       {dummySensorIds.map((sensorId) => (
-        <div key={sensorId} className="wireless-sensor-info">
-          <WirelessSensorStatus onClick={onClick} sensorId={sensorId}></WirelessSensorStatus>
+        <div key={sensorId} id={sensorId} className="wireless-sensor-info" onClick={onChooseSensorHandler}>
+          <WirelessSensorStatus sensorId={sensorId}></WirelessSensorStatus>
         </div>
       ))}
-      <SensorSettingSettingPopup ref={sensorSettingPopup} />
+      <SensorSettingSettingPopup
+        sensorId={selectedSensorId}
+        onModifySensor={onModifySensorHandler}
+        ref={sensorSettingPopup}
+      />
     </div>
   );
 };

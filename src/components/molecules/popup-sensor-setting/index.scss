@@ -1,0 +1,110 @@
+.sensor-setting-popup.popup {
+  width: 740px;
+  height: 640px;
+  border-radius: 15px;
+}
+
+.sensor-setting {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .__header {
+    height: 15%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+      justify-content: center;
+    }
+  }
+
+  .__content {
+    height: 96%;
+    width: 96%;
+    display: flex;
+    flex-direction: row;
+
+    .__navbar {
+      height: 100%;
+      width: 30%;
+    }
+    .__setting-content {
+      height: 90%;
+      width: 70%;
+      border: #0086ff 2px solid;
+      border-radius: 15px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+
+      .display-setting-input {
+        .item-title.item-label {
+          margin-right: 0px;
+          width: 40%;
+          display: flex;
+          align-items: center;
+
+          font-family: "Inter";
+          font-weight: 500;
+          font-size: 18px;
+        }
+
+        .item-input-wrap {
+          width: 60%;
+          height: 70%;
+          border-radius: 5px;
+          border: #000 1px solid;
+
+          .button {
+            border: none !important;
+            text-transform: none;
+            font-weight: 500;
+            font-size: 20px;
+          }
+
+          .input-with-value {
+            color: #0086ff;
+            font-size: 18px;
+            font-family: "Inter";
+            font-weight: 500;
+            font-size: 18px;
+          }
+
+          .popover-choose-sensor-unit {
+            width: 260px;
+          }
+        }
+      }
+
+      .buttons {
+        margin-top: 20px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+
+        .save-button {
+          background: #09a8fa;
+          color: white;
+          width: fit-content;
+          border-radius: 9999px;
+          min-width: 100px;
+          margin-right: 15px;
+
+          &.delete-mode {
+            background: #ff3b30;
+          }
+        }
+      }
+    }
+  }
+}
