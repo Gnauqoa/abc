@@ -200,7 +200,6 @@ export class SensorServices {
       if (sensor.id === sensorId) {
         const newUnitData = sensor.data.map((unit) => {
           if (unit.id === sensorUnitData.id) {
-            console.log(unit);
             return sensorUnitData;
           } else {
             return unit;

@@ -2,8 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 
 import { f7 } from "framework7-react";
 import WirelessSensorStatus from "../../atoms/wireless-sensor-status";
-import SensorServices from "../../../services/sensor-service";
-import SensorSettingSettingPopup from "../popup-sensor-setting";
+import SensorSettingPopup from "../popup-sensor-setting";
 
 import "./index.scss";
 
@@ -25,10 +24,6 @@ const WirelessSensorContainer = () => {
     }
   };
 
-  const onModifySensorHandler = useCallback((newSensorUnitInfo) => {
-    SensorServices.updateSensorSetting(selectedSensorId, newSensorUnitInfo);
-  });
-
   return (
     <div className="__card-sensors">
       {dummySensorIds.map((sensorId) => (
@@ -36,11 +31,7 @@ const WirelessSensorContainer = () => {
           <WirelessSensorStatus sensorId={sensorId}></WirelessSensorStatus>
         </div>
       ))}
-      <SensorSettingSettingPopup
-        sensorId={selectedSensorId}
-        onModifySensor={onModifySensorHandler}
-        ref={sensorSettingPopup}
-      />
+      <SensorSettingPopup sensorId={selectedSensorId} ref={sensorSettingPopup} />
     </div>
   );
 };
