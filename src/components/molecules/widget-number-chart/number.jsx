@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import $ from "jquery";
-import { getUnit } from "../../../services/sensor-service";
+import SensorServices from "../../../services/sensor-service";
 import "./number.scss";
-import SensorSelector from "../sensor-selector";
+import SensorSelector from "../popup-sensor-selector";
 
 export default ({ value, widget, handleSensorChange }) => {
   const sensor = widget.sensor;
@@ -19,7 +19,7 @@ export default ({ value, widget, handleSensorChange }) => {
   return (
     <div className="number-widget">
       <div className="__value">
-        {value} <span className="__unit">{value.length && getUnit(sensor.id, sensor.index)}</span>
+        {value} <span className="__unit">{value.length && SensorServices.getUnit(sensor.id, sensor.index)}</span>
       </div>
       <div className="sensor-select-container">
         <SensorSelector

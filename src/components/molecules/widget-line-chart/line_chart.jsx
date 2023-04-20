@@ -6,8 +6,8 @@ import $ from "jquery";
 
 Chart.register(zoomPlugin);
 
-import SensorSelector from "../sensor-selector";
-import sensorList from "../../../services/sensor-service";
+import SensorSelector from "../popup-sensor-selector";
+import SensorServices from "../../../services/sensor-service";
 
 const defaultXUnit = "s",
   roundX = 3;
@@ -333,6 +333,7 @@ let LineChart = (props, ref) => {
       id: sensor?.id,
       index: sensor?.index,
     };
+    const sensorList = SensorServices.getAllSensors();
     const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id);
     if (existingSensorData) {
       const sensorDetailData = existingSensorData.data[sensorRef.current.index];

@@ -13,7 +13,7 @@ import {
   PageContent,
 } from "framework7-react";
 import _ from "lodash";
-import sensorList from "../../../services/sensor-service";
+import SensorServices from "../../../services/sensor-service";
 import clsx from "clsx";
 import DataManagerIST from "../../../services/data-manager";
 import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../../../js/constants";
@@ -24,6 +24,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
 
   useEffect(() => {
+    const sensorList = SensorServices.getSensors();
     if (Object.keys(selectedSensor).length != 0) {
       const sensorId = parseInt(selectedSensor.id),
         sensorIndex = parseInt(selectedSensor.index),
@@ -39,6 +40,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
 
   const changeHandler = (value) => {
     const selectedValueString = value;
+    const sensorList = SensorServices.getSensors();
     if (selectedValueString) {
       const arr = selectedValueString.split("|");
       if (arr.length > 1) {
@@ -61,6 +63,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
   };
 
   const handleOpenPopup = () => {
+    const sensorList = SensorServices.getSensors();
     const activeSensors = DataManagerIST.getListActiveSensor();
     const sensorListForDisplay = sensorList.map((sensor) => {
       const sensorStatus = activeSensors.includes(sensor.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;

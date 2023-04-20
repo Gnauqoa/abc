@@ -21,16 +21,16 @@ import RoundButton from "../components/atoms/round-button";
 import dialog from "../components/molecules/dialog/dialog";
 import ActivityPageNav from "../components/molecules/activity-page-nav";
 import Timer from "../components/atoms/timer";
-import LineChart from "../components/molecules/line-widget/line_chart";
-import NumberWidget from "../components/molecules/number-widget/number";
-import TableWidget from "../components/molecules/table-widget";
-import SamplingSetting from "../components/molecules/sampling-settings";
-import DataDisplaySetting from "../components/molecules/data-display-setting";
+import LineChart from "../components/molecules/widget-line-chart/line_chart";
+import NumberWidget from "../components/molecules/widget-number-chart/number";
+import TableWidget from "../components/molecules/widget-table-chart";
+import SamplingSetting from "../components/molecules/popup-sampling-settings";
+// import DataDisplaySetting from "../components/molecules/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import NewPagePopup from "../components/molecules/new-page";
+import NewPagePopup from "../components/molecules/popup-new-page";
 import DataRunManagementPopup from "../components/molecules/data-run-management";
-import WirelessSensorContainer from "../components/molecules/wireless-sensor-container";
+import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -429,23 +429,12 @@ export default ({ f7route, f7router, filePath, content }) => {
       <Popover className="setting-popover-menu">
         <List>
           <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
           <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
           {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
         </List>
       </Popover>
-      <Popup className="display-setting-popup" ref={displaySettingPopup}>
-        <DataDisplaySetting
-          sensorSettings={sensorSettings}
-          onSubmit={(setting) => handleSensorSettingSubmit(setting)}
-        />
-      </Popup>
-      <Popup className="new-page-popup" ref={newPagePopup}>
-        <NewPagePopup handleNewPage={handleNewPage}></NewPagePopup>
-      </Popup>
-      <Popup className="data-run-management-popup" ref={dataRunManagementPopup}>
-        <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun}></DataRunManagementPopup>
-      </Popup>
+      <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
+      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
 
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">

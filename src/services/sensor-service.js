@@ -7,7 +7,7 @@ import soundSensorIcon from "../img/sensor-info/sound.png";
 import salinitySensorIcon from "../img/sensor-info/salinity.png";
 import tempSensorIcon from "../img/sensor-info/temp.png";
 
-export const sensors = [
+export const defaultSensors = [
   {
     id: 0,
     name: "Thời gian",
@@ -157,13 +157,54 @@ const sensorIcons = {
   ],
 };
 
-export function getUnit(sensorId, dataIndex) {
-  return sensors.filter((s) => s.id === sensorId)[0]?.data[dataIndex]?.unit || "";
+export class SensorServices {
+  constructor() {
+    this.initializeVariables();
+  }
+
+  /**
+   * Returns the instance of the DataManager class.
+   * @returns {SensorServices} - The instance of the DataManager class.
+   */
+  static getInstance() {
+    if (!SensorServices.instance) {
+      SensorServices.instance = new SensorServices();
+    }
+    return SensorServices.instance;
+  }
+
+  initializeVariables() {
+    this.sensors = defaultSensors;
+    this.customSensors = [];
+  }
+
+  getSensors() {
+    return this.sensors;
+  }
+
+  getCustomSensors() {
+    return this.customSensors;
+  }
+
+  getAllSensors() {
+    const allSensors = [...this.sensors, ...this.customSensors];
+    return allSensors;
+  }
+
+  getUnit(sensorId, dataIndex) {
+    const allSensors = [...this.sensors, ...this.customSensors];
+    return allSensors.filter((s) => s.id === sensorId)[0]?.data[dataIndex]?.unit || "";
+  }
+
+  getSensorIcon(sensorId, dataIndex) {
+    const sensorIcon = sensorIcons[sensorId]?.[dataIndex];
+    return sensorIcon !== undefined ? sensorIcon : {};
+  }
+
+  getSensorInfo(sensorId) {
+    const sensorInfo = this.sensors.filter((sensor) => sensor.id === sensorId);
+    return sensorInfo !== undefined ? sensorInfo : {};
+  }
 }
 
-export function getSensorIcon(sensorId, dataIndex) {
-  const sensorIcon = sensorIcons[sensorId]?.[dataIndex];
-  return sensorIcon !== undefined ? sensorIcon : {};
-}
-
-export default sensors;
+export default SensorServices.getInstance();
