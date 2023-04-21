@@ -16,13 +16,19 @@ import interpolateIcon from "../../../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../../../img/expandable-options/auto-scale.png";
 import noteIcon from "../../../img/expandable-options/note.png";
 
-const AUTO_SCALE_OPTION = 0;
+const X_FORMAT_FLOATING = 3;
+const X_DEFAULT_UNIT = "s";
+
+const SCALE_FIT_OPTION = 0;
 const NOTE_OPTION = 1;
 const INTERPOLATE_OPTION = 2;
 
+const X_UPPER_LOWER_BOUND = 5;
+const Y_UPPER_LOWER_BOUND = 2;
+
 const expandableOptions = [
   {
-    id: AUTO_SCALE_OPTION,
+    id: SCALE_FIT_OPTION,
     icon: autoScaleIcon,
   },
   {
@@ -35,13 +41,61 @@ const expandableOptions = [
   },
 ];
 
-const roundX = 3;
-const defaultXUnit = "s";
-
+// ======================================= CHART UTILS =======================================
 const roundXValue = (value) => {
-  return Math.round(value * Math.pow(10, roundX)) / Math.pow(10, roundX);
+  return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);
 };
 
+// chartData: chartInstance.data.datasets
+const getMaxMinAxises = ({ chartData }) => {
+  let maxX;
+  let maxY;
+  let minX;
+  let minY;
+
+  chartData.forEach((dataset) => {
+    const data = dataset.data;
+    data.forEach((d, index) => {
+      if (index === 0) {
+        maxX = d.x;
+        minX = d.x;
+        maxY = d.y;
+        minY = d.y;
+        return;
+      }
+
+      minX = Math.min(minX, d.x);
+      maxX = Math.max(maxX, d.x);
+      minY = Math.min(minY, d.y);
+      maxY = Math.max(maxY, d.y);
+    });
+  });
+
+  return {
+    maxX: maxX,
+    minX: minX,
+    maxY: maxY,
+    minY: minY,
+  };
+};
+
+const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
+  const { maxX } = getMaxMinAxises({
+    chartData,
+  });
+
+  let suggestMaxX;
+  if (maxX <= firstPageStep) {
+    suggestMaxX = firstPageStep;
+  } else {
+    const numOfPage = Math.ceil((maxX - firstPageStep) / pageStep);
+    suggestMaxX = firstPageStep + pageStep * numOfPage;
+  }
+
+  return suggestMaxX;
+};
+
+// ======================================= CHART FUNCTIONS =======================================
 const getChartJsPlugin = ({ valueLabelContainerRef }) => {
   return {
     afterDraw: (chart, args, options) => {
@@ -122,38 +176,6 @@ const createChartJsData = ({ chartData = [] }) => {
   return chartDataParam;
 };
 
-const getMaxX = ({ chartData }) => {
-  let max = 0;
-  chartData.forEach((s) => {
-    if (s.data.length > 0) {
-      const lastData = s.data[s.data.length - 1];
-      const firstData = s.data[0];
-      const xValue = roundXValue(lastData.x - firstData.x);
-      if (xValue > max) {
-        max = xValue;
-      }
-    }
-  });
-
-  return max;
-};
-
-const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
-  const maxX = getMaxX({
-    chartData,
-  });
-
-  let suggestMaxX;
-  if (maxX <= firstPageStep) {
-    suggestMaxX = firstPageStep;
-  } else {
-    const numOfPage = Math.ceil((maxX - firstPageStep) / pageStep);
-    suggestMaxX = firstPageStep + pageStep * numOfPage;
-  }
-
-  return suggestMaxX;
-};
-
 /**
  * data: [{
  * name:string,
@@ -206,15 +228,14 @@ const updateChart = ({ chartInstance, data, axisRef }) => {
       title: {
         color: "orange",
         display: true,
-        //text: axisRef.current.xUnit,
-        text: `(${defaultXUnit})`,
+        text: axisRef.current.xUnit,
+        text: `(${X_DEFAULT_UNIT})`,
         align: "end",
       },
     },
   };
 
   if (stepSize) {
-    //log("chart step size", stepSize);
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
   }
 
@@ -297,7 +318,7 @@ const getCustomTooltipFunc = ({ axisRef }) => {
           let span = "";
           span = `<tr><td><span style="${style}"></span><span>${dataSetName}</span></td></tr>`;
           innerHtml += span;
-          innerHtml += `<tr><td>x=${xValue}(${defaultXUnit})</td></tr>`;
+          innerHtml += `<tr><td>x=${xValue}(${X_DEFAULT_UNIT})</td></tr>`;
           innerHtml += `<tr><td>y=${yValue}(${axisRef.current.yUnit || ""})</td></tr>`;
         }
       });
@@ -325,6 +346,41 @@ const getCustomTooltipFunc = ({ axisRef }) => {
     tooltipEl.style.padding = tooltipModel.padding + "px " + tooltipModel.padding + "px";
     tooltipEl.style.pointerEvents = "none";
   };
+};
+
+// ======================================= EXPANDED OPTIONS FUNCTIONS =======================================
+const scaleToFixHandler = (chartInstance, axisRef) => {
+  if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
+    return;
+  }
+  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartData: chartInstance.data.datasets });
+
+  chartInstance.options.animation = true;
+  chartInstance.options.scales = {
+    y: {
+      min: minY - X_UPPER_LOWER_BOUND,
+      suggestedMax: maxY + X_UPPER_LOWER_BOUND,
+      title: {
+        color: "orange",
+        display: false,
+        text: axisRef.current.yUnit,
+      },
+    },
+    x: {
+      type: "linear",
+      suggestedMin: 0,
+      suggestedMax: maxX + Y_UPPER_LOWER_BOUND,
+      ticks: {},
+      title: {
+        color: "orange",
+        display: true,
+        text: axisRef.current.xUnit,
+        text: `(${X_DEFAULT_UNIT})`,
+        align: "end",
+      },
+    },
+  };
+  chartInstance.update();
 };
 
 let LineChart = (props, ref) => {
@@ -364,7 +420,7 @@ let LineChart = (props, ref) => {
     clearData: () => {},
     setCurrentData: ({ data }) => {
       const xValue = roundAndGetSignificantDigitString({ n: data.x });
-      xElRef.current.innerText = `${xValue}(${defaultXUnit})`;
+      xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
       yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
     },
     setChartData: ({ xUnit, yUnit, chartData = [] }) => {
@@ -375,7 +431,6 @@ let LineChart = (props, ref) => {
        */
       //log("chart data:", chartData);
       axisRef.current.xUnit = xUnit;
-
       chartData = createChartDataAndParseXAxis({ chartData });
       updateChart({
         chartInstance: chartInstanceRef.current,
@@ -454,12 +509,24 @@ let LineChart = (props, ref) => {
       chartInstance: chartInstanceRef.current,
       data: [],
       axisRef,
-      xUnit: defaultXUnit,
+      xUnit: X_DEFAULT_UNIT,
       yUnit: "",
     });
   }, []);
 
-  const onChooseOptionHandler = (optionId) => {};
+  const onChooseOptionHandler = (optionId) => {
+    switch (optionId) {
+      case SCALE_FIT_OPTION:
+        scaleToFixHandler(chartInstanceRef.current, axisRef);
+        break;
+      case NOTE_OPTION:
+        break;
+      case INTERPOLATE_OPTION:
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className="line-chart-wapper">
