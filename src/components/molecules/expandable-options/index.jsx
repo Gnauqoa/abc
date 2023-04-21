@@ -2,11 +2,7 @@ import React, { useState } from "react";
 
 import "./index.scss";
 
-import lineChartIcon from "../../../img/expandable-options/line.png";
 import expandRowIcon from "../../../img/expandable-options/expand-row.png";
-import interpolateIcon from "../../../img/expandable-options/interpolate.png";
-import autoScaleIcon from "../../../img/expandable-options/auto-scale.png";
-import noteIcon from "../../../img/expandable-options/note.png";
 
 const ICON_SIZE = "36px";
 const EXPAND_ICON_SIZE = "10px";

@@ -25,8 +25,9 @@ const INTERPOLATE_OPTION = 2;
 
 const X_UPPER_LOWER_BOUND = 2;
 const Y_UPPER_LOWER_BOUND = 5;
-
 const X_MIN_VALUE = -10;
+
+const INTERPOLATE_VALUE = 0.4;
 
 const expandableOptions = [
   {
@@ -385,6 +386,18 @@ const scaleToFixHandler = (chartInstance, axisRef) => {
   chartInstance.update();
 };
 
+const interpolateHandler = (chartInstance) => {
+  const newDatasets = chartInstance.data.datasets.map((dataset) => {
+    return {
+      ...dataset,
+      tension: INTERPOLATE_VALUE,
+    };
+  });
+
+  chartInstance.data.datasets = [...newDatasets];
+  chartInstance.options.animation = true;
+  chartInstance.update();
+};
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
   const { sensor } = widget;
@@ -525,6 +538,7 @@ let LineChart = (props, ref) => {
       case NOTE_OPTION:
         break;
       case INTERPOLATE_OPTION:
+        interpolateHandler(chartInstanceRef.current);
         break;
       default:
         break;
