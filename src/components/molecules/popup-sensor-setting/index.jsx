@@ -1,10 +1,11 @@
 import React, { forwardRef, useEffect, useState } from "react";
-import { Page, Navbar, List, ListInput, Button, f7, Popup, Popover } from "framework7-react";
+import { Page, Navbar, Button, f7, Popup } from "framework7-react";
 
 import SensorServices from "../../../services/sensor-service";
 import _ from "lodash";
 
 import SensorSettingTab from "./sensor-setting";
+import SensorCalibratingTab from "./sensor-calibrating";
 import "./index.scss";
 
 const SENSOR_SETTING_TAB = 1;
@@ -20,17 +21,23 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [sensorInfo, setSensorInfo] = useState({});
 
+  useEffect(() => {
+    getSensors();
+    setCurrentTab(defaultTab);
+  }, [sensorId]);
+
   const getSensors = () => {
     const sensorInfo = SensorServices.getSensorInfo(sensorId);
     setSensorInfo(sensorInfo);
   };
-  useEffect(() => {
-    getSensors();
-  }, [sensorId]);
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServices.updateSensorSetting(sensorId, newSensorUnitInfo);
     getSensors();
+    f7.popup.close();
+  };
+
+  const onSaveSensorCalibratingHandler = () => {
     f7.popup.close();
   };
 
@@ -48,8 +55,9 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
             {Object.keys(settingTabs).map((tabId) => {
               return (
                 <Button
-                  className={`nav-button ${parseInt(tabId) === currentTab ? "active" : "inactive"}`}
+                  key={tabId}
                   id={tabId}
+                  className={`nav-button ${parseInt(tabId) === currentTab ? "active" : "inactive"}`}
                   raised
                   fill
                   onClick={onChangeTab}
@@ -64,7 +72,7 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
             {currentTab === SENSOR_SETTING_TAB ? (
               <SensorSettingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorSettingHandler} />
             ) : (
-              <></>
+              <SensorCalibratingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorCalibratingHandler} />
             )}
           </div>
         </div>

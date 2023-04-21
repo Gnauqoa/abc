@@ -597,6 +597,18 @@ export class DataManager {
     }
   }
 
+  /**
+   * Get data for a specific sensor from the buffer.
+   *
+   * @param {string} sensorId - The ID of the sensor to get data for.
+   * @param {number=} sensorIndex - The index of the data to get (if the data is an array).
+   * @returns {any} - The sensor data or the specified data item (if the data is an array).
+   */
+  getDataSensor(sensorId, sensorIndex) {
+    const sensorData = this.buffer[sensorId];
+    return Array.isArray(sensorData) && sensorIndex !== undefined ? sensorData[sensorIndex] : sensorData;
+  }
+
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
   getParsedCollectingDataTime() {
     const parsedTime = (this.collectingDataTime / 1000).toFixed(3);

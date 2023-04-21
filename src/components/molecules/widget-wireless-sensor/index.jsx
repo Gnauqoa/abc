@@ -11,7 +11,7 @@ const WirelessSensorContainer = () => {
   const sensorSettingPopup = useRef();
   const [selectedSensorId, setSelectedSensorId] = useState();
 
-  const onChooseSensorHandler = (event) => {
+  const onChooseSensorHandler = useCallback((event) => {
     const sensorId = parseInt(event.currentTarget.id);
     if (sensorId === -1) {
     } else if (sensorId >= 1) {
@@ -22,7 +22,7 @@ const WirelessSensorContainer = () => {
         sensorSettingPopup.current.open();
       }
     }
-  };
+  }, []);
 
   return (
     <div className="__card-sensors">
