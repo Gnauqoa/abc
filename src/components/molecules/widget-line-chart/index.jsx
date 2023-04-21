@@ -23,8 +23,10 @@ const SCALE_FIT_OPTION = 0;
 const NOTE_OPTION = 1;
 const INTERPOLATE_OPTION = 2;
 
-const X_UPPER_LOWER_BOUND = 5;
-const Y_UPPER_LOWER_BOUND = 2;
+const X_UPPER_LOWER_BOUND = 2;
+const Y_UPPER_LOWER_BOUND = 5;
+
+const X_MIN_VALUE = -10;
 
 const expandableOptions = [
   {
@@ -358,8 +360,8 @@ const scaleToFixHandler = (chartInstance, axisRef) => {
   chartInstance.options.animation = true;
   chartInstance.options.scales = {
     y: {
-      min: minY - X_UPPER_LOWER_BOUND,
-      suggestedMax: maxY + X_UPPER_LOWER_BOUND,
+      min: minY - Y_UPPER_LOWER_BOUND,
+      suggestedMax: maxY + Y_UPPER_LOWER_BOUND,
       title: {
         color: "orange",
         display: false,
@@ -369,7 +371,7 @@ const scaleToFixHandler = (chartInstance, axisRef) => {
     x: {
       type: "linear",
       suggestedMin: 0,
-      suggestedMax: maxX + Y_UPPER_LOWER_BOUND,
+      suggestedMax: maxX + X_UPPER_LOWER_BOUND,
       ticks: {},
       title: {
         color: "orange",
@@ -451,6 +453,7 @@ let LineChart = (props, ref) => {
         },
       ],
     });
+    const minUnitValue = SensorServices.getMinUnitValueAllSensors();
 
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
@@ -486,8 +489,8 @@ let LineChart = (props, ref) => {
               mode: "xy",
             },
             limits: {
-              x: { min: 0 },
-              y: { min: 0 },
+              x: { min: X_MIN_VALUE },
+              y: { min: minUnitValue - Y_UPPER_LOWER_BOUND },
             },
             zoom: {
               wheel: {
