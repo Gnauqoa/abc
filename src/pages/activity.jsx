@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7 } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
+import SensorServices, { defaultSensors } from "../services/sensor-service";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -16,20 +17,21 @@ import {
   DEFAULT_SENSOR_ID,
 } from "../js/constants";
 
-import BackButton from "../components/back-button";
-import RoundButton from "../components/round-button";
-import dialog from "../components/dialog";
-import ActivityPageNav from "../components/activity-page-nav";
-import Timer from "../components/timer";
-import LineChart from "../components/widgets/line_chart";
-import NumberWidget from "../components/widgets/number";
-import TableWidget from "../components/widgets/table";
-import SamplingSetting from "../components/sampling-settings";
-import DataDisplaySetting from "../components/data-display-setting";
+import BackButton from "../components/atoms/back-button";
+import RoundButton from "../components/atoms/round-button";
+import dialog from "../components/molecules/dialog/dialog";
+import ActivityPageNav from "../components/molecules/activity-page-nav";
+import Timer from "../components/atoms/timer";
+import LineChart from "../components/molecules/widget-line-chart/line_chart";
+import NumberWidget from "../components/molecules/widget-number-chart/number";
+import TableWidget from "../components/molecules/widget-table-chart";
+import SamplingSetting from "../components/molecules/popup-sampling-settings";
+// import DataDisplaySetting from "../components/molecules/data-display-setting";
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import NewPagePopup from "../components/new-page";
-import DataRunManagementPopup from "../components/datarun-management";
+import NewPagePopup from "../components/molecules/popup-new-page";
+import DataRunManagementPopup from "../components/molecules/popup-data-run-management";
+import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -58,6 +60,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       frequency: 1,
       dataRuns: [],
       sensorSettings: [],
+      sensors: defaultSensors,
+      customSensors: [],
     };
   } else if (content) {
     activity = content;
@@ -85,7 +89,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
 
-  const displaySettingPopup = useRef();
+  // const displaySettingPopup = useRef();
   const newPagePopup = useRef();
   const dataRunManagementPopup = useRef();
   const lineChartRef = useRef([]);
@@ -95,6 +99,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   useEffect(() => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
+    SensorServices.importSensors(activity.sensors, activity.customSensors);
   }, []);
 
   useEffect(() => {
@@ -117,18 +122,18 @@ export default ({ f7route, f7router, filePath, content }) => {
     setName(e.target.value);
   }
 
-  function handleSensorSettingSubmit(setting) {
-    let sensorSettingsCpy = [...sensorSettings];
-    if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-      sensorSettingsCpy.push({ ...setting });
-    } else {
-      var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-      sensorSettingsCpy[foundIndex] = setting;
-    }
+  // function handleSensorSettingSubmit(setting) {
+  //   let sensorSettingsCpy = [...sensorSettings];
+  //   if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
+  //     sensorSettingsCpy.push({ ...setting });
+  //   } else {
+  //     var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
+  //     sensorSettingsCpy[foundIndex] = setting;
+  //   }
 
-    setSensorSettings(sensorSettingsCpy);
-    displaySettingPopup.current.f7Popup().close();
-  }
+  //   setSensorSettings(sensorSettingsCpy);
+  //   displaySettingPopup.current.f7Popup().close();
+  // }
 
   function handleFrequencySelect(frequency) {
     setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
@@ -140,7 +145,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     setTimerStopTime(timerNumber);
   }
 
-  async function handleActivitySave() {
+  const saveActivity = () => {
     // Collecting data from dataRuns
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
     const updatedPage = pages.map((page, index) => {
@@ -150,7 +155,22 @@ export default ({ f7route, f7router, filePath, content }) => {
         return page;
       }
     });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServices.exportSensors();
+    const updatedActivity = {
+      ...activity,
+      name,
+      pages: updatedPage,
+      dataRuns: updatedDataRuns,
+      frequency: frequency,
+      sensors: sensors,
+      customSensors: customSensors,
+    };
+
+    return updatedActivity;
+  };
+  async function handleActivitySave() {
+    const updatedActivity = saveActivity();
 
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
@@ -171,16 +191,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   async function handleActivityBack() {
-    // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets };
-      } else {
-        return page;
-      }
-    });
-    const updatedActivity = { ...activity, name, pages: updatedPage, dataRuns: updatedDataRuns, frequency: frequency };
+    const updatedActivity = saveActivity();
 
     dialog.prompt(
       "Bạn có muốn lưu lại những thay đổi này không?",
@@ -428,29 +439,19 @@ export default ({ f7route, f7router, filePath, content }) => {
       <Popover className="setting-popover-menu">
         <List>
           <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popupOpen=".display-setting-popup" popoverClose title="Cài đặt dữ liệu hiển thị" />
           <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
           {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
         </List>
       </Popover>
-      <Popup className="display-setting-popup" ref={displaySettingPopup}>
-        <DataDisplaySetting
-          sensorSettings={sensorSettings}
-          onSubmit={(setting) => handleSensorSettingSubmit(setting)}
-        />
-      </Popup>
-      <Popup className="new-page-popup" ref={newPagePopup}>
-        <NewPagePopup handleNewPage={handleNewPage}></NewPagePopup>
-      </Popup>
-      <Popup className="data-run-management-popup" ref={dataRunManagementPopup}>
-        <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun}></DataRunManagementPopup>
-      </Popup>
+      <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
+      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
 
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
         <div className="activity-layout">
+          <WirelessSensorContainer></WirelessSensorContainer>
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
-              <div className="__card __card-left">
+              <div className="__card-widget __card-left">
                 {layout === LAYOUT_TABLE_CHART && (
                   <TableWidget
                     ref={tableRef}
@@ -473,7 +474,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   />
                 )}
               </div>
-              <div className="__card __card-right">
+              <div className="__card-widget __card-right">
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
@@ -500,7 +501,7 @@ export default ({ f7route, f7router, filePath, content }) => {
             </>
           )}
           {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(layout) && (
-            <div className="__card">
+            <div className="__card-widget">
               {layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}

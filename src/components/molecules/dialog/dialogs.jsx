@@ -2,11 +2,11 @@ import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
 
-import DataManagerIST from "../services/data-manager";
-import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../js/constants";
+import DataManagerIST from "../../../services/data-manager";
+import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../../../js/constants";
 
-import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../js/constants";
-import * as core from "../utils/core";
+import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../../../js/constants";
+import * as core from "../../../utils/core";
 
 export default class extends Component {
   constructor(props) {

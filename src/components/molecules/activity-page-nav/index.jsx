@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "framework7-react";
-import nextImg from "../img/activity/next.png";
-import prevImg from "../img/activity/prev.png";
+import nextImg from "../../../img/activity/next.png";
+import prevImg from "../../../img/activity/prev.png";
 
 export default ({ onNextPage, onPrevPage, isDisabled, navOrder }) => {
   return (

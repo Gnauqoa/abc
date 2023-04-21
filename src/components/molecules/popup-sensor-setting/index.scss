@@ -1,0 +1,251 @@
+.sensor-setting-popup.popup {
+  width: 840px;
+  height: 720px;
+  border-radius: 15px;
+}
+
+.sensor-setting {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .__header {
+    height: 10%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+      justify-content: center;
+    }
+  }
+
+  .__content {
+    height: 96%;
+    width: 96%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .__navbar {
+      height: 90%;
+      width: 30%;
+      margin: 30px 10px 0 30px;
+
+      display: flex;
+      gap: 15px;
+      flex-direction: column;
+
+      --primary-color: #0086ff;
+      --secondary-color: #d9d9d9;
+
+      .nav-button {
+        text-transform: none;
+        font-weight: 600;
+        font-size: 1.25rem;
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .nav-button.active {
+        background: var(--primary-color);
+        color: #ffffff;
+      }
+
+      .nav-button.inactive {
+        background: var(--secondary-color);
+        color: #000000;
+      }
+    }
+
+    .__setting-content {
+      height: 94%;
+      width: 62%;
+      border: #0086ff 2px solid;
+      border-radius: 15px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+
+      display: flex;
+      flex-direction: column;
+
+      .__setting {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        .display-setting-input {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 40%;
+            display: flex;
+            align-items: center;
+
+            font-family: "Inter";
+            font-weight: 500;
+            font-size: 18px;
+          }
+
+          .item-input-wrap {
+            width: 60%;
+            height: 70%;
+            border-radius: 5px;
+            border: #000 1px solid;
+
+            .button {
+              display: flex;
+              justify-content: space-between;
+              border: none !important;
+              text-transform: none;
+              font-weight: 500;
+              font-size: 20px;
+              color: #0086ff;
+
+              span {
+                color: #0086ff;
+              }
+              i {
+                justify-content: flex-end;
+                color: #0086ff;
+              }
+            }
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 18px;
+              font-family: "Inter";
+              font-weight: 500;
+              font-size: 18px;
+            }
+
+            .popover-choose-sensor-unit {
+              width: 260px;
+            }
+          }
+        }
+      }
+
+      .__calibrating {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        .__label-calibrating-type {
+          font-weight: 600;
+          font-size: 24px;
+          padding-left: 15px;
+        }
+        .display-setting-input {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 40%;
+            display: flex;
+            align-items: center;
+
+            font-family: "Inter";
+            font-weight: 500;
+            font-size: 18px;
+          }
+
+          .item-input-wrap {
+            width: 60%;
+            height: 70%;
+            border-radius: 5px;
+            border: #000 1px solid;
+
+            .button {
+              display: flex;
+              justify-content: space-between;
+              border: none !important;
+              text-transform: none;
+              font-weight: 500;
+              font-size: 20px;
+              color: #0086ff;
+
+              span {
+                color: #0086ff;
+              }
+              i {
+                justify-content: flex-end;
+                color: #0086ff;
+              }
+            }
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 18px;
+              font-family: "Inter";
+              font-weight: 500;
+              font-size: 18px;
+            }
+
+            .popover-choose-sensor-unit {
+              width: 260px;
+            }
+          }
+        }
+
+        .display-setting-input-button {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 40%;
+            display: flex;
+            align-items: center;
+
+            font-family: "Inter";
+            font-weight: 500;
+            font-size: 18px;
+          }
+
+          .item-input-wrap {
+            width: 35%;
+            height: 70%;
+            border-radius: 5px;
+            border: #000 1px solid;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 18px;
+              font-family: "Inter";
+              font-weight: 500;
+              font-size: 18px;
+              margin-left: 10px;
+            }
+          }
+          .sampling-button {
+            width: 25%;
+            text-transform: none;
+            margin-left: 5px;
+
+            background: #09a8fa;
+            color: white;
+            width: fit-content;
+            border-radius: 9999px;
+          }
+        }
+      }
+
+      .buttons {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+
+        .save-button {
+          background: #09a8fa;
+          color: white;
+          width: fit-content;
+          border-radius: 9999px;
+          min-width: 100px;
+
+          &.delete-mode {
+            background: #ff3b30;
+          }
+        }
+      }
+    }
+  }
+}

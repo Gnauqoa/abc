@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
-import { sensors } from "./sensor-service";
+import SensorServices from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
@@ -82,7 +82,7 @@ export class DataManager {
     this.collectingDataInterval = 1000;
 
     this.samplingMode = SAMPLING_AUTO;
-    this.sensorIds = sensors.map((sensor) => sensor.id);
+    this.sensorIds = SensorServices.getSensors().map((sensor) => sensor.id);
 
     // Parameters for Timer
     this.timerCollectingTime = 0;
@@ -429,6 +429,11 @@ export class DataManager {
     return false;
   }
 
+  addCustomSensor(sensorId) {
+    const sensorsData = [];
+    this.buffer[parseInt(sensorId)] = sensorsData;
+  }
+
   // -------------------------------- Export -------------------------------- //
   /** Export the current data run to a CSV file.
    * @function
@@ -462,6 +467,7 @@ export class DataManager {
       }
 
       // Create Row Names with all sensor that had been recorded
+      const sensors = SensorServices.getAllSensors();
       for (const sensorId of dataRunInfo.recordedSensors) {
         const sensorInfo = sensors[sensorId];
         const subSensorIds = Object.keys(sensorInfo.data);
@@ -591,6 +597,18 @@ export class DataManager {
     }
   }
 
+  /**
+   * Get data for a specific sensor from the buffer.
+   *
+   * @param {string} sensorId - The ID of the sensor to get data for.
+   * @param {number=} sensorIndex - The index of the data to get (if the data is an array).
+   * @returns {any} - The sensor data or the specified data item (if the data is an array).
+   */
+  getDataSensor(sensorId, sensorIndex) {
+    const sensorData = this.buffer[sensorId];
+    return Array.isArray(sensorData) && sensorIndex !== undefined ? sensorData[sensorIndex] : sensorData;
+  }
+
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
   getParsedCollectingDataTime() {
     const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
@@ -675,7 +693,7 @@ export class DataManager {
       const sensorId = (Math.random() * (4 - 1) + 1).toFixed(0);
       const sensorSerialId = 0;
 
-      const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
+      const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
       const dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];

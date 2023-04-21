@@ -1,0 +1,124 @@
+.__active {
+  display: flex;
+  height: 100%;
+  cursor: pointer;
+  border-radius: inherit;
+
+  .__icon {
+    height: 100%;
+    width: 45%;
+    background: #0086ff;
+    border-top-right-radius: 40px 300px;
+    border-bottom-right-radius: 40px 300px;
+    border-top-left-radius: 35px 35px;
+    border-bottom-left-radius: 35px 35px;
+    display: flex;
+    flex-direction: column;
+
+    .__sensor-icon {
+      height: 70%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+
+      img {
+        width: 60px;
+      }
+    }
+    .__sensor-name {
+      height: 30%;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+      font-size: 16px;
+      font-family: Inter;
+      font-weight: 600;
+    }
+  }
+
+  .__sensor-info {
+    height: 100%;
+    width: 55%;
+    display: flex;
+    flex-direction: column;
+    border-radius: inherit;
+
+    .__close-button {
+      width: 30%;
+      height: 20%;
+      align-self: flex-end;
+    }
+    .__sensor-value {
+      width: 100%;
+      height: 30%;
+      font-weight: 700;
+      font-family: "Inter";
+      font-size: 36px;
+      text-align: center;
+    }
+    .__sensor-unit {
+      width: 100%;
+      height: 30%;
+      font-weight: 400;
+      font-family: "Inter";
+      font-size: 30px;
+      text-align: center;
+    }
+    .__signal-strength {
+      width: 30%;
+      height: 20%;
+      align-self: flex-end;
+
+      img {
+        width: 40px;
+      }
+    }
+  }
+}
+
+.__inactive {
+  display: inline-block;
+  height: 100%;
+  cursor: pointer;
+  border-radius: inherit;
+
+  .__icon {
+    height: 70%;
+    width: 100%;
+
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+
+    color: #d9d9d9 !important;
+  }
+
+  .__text {
+    height: 30%;
+    width: 100%;
+    line-height: 20px;
+    color: #000000;
+    text-align: center;
+    font-family: Inter;
+    font-size: 18px;
+  }
+}
+
+.__inactive:active {
+  background: #d9d9d9;
+
+  .__icon {
+    height: 70%;
+    width: 100%;
+
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+
+    color: #ffffff !important;
+  }
+}

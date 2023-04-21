@@ -2,10 +2,10 @@ import React, { Component } from "react";
 
 const ConnectContext = React.createContext();
 
-import { CONNECT_BLE_TYPE } from "../../js/constants";
-import * as core from "../../utils/core";
-import * as commandUtils from "../../utils/command-utils";
-import * as sharedDataUtils from "../../utils/shared-data-utils";
+import { CONNECT_BLE_TYPE } from "../../../js/constants";
+import * as core from "../../../utils/core";
+import * as commandUtils from "../../../utils/command-utils";
+import * as sharedDataUtils from "../../../utils/shared-data-utils";
 
 class ConnectContextProvider extends Component {
   constructor(props) {

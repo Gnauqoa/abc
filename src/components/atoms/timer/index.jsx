@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
-import DataManagerIST from "./../services/data-manager";
-import { TIMER_INTERVAL } from "../js/constants";
+import DataManagerIST from "../../../services/data-manager";
+import { TIMER_INTERVAL } from "../../../js/constants";
 export default ({ isRunning }) => {
   const [count, setCount] = useState(0);
 

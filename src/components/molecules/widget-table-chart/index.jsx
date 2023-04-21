@@ -1,9 +1,9 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 
-import "./table_chart.scss";
-import SensorSelector from "../sensor-selector";
-import { getUnit } from "../../services/sensor-service";
-import DataManagerIST from "../../services/data-manager";
+import "./index.scss";
+import SensorSelector from "../popup-sensor-selector";
+import SensorServices from "../../../services/sensor-service";
+import DataManagerIST from "../../../services/data-manager";
 
 import {
   LAYOUT_TABLE,
@@ -12,7 +12,7 @@ import {
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
   DEFAULT_SENSOR_ID,
-} from "../../js/constants";
+} from "../../../js/constants";
 
 const DEFAULT_ROWS = 15;
 const FIRST_COLUMN_DEFAULT_OPT = "time";
@@ -78,7 +78,8 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
 
-  const sensorUnit = widget.sensor.id === DEFAULT_SENSOR_ID ? "" : getUnit(widget.sensor.id, widget.sensor.index);
+  const sensorUnit =
+    widget.sensor.id === DEFAULT_SENSOR_ID ? "" : SensorServices.getUnit(widget.sensor.id, widget.sensor.index);
 
   useImperativeHandle(ref, () => ({
     handleSamplingManual() {

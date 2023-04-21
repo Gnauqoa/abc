@@ -1,4 +1,4 @@
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 var cordovaApp = {
   f7: null,

@@ -1,6 +1,6 @@
 import store from "store";
 import { f7 } from "framework7-react";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
