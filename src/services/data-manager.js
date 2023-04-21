@@ -13,6 +13,9 @@ import {
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 3;
 
+// TODO: Fix when collecting data with timer, if any happen like manual sampling,
+// change frequency or start/stop collecting data. Stop timer
+
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
  */

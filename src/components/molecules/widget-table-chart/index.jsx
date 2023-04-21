@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
-
+import { Button, Icon } from "framework7-react";
 import "./index.scss";
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
@@ -245,6 +245,14 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                       );
                     })}
                   </select>
+                  {firstColumnOption === FIRST_COLUMN_CUSTOM_OPT && (
+                    <Button
+                      iconIos={`material:edit`}
+                      iconMd={`material:edit`}
+                      iconAurora={`material:edit`}
+                      style={{ color: "#8C8C8C" }}
+                    ></Button>
+                  )}
                 </div>
                 <div className="header-unit">
                   {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
