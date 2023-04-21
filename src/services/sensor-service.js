@@ -185,6 +185,23 @@ export class SensorServices {
     return allSensors.filter((s) => s.id === sensorId)[0]?.data[dataIndex]?.unit || "";
   }
 
+  getMinUnitValueAllSensors() {
+    let minValue;
+    const allSensors = [...this.sensors, ...this.customSensors];
+    allSensors.forEach((sensor) => {
+      if (!Array.isArray(sensor.data)) return;
+
+      sensor.data.forEach((unit) => {
+        const minUnit = Number(unit.min);
+        if (Number.isNaN(minUnit)) return;
+
+        if (minValue === undefined) minValue = minUnit;
+        else minValue = Math.min(minValue, minUnit);
+      });
+    });
+    return minValue;
+  }
+
   getSensorIcon(sensorId) {
     const sensorIcon = sensorIcons[sensorId];
     return sensorIcon !== undefined ? sensorIcon : {};
