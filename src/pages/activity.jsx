@@ -22,7 +22,7 @@ import RoundButton from "../components/atoms/round-button";
 import dialog from "../components/molecules/dialog/dialog";
 import ActivityPageNav from "../components/molecules/activity-page-nav";
 import Timer from "../components/atoms/timer";
-import LineChart from "../components/molecules/widget-line-chart/line_chart";
+import LineChart from "../components/molecules/widget-line-chart";
 import NumberWidget from "../components/molecules/widget-number-chart/number";
 import TableWidget from "../components/molecules/widget-table-chart";
 import SamplingSetting from "../components/molecules/popup-sampling-settings";

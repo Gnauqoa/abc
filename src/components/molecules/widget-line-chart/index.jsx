@@ -1,28 +1,47 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import "./line_chart.scss";
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import $ from "jquery";
-
-Chart.register(zoomPlugin);
+import ExpandableOptions from "../expandable-options";
 
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 
-const defaultXUnit = "s",
-  roundX = 3;
+import "./index.scss";
+
+Chart.register(zoomPlugin);
+
+import lineChartIcon from "../../../img/expandable-options/line.png";
+import interpolateIcon from "../../../img/expandable-options/interpolate.png";
+import autoScaleIcon from "../../../img/expandable-options/auto-scale.png";
+import noteIcon from "../../../img/expandable-options/note.png";
+
+const AUTO_SCALE_OPTION = 0;
+const NOTE_OPTION = 1;
+const INTERPOLATE_OPTION = 2;
+
+const expandableOptions = [
+  {
+    id: AUTO_SCALE_OPTION,
+    icon: autoScaleIcon,
+  },
+  {
+    id: NOTE_OPTION,
+    icon: noteIcon,
+  },
+  {
+    id: INTERPOLATE_OPTION,
+    icon: interpolateIcon,
+  },
+];
+
+const roundX = 3;
+const defaultXUnit = "s";
+
 const roundXValue = (value) => {
   return Math.round(value * Math.pow(10, roundX)) / Math.pow(10, roundX);
 };
-const log = (text, data) => {
-  let debug = true;
-  if (debug) {
-    console.log(text);
-    if (data) {
-      console.dir(data);
-    }
-  }
-};
+
 const getChartJsPlugin = ({ valueLabelContainerRef }) => {
   return {
     afterDraw: (chart, args, options) => {
@@ -69,12 +88,6 @@ const createChartJsData = ({ chartData = [] }) => {
         x: roundXValue(d.x - firstPoint.x),
         y: d.y,
       });
-      // if (dataIndex == 2) {
-      //   dataList.push({
-      //     x: d.x - firstPoint.x,
-      //     y: d.y,
-      //   });
-      // }
     });
     chartDataParam.datasets.push({
       label: s.name,
@@ -113,9 +126,9 @@ const getMaxX = ({ chartData }) => {
   let max = 0;
   chartData.forEach((s) => {
     if (s.data.length > 0) {
-      const lastData = s.data[s.data.length - 1],
-        firstData = s.data[0],
-        xValue = roundXValue(lastData.x - firstData.x);
+      const lastData = s.data[s.data.length - 1];
+      const firstData = s.data[0];
+      const xValue = roundXValue(lastData.x - firstData.x);
       if (xValue > max) {
         max = xValue;
       }
@@ -152,27 +165,25 @@ const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
  *
  */
 const updateChart = ({ chartInstance, data, axisRef }) => {
-  const pageStep = 5,
-    firstPageStep = 10;
+  const pageStep = 5;
+  const firstPageStep = 10;
+
   let suggestedMaxX = calculateSuggestMaxX({
-      chartData: data,
-      pageStep,
-      firstPageStep,
-    }),
-    stepSize;
+    chartData: data,
+    pageStep,
+    firstPageStep,
+  });
 
   if (!suggestedMaxX) {
     suggestedMaxX = pageStep;
   }
 
-  stepSize = suggestedMaxX / 10;
+  const stepSize = suggestedMaxX / 10;
 
   chartInstance.data = createChartJsData({
     chartData: data,
   });
-
   chartInstance.options.animation = false;
-
   chartInstance.options.scales = {
     y: {
       min: axisRef.current.yMin,
@@ -201,6 +212,7 @@ const updateChart = ({ chartInstance, data, axisRef }) => {
       },
     },
   };
+
   if (stepSize) {
     //log("chart step size", stepSize);
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
@@ -318,15 +330,15 @@ const getCustomTooltipFunc = ({ axisRef }) => {
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
   const { sensor } = widget;
-  const chartEl = useRef(),
-    chartInstanceRef = useRef(),
-    sensorRef = useRef({}),
-    axisRef = useRef({
-      xUnit: "",
-      yUnit: "",
-      yMin: 0,
-      yMax: null,
-    });
+  const chartEl = useRef();
+  const chartInstanceRef = useRef();
+  const sensorRef = useRef({});
+  const axisRef = useRef({
+    xUnit: "",
+    yUnit: "",
+    yMin: 0,
+    yMax: null,
+  });
 
   if (sensorRef.current.id != sensor?.id || sensorRef.current.index != sensor?.index) {
     sensorRef.current = {
@@ -344,9 +356,9 @@ let LineChart = (props, ref) => {
     }
   }
 
-  let valueContainerElRef = useRef(),
-    xElRef = useRef(),
-    yElRef = useRef();
+  let valueContainerElRef = useRef();
+  let xElRef = useRef();
+  let yElRef = useRef();
 
   useImperativeHandle(ref, () => ({
     clearData: () => {},
@@ -374,6 +386,7 @@ let LineChart = (props, ref) => {
       });
     },
   }));
+
   useEffect(() => {
     const data = createChartJsData({
       chartData: [
@@ -383,6 +396,7 @@ let LineChart = (props, ref) => {
         },
       ],
     });
+
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
@@ -445,6 +459,8 @@ let LineChart = (props, ref) => {
     });
   }, []);
 
+  const onChooseOptionHandler = (optionId) => {};
+
   return (
     <div className="line-chart-wapper">
       <div className="sensor-selector-wrapper">
@@ -457,7 +473,6 @@ let LineChart = (props, ref) => {
       </div>
 
       <div className="canvas-container">
-        <canvas ref={chartEl} />
         <div className="current-value-sec" ref={valueContainerElRef}>
           <div className="value-container">
             x=<span ref={xElRef}></span>
@@ -465,6 +480,14 @@ let LineChart = (props, ref) => {
           <div className="value-container">
             y=<span ref={yElRef}></span>
           </div>
+        </div>
+        <canvas ref={chartEl} />
+        <div className="expandable-options">
+          <ExpandableOptions
+            expandIcon={lineChartIcon}
+            options={expandableOptions}
+            onChooseOption={onChooseOptionHandler}
+          />
         </div>
       </div>
     </div>
