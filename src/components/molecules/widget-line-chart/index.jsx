@@ -116,9 +116,14 @@ const handleElementDragging = function (event) {
   return true;
 };
 
-const getAllCurrentNotes = (sensorId, sensorIndex) => {
+const getAllCurrentNotes = (sensorId, sensorIndex, datasetIndex) => {
   const currentChartNotes = Object.values(allNotes).filter((note) => {
-    return note.sensorId === sensorId && note.sensorIndex === sensorIndex;
+    console.log(sensorId, sensorIndex, datasetIndex);
+    return (
+      (sensorId === undefined || note.sensorId === sensorId) &&
+      (sensorIndex === undefined || note.sensorIndex === sensorIndex) &&
+      (datasetIndex === undefined || note.datasetIndex === datasetIndex)
+    );
   });
 
   const noteElements = {};
@@ -234,18 +239,19 @@ const onDoubleClickNoteElement = ({ chart, element }) => {
   const noteElement = chart.config.options.plugins.annotation.annotations[noteElementId];
   if (!noteElement) return;
 
-  dialog.modifyNoteLineChart("Thêm note", (note) => {
-    if (!note) {
+  dialog.modifyNoteLineChart("Thêm note", (noteContent) => {
+    if (!noteContent) {
       delete chart.config.options.plugins.annotation.annotations[noteElementId];
       delete allNotes[noteElementId];
     } else {
-      const newContents = prepareContentNote(note);
-      chart.config.options.plugins.annotation.annotations[noteElementId].content = newContents;
-      allNotes[noteElementId] = { ...allNotes[noteElementId], content: newContents };
+      const newNoteContent = prepareContentNote(noteContent);
+      chart.config.options.plugins.annotation.annotations[noteElementId].content = newNoteContent;
+      allNotes[noteElementId] = { ...allNotes[noteElementId], content: newNoteContent };
     }
     chart.update();
   });
 };
+
 const addNoteHandler = (chartInstance, sensorInstance) => {
   if (!selectedPointElement || !selectedPointElement.element) return;
 
@@ -254,8 +260,10 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
   const noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
 
   if (!Object.keys(allNotes).includes(noteId)) {
-    const notePos = {
+    const newNote = {
       id: noteId,
+      content: sampleNote.content,
+      datasetIndex: selectedPointElement.datasetIndex,
       sensorId: sensorInstance.id,
       sensorIndex: sensorInstance.index,
       xValue: xValueNoteElement,
@@ -266,10 +274,10 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
 
     const newNoteElement = {
       ...sampleNote,
-      ...notePos,
+      ...newNote,
     };
 
-    allNotes = { ...allNotes, [noteId]: notePos };
+    allNotes = { ...allNotes, [noteId]: newNote };
     chartInstance.config.options.plugins.annotation.annotations = {
       ...chartInstance.config.options.plugins.annotation.annotations,
       [noteId]: newNoteElement,
@@ -285,6 +293,20 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
   chartInstance.config.options.pointBorderColor = newPointBorderColor;
 
   chartInstance.update();
+};
+
+// ======================================= CHART LEGEND =======================================
+const onClickLegendHandler = (event, legendItem, legend) => {
+  if (event.type !== "click") return;
+  const index = legendItem.datasetIndex;
+  const ci = legend.chart;
+  if (ci.isDatasetVisible(index)) {
+    ci.hide(index);
+    legendItem.hidden = true;
+  } else {
+    ci.show(index);
+    legendItem.hidden = false;
+  }
 };
 
 // ======================================= CHART FUNCTIONS =======================================
@@ -352,7 +374,7 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
   }
 
-  const noteAnnotations = getAllCurrentNotes(sensor?.id, sensor?.index);
+  const noteAnnotations = getAllCurrentNotes(sensor?.id, sensor?.index, undefined);
   chartInstance.config.options.plugins.annotation.annotations = {
     ...noteAnnotations,
   };
@@ -440,7 +462,7 @@ let LineChart = (props, ref) => {
         //Customize chart options
         animation: false,
         maintainAspectRatio: false,
-        events: ["mousemove", "mouseout", "click", "touchstart", "touchmove", "mousedown"],
+        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
         plugins: {
           tooltip: {
             usePointStyle: true,
@@ -489,6 +511,11 @@ let LineChart = (props, ref) => {
             leave: onLeaveNoteElement,
             click: onClickNoteElement,
             annotations: {},
+          },
+
+          legend: {
+            display: true,
+            onClick: onClickLegendHandler,
           },
         },
       },
