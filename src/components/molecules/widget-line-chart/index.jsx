@@ -27,7 +27,7 @@ import {
   X_MIN_VALUE,
   getMaxPointsAllDatasets,
   prepareContentNote,
-} from "../../../utils/line-chart-utils";
+} from "../../../utils/widget-line-utils";
 
 import "./index.scss";
 import dialog from "../dialog/dialog";
