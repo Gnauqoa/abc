@@ -27,12 +27,12 @@ const FIRST_COLUMN_OPTIONS = [
   {
     id: FIRST_COLUMN_DEFAULT_OPT,
     name: "Thời gian",
-    unit: "(giây)",
+    unit: <span className="header-unit__input">(giây)</span>,
   },
   {
     id: FIRST_COLUMN_CUSTOM_OPT,
     name: "Người dùng nhập",
-    unit: <input id={FIRST_COLUMN_CUSTOM_OPT} className="header-unit__input" type="text" placeholder="--------" />,
+    unit: <input id={FIRST_COLUMN_CUSTOM_OPT} type="text" placeholder="--------" />,
   },
 ];
 
@@ -205,56 +205,52 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     <div className="wapper">
       <div className="wapper__chart">
         <table className="wapper__chart__table">
-          <tbody className="wapper__chart__table__body" style={{ ...PAGE_SETTINGS[chartLayout]["table-chart-body"] }}>
-            <tr className="header" ref={headerRowRef}>
-              <td>
-                <div className="header-name">
-                  <select
-                    disabled={isRunning}
-                    value={firstColumnOption}
-                    className="custom-select"
-                    onChange={handleFirstColumSelector}
-                    style={PAGE_SETTINGS[chartLayout]["custom-select"]}
-                  >
-                    <option value={"defaultSensorSelectedValue"} disabled>
-                      Chọn thông tin
-                    </option>
-                    {FIRST_COLUMN_OPTIONS.map((option) => {
-                      return (
-                        <option key={option.id} value={option.id}>
-                          {option.name}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  {firstColumnOption === FIRST_COLUMN_CUSTOM_OPT && (
-                    <Button
-                      iconIos={`material:edit`}
-                      iconMd={`material:edit`}
-                      iconAurora={`material:edit`}
-                      style={{ color: "#8C8C8C" }}
-                    ></Button>
-                  )}
-                </div>
-                <div className="header-unit">
-                  {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
-                </div>
-              </td>
-              <td>
-                <div className="header-name">
-                  <div className="sensor-select-container-table-chart">
-                    <SensorSelector
-                      disabled={isRunning}
-                      selectedSensor={widget.sensor}
-                      hideDisplayUnit={true}
-                      onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-                    ></SensorSelector>
-                  </div>
-                </div>
+          {/* ========================== TABLE HEADER ========================== */}
+          <div className="wapper__chart__table__header">
+            <div className="__header-column">
+              <div className="__header-name">
+                <select
+                  className="custom-select"
+                  disabled={isRunning}
+                  value={firstColumnOption}
+                  onChange={handleFirstColumSelector}
+                  style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
+                >
+                  <option value={"defaultSensorSelectedValue"} disabled>
+                    Chọn thông tin
+                  </option>
+                  {FIRST_COLUMN_OPTIONS.map((option) => {
+                    return (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="__header-unit">
+                {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
+              </div>
+            </div>
 
-                {sensorUnit !== "" && <div className="header-unit">({sensorUnit})</div>}
-              </td>
-            </tr>
+            <div className="__header-column">
+              <div className="__header-name">
+                <SensorSelector
+                  className="sensor-selector "
+                  disabled={isRunning}
+                  selectedSensor={widget.sensor}
+                  hideDisplayUnit={true}
+                  onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+                  style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
+                ></SensorSelector>
+              </div>
+              <div className="__header-unit">
+                <span className="header-unit__input">{sensorUnit !== "" ? `(${sensorUnit})` : "--------"}</span>
+              </div>
+            </div>
+          </div>
+          {/* ========================== TABLE BODY ========================== */}
+          <tbody className="wapper__chart__table__body">
             {[...rows, emptyRow, emptyRow].map((row, index) => {
               let ref;
               if (!isRunning) ref = null;
@@ -266,6 +262,7 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
 
               return (
                 <tr key={index} ref={ref}>
+                  {/* ========================== FIXED FIRST COLUMN ========================== */}
                   <td>
                     {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
                       <span className="span-input">{row.colum1}</span>
@@ -279,6 +276,8 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                       />
                     )}
                   </td>
+
+                  {/* ========================== SECOND COLUMN ========================== */}
                   <td id={index} onClick={handleChangeSelectedColumn}>
                     <span className="span-value " style={index === selectedRow ? { color: "#11b444" } : {}}>
                       {row.colum2}

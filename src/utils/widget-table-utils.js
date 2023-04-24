@@ -10,33 +10,21 @@ export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
 export const PAGE_SETTINGS = {
   [LAYOUT_TABLE]: {
-    "table-chart-body": {
-      width: "96%",
-      margin: "3% 7%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "70%",
-      fontSize: "16px",
-    },
-  },
-  [LAYOUT_TABLE_CHART]: {
-    "table-chart-body": {
-      width: "98%",
-      margin: "3% 2%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "97%",
+    "header-name-selector": {
+      width: "300px",
       fontSize: "16px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
-    "table-chart-body": {
-      width: "90%",
-      margin: "3% 5%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "76%",
+    "header-name-selector": {
+      width: "200px",
       fontSize: "18px",
+    },
+  },
+  [LAYOUT_TABLE_CHART]: {
+    "header-name-selector": {
+      width: "160px",
+      fontSize: "16px",
     },
   },
 };
