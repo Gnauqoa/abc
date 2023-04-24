@@ -7,7 +7,6 @@ import ExpandableOptions from "../expandable-options";
 
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
-import storeService from "../../../services/store-service";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
@@ -26,7 +25,6 @@ import {
   X_DEFAULT_UNIT,
   Y_UPPER_LOWER_BOUND,
   X_MIN_VALUE,
-  getNoteElementId,
   getMaxPointsAllDatasets,
   prepareContentNote,
 } from "../../../utils/line-chart-utils";
@@ -40,7 +38,7 @@ Chart.register(annotationPlugin);
 // ===================================== START DRAG-DROP UTILS =====================================
 let noteElement;
 let lastNoteEvent;
-let selectedPointPos = null;
+let selectedPointElement = null;
 let allNotes = {};
 let timerDoubleClick;
 const POINT_BACKGROUND_COLOR = "#36a2eb80";
@@ -144,7 +142,7 @@ const onClickChartHandler = (event, elements, chart) => {
     const isPointElement = elements[0]?.element instanceof PointElement;
 
     // Handle click point
-    if (isPointElement || selectedPointPos !== null) {
+    if (isPointElement || selectedPointElement !== null) {
       // Get max points of all datasets
       const maxPointsAllDatasets = getMaxPointsAllDatasets(chart);
       const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
@@ -153,20 +151,15 @@ const onClickChartHandler = (event, elements, chart) => {
       if (isPointElement) {
         const selectedPoint = elements[0];
         const dataPointIndex = selectedPoint.index;
-
+        selectedPointElement = selectedPoint;
         newPointBackgroundColor[dataPointIndex] = "red";
 
         chart.config.options.pointBackgroundColor = newPointBackgroundColor;
         chart.config.options.pointBorderColor = newPointBorderColor;
 
-        selectedPointPos = {
-          x: selectedPoint.element.x,
-          y: selectedPoint.element.y,
-        };
-
         chart.update();
-      } else if (selectedPointPos !== null) {
-        selectedPointPos = null;
+      } else if (selectedPointElement !== null) {
+        selectedPointElement = null;
 
         chart.config.options.pointBackgroundColor = newPointBackgroundColor;
         chart.config.options.pointBorderColor = newPointBorderColor;
@@ -253,43 +246,43 @@ const onDoubleClickNoteElement = ({ chart, element }) => {
     chart.update();
   });
 };
-
-// TODO: modify after select, pan in chart and add note, the note position note correct
 const addNoteHandler = (chartInstance, sensorInstance) => {
-  if (!selectedPointPos) return;
+  if (!selectedPointElement || !selectedPointElement.element) return;
 
-  const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointPos.x);
-  const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointPos.y);
+  const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
+  const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointElement.element.y);
+  const noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
 
-  const noteId = getNoteElementId();
-  const notePos = {
-    id: noteId,
-    sensorId: sensorInstance.id,
-    sensorIndex: sensorInstance.index,
-    xValue: xValueNoteElement,
-    yValue: yValueNoteElement,
-    xAdjust: -60,
-    yAdjust: -60,
-  };
+  if (!Object.keys(allNotes).includes(noteId)) {
+    const notePos = {
+      id: noteId,
+      sensorId: sensorInstance.id,
+      sensorIndex: sensorInstance.index,
+      xValue: xValueNoteElement,
+      yValue: yValueNoteElement,
+      xAdjust: -60,
+      yAdjust: -60,
+    };
 
-  const newNoteElement = {
-    ...sampleNote,
-    ...notePos,
-  };
+    const newNoteElement = {
+      ...sampleNote,
+      ...notePos,
+    };
 
-  allNotes = { ...allNotes, [noteId]: notePos };
-  selectedPointPos = null;
+    allNotes = { ...allNotes, [noteId]: notePos };
+    chartInstance.config.options.plugins.annotation.annotations = {
+      ...chartInstance.config.options.plugins.annotation.annotations,
+      [noteId]: newNoteElement,
+    };
+  }
 
+  // Clear selected point
+  selectedPointElement = null;
   const maxPointsAllDatasets = getMaxPointsAllDatasets(chartInstance);
   const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
   const newPointBorderColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BORDER_COLOR);
-
   chartInstance.config.options.pointBackgroundColor = newPointBackgroundColor;
   chartInstance.config.options.pointBorderColor = newPointBorderColor;
-  chartInstance.config.options.plugins.annotation.annotations = {
-    ...chartInstance.config.options.plugins.annotation.annotations,
-    [noteId]: newNoteElement,
-  };
 
   chartInstance.update();
 };
@@ -447,7 +440,7 @@ let LineChart = (props, ref) => {
         //Customize chart options
         animation: false,
         maintainAspectRatio: false,
-        events: ["mousedown", "mouseup", "mousemove", "mouseout", "click"],
+        events: ["mousemove", "mouseout", "click", "touchstart", "touchmove", "mousedown"],
         plugins: {
           tooltip: {
             usePointStyle: true,
