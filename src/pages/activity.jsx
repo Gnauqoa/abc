@@ -250,6 +250,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       lastDataRunId: null,
     };
     const newPages = [...pages, newPage];
+    prevChartDataRef.current[currentPageIndex] = null;
 
     setPages(newPages);
     setWidgets(defaultWidgets);
@@ -407,6 +408,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         xUnit: "ms",
         yUnit: "",
         maxHz: 10,
+        curSensor: sensor,
       });
     }
   }

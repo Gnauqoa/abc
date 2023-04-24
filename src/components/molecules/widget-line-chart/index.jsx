@@ -1,183 +1,266 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import Chart from "chart.js/auto";
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
+import Chart, { PointElement } from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
-import $ from "jquery";
+import annotationPlugin from "chartjs-plugin-annotation";
+import _ from "lodash";
 import ExpandableOptions from "../expandable-options";
 
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
+import storeService from "../../../services/store-service";
+
+import lineChartIcon from "../../../img/expandable-options/line.png";
+import {
+  calculateSuggestMaxX,
+  createChartDataAndParseXAxis,
+  createChartJsData,
+  roundAndGetSignificantDigitString,
+  getCustomTooltipFunc,
+  getChartJsPlugin,
+  scaleToFixHandler,
+  interpolateHandler,
+  expandableOptions,
+  SCALE_FIT_OPTION,
+  NOTE_OPTION,
+  INTERPOLATE_OPTION,
+  X_DEFAULT_UNIT,
+  Y_UPPER_LOWER_BOUND,
+  X_MIN_VALUE,
+  getNoteElementId,
+  getMaxPointsAllDatasets,
+} from "../../../utils/line-chart-utils";
 
 import "./index.scss";
 
 Chart.register(zoomPlugin);
+Chart.register(annotationPlugin);
 
-import lineChartIcon from "../../../img/expandable-options/line.png";
-import interpolateIcon from "../../../img/expandable-options/interpolate.png";
-import autoScaleIcon from "../../../img/expandable-options/auto-scale.png";
-import noteIcon from "../../../img/expandable-options/note.png";
+// ===================================== START DRAG-DROP UTILS =====================================
+let noteElement;
+let lastNoteEvent;
+let selectedPointPos = null;
+let allNotes = {};
 
-const X_FORMAT_FLOATING = 3;
-const X_DEFAULT_UNIT = "s";
+const POINT_BACKGROUND_COLOR = "#36a2eb80";
+const POINT_BORDER_COLOR = "#36a2eb";
 
-const SCALE_FIT_OPTION = 0;
-const NOTE_OPTION = 1;
-const INTERPOLATE_OPTION = 2;
+const NOTE_BACKGROUND_COLOR = "#ff638440";
+const NOTE_BACKGROUND_COLOR_ACTIVE = "#e9164440";
+const NOTE_BORDER_COLOR = "#C12553";
 
-const X_UPPER_LOWER_BOUND = 2;
-const Y_UPPER_LOWER_BOUND = 5;
-const X_MIN_VALUE = -10;
-
-const INTERPOLATE_VALUE = 0.4;
-
-const expandableOptions = [
-  {
-    id: SCALE_FIT_OPTION,
-    icon: autoScaleIcon,
+let sampleNote = {
+  type: "label",
+  backgroundColor: NOTE_BACKGROUND_COLOR,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: NOTE_BORDER_COLOR,
+  width: 40,
+  height: 20,
+  padding: {
+    top: 6,
+    left: 6,
+    right: 6,
+    bottom: 6,
   },
-  {
-    id: NOTE_OPTION,
-    icon: noteIcon,
+  content: ["Label annotation", "to drag", "to drag", "to drag"],
+  callout: {
+    display: true,
+    borderColor: "black",
   },
-  {
-    id: INTERPOLATE_OPTION,
-    icon: interpolateIcon,
-  },
-];
-
-// ======================================= CHART UTILS =======================================
-const roundXValue = (value) => {
-  return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);
+  click: ({ element }) => {},
+  xValue: 0,
+  yValue: 0,
 };
 
-// chartData: chartInstance.data.datasets
-const getMaxMinAxises = ({ chartData }) => {
-  let maxX;
-  let maxY;
-  let minX;
-  let minY;
+const dragger = {
+  id: "annotation-dragger",
+  beforeEvent(chart, args, options) {
+    if (handleDrag(args.event)) {
+      args.changed = true;
+      return;
+    }
+  },
+};
 
-  chartData.forEach((dataset) => {
-    const data = dataset.data;
-    data.forEach((d, index) => {
-      if (index === 0) {
-        maxX = d.x;
-        minX = d.x;
-        maxY = d.y;
-        minY = d.y;
-        return;
-      }
+const handleDrag = function (event) {
+  if (noteElement) {
+    switch (event.type) {
+      case "mousemove":
+        const result = handleElementDragging(event);
+        return result;
+      case "mouseout":
+      case "mouseup":
+        lastNoteEvent = undefined;
+        break;
+      case "mousedown":
+        lastNoteEvent = event;
+        break;
+      default:
+    }
+  }
+};
 
-      minX = Math.min(minX, d.x);
-      maxX = Math.max(maxX, d.x);
-      minY = Math.min(minY, d.y);
-      maxY = Math.max(maxY, d.y);
-    });
+const handleElementDragging = function (event) {
+  if (!lastNoteEvent || !noteElement) {
+    return;
+  }
+
+  const moveX = event.x - lastNoteEvent.x;
+  const moveY = event.y - lastNoteEvent.y;
+
+  noteElement.x += moveX;
+  noteElement.y += moveY;
+  noteElement.x2 += moveX;
+  noteElement.y2 += moveY;
+  noteElement.centerX += moveX;
+  noteElement.centerY += moveY;
+
+  lastNoteEvent = event;
+  return true;
+};
+
+const getAllCurrentNotes = (sensorId, sensorIndex) => {
+  const currentChartNotes = Object.values(allNotes).filter((note) => {
+    return note.sensorId === sensorId && note.sensorIndex === sensorIndex;
   });
 
-  return {
-    maxX: maxX,
-    minX: minX,
-    maxY: maxY,
-    minY: minY,
+  const noteElements = {};
+  currentChartNotes.forEach((note) => {
+    const newNoteElement = {
+      ...sampleNote,
+      xValue: note.xValue,
+      yValue: note.yValue,
+      xAdjust: note.xAdjust,
+      yAdjust: note.yAdjust,
+    };
+
+    noteElements[note.id] = newNoteElement;
+  });
+  return noteElements;
+};
+
+const onClickChartHandler = (event, elements, chart) => {
+  if (event.type === "click") {
+    const isPointElement = elements[0]?.element instanceof PointElement;
+
+    // Handle click point
+    if (isPointElement || selectedPointPos !== null) {
+      // Get max points of all datasets
+      const maxPointsAllDatasets = getMaxPointsAllDatasets(chart);
+      const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
+      const newPointBorderColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BORDER_COLOR);
+
+      if (isPointElement) {
+        const selectedPoint = elements[0];
+        const dataPointIndex = selectedPoint.index;
+
+        newPointBackgroundColor[dataPointIndex] = "red";
+
+        chart.config.options.pointBackgroundColor = newPointBackgroundColor;
+        chart.config.options.pointBorderColor = newPointBorderColor;
+
+        selectedPointPos = {
+          x: selectedPoint.element.x,
+          y: selectedPoint.element.y,
+        };
+
+        chart.update();
+      } else if (selectedPointPos !== null) {
+        selectedPointPos = null;
+
+        chart.config.options.pointBackgroundColor = newPointBackgroundColor;
+        chart.config.options.pointBorderColor = newPointBorderColor;
+
+        chart.update();
+      }
+    }
+  }
+};
+const onEnterNoteElement = ({ chart, element }) => {
+  const noteElementId = element.options.id;
+  noteElement = element;
+
+  chart.canvas.style.cursor = "pointer";
+  chart.config.options.plugins.annotation.annotations[noteElementId].backgroundColor = NOTE_BACKGROUND_COLOR_ACTIVE;
+  chart.config.options.plugins.zoom.pan.enabled = false;
+  chart.update();
+};
+
+const onLeaveNoteElement = ({ chart, element }) => {
+  const noteElementId = element.options.id;
+
+  let label = chart.config.options.plugins.annotation.annotations[noteElementId];
+  const oldXPixel = chart.scales.x.getPixelForValue(label.xValue);
+  const oldYPixel = chart.scales.y.getPixelForValue(label.yValue);
+
+  const newAdjustPos = {
+    xAdjust: element.centerX - oldXPixel,
+    yAdjust: element.centerY - oldYPixel,
+  };
+
+  label = {
+    ...label,
+    ...newAdjustPos,
+    backgroundColor: NOTE_BACKGROUND_COLOR,
+  };
+  chart.canvas.style.cursor = "default";
+  chart.config.options.plugins.annotation.annotations[noteElementId] = { ...label };
+  chart.config.options.plugins.zoom.pan.enabled = true;
+  chart.update();
+  noteElement = undefined;
+  lastNoteEvent = undefined;
+
+  const currentNote = {
+    ...allNotes[noteElementId],
+    ...newAdjustPos,
+  };
+
+  allNotes = {
+    ...allNotes,
+    [noteElementId]: currentNote,
   };
 };
 
-const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
-  const { maxX } = getMaxMinAxises({
-    chartData,
-  });
+const addNoteHandler = (chartInstance, sensorInstance) => {
+  if (!selectedPointPos) return;
 
-  let suggestMaxX;
-  if (maxX <= firstPageStep) {
-    suggestMaxX = firstPageStep;
-  } else {
-    const numOfPage = Math.ceil((maxX - firstPageStep) / pageStep);
-    suggestMaxX = firstPageStep + pageStep * numOfPage;
-  }
+  const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointPos.x);
+  const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointPos.y);
 
-  return suggestMaxX;
+  const noteId = getNoteElementId();
+  const notePos = {
+    id: noteId,
+    sensorId: sensorInstance.id,
+    sensorIndex: sensorInstance.index,
+    xValue: xValueNoteElement,
+    yValue: yValueNoteElement,
+    xAdjust: 0,
+    yAdjust: 0,
+  };
+
+  const newNoteElement = {
+    ...sampleNote,
+    ...notePos,
+  };
+
+  allNotes = { ...allNotes, [noteId]: notePos };
+  selectedPointPos = null;
+
+  const maxPointsAllDatasets = getMaxPointsAllDatasets(chartInstance);
+  const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
+  const newPointBorderColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BORDER_COLOR);
+
+  chartInstance.config.options.pointBackgroundColor = newPointBackgroundColor;
+  chartInstance.config.options.pointBorderColor = newPointBorderColor;
+  chartInstance.config.options.plugins.annotation.annotations = {
+    ...chartInstance.config.options.plugins.annotation.annotations,
+    [noteId]: newNoteElement,
+  };
+
+  chartInstance.update();
 };
 
 // ======================================= CHART FUNCTIONS =======================================
-const getChartJsPlugin = ({ valueLabelContainerRef }) => {
-  return {
-    afterDraw: (chart, args, options) => {
-      const { ctx } = chart;
-      let xAxis = chart.scales["x"];
-      let yAxis = chart.scales["y"];
-      valueLabelContainerRef.current.style.top = `${yAxis.top + 5}px`;
-      valueLabelContainerRef.current.style.left = `${xAxis.left + 5}px`;
-      ctx.save();
-      ctx.restore();
-    },
-  };
-};
-
-/**
- *
- * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
- */
-const createChartJsData = ({ chartData = [] }) => {
-  let chartDataParam = {
-    labels: [],
-    datasets: [
-      {
-        label: "",
-        data: [],
-      },
-    ],
-  };
-
-  chartDataParam.datasets = [];
-  chartData.forEach((s) => {
-    const dataList = [];
-    let firstPoint = null;
-
-    s.data.forEach((d, dataIndex) => {
-      if (dataIndex == 0) {
-        const firstData = s.data[0];
-        firstPoint = {
-          x: roundXValue(firstData.x),
-          y: firstData.y,
-        };
-      }
-      dataList.push({
-        x: roundXValue(d.x - firstPoint.x),
-        y: d.y,
-      });
-    });
-    chartDataParam.datasets.push({
-      label: s.name,
-      data: dataList,
-    });
-  });
-
-  /**For testing */
-  // chartData.forEach((s, index) => {
-  //   const dataList = [];
-  //   let firstPoint = null;
-
-  //   s.data.forEach((d, dataIndex) => {
-  //     if (dataIndex == 0) {
-  //       const firstData = s.data[0];
-  //       firstPoint = {
-  //         x: firstData.x,
-  //         y: firstData.y,
-  //       };
-  //     }
-  //     dataList.push({
-  //       x: d.x - firstPoint.x,
-  //       y: parseFloat(d.y) + 10,
-  //     });
-  //   });
-  //   chartDataParam.datasets.push({
-  //     label: s.name + "test",
-  //     data: dataList,
-  //   });
-  // });
-
-  return chartDataParam;
-};
 
 /**
  * data: [{
@@ -189,7 +272,7 @@ const createChartJsData = ({ chartData = [] }) => {
  * }]
  *
  */
-const updateChart = ({ chartInstance, data, axisRef }) => {
+const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
   const pageStep = 5;
   const firstPageStep = 10;
 
@@ -231,7 +314,7 @@ const updateChart = ({ chartInstance, data, axisRef }) => {
       title: {
         color: "orange",
         display: true,
-        text: axisRef.current.xUnit,
+        // text: axisRef.current.xUnit,
         text: `(${X_DEFAULT_UNIT})`,
         align: "end",
       },
@@ -242,162 +325,14 @@ const updateChart = ({ chartInstance, data, axisRef }) => {
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
   }
 
-  chartInstance.update();
-};
-
-const createChartDataAndParseXAxis = ({ chartData }) => {
-  const result = chartData.map((dataSeries) => {
-    return {
-      name: dataSeries.name,
-      data: dataSeries.data.map((item) => {
-        return {
-          x: roundXValue(parseFloat(item.x)),
-          y: item.y,
-        };
-      }),
-    };
-  });
-
-  return result;
-};
-
-const roundAndGetSignificantDigitString = ({ n }) => {
-  if (typeof n === "number") {
-    return n.toString();
-  } else if (typeof n === "string") {
-    return roundXValue(parseFloat(n)).toString();
-  } else {
-    return NaN;
-  }
-};
-
-const getCustomTooltipFunc = ({ axisRef }) => {
-  return (context) => {
-    let tooltipEl = document.getElementById("chartjs-tooltip");
-
-    // Create element on first render
-    if (!tooltipEl) {
-      tooltipEl = document.createElement("div");
-      tooltipEl.classList.add("chartjs-tooltip-custom");
-      tooltipEl.id = "chartjs-tooltip";
-      tooltipEl.innerHTML = "<table></table>";
-      document.body.appendChild(tooltipEl);
-    }
-
-    // Hide if no tooltip
-    const tooltipModel = context.tooltip;
-    if (tooltipModel.opacity === 0) {
-      tooltipEl.style.opacity = 0;
-      return;
-    }
-
-    // Set caret Position
-    tooltipEl.classList.remove("above", "below", "no-transform");
-    if (tooltipModel.yAlign) {
-      tooltipEl.classList.add(tooltipModel.yAlign);
-    } else {
-      tooltipEl.classList.add("no-transform");
-    }
-
-    function getBody(bodyItem) {
-      return bodyItem.lines;
-    }
-
-    // Set Text
-    if (tooltipModel.body) {
-      const bodyLines = tooltipModel.body.map(getBody);
-      let innerHtml = "<tbody>";
-      bodyLines.forEach(function (body, i) {
-        const colors = tooltipModel.labelColors[i];
-        let bodyValues = [];
-        if (body && body.length > 0) {
-          bodyValues = body[0].split("|");
-          const dataSetName = bodyValues[0],
-            xValue = bodyValues[1],
-            yValue = bodyValues[2];
-          let style = `display: inline-block; background: ${colors.borderColor};`;
-          style += `border-color: ${colors.borderColor};`;
-          style += "border-width: 2px; width: 10px; height: 10px; margin-right: 3px;";
-          let span = "";
-          span = `<tr><td><span style="${style}"></span><span>${dataSetName}</span></td></tr>`;
-          innerHtml += span;
-          innerHtml += `<tr><td>x=${xValue}(${X_DEFAULT_UNIT})</td></tr>`;
-          innerHtml += `<tr><td>y=${yValue}(${axisRef.current.yUnit || ""})</td></tr>`;
-        }
-      });
-      innerHtml += "</tbody>";
-
-      let tableRoot = tooltipEl.querySelector("table");
-      tableRoot.innerHTML = innerHtml;
-    }
-
-    const position = context.chart.canvas.getBoundingClientRect();
-    const windowWidth = $(window).width();
-    let suggestedX = position.left + window.pageXOffset + tooltipModel.caretX + 10,
-      tooltipWidth = $(tooltipEl).outerWidth();
-    if (suggestedX + tooltipWidth > windowWidth) {
-      suggestedX -= tooltipWidth + 10;
-    }
-
-    tooltipEl.style.opacity = 1;
-    tooltipEl.style.position = "absolute";
-    tooltipEl.style.left = `${suggestedX}px`;
-    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + "px";
-    tooltipEl.style.zIndex = 9999;
-    tooltipEl.style.fontFamily = "Arial";
-    tooltipEl.style.fontSize = "14px";
-    tooltipEl.style.padding = tooltipModel.padding + "px " + tooltipModel.padding + "px";
-    tooltipEl.style.pointerEvents = "none";
-  };
-};
-
-// ======================================= EXPANDED OPTIONS FUNCTIONS =======================================
-const scaleToFixHandler = (chartInstance, axisRef) => {
-  if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
-    return;
-  }
-  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartData: chartInstance.data.datasets });
-
-  chartInstance.options.animation = true;
-  chartInstance.options.scales = {
-    y: {
-      min: minY - Y_UPPER_LOWER_BOUND,
-      suggestedMax: maxY + Y_UPPER_LOWER_BOUND,
-      title: {
-        color: "orange",
-        display: false,
-        text: axisRef.current.yUnit,
-      },
-    },
-    x: {
-      type: "linear",
-      suggestedMin: 0,
-      suggestedMax: maxX + X_UPPER_LOWER_BOUND,
-      ticks: {},
-      title: {
-        color: "orange",
-        display: true,
-        text: axisRef.current.xUnit,
-        text: `(${X_DEFAULT_UNIT})`,
-        align: "end",
-      },
-    },
+  const noteAnnotations = getAllCurrentNotes(sensor?.id, sensor?.index);
+  chartInstance.config.options.plugins.annotation.annotations = {
+    ...noteAnnotations,
   };
   chartInstance.update();
 };
 
-const interpolateHandler = (chartInstance) => {
-  const newDatasets = chartInstance.data.datasets.map((dataset) => {
-    return {
-      ...dataset,
-      tension: INTERPOLATE_VALUE,
-    };
-  });
-
-  chartInstance.data.datasets = [...newDatasets];
-  chartInstance.options.animation = true;
-  chartInstance.update();
-};
+// ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
   const { sensor } = widget;
@@ -410,6 +345,10 @@ let LineChart = (props, ref) => {
     yMin: 0,
     yMax: null,
   });
+
+  let valueContainerElRef = useRef();
+  let xElRef = useRef();
+  let yElRef = useRef();
 
   if (sensorRef.current.id != sensor?.id || sensorRef.current.index != sensor?.index) {
     sensorRef.current = {
@@ -427,10 +366,6 @@ let LineChart = (props, ref) => {
     }
   }
 
-  let valueContainerElRef = useRef();
-  let xElRef = useRef();
-  let yElRef = useRef();
-
   useImperativeHandle(ref, () => ({
     clearData: () => {},
     setCurrentData: ({ data }) => {
@@ -438,7 +373,7 @@ let LineChart = (props, ref) => {
       xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
       yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
     },
-    setChartData: ({ xUnit, yUnit, chartData = [] }) => {
+    setChartData: ({ xUnit, yUnit, chartData = [], curSensor: sensor }) => {
       /**
        * chartData = [
        * { name, data: [{x,y}, ...]}
@@ -451,6 +386,7 @@ let LineChart = (props, ref) => {
         chartInstance: chartInstanceRef.current,
         data: chartData,
         axisRef,
+        sensor,
         xUnit,
         yUnit,
       });
@@ -473,13 +409,17 @@ let LineChart = (props, ref) => {
       type: "line",
       data: data,
       options: {
+        onClick: onClickChartHandler,
         //Customize chart options
         animation: false,
         maintainAspectRatio: false,
+        events: ["mousedown", "mouseup", "mousemove", "mouseout", "click"],
         plugins: {
           tooltip: {
+            usePointStyle: true,
             enabled: false,
             external: getCustomTooltipFunc({ axisRef }),
+
             callbacks: {
               label: function (context) {
                 const resultArr = [];
@@ -516,9 +456,15 @@ let LineChart = (props, ref) => {
               mode: "xy",
             },
           },
+
+          annotation: {
+            enter: onEnterNoteElement,
+            leave: onLeaveNoteElement,
+            annotations: {},
+          },
         },
       },
-      plugins: [chartJsPlugin],
+      plugins: [chartJsPlugin, dragger],
     });
 
     updateChart({
@@ -536,6 +482,7 @@ let LineChart = (props, ref) => {
         scaleToFixHandler(chartInstanceRef.current, axisRef);
         break;
       case NOTE_OPTION:
+        addNoteHandler(chartInstanceRef.current, sensorRef.current);
         break;
       case INTERPOLATE_OPTION:
         interpolateHandler(chartInstanceRef.current);
