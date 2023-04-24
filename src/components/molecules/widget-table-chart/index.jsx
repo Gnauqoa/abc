@@ -1,55 +1,27 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
-import { Button, Icon } from "framework7-react";
+import { Button } from "framework7-react";
 import "./index.scss";
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 
+import { SAMPLING_AUTO, SAMPLING_MANUAL, DEFAULT_SENSOR_ID } from "../../../js/constants";
+
+import tableChartIcon from "../../../img/expandable-options/table.png";
 import {
-  LAYOUT_TABLE,
-  LAYOUT_TABLE_CHART,
-  LAYOUT_NUMBER_TABLE,
-  SAMPLING_AUTO,
-  SAMPLING_MANUAL,
-  DEFAULT_SENSOR_ID,
-} from "../../../js/constants";
+  expandableOptions,
+  PAGE_SETTINGS,
+  DEFAULT_ROWS,
+  FIRST_COLUMN_DEFAULT_OPT,
+  FIRST_COLUMN_CUSTOM_OPT,
+  emptyRow,
+  defaultRows,
+  ADD_COLUMN_OPTION,
+  DELETE_COLUMN_OPTION,
+  SUMMARIZE_OPTION,
+} from "../../../utils/widget-table-utils";
 
-const DEFAULT_ROWS = 15;
-const FIRST_COLUMN_DEFAULT_OPT = "time";
-const FIRST_COLUMN_CUSTOM_OPT = "custom";
-
-const PAGE_SETTINGS = {
-  [LAYOUT_TABLE]: {
-    "table-chart-body": {
-      width: "96%",
-      margin: "3% 7%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "70%",
-      fontSize: "16px",
-    },
-  },
-  [LAYOUT_TABLE_CHART]: {
-    "table-chart-body": {
-      width: "98%",
-      margin: "3% 2%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "97%",
-      fontSize: "16px",
-    },
-  },
-  [LAYOUT_NUMBER_TABLE]: {
-    "table-chart-body": {
-      width: "90%",
-      margin: "3% 5%", // 3% top and bottom, 7% left and right
-    },
-    "custom-select": {
-      width: "76%",
-      fontSize: "18px",
-    },
-  },
-};
+import ExpandableOptions from "../expandable-options";
 
 const FIRST_COLUMN_OPTIONS = [
   {
@@ -63,9 +35,6 @@ const FIRST_COLUMN_OPTIONS = [
     unit: <input id={FIRST_COLUMN_CUSTOM_OPT} className="header-unit__input" type="text" placeholder="--------" />,
   },
 ];
-
-const emptyRow = { colum1: "", colum2: "" };
-const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
 const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning, samplingMode }, ref) => {
   const [rows, setRows] = useState(defaultRows);
@@ -219,6 +188,19 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     });
   };
 
+  const onChooseOptionHandler = (optionId) => {
+    switch (optionId) {
+      case ADD_COLUMN_OPTION:
+        break;
+      case DELETE_COLUMN_OPTION:
+        break;
+      case SUMMARIZE_OPTION:
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -307,6 +289,13 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
             })}
           </tbody>
         </table>
+      </div>
+      <div className="expandable-options">
+        <ExpandableOptions
+          expandIcon={tableChartIcon}
+          options={expandableOptions}
+          onChooseOption={onChooseOptionHandler}
+        />
       </div>
     </div>
   );

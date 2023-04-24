@@ -2,8 +2,6 @@ import React, { useState } from "react";
 
 import "./index.scss";
 
-import expandRowIcon from "../../../img/expandable-options/expand-row.png";
-
 const ICON_SIZE = "50%";
 const EXPAND_ICON_SIZE = "80%";
 
@@ -22,12 +20,7 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
   return (
     <div className="row">
       <div className="container expand-button" onClick={handleExpand}>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img src={expandIcon} alt="expandIcon" style={{ width: EXPAND_ICON_SIZE }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "center", paddingRight: "5px" }}>
-          <img src={expandRowIcon} alt="expandRowIcon" style={{ width: "100%" }} />
-        </div>
+        <img src={expandIcon} alt="expandIcon" style={{ width: EXPAND_ICON_SIZE }} />
       </div>
 
       <div className={`container options ${expanded ? "expanded" : ""}`}>
