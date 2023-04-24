@@ -28,9 +28,11 @@ import {
   X_MIN_VALUE,
   getNoteElementId,
   getMaxPointsAllDatasets,
+  prepareContentNote,
 } from "../../../utils/line-chart-utils";
 
 import "./index.scss";
+import dialog from "../dialog/dialog";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -40,7 +42,7 @@ let noteElement;
 let lastNoteEvent;
 let selectedPointPos = null;
 let allNotes = {};
-
+let timerDoubleClick;
 const POINT_BACKGROUND_COLOR = "#36a2eb80";
 const POINT_BORDER_COLOR = "#36a2eb";
 
@@ -67,7 +69,6 @@ let sampleNote = {
     display: true,
     borderColor: "black",
   },
-  click: ({ element }) => {},
   xValue: 0,
   yValue: 0,
 };
@@ -219,6 +220,22 @@ const onLeaveNoteElement = ({ chart, element }) => {
     ...allNotes,
     [noteElementId]: currentNote,
   };
+};
+
+const onClickNoteElement = ({ chart, element }) => {
+  if (timerDoubleClick) {
+    timerDoubleClick = null;
+    dialog.modifyNoteLineChart("Thêm note", (note) => {
+      const newContents = prepareContentNote(note);
+      const noteElement = element.options.id;
+      chart.config.options.plugins.annotation.annotations[noteElement].content = newContents;
+      chart.update();
+    });
+  } else {
+    timerDoubleClick = setTimeout(() => {
+      timerDoubleClick = null;
+    }, 250);
+  }
 };
 
 const addNoteHandler = (chartInstance, sensorInstance) => {
@@ -460,6 +477,7 @@ let LineChart = (props, ref) => {
           annotation: {
             enter: onEnterNoteElement,
             leave: onLeaveNoteElement,
+            click: onClickNoteElement,
             annotations: {},
           },
         },

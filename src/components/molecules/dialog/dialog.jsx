@@ -361,6 +361,35 @@ export const samplingSettings = (title, handleGetSampleSettings) => {
   });
 };
 
+export const modifyNoteLineChart = (title, handleUpdateNote) => {
+  let dialogId = "dialog-modify-note-line-chart";
+  const open = () => {
+    $(`#${dialogId}`).css({ display: "block" });
+    $(`#${dialogId} .title`).html(title);
+    $(`#${dialogId}`).addClass("dialog-in");
+  };
+  const close = () => {
+    $(`#${dialogId}`).css({ display: "none" });
+    $(`#${dialogId} .title`).html("");
+    $(`#${dialogId}`).removeClass("dialog-in");
+  };
+
+  open();
+
+  $(`#${dialogId} .ok-button`).off("click");
+  $(`#${dialogId} .cancel-button`).off("click");
+
+  $(`#${dialogId} .ok-button`).on("click", () => {
+    const note = $(`#${dialogId} .input`).val()?.trim();
+    if (!note.length) return;
+    handleUpdateNote(note);
+    close();
+  });
+  $(`#${dialogId} .cancel-button`).on("click", () => {
+    close();
+  });
+};
+
 export default {
   alert,
   confirm,
@@ -374,4 +403,5 @@ export default {
   changeFwDeviceName,
   notiErrorInstruction,
   samplingSettings,
+  modifyNoteLineChart,
 };

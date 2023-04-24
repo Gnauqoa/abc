@@ -178,7 +178,6 @@ export default class extends Component {
                     className="input"
                     value={this.state.samplingTime}
                     onChange={this.handleSamplingTimeChange}
-                    onKeyDown={this.handleOkByEnter}
                   />
                 </div>
               </div>
@@ -219,6 +218,29 @@ export default class extends Component {
               })}
             </List>
           </Popover>
+        </div>
+
+        <div id="dialog-modify-note-line-chart" className="dialog-component">
+          <div className="dialog-content">
+            <div className="content">
+              <div className="title" />
+              <div className="items">
+                <div className="item">
+                  <div className="text">Chu kỳ: </div>
+                  <input
+                    type="text"
+                    className="input"
+                    value={this.state.inputText}
+                    onChange={this.handleInputTextChange}
+                  />
+                </div>
+              </div>
+              <div className="buttons">
+                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="ok-button">OK</Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="dialog-delete" className="dialog-component">

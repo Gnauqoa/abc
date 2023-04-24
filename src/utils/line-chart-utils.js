@@ -313,3 +313,25 @@ export const getMaxPointsAllDatasets = (charInstance) => {
   });
   return maxPointsAllDatasets;
 };
+
+export const prepareContentNote = (str) => {
+  const words = str.split(" ");
+  const result = [];
+  let currentString = "";
+
+  for (let i = 0; i < words.length; i++) {
+    if ((currentString + words[i]).length <= 20) {
+      currentString += words[i] + " ";
+    } else {
+      result.push(currentString.trim());
+      currentString = words[i] + " ";
+    }
+  }
+
+  // Push any remaining words
+  if (currentString.length > 0) {
+    result.push(currentString.trim());
+  }
+
+  return result;
+};
