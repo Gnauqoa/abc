@@ -67,6 +67,7 @@ let sampleNote = {
   },
   xValue: 0,
   yValue: 0,
+  display: true,
 };
 
 const dragger = {
@@ -85,13 +86,13 @@ const handleDrag = function (event) {
       case "mousemove":
         const result = handleElementDragging(event);
         return result;
-      case "mouseout":
-      case "mouseup":
+      case "mouseup": // do not press the mouse
         lastNoteEvent = undefined;
         break;
-      case "mousedown":
+      case "mousedown": // press the mouse
         lastNoteEvent = event;
         break;
+      case "mouseout":
       default:
     }
   }
@@ -116,7 +117,7 @@ const handleElementDragging = function (event) {
   return true;
 };
 
-const getAllCurrentNotes = (sensorId, sensorIndex, datasetIndex) => {
+const getAllCurrentNotes = ({ sensorId, sensorIndex, datasetIndex }) => {
   const currentChartNotes = Object.values(allNotes).filter((note) => {
     console.log(sensorId, sensorIndex, datasetIndex);
     return (
@@ -298,15 +299,27 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
 // ======================================= CHART LEGEND =======================================
 const onClickLegendHandler = (event, legendItem, legend) => {
   if (event.type !== "click") return;
-  const index = legendItem.datasetIndex;
+
+  const datasetIndex = legendItem.datasetIndex;
+  const noteElements = getAllCurrentNotes({ datasetIndex: datasetIndex });
   const ci = legend.chart;
-  if (ci.isDatasetVisible(index)) {
-    ci.hide(index);
+
+  console.log(ci.isDatasetVisible(datasetIndex), legendItem.hidden);
+  let isShowNote = false;
+  if (ci.isDatasetVisible(datasetIndex)) {
+    ci.hide(datasetIndex);
     legendItem.hidden = true;
+    isShowNote = false;
   } else {
-    ci.show(index);
+    ci.show(datasetIndex);
     legendItem.hidden = false;
+    isShowNote = true;
   }
+
+  Object.keys(noteElements).forEach((nodeId) => {
+    ci.config.options.plugins.annotation.annotations[nodeId].display = isShowNote;
+  });
+  ci.update();
 };
 
 // ======================================= CHART FUNCTIONS =======================================
@@ -373,8 +386,7 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
   if (stepSize) {
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
   }
-
-  const noteAnnotations = getAllCurrentNotes(sensor?.id, sensor?.index, undefined);
+  const noteAnnotations = getAllCurrentNotes({ sensorId: sensor?.id, sensorIndex: sensor?.index });
   chartInstance.config.options.plugins.annotation.annotations = {
     ...noteAnnotations,
   };
