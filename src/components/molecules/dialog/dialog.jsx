@@ -381,7 +381,6 @@ export const modifyNoteLineChart = (title, handleUpdateNote) => {
 
   $(`#${dialogId} .ok-button`).on("click", () => {
     const note = $(`#${dialogId} .input`).val()?.trim();
-    if (!note.length) return;
     handleUpdateNote(note);
     close();
   });

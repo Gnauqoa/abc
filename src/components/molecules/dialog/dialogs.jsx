@@ -13,6 +13,7 @@ export default class extends Component {
     super(props);
     this.state = {
       inputText: "Tên",
+      inputNote: "Note",
       samplingTime: "",
       samplingFrequency: DataManagerIST.getCollectingDataFrequency(),
     };
@@ -30,6 +31,10 @@ export default class extends Component {
 
   handleInputTextChange = (e) => {
     this.setState({ inputText: e.target.value.trimStart() });
+  };
+
+  handleInputNoteChange = (e) => {
+    this.setState({ inputNote: e.target.value.trimStart() });
   };
 
   handleSamplingTimeChange = (e) => {
@@ -230,8 +235,8 @@ export default class extends Component {
                   <input
                     type="text"
                     className="input"
-                    value={this.state.inputText}
-                    onChange={this.handleInputTextChange}
+                    value={this.state.inputNote}
+                    onChange={this.handleInputNoteChange}
                   />
                 </div>
               </div>

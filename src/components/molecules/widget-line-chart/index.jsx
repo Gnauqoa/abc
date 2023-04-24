@@ -56,15 +56,13 @@ let sampleNote = {
   borderRadius: 6,
   borderWidth: 1,
   borderColor: NOTE_BORDER_COLOR,
-  width: 40,
-  height: 20,
   padding: {
-    top: 6,
+    top: 12,
     left: 6,
     right: 6,
-    bottom: 6,
+    bottom: 12,
   },
-  content: ["Label annotation", "to drag", "to drag", "to drag"],
+  content: ["    Note    "],
   callout: {
     display: true,
     borderColor: "black",
@@ -129,6 +127,7 @@ const getAllCurrentNotes = (sensorId, sensorIndex) => {
   currentChartNotes.forEach((note) => {
     const newNoteElement = {
       ...sampleNote,
+      content: note.content,
       xValue: note.xValue,
       yValue: note.yValue,
       xAdjust: note.xAdjust,
@@ -188,49 +187,48 @@ const onEnterNoteElement = ({ chart, element }) => {
 };
 
 const onLeaveNoteElement = ({ chart, element }) => {
-  const noteElementId = element.options.id;
-
+  const noteElementId = element?.options?.id;
   let label = chart.config.options.plugins.annotation.annotations[noteElementId];
-  const oldXPixel = chart.scales.x.getPixelForValue(label.xValue);
-  const oldYPixel = chart.scales.y.getPixelForValue(label.yValue);
 
-  const newAdjustPos = {
-    xAdjust: element.centerX - oldXPixel,
-    yAdjust: element.centerY - oldYPixel,
-  };
+  if (label) {
+    const oldXPixel = chart.scales.x.getPixelForValue(label.xValue);
+    const oldYPixel = chart.scales.y.getPixelForValue(label.yValue);
+    const newAdjustPos = {
+      xAdjust: element.centerX - oldXPixel,
+      yAdjust: element.centerY - oldYPixel,
+    };
 
-  label = {
-    ...label,
-    ...newAdjustPos,
-    backgroundColor: NOTE_BACKGROUND_COLOR,
-  };
+    label = {
+      ...label,
+      ...newAdjustPos,
+      backgroundColor: NOTE_BACKGROUND_COLOR,
+    };
+
+    noteElement = undefined;
+    lastNoteEvent = undefined;
+
+    const currentNote = {
+      ...allNotes[noteElementId],
+      ...newAdjustPos,
+    };
+
+    allNotes = {
+      ...allNotes,
+      [noteElementId]: currentNote,
+    };
+
+    chart.config.options.plugins.annotation.annotations[noteElementId] = { ...label };
+  }
+
   chart.canvas.style.cursor = "default";
-  chart.config.options.plugins.annotation.annotations[noteElementId] = { ...label };
   chart.config.options.plugins.zoom.pan.enabled = true;
   chart.update();
-  noteElement = undefined;
-  lastNoteEvent = undefined;
-
-  const currentNote = {
-    ...allNotes[noteElementId],
-    ...newAdjustPos,
-  };
-
-  allNotes = {
-    ...allNotes,
-    [noteElementId]: currentNote,
-  };
 };
 
 const onClickNoteElement = ({ chart, element }) => {
   if (timerDoubleClick) {
     timerDoubleClick = null;
-    dialog.modifyNoteLineChart("Thêm note", (note) => {
-      const newContents = prepareContentNote(note);
-      const noteElement = element.options.id;
-      chart.config.options.plugins.annotation.annotations[noteElement].content = newContents;
-      chart.update();
-    });
+    onDoubleClickNoteElement({ chart, element });
   } else {
     timerDoubleClick = setTimeout(() => {
       timerDoubleClick = null;
@@ -238,6 +236,25 @@ const onClickNoteElement = ({ chart, element }) => {
   }
 };
 
+const onDoubleClickNoteElement = ({ chart, element }) => {
+  const noteElementId = element.options.id;
+  const noteElement = chart.config.options.plugins.annotation.annotations[noteElementId];
+  if (!noteElement) return;
+
+  dialog.modifyNoteLineChart("Thêm note", (note) => {
+    if (!note) {
+      delete chart.config.options.plugins.annotation.annotations[noteElementId];
+      delete allNotes[noteElementId];
+    } else {
+      const newContents = prepareContentNote(note);
+      chart.config.options.plugins.annotation.annotations[noteElementId].content = newContents;
+      allNotes[noteElementId] = { ...allNotes[noteElementId], content: newContents };
+    }
+    chart.update();
+  });
+};
+
+// TODO: modify after select, pan in chart and add note, the note position note correct
 const addNoteHandler = (chartInstance, sensorInstance) => {
   if (!selectedPointPos) return;
 
@@ -251,8 +268,8 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
     sensorIndex: sensorInstance.index,
     xValue: xValueNoteElement,
     yValue: yValueNoteElement,
-    xAdjust: 0,
-    yAdjust: 0,
+    xAdjust: -60,
+    yAdjust: -60,
   };
 
   const newNoteElement = {
@@ -289,6 +306,7 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
  * }]
  *
  */
+// TODO: check axisRef does not change for first time change sensor value
 const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
   const pageStep = 5;
   const firstPageStep = 10;
@@ -331,7 +349,6 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
       title: {
         color: "orange",
         display: true,
-        // text: axisRef.current.xUnit,
         text: `(${X_DEFAULT_UNIT})`,
         align: "end",
       },
