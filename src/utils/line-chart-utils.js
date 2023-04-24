@@ -299,11 +299,6 @@ export const interpolateHandler = (chartInstance) => {
   chartInstance.update();
 };
 
-export const getNoteElementId = () => {
-  const noteId = `note-element-${uuidv4()}`;
-  return noteId;
-};
-
 // ======================================= END EXPANDED OPTIONS FUNCTIONS =======================================
 
 export const getMaxPointsAllDatasets = (charInstance) => {
