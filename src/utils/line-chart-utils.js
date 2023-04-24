@@ -1,5 +1,5 @@
 import $ from "jquery";
-import { v4 as uuidv4 } from "uuid";
+import { CHART_COLORS, transparentize } from "./chartjs-utils";
 
 import interpolateIcon from "../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../img/expandable-options/auto-scale.png";
@@ -142,6 +142,8 @@ export const createChartJsData = ({ chartData = [] }) => {
       pointStyle: "circle",
       pointRadius: 5,
       pointHoverRadius: 10,
+      borderColor: CHART_COLORS.blue,
+      backgroundColor: transparentize(CHART_COLORS.blue, 0.5),
     });
   });
 
