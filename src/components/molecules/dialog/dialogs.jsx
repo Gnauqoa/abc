@@ -13,6 +13,7 @@ export default class extends Component {
     super(props);
     this.state = {
       inputText: "Tên",
+      inputNote: "Note",
       samplingTime: "",
       samplingFrequency: DataManagerIST.getCollectingDataFrequency(),
     };
@@ -30,6 +31,10 @@ export default class extends Component {
 
   handleInputTextChange = (e) => {
     this.setState({ inputText: e.target.value.trimStart() });
+  };
+
+  handleInputNoteChange = (e) => {
+    this.setState({ inputNote: e.target.value.trimStart() });
   };
 
   handleSamplingTimeChange = (e) => {
@@ -178,7 +183,6 @@ export default class extends Component {
                     className="input"
                     value={this.state.samplingTime}
                     onChange={this.handleSamplingTimeChange}
-                    onKeyDown={this.handleOkByEnter}
                   />
                 </div>
               </div>
@@ -219,6 +223,29 @@ export default class extends Component {
               })}
             </List>
           </Popover>
+        </div>
+
+        <div id="dialog-modify-note-line-chart" className="dialog-component">
+          <div className="dialog-content">
+            <div className="content">
+              <div className="title" />
+              <div className="items">
+                <div className="item">
+                  <div className="text">Chu kỳ: </div>
+                  <input
+                    type="text"
+                    className="input"
+                    value={this.state.inputNote}
+                    onChange={this.handleInputNoteChange}
+                  />
+                </div>
+              </div>
+              <div className="buttons">
+                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="ok-button">OK</Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="dialog-delete" className="dialog-component">

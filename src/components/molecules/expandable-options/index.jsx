@@ -4,8 +4,8 @@ import "./index.scss";
 
 import expandRowIcon from "../../../img/expandable-options/expand-row.png";
 
-const ICON_SIZE = "36px";
-const EXPAND_ICON_SIZE = "10px";
+const ICON_SIZE = "50%";
+const EXPAND_ICON_SIZE = "80%";
 
 const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
   const [expanded, setExpanded] = useState(false);
@@ -22,11 +22,11 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
   return (
     <div className="row">
       <div className="container expand-button" onClick={handleExpand}>
-        <div>
-          <img src={expandIcon} alt="expandIcon" style={{ width: ICON_SIZE }} />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <img src={expandIcon} alt="expandIcon" style={{ width: EXPAND_ICON_SIZE }} />
         </div>
-        <div>
-          <img src={expandRowIcon} alt="expandRowIcon" style={{ width: EXPAND_ICON_SIZE }} />
+        <div style={{ display: "flex", justifyContent: "center", paddingRight: "5px" }}>
+          <img src={expandRowIcon} alt="expandRowIcon" style={{ width: "100%" }} />
         </div>
       </div>
 

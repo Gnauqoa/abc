@@ -7,7 +7,7 @@ import SensorSettingPopup from "../popup-sensor-setting";
 import "./index.scss";
 
 const WirelessSensorContainer = () => {
-  const dummySensorIds = [-1, 2, 5];
+  const dummySensorIds = [2, 3, 4, 5];
   const sensorSettingPopup = useRef();
   const [selectedSensorId, setSelectedSensorId] = useState();
 

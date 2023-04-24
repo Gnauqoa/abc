@@ -8,6 +8,7 @@ import tempHumiditySensorIcon from "../img/sensor-info/temp-humidity.png";
 import soundSensorIcon from "../img/sensor-info/sound.png";
 import salinitySensorIcon from "../img/sensor-info/salinity.png";
 import tempSensorIcon from "../img/sensor-info/temp.png";
+import pressureSensorIcon from "../img/sensor-info/pressure.png";
 
 export const defaultSensors = [
   {
@@ -92,56 +93,56 @@ const sensorIcons = {
   1: {
     icon: co2SensorIcon,
     label: "CO2",
-    width: 60,
+    width: "50%",
     unit: "ppm",
   },
   2: {
     icon: doSensorIcon,
     label: "DO",
-    width: 60,
+    width: "50%",
     unit: "mg/L",
   },
 
   3: {
     icon: o2SensorIcon,
     label: "O2",
-    width: 60,
+    width: "50%",
     unit: "ppm",
   },
   4: {
     icon: tempSensorIcon,
     label: "Nhiệt độ",
-    width: 40,
+    width: "40%",
     unit: "°C",
   },
   5: {
     icon: tempHumiditySensorIcon,
     label: "Nhiệt độ & độ ẩm",
-    width: 60,
+    width: "50%",
     unit: "%",
   },
   6: {
     icon: salinitySensorIcon,
     label: "Nồng độ mặn",
-    width: 60,
+    width: "50%",
     unit: "ppt",
   },
   7: {
     icon: phSensorIcon,
     label: "PH",
-    width: 60,
+    width: "50%",
     unit: "pH",
   },
   8: {
     icon: soundSensorIcon,
     label: "Âm thanh",
-    width: 60,
+    width: "50%",
     unit: "dBA",
   },
   9: {
-    icon: soundSensorIcon,
+    icon: pressureSensorIcon,
     label: "Áp suất khí",
-    width: 60,
+    width: "50%",
     unit: "kPa",
   },
 };

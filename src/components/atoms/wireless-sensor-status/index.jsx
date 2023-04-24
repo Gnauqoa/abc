@@ -30,7 +30,7 @@ const WirelessSensorActive = ({ sensorId }) => {
             </div>
             <div className="__sensor-value">24</div>
             <div className="__sensor-unit">{unit}</div>
-            <div className="__signal-strength">
+            <div className="__signal-battery">
               <img src={batteryIcon} alt="battery" />
             </div>
           </div>
