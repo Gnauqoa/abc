@@ -16,7 +16,9 @@ const WirelessSensorActive = ({ sensorId }) => {
             <div className="__sensor-icon">
               <img src={icon || ""} alt={label} style={width ? { width: width } : {}} />
             </div>
-            <div className="__sensor-name">{label}</div>
+            <div className="__sensor-name">
+              <span>{label}</span>
+            </div>
           </div>
           <div className="__sensor-info">
             <div className="__close-button">
@@ -28,8 +30,12 @@ const WirelessSensorActive = ({ sensorId }) => {
                 iconSize={30}
               ></Button>
             </div>
-            <div className="__sensor-value">24</div>
-            <div className="__sensor-unit">{unit}</div>
+            <div className="__sensor-value">
+              <span>24</span>
+            </div>
+            <div className="__sensor-unit">
+              <span>{unit}</span>
+            </div>
             <div className="__signal-battery">
               <img src={batteryIcon} alt="battery" />
             </div>
