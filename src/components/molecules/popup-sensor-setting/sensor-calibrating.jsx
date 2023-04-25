@@ -137,7 +137,7 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
         </CustomDropdownInput>
 
         <CustomDropdownInput
-          labelName="kiểu hiệu chỉnh:"
+          labelName="Kiểu hiệu chỉnh:"
           buttonName={`${formField.calibratingType} điểm`}
           popOverName="popover-sensor-calibrating-type"
         >
@@ -152,7 +152,7 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
 
         {[...Array(formField.calibratingType).keys()].map((calibrateType) => {
           return (
-            <List key={`calibrationType_${calibrateType}`}>
+            <List key={`calibrationType_${calibrateType}`} style={{ marginTop: "10px", marginBottom: "10px" }}>
               <div className="__label-calibrating-type">Điểm {calibrateType + 1}</div>
               <ListInput
                 className="display-setting-input label-color-black"
@@ -197,13 +197,12 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
             </List>
           );
         })}
+        <div className="buttons">
+          <Button className="save-button" onClick={onSubmitHandler}>
+            Lưu
+          </Button>
+        </div>
       </List>
-
-      <div className="buttons">
-        <Button className="save-button" onClick={onSubmitHandler}>
-          Lưu
-        </Button>
-      </div>
     </>
   );
 };
