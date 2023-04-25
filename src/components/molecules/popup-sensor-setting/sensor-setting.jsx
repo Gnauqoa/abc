@@ -104,6 +104,22 @@ const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
             })}
           </List>
         </CustomDropdownInput>
+        {/* <ListInput
+          outline
+          className="display-setting-input label-color-black"
+          label="Chọn dữ liệu:"
+          defaultValue=""
+          value={formField.sensorDetailId}
+          type="select"
+          validate
+        >
+          <option label={formField.unitName} key="nan" id="nan"></option>
+          {sensorInfo?.data?.map((sensorUnit) => (
+            <optgroup label={sensorUnit.name} key={sensorUnit.id}>
+              <option key={sensorInfo?.id + "|" + sensorUnit.id} value={sensorInfo?.id + "|" + sensorUnit.id} />
+            </optgroup>
+          ))}
+        </ListInput> */}
 
         <ListInput
           className="display-setting-input label-color-black"

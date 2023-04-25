@@ -15,6 +15,7 @@ import {
   SAMPLING_MANUAL,
   TIMER_NO_STOP,
   DEFAULT_SENSOR_ID,
+  DEFAULT_SENSOR_DATA,
 } from "../js/constants";
 
 import BackButton from "../components/atoms/back-button";
@@ -40,11 +41,11 @@ export default ({ f7route, f7router, filePath, content }) => {
   let activity;
 
   if (selectedLayout) {
-    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
+        { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
     }
 
@@ -73,7 +74,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
-  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
+  // const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
   const [frequency, setFrequency] = useState(activity.frequency);
   const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
@@ -106,9 +107,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     let subscriberId = null;
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
-    const subscribedSensorIds = widgets
-      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? parseInt(widget.sensor.id) : false))
-      .filter(Boolean);
+    const subscribedSensorIds = [
+      ...new Set(
+        widgets.flatMap((widget) =>
+          widget.sensors
+            .map((sensor) => (sensor.id !== DEFAULT_SENSOR_ID ? parseInt(sensor.id) : false))
+            .filter(Boolean)
+        )
+      ),
+    ];
 
     subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
 
@@ -237,13 +244,14 @@ export default ({ f7route, f7router, filePath, content }) => {
   // =========================== Functions associate with Page ===========================
   function handleNewPage(chartType) {
     if (!chartType) return;
-    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
+        { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
     }
+
     const newPage = {
       layout: chartType,
       widgets: defaultWidgets,
@@ -295,12 +303,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     prevChartDataRef.current[currentPageIndex] = null;
   }
 
-  function handleSensorChange(widgetId, sensor) {
+  function handleSensorChange(widgetId, sensorIndex, sensor) {
     const updatedWidgets = widgets.map((w) => {
-      if (w.id === widgetId) {
-        return { ...w, sensor };
+      if (w.id !== widgetId) {
+        return w;
       }
-      return w;
+
+      const newSensors = [...w.sensors];
+      newSensors[sensorIndex] = { ...sensor };
+      return { ...w, sensors: newSensors };
     });
     const updatePages = pages.map((page, index) => {
       if (index === currentPageIndex) {
@@ -308,6 +319,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return page;
     });
+
     setWidgets(updatedWidgets);
     setPages(updatePages);
   }
@@ -357,31 +369,52 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleDataManagerCallback(emittedDatas) {
     // console.log(">>>>> AUTO - data manager:", emittedDatas);
     const updatedSensorValues = { ...currentSensorValues };
-    emittedDatas.forEach((data) => {
+
+    for (const [key, data] of Object.entries(emittedDatas)) {
       const time = data[1];
       const sensorId = data[2];
       const values = data.slice(3);
       const sensorValues = { time, sensorId, values };
-      updatedSensorValues[sensorId] = sensorValues;
-    });
+
+      updatedSensorValues[key] = sensorValues;
+    }
+
     setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
   }
 
-  function getCurrentValue(sensor, isTable = false) {
-    if (!isTable) return currentSensorValues[sensor.id]?.values[sensor.index] || "";
-    const data = currentSensorValues[sensor.id];
-    return data ? { time: data.time, values: data.values } : {};
+  // =========================== Functions associate with retrieving data ===========================
+  function getCurrentValues(sensors, isTable = false) {
+    const defaultNumberSensorIndex = 0;
+    const numberSensor = sensors[defaultNumberSensorIndex] || DEFAULT_SENSOR_DATA;
+    if (!isTable) return currentSensorValues[numberSensor.id]?.values[numberSensor.index] || "";
+
+    const tableDatas = [];
+    sensors.forEach((sensor) => {
+      const currentSensorValue = currentSensorValues[sensor.id];
+      const tableData = currentSensorValue ? { time: currentSensorValue.time, values: currentSensorValue.values } : {};
+      tableDatas.push(tableData);
+    });
+
+    return tableDatas;
   }
 
-  function getDataForTable(sensor) {
-    const tableData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
-    return tableData;
+  function getDatasForTable(sensors) {
+    const sensorIds = [];
+    for (const sensor of sensors) {
+      sensorIds.push(sensor.id);
+    }
+
+    const tableDatas = DataManagerIST.getWidgetDatasRunData(currentDataRunId, sensorIds);
+    return tableDatas;
   }
 
-  function getDataForChart(sensor) {
+  function getDataForChart(sensors) {
     if (!lineChartRef.current[currentPageIndex]) return;
+    const defaultSensorIndex = 0;
+    const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-    const chartData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
+    const chartDatas = DataManagerIST.getWidgetDatasRunData(currentDataRunId, [sensor.id]);
+    const chartData = chartDatas[defaultSensorIndex] || [];
     const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
 
     const sensorValue = currentSensorValues[sensor.id];
@@ -412,6 +445,52 @@ export default ({ f7route, f7router, filePath, content }) => {
       });
     }
   }
+
+  // =========================== Functions associate with Table ===========================
+  const onAddTableColumnHandler = (widgetId) => {
+    const currentWidget = widgets[widgetId];
+    if (!currentWidget) return;
+
+    const updatedWidgets = widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = [...w.sensors, DEFAULT_SENSOR_DATA];
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setWidgets(updatedWidgets);
+    setPages(updatePages);
+  };
+
+  const onDeleteTableColumnHandler = (widgetId, sensorIndex) => {
+    const updatedWidgets = widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = w.sensors.filter((s, i) => i !== sensorIndex);
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setWidgets(updatedWidgets);
+    setPages(updatePages);
+  };
 
   return (
     <Page className="bg-color-regal-blue activity">
@@ -458,19 +537,21 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
-                    data={getDataForTable(widgets[0].sensor)}
-                    currentValue={getCurrentValue(widgets[0].sensor, true)}
+                    datas={getDatasForTable(widgets[0].sensors)}
+                    currentValues={getCurrentValues(widgets[0].sensors, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    onAddTableColumnHandler={onAddTableColumnHandler}
+                    onDeleteTableColumnHandler={onDeleteTableColumnHandler}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
                     key={`${currentPageIndex}_number`}
-                    value={getCurrentValue(widgets[0].sensor)}
+                    value={getCurrentValues(widgets[0].sensors)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -480,7 +561,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
-                    data={getDataForChart(widgets[1].sensor)}
+                    data={getDataForChart(widgets[1].sensors)}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
@@ -490,13 +571,15 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
-                    data={getDataForTable(widgets[1].sensor)}
-                    currentValue={getCurrentValue(widgets[1].sensor, true)}
+                    datas={getDatasForTable(widgets[1].sensors)}
+                    currentValues={getCurrentValues(widgets[1].sensors, true)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    onAddTableColumnHandler={onAddTableColumnHandler}
+                    onDeleteTableColumnHandler={onDeleteTableColumnHandler}
                   />
                 )}
               </div>
@@ -507,7 +590,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}
-                  data={getDataForChart(widgets[0].sensor)}
+                  data={getDataForChart(widgets[0].sensors)}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
@@ -517,19 +600,21 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <TableWidget
                   ref={tableRef}
                   key={`${currentPageIndex}_table`}
-                  data={getDataForTable(widgets[0].sensor)}
-                  currentValue={getCurrentValue(widgets[0].sensor, true)}
+                  datas={getDatasForTable(widgets[0].sensors)}
+                  currentValues={getCurrentValues(widgets[0].sensors, true)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
                   samplingMode={samplingMode}
+                  onAddTableColumnHandler={onAddTableColumnHandler}
+                  onDeleteTableColumnHandler={onDeleteTableColumnHandler}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
                   key={`${currentPageIndex}_number`}
-                  value={getCurrentValue(widgets[0].sensor)}
+                  value={getCurrentValues(widgets[0].sensors)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />

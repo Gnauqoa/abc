@@ -28,6 +28,7 @@ import {
   getMaxPointsAllDatasets,
   prepareContentNote,
 } from "../../../utils/widget-line-utils";
+import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
 import "./index.scss";
 import dialog from "../dialog/dialog";
@@ -119,7 +120,6 @@ const handleElementDragging = function (event) {
 
 const getAllCurrentNotes = ({ sensorId, sensorIndex, datasetIndex }) => {
   const currentChartNotes = Object.values(allNotes).filter((note) => {
-    console.log(sensorId, sensorIndex, datasetIndex);
     return (
       (sensorId === undefined || note.sensorId === sensorId) &&
       (sensorIndex === undefined || note.sensorIndex === sensorIndex) &&
@@ -304,7 +304,6 @@ const onClickLegendHandler = (event, legendItem, legend) => {
   const noteElements = getAllCurrentNotes({ datasetIndex: datasetIndex });
   const ci = legend.chart;
 
-  console.log(ci.isDatasetVisible(datasetIndex), legendItem.hidden);
   let isShowNote = false;
   if (ci.isDatasetVisible(datasetIndex)) {
     ci.hide(datasetIndex);
@@ -396,7 +395,9 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
   const { widget, handleSensorChange } = props;
-  const { sensor } = widget;
+  const defaultSensorIndex = 0;
+  const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
+  const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const chartEl = useRef();
   const chartInstanceRef = useRef();
   const sensorRef = useRef({});
@@ -564,8 +565,8 @@ let LineChart = (props, ref) => {
       <div className="sensor-selector-wrapper">
         <div className="sensor-select-vertical-mount-container">
           <SensorSelector
-            selectedSensor={widget.sensor}
-            onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+            selectedSensor={selectedSensor}
+            onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
           ></SensorSelector>
         </div>
       </div>

@@ -414,14 +414,20 @@ export class DataManager {
     return dataRunInfos;
   }
 
-  getWidgetDataRunData(currentDataRunId, sensorId) {
+  getWidgetDatasRunData(currentDataRunId, sensorIds) {
     const dataRun = this.dataRuns[currentDataRunId];
     if (!dataRun) {
-      // console.log(`DATA_MANAGER-getWidgetDataRunData: dataRunId ${currentDataRunId} does not exist`);
+      // console.log(`DATA_MANAGER-getWidgetDatasRunData: dataRunId ${currentDataRunId} does not exist`);
       return [];
     }
-    const widgetData = dataRun.data[sensorId];
-    return widgetData ? [...widgetData] : [];
+
+    const widgetDatas = [];
+    for (const sensorId of sensorIds) {
+      const sensorData = dataRun.data[parseInt(sensorId)];
+      widgetDatas.push(sensorData ? [...sensorData] : []);
+    }
+
+    return widgetDatas;
   }
 
   setCurrentDataRun(dataRunId) {
@@ -581,23 +587,31 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  appendManualSample(sensorId, sensorValues) {
+  appendManualSample(sensorIds, sensorValues) {
     const curBuffer = { ...this.buffer };
     const parsedTime = this.getParsedCollectingDataTime();
 
-    if (sensorId && sensorValues) {
-      curBuffer[sensorId] = sensorValues;
-    }
+    sensorIds.forEach((sensorId, i) => {
+      const sensorValue = sensorValues[i].values;
+
+      if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+        curBuffer[sensorId] = sensorValue;
+      }
+    });
 
     this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
     return { ...this.buffer };
   }
 
-  updateDataRunDataAtIndex(selectedIndex, sensorId, sensorValues) {
+  updateDataRunDataAtIndex(selectedIndex, sensorIds, sensorValues) {
     const dataRunData = this.dataRuns[this.curDataRunId]?.data;
-    if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex]) {
-      dataRunData[sensorId][selectedIndex].values = sensorValues;
-    }
+
+    sensorIds.forEach((sensorId, i) => {
+      const sensorValue = sensorValues[i].values;
+      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && sensorValue !== {}) {
+        dataRunData[sensorId][selectedIndex].values = sensorValue;
+      }
+    });
   }
 
   /**
@@ -682,10 +696,12 @@ export class DataManager {
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
       const time = this.isCollectingData ? parsedTime : "0.000";
 
-      const emittedDatas = subscriber.sensorIds.map((sensorId) => {
+      const emittedDatas = subscriber.sensorIds.reduce((acc, sensorId) => {
         const sensorData = curBuffer[sensorId] || [];
-        return [dataRunId, time, sensorId, ...sensorData];
-      });
+        acc[sensorId] = [dataRunId, time, sensorId, ...sensorData];
+        return acc;
+      }, {});
+
       // Notify subscriber
       this.emitter.emit(subscriberId, emittedDatas);
     }
