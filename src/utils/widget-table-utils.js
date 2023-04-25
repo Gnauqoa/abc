@@ -14,11 +14,17 @@ export const PAGE_SETTINGS = {
       width: "300px",
       fontSize: "16px",
     },
+    td: {
+      minWidth: "320px",
+    },
   },
   [LAYOUT_NUMBER_TABLE]: {
     "header-name-selector": {
       width: "200px",
       fontSize: "18px",
+    },
+    td: {
+      minWidth: "260px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
@@ -26,11 +32,11 @@ export const PAGE_SETTINGS = {
       width: "160px",
       fontSize: "16px",
     },
+    td: {
+      minWidth: "210px",
+    },
   },
 };
-
-export const emptyRow = { colum1: "", colum2: "" };
-export const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
 
 export const ADD_COLUMN_OPTION = 0;
 export const DELETE_COLUMN_OPTION = 1;
