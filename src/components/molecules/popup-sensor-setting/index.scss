@@ -1,11 +1,11 @@
 .sensor-setting-popup {
   display: block;
   left: calc(50% - 400px);
-  top: calc(50% - 350px);
+  top: calc(50% - 300px);
 }
 .sensor-setting-popup.popup {
   width: 800px;
-  height: 700px;
+  height: 600px;
   border-radius: 25px;
 }
 
@@ -136,9 +136,10 @@
       .__calibrating {
         margin-top: 10px;
         margin-bottom: 10px;
+
         .__label-calibrating-type {
-          // font-weight: 600;
-          font-size: 24px;
+          font-weight: 600;
+          font-size: 20px;
           padding-left: 15px;
         }
         .display-setting-input {
