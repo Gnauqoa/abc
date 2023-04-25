@@ -12,9 +12,10 @@ export const SCALE_FIT_OPTION = 0;
 export const NOTE_OPTION = 1;
 export const INTERPOLATE_OPTION = 2;
 
-export const X_UPPER_LOWER_BOUND = 2;
-export const Y_UPPER_LOWER_BOUND = 5;
+export const X_UPPER_LOWER_MARGIN = 2;
+export const Y_UPPER_LOWER_MARGIN_SCALE = 0.05;
 export const X_MIN_VALUE = -10;
+export const Y_MIN_VALUE = 5;
 
 export const INTERPOLATE_VALUE = 0.4;
 
@@ -261,11 +262,12 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
   }
   const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartData: chartInstance.data.datasets });
 
+  const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
   chartInstance.options.animation = true;
   chartInstance.options.scales = {
     y: {
-      min: minY - Y_UPPER_LOWER_BOUND,
-      suggestedMax: maxY + Y_UPPER_LOWER_BOUND,
+      min: minY - marginUpperLower,
+      suggestedMax: maxY + marginUpperLower,
       title: {
         color: "orange",
         display: false,
@@ -275,7 +277,7 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
     x: {
       type: "linear",
       suggestedMin: 0,
-      suggestedMax: maxX + X_UPPER_LOWER_BOUND,
+      suggestedMax: maxX + X_UPPER_LOWER_MARGIN,
       ticks: {},
       title: {
         color: "orange",
