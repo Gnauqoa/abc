@@ -23,8 +23,8 @@ import {
   NOTE_OPTION,
   INTERPOLATE_OPTION,
   X_DEFAULT_UNIT,
-  Y_UPPER_LOWER_BOUND,
   X_MIN_VALUE,
+  Y_MIN_VALUE,
   getMaxPointsAllDatasets,
   prepareContentNote,
 } from "../../../utils/widget-line-utils";
@@ -505,7 +505,7 @@ let LineChart = (props, ref) => {
             },
             limits: {
               x: { min: X_MIN_VALUE },
-              y: { min: minUnitValue - Y_UPPER_LOWER_BOUND },
+              y: { min: minUnitValue - Y_MIN_VALUE },
             },
             zoom: {
               wheel: {
