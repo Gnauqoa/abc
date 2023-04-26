@@ -20,6 +20,7 @@ import {
 } from "../../../utils/widget-table-utils";
 
 import ExpandableOptions from "../expandable-options";
+import SummarizedTable from "./summarize";
 const FIRST_COLUMN_OPTIONS = [
   {
     id: FIRST_COLUMN_DEFAULT_OPT,
@@ -64,10 +65,14 @@ const TableWidget = (
     selectedColumn: 0,
   });
 
+  const [isShowSummarizedData, setIsShowSummarizedData] = useState(false);
+  const expandOptions = expandableOptions.map((option) => {
+    if (option.id !== SUMMARIZE_OPTION) return option;
+    return { ...option, selected: isShowSummarizedData };
+  });
+
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
-
   const lastRowRef = useRef(null);
-
   const sensorsUnit = widget.sensors.map((sensor) => {
     return sensor.id === DEFAULT_SENSOR_ID ? "" : SensorServices.getUnit(sensor.id, sensor.index);
   });
@@ -283,6 +288,10 @@ const TableWidget = (
     onDeleteTableColumnHandler(widget.id, deleteSensorIndex);
   };
 
+  const summarizeTableHandler = () => {
+    setIsShowSummarizedData(!isShowSummarizedData);
+  };
+
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
@@ -292,6 +301,7 @@ const TableWidget = (
         deleteColumnHandler();
         break;
       case SUMMARIZE_OPTION:
+        summarizeTableHandler();
         break;
       default:
         break;
@@ -412,12 +422,13 @@ const TableWidget = (
           </tbody>
         </table>
       </div>
+
+      {isShowSummarizedData && (
+        <SummarizedTable chartLayout={chartLayout} datas={datas} sensors={widget.sensors}></SummarizedTable>
+      )}
+
       <div className="expandable-options">
-        <ExpandableOptions
-          expandIcon={tableChartIcon}
-          options={expandableOptions}
-          onChooseOption={onChooseOptionHandler}
-        />
+        <ExpandableOptions expandIcon={tableChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
       </div>
     </div>
   );

@@ -27,8 +27,17 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
         {Array.isArray(options) &&
           options.map((option) => {
             return (
-              <div key={option.id} className="expand-button" id={option.id} onClick={onOptionClickedHandler}>
-                <img src={option.icon} alt={`expand-icon-${option.id}`} style={{ width: ICON_SIZE }} />
+              <div
+                key={option.id}
+                className={`expand-button ${option.selected && "selected"}`}
+                id={option.id}
+                onClick={onOptionClickedHandler}
+              >
+                <img
+                  src={option.selected ? option.selectedIcon : option.icon}
+                  alt={`expand-icon-${option.id}`}
+                  style={{ width: ICON_SIZE }}
+                />
               </div>
             );
           })}
