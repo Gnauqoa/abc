@@ -23,10 +23,10 @@ const WirelessSensorActive = ({ sensorId }) => {
           <div className="__sensor-info">
             <div className="__close-button">
               <Button
-                iconIos={"f7:xmark_circle_fill"}
-                iconMd={"f7:xmark_circle_fill"}
-                iconAurora={"f7:xmark_circle_fill"}
-                color="red"
+                iconIos={"material:highlight_off"}
+                iconMd={"material:highlight_off"}
+                iconAurora={"material:highlight_off"}
+                // color="black"
                 iconSize={30}
               ></Button>
             </div>

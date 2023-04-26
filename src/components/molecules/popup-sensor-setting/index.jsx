@@ -37,7 +37,9 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
     f7.popup.close();
   };
 
-  const onSaveSensorCalibratingHandler = () => {
+  const onSaveSensorCalibratingHandler = (calculatedValues) => {
+    const { k, offset } = calculatedValues;
+    console.log("y = ax + b => ", `y = ${k}x + ${offset}`);
     f7.popup.close();
   };
 

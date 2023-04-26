@@ -21,8 +21,8 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
         unitId: unitInfo.id,
         unitName: unitInfo.name || "",
         calibratingType: calibrationType || CALIBRATING_1_POINT,
-        calibrationValues: calibrationValues || [0, 1], // { a: 1, b: 0 }
-        calibrationValuesRead: [0, 1], // { a: 1, b: 0 }
+        calibrationValues: calibrationValues || [1, 0], // { a: 1, b: 0 } y = a * x + b
+        calibrationValuesRead: [1, 0], // { a: 1, b: 0 }
       });
     }
   }, [sensorInfo]);
@@ -50,6 +50,7 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
     const sensorIndex = sensorInfo.data.findIndex((sensorUnit) => sensorUnit.id === formField.unitId);
     const { id: sensorId } = sensorInfo;
     const data = DataManagerIST.getDataSensor(sensorId, sensorIndex);
+    if (data === undefined) return;
 
     const nameSplit = event.currentTarget.id.split("_");
     if (nameSplit.length === 2) {
@@ -75,48 +76,33 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
     }
   };
 
-  const validateSensorCalibratingParams = (sensorUnitInfo) => {
-    //   if (sensorUnitInfo.name === "") {
-    //     f7.dialog.alert("Thông tin hiển thị không được phép để trống");
-    //     return false;
-    //   }
+  const convertCalibrationValues = (calibrationValues) => {
+    const defaultReturn = { data1: 1, data2: 0 };
+    const [data1, data2] = calibrationValues;
+    const data1Float = Number(data1);
+    const data2Float = Number(data2);
 
-    //   if (Number.isNaN(sensorUnitInfo.min)) {
-    //     f7.dialog.alert("Giá trị tối thiểu phải là số");
-    //     return false;
-    //   }
+    if (Number.isNaN(data1Float)) {
+      f7.dialog.alert("Giá trị chuẩn điểm 1 phải là số");
+      return defaultReturn;
+    }
 
-    //   if (Number.isNaN(sensorUnitInfo.max)) {
-    //     f7.dialog.alert("Giá trị tối đa phải là số");
-    //     return false;
-    //   }
-
-    //   if (Number.isNaN(sensorUnitInfo.formatFloatingPoint)) {
-    //     f7.dialog.alert("Giá trị định dạng phải là số");
-    //     return false;
-    //   }
-
-    return true;
+    if (Number.isNaN(data2Float)) {
+      f7.dialog.alert("Giá trị chuẩn điểm 2 phải là số");
+      return defaultReturn;
+    }
+    return { data1: data1Float, data2: data2Float };
   };
-
   const onSubmitHandler = (event) => {
     event.preventDefault();
 
-    const parsedMinValue = Number(formField.minValue || "0");
-    const parsedMaxValue = Number(formField.maxValue || "0");
-    const parsedFormatFloatingPoint = Number(formField.formatFloatingPoint || "0");
-    const newSensorUnitInfo = {
-      id: formField.unitId,
-      name: formField.displayedNamed,
-      unit: formField.unitOfMeasure,
-      min: parsedMinValue,
-      max: parsedMaxValue,
-      formatFloatingPoint: parsedFormatFloatingPoint,
-    };
+    const { data1: v1, data2: v2 } = convertCalibrationValues(formField.calibrationValues);
+    const { data1: r1, data2: r2 } = convertCalibrationValues(formField.calibrationValuesRead);
 
-    if (validateSensorCalibratingParams(newSensorUnitInfo)) {
-      onSaveHandler(newSensorUnitInfo);
-    }
+    const k = ((v1 - v2) / (r1 - r2)).toFixed(2);
+    const offset = (v1 - k * r1).toFixed(2);
+
+    onSaveHandler({ k: k, offset: offset });
   };
 
   return (

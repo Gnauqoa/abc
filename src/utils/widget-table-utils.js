@@ -5,7 +5,7 @@ import deleteColumnIcon from "../img/expandable-options/delete-column.png";
 import summarizeTableIcon from "../img/expandable-options/summarize-table.png";
 import summarizeTableSelectedIcon from "../img/expandable-options/summarize-table-selected.png";
 
-export const DEFAULT_ROWS = 15;
+export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";
 export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
