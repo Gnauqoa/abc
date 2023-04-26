@@ -75,29 +75,29 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
     }
   };
 
-  // const validateSensorSettingParams = (sensorUnitInfo) => {
-  //   if (sensorUnitInfo.name === "") {
-  //     f7.dialog.alert("Thông tin hiển thị không được phép để trống");
-  //     return false;
-  //   }
+  const validateSensorCalibratingParams = (sensorUnitInfo) => {
+    //   if (sensorUnitInfo.name === "") {
+    //     f7.dialog.alert("Thông tin hiển thị không được phép để trống");
+    //     return false;
+    //   }
 
-  //   if (Number.isNaN(sensorUnitInfo.min)) {
-  //     f7.dialog.alert("Giá trị tối thiểu phải là số");
-  //     return false;
-  //   }
+    //   if (Number.isNaN(sensorUnitInfo.min)) {
+    //     f7.dialog.alert("Giá trị tối thiểu phải là số");
+    //     return false;
+    //   }
 
-  //   if (Number.isNaN(sensorUnitInfo.max)) {
-  //     f7.dialog.alert("Giá trị tối đa phải là số");
-  //     return false;
-  //   }
+    //   if (Number.isNaN(sensorUnitInfo.max)) {
+    //     f7.dialog.alert("Giá trị tối đa phải là số");
+    //     return false;
+    //   }
 
-  //   if (Number.isNaN(sensorUnitInfo.formatFloatingPoint)) {
-  //     f7.dialog.alert("Giá trị định dạng phải là số");
-  //     return false;
-  //   }
+    //   if (Number.isNaN(sensorUnitInfo.formatFloatingPoint)) {
+    //     f7.dialog.alert("Giá trị định dạng phải là số");
+    //     return false;
+    //   }
 
-  //   return true;
-  // };
+    return true;
+  };
 
   const onSubmitHandler = (event) => {
     event.preventDefault();
@@ -114,7 +114,7 @@ const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
       formatFloatingPoint: parsedFormatFloatingPoint,
     };
 
-    if (validateSensorSettingParams(newSensorUnitInfo)) {
+    if (validateSensorCalibratingParams(newSensorUnitInfo)) {
       onSaveHandler(newSensorUnitInfo);
     }
   };

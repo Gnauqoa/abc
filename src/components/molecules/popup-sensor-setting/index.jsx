@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useState } from "react";
-import { Page, Navbar, Button, f7, Popup } from "framework7-react";
+import { Page, Navbar, Button, f7, Popup, NavLeft, NavTitle } from "framework7-react";
 
 import SensorServices from "../../../services/sensor-service";
 import _ from "lodash";
@@ -49,7 +49,18 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
   return (
     <Popup className="sensor-setting-popup" ref={ref}>
       <Page className="sensor-setting">
-        <Navbar className="__header" title={sensorInfo?.name} />
+        <Navbar>
+          <NavLeft>
+            <Button
+              iconIos="material:arrow_back"
+              iconMd="material:arrow_back"
+              iconAurora="material:arrow_back"
+              className="back-icon margin-right"
+              popupClose
+            ></Button>
+          </NavLeft>
+          <NavTitle style={{ color: "#0086ff" }}>{sensorInfo?.name}</NavTitle>
+        </Navbar>
         <div className="__content">
           <div className="__navbar">
             {Object.keys(settingTabs).map((tabId) => {
