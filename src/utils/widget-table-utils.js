@@ -16,7 +16,7 @@ export const PAGE_SETTINGS = {
       fontSize: "16px",
     },
     td: {
-      minWidth: "320px",
+      minWidth: "300px",
     },
   },
   [LAYOUT_NUMBER_TABLE]: {
@@ -25,16 +25,16 @@ export const PAGE_SETTINGS = {
       fontSize: "18px",
     },
     td: {
-      minWidth: "260px",
+      minWidth: "200px",
     },
   },
   [LAYOUT_TABLE_CHART]: {
     "header-name-selector": {
-      width: "160px",
+      width: "140px",
       fontSize: "16px",
     },
     td: {
-      minWidth: "210px",
+      minWidth: "140px",
     },
   },
 };
