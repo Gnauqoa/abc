@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
-import { Button } from "framework7-react";
+// import { Button } from "framework7-react";
 import "./index.scss";
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
