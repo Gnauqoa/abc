@@ -550,7 +550,6 @@ export class DataManager {
   }
 
   // -------------------------------- Read sensor data -------------------------------- //
-
   /**
    * Callback function called in DeviceManager when there is data available
    * @param {string} sensorsData - The format sensor data (@, id, data1, data2, data3, data 4, *).
@@ -633,6 +632,18 @@ export class DataManager {
     return Array.isArray(sensorData) && sensorIndex !== undefined ? sensorData[sensorIndex] : sensorData;
   }
 
+  getBuffer() {
+    return this.buffer;
+  }
+
+  removeWirelessSensor(sensorId) {
+    try {
+      delete this.buffer[parseInt(sensorId)];
+    } catch (e) {
+      console.error(`callbackSensorDisconnected: ${e.message}`);
+    }
+  }
+
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
   getParsedCollectingDataTime() {
     const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
@@ -649,8 +660,11 @@ export class DataManager {
       try {
         const curBuffer = { ...this.buffer };
         const parsedTime = this.getParsedCollectingDataTime();
+
+        // Emit all subscribers
         this.emitSubscribers(parsedTime, curBuffer);
 
+        // Append data to data run and increment collecting data time
         if (this.isCollectingData) {
           if (this.samplingMode === SAMPLING_AUTO) {
             this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
@@ -660,6 +674,7 @@ export class DataManager {
           this.collectingDataTime += this.collectingDataInterval;
         }
 
+        // Increment timer collecting time and stop if it reaches the stop time
         this.timerCollectingTime += this.collectingDataInterval;
         if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
           this.emitter.emit(this.timerSubscriber.subscriberTimerId);
@@ -716,7 +731,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (4 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (3 - 1) + 1).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
