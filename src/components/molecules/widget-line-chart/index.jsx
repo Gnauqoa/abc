@@ -12,12 +12,13 @@ import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
   calculateSuggestMaxX,
   createChartDataAndParseXAxis,
-  createChartJsData,
+  createChartJsDatas,
   roundAndGetSignificantDigitString,
   getCustomTooltipFunc,
   getChartJsPlugin,
   scaleToFixHandler,
   interpolateHandler,
+  clearAllSelectedPoints,
   expandableOptions,
   SCALE_FIT_OPTION,
   NOTE_OPTION,
@@ -25,7 +26,6 @@ import {
   X_DEFAULT_UNIT,
   X_MIN_VALUE,
   Y_MIN_VALUE,
-  getMaxPointsAllDatasets,
   prepareContentNote,
 } from "../../../utils/widget-line-utils";
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
@@ -42,8 +42,6 @@ let lastNoteEvent;
 let selectedPointElement = null;
 let allNotes = {};
 let timerDoubleClick;
-const POINT_BACKGROUND_COLOR = "#36a2eb80";
-const POINT_BORDER_COLOR = "#36a2eb";
 
 const NOTE_BACKGROUND_COLOR = "#ff638440";
 const NOTE_BACKGROUND_COLOR_ACTIVE = "#e9164440";
@@ -149,27 +147,33 @@ const onClickChartHandler = (event, elements, chart) => {
 
     // Handle click point
     if (isPointElement || selectedPointElement !== null) {
-      // Get max points of all datasets
-      const maxPointsAllDatasets = getMaxPointsAllDatasets(chart);
-      const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
-      const newPointBorderColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BORDER_COLOR);
-
       if (isPointElement) {
+        clearAllSelectedPoints(chart);
+
         const selectedPoint = elements[0];
+        const datasetIndex = selectedPoint.datasetIndex;
         const dataPointIndex = selectedPoint.index;
+        const currentDataset = chart.data.datasets[datasetIndex];
+
+        const newPointBackgroundColor = Array.from(
+          { length: currentDataset.data.length },
+          () => currentDataset.backgroundColor
+        );
+        const newPointBorderColor = Array.from(
+          { length: currentDataset.data.length },
+          () => currentDataset.borderColor
+        );
+
         selectedPointElement = selectedPoint;
         newPointBackgroundColor[dataPointIndex] = "red";
 
-        chart.config.options.pointBackgroundColor = newPointBackgroundColor;
-        chart.config.options.pointBorderColor = newPointBorderColor;
+        currentDataset.pointBackgroundColor = newPointBackgroundColor;
+        currentDataset.pointBorderColor = newPointBorderColor;
 
         chart.update();
       } else if (selectedPointElement !== null) {
         selectedPointElement = null;
-
-        chart.config.options.pointBackgroundColor = newPointBackgroundColor;
-        chart.config.options.pointBorderColor = newPointBorderColor;
-
+        clearAllSelectedPoints(chart);
         chart.update();
       }
     }
@@ -287,12 +291,7 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
 
   // Clear selected point
   selectedPointElement = null;
-  const maxPointsAllDatasets = getMaxPointsAllDatasets(chartInstance);
-  const newPointBackgroundColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BACKGROUND_COLOR);
-  const newPointBorderColor = Array.from({ length: maxPointsAllDatasets }, () => POINT_BORDER_COLOR);
-  chartInstance.config.options.pointBackgroundColor = newPointBackgroundColor;
-  chartInstance.config.options.pointBorderColor = newPointBorderColor;
-
+  clearAllSelectedPoints(chartInstance);
   chartInstance.update();
 };
 
@@ -339,7 +338,7 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
   const firstPageStep = 10;
 
   let suggestedMaxX = calculateSuggestMaxX({
-    chartData: data,
+    chartDatas: data,
     pageStep,
     firstPageStep,
   });
@@ -350,8 +349,8 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
 
   const stepSize = suggestedMaxX / 10;
 
-  chartInstance.data = createChartJsData({
-    chartData: data,
+  chartInstance.data = createChartJsDatas({
+    chartDatas: data,
   });
   chartInstance.options.animation = false;
   chartInstance.options.scales = {
@@ -435,18 +434,19 @@ let LineChart = (props, ref) => {
       xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
       yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
     },
-    setChartData: ({ xUnit, yUnit, chartData = [], curSensor: sensor }) => {
+
+    setChartData: ({ xUnit, yUnit, chartDatas = [], curSensor: sensor }) => {
       /**
        * chartData = [
        * { name, data: [{x,y}, ...]}
        * ]
        */
-      //log("chart data:", chartData);
       axisRef.current.xUnit = xUnit;
-      chartData = createChartDataAndParseXAxis({ chartData });
+      chartDatas = createChartDataAndParseXAxis({ chartDatas });
+
       updateChart({
         chartInstance: chartInstanceRef.current,
-        data: chartData,
+        data: chartDatas,
         axisRef,
         sensor,
         xUnit,
@@ -456,20 +456,19 @@ let LineChart = (props, ref) => {
   }));
 
   useEffect(() => {
-    const data = createChartJsData({
-      chartData: [
-        {
-          name: "",
-          data: [],
-        },
-      ],
-    });
+    // const data = createChartJsDatas({
+    //   chartDatas: [
+    //     {
+    //       name: "",
+    //       data: [],
+    //     },
+    //   ],
+    // });
     const minUnitValue = SensorServices.getMinUnitValueAllSensors();
-
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
-      data: data,
+      // data: data,
       options: {
         onClick: onClickChartHandler,
         //Customize chart options
