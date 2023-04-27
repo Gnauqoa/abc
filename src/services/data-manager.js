@@ -301,7 +301,14 @@ export class DataManager {
      * @property {string} name - The name of the data run.
      * @property {Array} data - An array of sensor data collected during the data run.
      */
-    const dataRunName = name || `Lần ${Object.keys(this.dataRuns).length + 1}`;
+    // Find the max dataRun Name
+    const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
+      const dataRunNameSplitted = dataRun.name.split(" ");
+      const value = Number(dataRunNameSplitted?.[1]);
+      return !Number.isNaN(value) && Math.max(maxValue, value);
+    }, 0);
+
+    const dataRunName = name || `Lần ${maxDataRunNum + 1}`;
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
       name: dataRunName,

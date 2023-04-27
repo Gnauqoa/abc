@@ -96,3 +96,9 @@ const NAMED_COLORS = [
 export function namedColor(index) {
   return NAMED_COLORS[index % NAMED_COLORS.length];
 }
+
+export default {
+  namedColor,
+  CHART_COLORS,
+  transparentize,
+};

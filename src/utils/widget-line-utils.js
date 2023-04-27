@@ -1,5 +1,5 @@
 import $ from "jquery";
-import { CHART_COLORS, transparentize } from "./chartjs-utils";
+import chartUtils from "./chartjs-utils";
 
 import interpolateIcon from "../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../img/expandable-options/auto-scale.png";
@@ -40,16 +40,15 @@ const roundXValue = (value) => {
 };
 
 // chartData: chartInstance.data.datasets
-export const getMaxMinAxises = ({ chartData }) => {
+export const getMaxMinAxises = ({ chartDatas }) => {
   let maxX;
   let maxY;
   let minX;
   let minY;
 
-  chartData.forEach((dataset) => {
-    const data = dataset.data;
-    data.forEach((d, index) => {
-      if (index === 0) {
+  chartDatas.forEach((dataset) => {
+    dataset.data.forEach((d) => {
+      if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
         maxX = d.x;
         minX = d.x;
         maxY = d.y;
@@ -72,9 +71,9 @@ export const getMaxMinAxises = ({ chartData }) => {
   };
 };
 
-export const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => {
+export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) => {
   const { maxX } = getMaxMinAxises({
-    chartData,
+    chartDatas: chartDatas,
   });
 
   let suggestMaxX;
@@ -88,11 +87,11 @@ export const calculateSuggestMaxX = ({ chartData, pageStep, firstPageStep }) => 
   return suggestMaxX;
 };
 
-export const createChartDataAndParseXAxis = ({ chartData }) => {
-  const result = chartData.map((dataSeries) => {
+export const createChartDataAndParseXAxis = ({ chartDatas }) => {
+  const result = chartDatas.map((chartData) => {
     return {
-      name: dataSeries.name,
-      data: dataSeries.data.map((item) => {
+      name: chartData.name,
+      data: chartData.data.map((item) => {
         return {
           x: roundXValue(parseFloat(item.x)),
           y: item.y,
@@ -108,7 +107,7 @@ export const createChartDataAndParseXAxis = ({ chartData }) => {
  *
  * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
  */
-export const createChartJsData = ({ chartData = [] }) => {
+export const createChartJsDatas = ({ chartDatas = [] }) => {
   let chartDataParam = {
     labels: [],
     datasets: [
@@ -120,7 +119,7 @@ export const createChartJsData = ({ chartData = [] }) => {
   };
 
   chartDataParam.datasets = [];
-  chartData.forEach((s) => {
+  chartDatas.forEach((s, index) => {
     const dataList = [];
     let firstPoint = null;
 
@@ -137,14 +136,15 @@ export const createChartJsData = ({ chartData = [] }) => {
         y: d.y,
       });
     });
+
     chartDataParam.datasets.push({
       label: s.name,
       data: dataList,
       pointStyle: "circle",
       pointRadius: 5,
       pointHoverRadius: 10,
-      borderColor: CHART_COLORS.blue,
-      backgroundColor: transparentize(CHART_COLORS.blue, 0.5),
+      borderColor: chartUtils.namedColor(index),
+      backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
     });
   });
 
@@ -244,13 +244,15 @@ export const getCustomTooltipFunc = ({ axisRef }) => {
 export const getChartJsPlugin = ({ valueLabelContainerRef }) => {
   return {
     afterDraw: (chart, args, options) => {
-      const { ctx } = chart;
-      let xAxis = chart.scales["x"];
-      let yAxis = chart.scales["y"];
-      valueLabelContainerRef.current.style.top = `${yAxis.top + 5}px`;
-      valueLabelContainerRef.current.style.left = `${xAxis.left + 5}px`;
-      ctx.save();
-      ctx.restore();
+      try {
+        const { ctx } = chart;
+        let xAxis = chart.scales["x"];
+        let yAxis = chart.scales["y"];
+        valueLabelContainerRef.current.style.top = `${yAxis.top + 5}px`;
+        valueLabelContainerRef.current.style.left = `${xAxis.left + 5}px`;
+        ctx.save();
+        ctx.restore();
+      } catch (e) {}
     },
   };
 };
@@ -260,7 +262,7 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
   if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
     return;
   }
-  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartData: chartInstance.data.datasets });
+  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
 
   const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
   chartInstance.options.animation = true;
@@ -304,15 +306,6 @@ export const interpolateHandler = (chartInstance) => {
 };
 
 // ======================================= END EXPANDED OPTIONS FUNCTIONS =======================================
-
-export const getMaxPointsAllDatasets = (charInstance) => {
-  let maxPointsAllDatasets = 0;
-  charInstance.data.datasets.forEach((dataset) => {
-    maxPointsAllDatasets = dataset.data && Math.max(dataset.data.length);
-  });
-  return maxPointsAllDatasets;
-};
-
 export const prepareContentNote = (str) => {
   const words = str.split(" ");
   const result = [];
@@ -333,4 +326,17 @@ export const prepareContentNote = (str) => {
   }
 
   return result;
+};
+
+export const clearAllSelectedPoints = (chart) => {
+  chart.data.datasets.forEach((dataset) => {
+    const backgroundColor = dataset.backgroundColor;
+    const borderColor = dataset.borderColor;
+
+    const newPointBackgroundColor = Array.from({ length: dataset.data.length }, () => backgroundColor);
+    const newPointBorderColor = Array.from({ length: dataset.data.length }, () => borderColor);
+
+    dataset.pointBackgroundColor = newPointBackgroundColor;
+    dataset.pointBorderColor = newPointBorderColor;
+  });
 };

@@ -129,19 +129,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     setName(e.target.value);
   }
 
-  // function handleSensorSettingSubmit(setting) {
-  //   let sensorSettingsCpy = [...sensorSettings];
-  //   if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-  //     sensorSettingsCpy.push({ ...setting });
-  //   } else {
-  //     var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-  //     sensorSettingsCpy[foundIndex] = setting;
-  //   }
-
-  //   setSensorSettings(sensorSettingsCpy);
-  //   displaySettingPopup.current.f7Popup().close();
-  // }
-
   function handleFrequencySelect(frequency) {
     setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
@@ -413,10 +400,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-    const chartDatas = DataManagerIST.getWidgetDatasRunData(currentDataRunId, [sensor.id]);
-    const chartData = chartDatas[defaultSensorIndex] || [];
-    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
-
+    // Update current value for Line Chart
     const sensorValue = currentSensorValues[sensor.id];
     if (sensorValue) {
       let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
@@ -428,21 +412,30 @@ export default ({ f7route, f7router, filePath, content }) => {
       });
     }
 
-    if (data.length > 0) {
-      if (_.isEqual(data, prevChartDataRef.current[currentPageIndex])) return;
-      prevChartDataRef.current[currentPageIndex] = data;
+    let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    let currentData;
+    const chartDatas = dataRunPreviews.map((dataRunPreview) => {
+      let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
+      const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+      if (dataRunPreview.id === currentDataRunId) {
+        currentData = data;
+      }
+
+      return {
+        name: dataRunPreview.name,
+        data: data,
+      };
+    });
+
+    if (currentData && currentData.length > 0 && !_.isEqual(currentData, prevChartDataRef.current[currentPageIndex])) {
       lineChartRef.current[currentPageIndex].setChartData({
-        chartData: [
-          {
-            name: `Lần ${DataManagerIST.dataRunsSize()}`,
-            data: data,
-          },
-        ],
+        chartDatas: chartDatas,
         xUnit: "ms",
         yUnit: "",
         maxHz: 10,
         curSensor: sensor,
       });
+      prevChartDataRef.current[currentPageIndex] = currentData;
     }
   }
 
