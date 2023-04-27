@@ -7,11 +7,11 @@ import DataManagerIST from "../../../services/data-manager.js";
 import SensorServices from "../../../services/sensor-service";
 
 import "./index.scss";
-import dialog from "../dialog/dialog";
 const DISCONNECT_ICON_CLASSNAMES = "icon material-icons";
 const WirelessSensorContainer = () => {
-  const [sensorsInfo, setSensorsInfo] = useState([{}]);
   const sensorSettingPopup = useRef();
+  const [sensorsInfo, setSensorsInfo] = useState([{}]);
+  const [sensorsDataIndex, setSensorsDataIndex] = useState({});
   const [selectedSensorId, setSelectedSensorId] = useState();
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const WirelessSensorContainer = () => {
         const { icon, label, width, unit } = SensorServices.getSensorIcon(sensorId);
         return {
           sensorId: parseInt(sensorId),
-          sensorData: buffer[sensorId],
+          sensorDatas: buffer[sensorId],
           sensorIcon: {
             icon: icon,
             label: label,
@@ -30,6 +30,7 @@ const WirelessSensorContainer = () => {
           },
         };
       });
+
       setSensorsInfo(sensorsInfo);
     }, 1000);
 
@@ -54,35 +55,46 @@ const WirelessSensorContainer = () => {
   }, []);
 
   const onDisconnectHandler = (sensorId) => {
-    dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa cảm biến này không?`,
-      () => {
-        console.log("remove sensorId: ", sensorId);
-        DataManagerIST.removeWirelessSensor(sensorId);
-      },
-      () => {}
-    );
+    console.log("remove sensorId: ", sensorId);
+    DataManagerIST.removeWirelessSensor(sensorId);
+  };
+
+  const onSaveSettingHandler = (sensorId, newSensorUnitInfo) => {
+    const sensorInfo = SensorServices.getSensorInfo(sensorId);
+    if (!Array.isArray(sensorInfo.data)) return;
+    const dataIndex = sensorInfo.data.findIndex((item) => item.id === newSensorUnitInfo.id); // output: -1 (not found)
+    if (dataIndex !== -1) {
+      setSensorsDataIndex({ ...sensorsDataIndex, [sensorId]: dataIndex });
+    }
   };
 
   return (
     <div className="__card-sensors">
-      <SensorSettingPopup sensorId={selectedSensorId} ref={sensorSettingPopup} />
-      {sensorsInfo.map((sensorInfo) => (
-        <div
-          key={sensorInfo.sensorId}
-          id={sensorInfo.sensorId}
-          className="wireless-sensor-info"
-          onClick={onChooseSensorHandler}
-        >
-          <WirelessSensorStatus
-            sensorId={sensorInfo.sensorId}
-            sensorData={sensorInfo.sensorData}
-            sensorIcon={sensorInfo.sensorIcon}
-            onDisconnect={onDisconnectHandler}
-          ></WirelessSensorStatus>
-        </div>
-      ))}
+      <SensorSettingPopup
+        sensorId={selectedSensorId}
+        sensorDataIndex={sensorsDataIndex?.[selectedSensorId]}
+        onSaveSetting={onSaveSettingHandler}
+        ref={sensorSettingPopup}
+      />
+      {sensorsInfo.map((sensorInfo) => {
+        const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
+        const sensorData = sensorInfo.sensorDatas?.[dataIndex];
+        return (
+          <div
+            key={sensorInfo.sensorId}
+            id={sensorInfo.sensorId}
+            className="wireless-sensor-info"
+            onClick={onChooseSensorHandler}
+          >
+            <WirelessSensorStatus
+              sensorId={sensorInfo.sensorId}
+              sensorData={sensorData}
+              sensorIcon={sensorInfo.sensorIcon}
+              onDisconnect={onDisconnectHandler}
+            ></WirelessSensorStatus>
+          </div>
+        );
+      })}
     </div>
   );
 };

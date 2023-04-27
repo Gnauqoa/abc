@@ -17,7 +17,7 @@ const settingTabs = {
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
 };
 
-const SensorSettingPopup = ({ sensorId }, ref) => {
+const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) => {
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [sensorInfo, setSensorInfo] = useState({});
 
@@ -33,6 +33,7 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServices.updateSensorSetting(sensorId, newSensorUnitInfo);
+    onSaveSetting(sensorId, newSensorUnitInfo);
     getSensors();
     f7.popup.close();
   };
@@ -83,9 +84,17 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
 
           <div className="__setting-content">
             {currentTab === SENSOR_SETTING_TAB ? (
-              <SensorSettingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorSettingHandler} />
+              <SensorSettingTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveSensorSettingHandler}
+              />
             ) : (
-              <SensorCalibratingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorCalibratingHandler} />
+              <SensorCalibratingTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveSensorCalibratingHandler}
+              />
             )}
           </div>
         </div>

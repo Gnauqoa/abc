@@ -731,7 +731,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (3 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (6 - 4) + 4).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
