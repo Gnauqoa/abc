@@ -9,12 +9,13 @@ const CALIBRATING_1_POINT = 1;
 const CALIBRATING_2_POINTS = 2;
 const defaultCalibratingValues = [0, 1];
 
-const SensorCalibratingTab = ({ sensorInfo, onSaveHandler }) => {
+const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   const [formField, setFormField] = React.useState({});
+
   useEffect(() => {
     const unitInfos = sensorInfo.data;
     if (Array.isArray(unitInfos) && unitInfos.length > 0) {
-      const unitInfo = unitInfos[0];
+      const unitInfo = unitInfos[sensorDataIndex || 0];
       const calibrationType = unitInfo.calibrationType;
       const calibrationValues = unitInfo.calibrationValues;
       setFormField({
