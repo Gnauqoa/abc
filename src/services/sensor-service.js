@@ -93,56 +93,47 @@ const sensorIcons = {
   1: {
     icon: co2SensorIcon,
     label: "CO2",
-    width: "50%",
     unit: "ppm",
   },
   2: {
     icon: doSensorIcon,
     label: "DO",
-    width: "50%",
     unit: "mg/L",
   },
 
   3: {
     icon: o2SensorIcon,
     label: "O2",
-    width: "50%",
     unit: "ppm",
   },
   4: {
     icon: tempSensorIcon,
     label: "Nhiệt độ",
-    width: "40%",
     unit: "°C",
   },
   5: {
     icon: tempHumiditySensorIcon,
     label: "Nhiệt độ & độ ẩm",
-    width: "50%",
     unit: "%",
   },
   6: {
     icon: salinitySensorIcon,
     label: "Nồng độ mặn",
-    width: "50%",
     unit: "ppt",
   },
   7: {
     icon: phSensorIcon,
     label: "PH",
-    width: "50%",
     unit: "pH",
   },
   8: {
     icon: soundSensorIcon,
     label: "Âm thanh",
-    width: "50%",
     unit: "dBA",
   },
   9: {
     icon: pressureSensorIcon,
     label: "Áp suất khí",
-    width: "50%",
     unit: "kPa",
   },
 };

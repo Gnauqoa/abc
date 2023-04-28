@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import moment from "moment";
 import DataManagerIST from "../../../services/data-manager";
 import { TIMER_INTERVAL } from "../../../js/constants";
-export default ({ isRunning }) => {
+
+const Timer = ({ isRunning }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -21,3 +22,5 @@ export default ({ isRunning }) => {
 
   return <div className="timer">{moment.utc(count).format("HH:mm:ss.S")}</div>;
 };
+
+export default Timer;

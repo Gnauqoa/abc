@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-
 import { f7 } from "framework7-react";
+import "./index.scss";
+
 import WirelessSensorStatus from "../../atoms/wireless-sensor-status";
 import SensorSettingPopup from "../popup-sensor-setting";
 import DataManagerIST from "../../../services/data-manager.js";
 import SensorServices from "../../../services/sensor-service";
 
-import "./index.scss";
 const DISCONNECT_ICON_CLASSNAMES = "icon material-icons";
+const CHECK_SENSOR_STATUS_INTERVAL = 1000;
+
 const WirelessSensorContainer = () => {
   const sensorSettingPopup = useRef();
   const [sensorsInfo, setSensorsInfo] = useState([{}]);
@@ -18,21 +20,20 @@ const WirelessSensorContainer = () => {
     let intervalId = setInterval(() => {
       const buffer = DataManagerIST.getBuffer();
       const sensorsInfo = Object.keys(buffer).map((sensorId) => {
-        const { icon, label, width, unit } = SensorServices.getSensorIcon(sensorId);
+        const { icon, label, unit } = SensorServices.getSensorIcon(sensorId);
         return {
           sensorId: parseInt(sensorId),
           sensorDatas: buffer[sensorId],
           sensorIcon: {
             icon: icon,
             label: label,
-            width: width,
             unit: unit,
           },
         };
       });
 
       setSensorsInfo(sensorsInfo);
-    }, 1000);
+    }, CHECK_SENSOR_STATUS_INTERVAL);
 
     return () => {
       clearInterval(intervalId);
