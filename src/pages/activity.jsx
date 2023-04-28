@@ -411,7 +411,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   // =========================== Functions associate with Table ===========================
-  const onAddTableColumnHandler = (widgetId) => {
+  const handleTableAddColumn = (widgetId) => {
     const currentWidget = widgets[widgetId];
     if (!currentWidget) return;
 
@@ -435,7 +435,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(updatePages);
   };
 
-  const onDeleteTableColumnHandler = (widgetId, sensorIndex) => {
+  const handleTableDeleteColumn = (widgetId, sensorIndex) => {
     const updatedWidgets = widgets.map((w) => {
       if (w.id !== widgetId) {
         return w;
@@ -485,8 +485,8 @@ export default ({ f7route, f7router, filePath, content }) => {
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
-                    onAddTableColumnHandler={onAddTableColumnHandler}
-                    onDeleteTableColumnHandler={onDeleteTableColumnHandler}
+                    handleTableAddColumn={handleTableAddColumn}
+                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -519,8 +519,8 @@ export default ({ f7route, f7router, filePath, content }) => {
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
-                    onAddTableColumnHandler={onAddTableColumnHandler}
-                    onDeleteTableColumnHandler={onDeleteTableColumnHandler}
+                    handleTableAddColumn={handleTableAddColumn}
+                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
               </div>
@@ -548,8 +548,8 @@ export default ({ f7route, f7router, filePath, content }) => {
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
                   samplingMode={samplingMode}
-                  onAddTableColumnHandler={onAddTableColumnHandler}
-                  onDeleteTableColumnHandler={onDeleteTableColumnHandler}
+                  handleTableAddColumn={handleTableAddColumn}
+                  handleTableDeleteColumn={handleTableDeleteColumn}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
