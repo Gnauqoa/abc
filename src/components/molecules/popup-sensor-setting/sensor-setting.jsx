@@ -157,7 +157,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           label="Format số lẻ:"
           type="text"
           validateOnBlur
-          value={formField.formatFloatingPoint || 1}
+          value={formField.formatFloatingPoint}
           onChange={formFieldHandler}
         ></ListInput>
       </List>

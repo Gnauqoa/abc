@@ -560,8 +560,11 @@ export class DataManager {
       const sensorId = data[0];
       const dataLength = data[2];
       const sensorsData = [];
+      const sensorInfo = SensorServices.getSensorInfo(parseInt(sensorId));
+
       for (let i = 0; i < dataLength; i++) {
-        sensorsData.push(data[NUM_NON_DATA_SENSORS_CALLBACK + i]);
+        const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
+        sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
       this.buffer[parseInt(sensorId)] = sensorsData;
     } catch (e) {
