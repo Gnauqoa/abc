@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7 } from "framework7-react";
+import { Page } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import SensorServices, { defaultSensors } from "../services/sensor-service";
@@ -18,21 +18,21 @@ import {
   DEFAULT_SENSOR_DATA,
 } from "../js/constants";
 
-import BackButton from "../components/atoms/back-button";
-import RoundButton from "../components/atoms/round-button";
+// Import Atom Components
 import dialog from "../components/molecules/dialog/dialog";
-import ActivityPageNav from "../components/molecules/activity-page-nav";
-import Timer from "../components/atoms/timer";
+
+// Import Molecules Components
 import LineChart from "../components/molecules/widget-line-chart";
 import NumberWidget from "../components/molecules/widget-number-chart/number";
 import TableWidget from "../components/molecules/widget-table-chart";
-import SamplingSetting from "../components/molecules/popup-sampling-settings";
-// import DataDisplaySetting from "../components/molecules/data-display-setting";
+import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
+
+// Import Organisms Components
+import ActivityHeader from "../components/organisms/activity-page-header";
+import ActivityFooter from "../components/organisms/activity-page-footer";
+
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import NewPagePopup from "../components/molecules/popup-new-page";
-import DataRunManagementPopup from "../components/molecules/popup-data-run-management";
-import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -74,11 +74,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
-  // const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
   const [frequency, setFrequency] = useState(activity.frequency);
   const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
-  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -90,12 +88,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
 
-  // const displaySettingPopup = useRef();
-  const newPagePopup = useRef();
-  const dataRunManagementPopup = useRef();
+  const tableRef = useRef();
   const lineChartRef = useRef([]);
   let prevChartDataRef = useRef([]);
-  const tableRef = useRef();
 
   useEffect(() => {
     DataManagerIST.init();
@@ -124,45 +119,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     };
   }, [widgets]);
 
+  // =========================================================================================
   // =========================== Functions associate with Activity ===========================
-  function handleActivityNameChange(e) {
-    setName(e.target.value);
-  }
-
-  function handleFrequencySelect(frequency) {
-    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
-    const result = DataManagerIST.setCollectingDataFrequency(frequency);
-    result && setFrequency(frequency);
-  }
-
-  function handleSetTimerInMs(timerNumber) {
-    setTimerStopTime(timerNumber);
-  }
-
-  const saveActivity = () => {
-    // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets };
-      } else {
-        return page;
-      }
-    });
-    // Get modify sensors and custom sensors
-    const { sensors, customSensors } = SensorServices.exportSensors();
-    const updatedActivity = {
-      ...activity,
-      name,
-      pages: updatedPage,
-      dataRuns: updatedDataRuns,
-      frequency: frequency,
-      sensors: sensors,
-      customSensors: customSensors,
-    };
-
-    return updatedActivity;
-  };
+  // =========================================================================================
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
 
@@ -203,32 +162,48 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
-  function handleFullScreen() {
-    try {
-      if (f7.device.electron) {
-        window._cdvElectronIpc.setFullscreen(!isFullScreen);
-        setIsFullScreen(!isFullScreen);
-      } else if (f7.device.desktop) {
-        if (!document.fullscreenEnabled) {
-          setIsFullScreen(false);
-          return;
-        }
-
-        if (isFullScreen) {
-          document.exitFullscreen();
-        } else {
-          const appEl = f7.el;
-          appEl.requestFullscreen();
-        }
-        setIsFullScreen(!isFullScreen);
-      }
-    } catch (e) {
-      console.log(e);
-      setIsFullScreen(false);
-    }
+  function handleActivityNameChange(e) {
+    setName(e.target.value);
   }
 
+  function handleFrequencySelect(frequency) {
+    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result && setFrequency(frequency);
+  }
+
+  function handleSetTimerInMs(timerNumber) {
+    setTimerStopTime(timerNumber);
+  }
+
+  const saveActivity = () => {
+    // Collecting data from dataRuns
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets };
+      } else {
+        return page;
+      }
+    });
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServices.exportSensors();
+    const updatedActivity = {
+      ...activity,
+      name,
+      pages: updatedPage,
+      dataRuns: updatedDataRuns,
+      frequency: frequency,
+      sensors: sensors,
+      customSensors: customSensors,
+    };
+
+    return updatedActivity;
+  };
+
+  // =====================================================================================
   // =========================== Functions associate with Page ===========================
+  // =====================================================================================
   function handleNewPage(chartType) {
     if (!chartType) return;
     let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
@@ -311,19 +286,13 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(updatePages);
   }
 
+  // ========================================================================================
   // =========================== Functions associate with DataRun ===========================
-  function handleExportExcel() {
-    DataManagerIST.exportDataRunExcel();
-  }
-
+  // ========================================================================================
   function setLastDataRunIdForCurrentPage(dataRunId) {
     let updatedPages = _.cloneDeep(pages);
     updatedPages[currentPageIndex].lastDataRunId = dataRunId;
     setPages(() => updatedPages);
-  }
-
-  function handleChangeDataRun() {
-    console.log("handleChangeDataRun");
   }
 
   function handleStopCollecting() {
@@ -369,7 +338,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
   }
 
+  // ================================================================================================
   // =========================== Functions associate with retrieving data ===========================
+  // ================================================================================================
   function getCurrentValues(sensors, isTable = false) {
     const defaultNumberSensorIndex = 0;
     const numberSensor = sensors[defaultNumberSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -487,40 +458,17 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   return (
     <Page className="bg-color-regal-blue activity">
-      <Navbar>
-        <NavLeft>
-          <BackButton disabled={isRunning} onClick={handleActivityBack} />
-          <RoundButton
-            disabled={isRunning}
-            icon="add_chart"
-            popupOpen=".new-page-popup"
-            popoverClose
-            title="Cài đặt dữ liệu hiển thị"
-          />
-          <RoundButton disabled={isRunning || pages?.length === 1} icon="delete_forever" onClick={handlePageDelete} />
-        </NavLeft>
-        <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
-        <NavRight>
-          <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
-          <RoundButton
-            disabled={isRunning}
-            icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
-            onClick={handleFullScreen}
-          />
-        </NavRight>
-      </Navbar>
-      <Popover className="setting-popover-menu">
-        <List>
-          <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
-          {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
-        </List>
-      </Popover>
-      <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
-      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
-
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
+        <ActivityHeader
+          name={name}
+          pageLength={pages?.length}
+          isRunning={isRunning}
+          handleActivityNameChange={handleActivityNameChange}
+          handleActivityBack={handleActivityBack}
+          handleActivitySave={handleActivitySave}
+          handleNewPage={handleNewPage}
+          handlePageDelete={handlePageDelete}
+        />
         <div className="activity-layout">
           <WirelessSensorContainer></WirelessSensorContainer>
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -615,35 +563,18 @@ export default ({ f7route, f7router, filePath, content }) => {
             </div>
           )}
         </div>
-        <div className="activity-footer display-flex justify-content-space-between">
-          <div className="__toolbar-left">
-            <SamplingSetting
-              isRunning={isRunning}
-              frequency={frequency}
-              handleFrequencySelect={handleFrequencySelect}
-              handleSetTimerInMs={handleSetTimerInMs}
-              handleGetManualSample={handleGetManualSample}
-            />
-          </div>
-          <div className="__toolbar-center">
-            <ActivityPageNav
-              navOrder={`${currentPageIndex + 1}/${pages.length}`}
-              isDisabled={isRunning}
-              onNextPage={handlePageNext}
-              onPrevPage={handlePagePrev}
-            />
-          </div>
-          <div className="__toolbar-right">
-            <Timer isRunning={isRunning} />
-            <div className="sample">
-              {isRunning ? (
-                <RoundButton icon="stop" color="#FF0000" onClick={handleSampleClick} />
-              ) : (
-                <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleSampleClick} />
-              )}
-            </div>
-          </div>
-        </div>
+        <ActivityFooter
+          isRunning={isRunning}
+          frequency={frequency}
+          pageLength={pages?.length}
+          currentPageIndex={currentPageIndex}
+          handlePageNext={handlePageNext}
+          handlePagePrev={handlePagePrev}
+          handleFrequencySelect={handleFrequencySelect}
+          handleSetTimerInMs={handleSetTimerInMs}
+          handleGetManualSample={handleGetManualSample}
+          handleSampleClick={handleSampleClick}
+        />
       </div>
     </Page>
   );

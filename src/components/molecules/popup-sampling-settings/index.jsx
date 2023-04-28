@@ -15,7 +15,13 @@ const FREQUENCY_UNITS = {
   k: 1000,
 };
 
-export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInMs, handleGetManualSample }) => {
+const SamplingSetting = ({
+  isRunning,
+  frequency,
+  handleFrequencySelect,
+  handleSetTimerInMs,
+  handleGetManualSample,
+}) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
 
   const handleGetSampleSettings = (samplingSettings) => {
@@ -119,3 +125,5 @@ export default ({ isRunning, frequency, handleFrequencySelect, handleSetTimerInM
     </div>
   );
 };
+
+export default SamplingSetting;

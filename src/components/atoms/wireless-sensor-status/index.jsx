@@ -21,11 +21,7 @@ const WirelessSensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect }
         <div className="__active">
           <div className="__icon">
             <div className="__sensor-icon">
-              <img
-                src={sensorIcon.icon || ""}
-                alt={sensorIcon.label}
-                style={sensorIcon.width ? { width: sensorIcon.width } : {}}
-              />
+              <img src={sensorIcon.icon || ""} alt={sensorIcon.label} />
             </div>
             <div className="__sensor-name">
               <span>{sensorIcon.label}</span>
