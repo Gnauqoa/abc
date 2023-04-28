@@ -43,8 +43,8 @@ const TableWidget = (
     chartLayout,
     isRunning,
     samplingMode,
-    onAddTableColumnHandler,
-    onDeleteTableColumnHandler,
+    handleTableAddColumn,
+    handleTableDeleteColumn,
   },
   ref
 ) => {
@@ -284,8 +284,7 @@ const TableWidget = (
     if (!selectedColumn || numColumns <= 1) return;
 
     const deleteSensorIndex = selectedColumn - 1;
-    console.log("delete deleteSensorIndex: ", deleteSensorIndex);
-    onDeleteTableColumnHandler(widget.id, deleteSensorIndex);
+    handleTableDeleteColumn(widget.id, deleteSensorIndex);
   };
 
   const summarizeTableHandler = () => {
@@ -295,7 +294,7 @@ const TableWidget = (
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
-        onAddTableColumnHandler(widget.id);
+        handleTableAddColumn(widget.id);
         break;
       case DELETE_COLUMN_OPTION:
         deleteColumnHandler();
