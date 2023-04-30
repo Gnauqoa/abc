@@ -75,6 +75,7 @@
 
 
     <preference name="DisallowOverscroll" value="true" />
+    <preference name="Orientation" value="landscape" />
     <preference name="BackupWebStorage" value="local" />
     <preference name="AutoHideSplashScreen" value="false" />
     <preference name="ShowSplashScreenSpinner" value="false" />
