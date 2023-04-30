@@ -25,6 +25,6 @@ node_modules/
 /plugins/
 /www/
 /dist/
-!/platforms/
-/platforms/electron/build
-/platforms/electron/build-res
+/platforms/
+!/platforms/electron/build
+!/platforms/electron/build-res
