@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useState } from "react";
-import { Page, Navbar, Button, f7, Popup } from "framework7-react";
+import { Page, Navbar, Button, f7, Popup, NavLeft, NavTitle } from "framework7-react";
 
 import SensorServices from "../../../services/sensor-service";
 import _ from "lodash";
@@ -17,7 +17,7 @@ const settingTabs = {
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
 };
 
-const SensorSettingPopup = ({ sensorId }, ref) => {
+const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) => {
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [sensorInfo, setSensorInfo] = useState({});
 
@@ -33,11 +33,14 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServices.updateSensorSetting(sensorId, newSensorUnitInfo);
+    onSaveSetting(sensorId, newSensorUnitInfo);
     getSensors();
     f7.popup.close();
   };
 
-  const onSaveSensorCalibratingHandler = () => {
+  const onSaveSensorCalibratingHandler = (calculatedValues) => {
+    const { k, offset } = calculatedValues;
+    console.log("y = ax + b => ", `y = ${k}x + ${offset}`);
     f7.popup.close();
   };
 
@@ -49,7 +52,18 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
   return (
     <Popup className="sensor-setting-popup" ref={ref}>
       <Page className="sensor-setting">
-        <Navbar className="__header" title={sensorInfo?.name} />
+        <Navbar>
+          <NavLeft>
+            <Button
+              iconIos="material:arrow_back"
+              iconMd="material:arrow_back"
+              iconAurora="material:arrow_back"
+              className="back-icon margin-right"
+              popupClose
+            ></Button>
+          </NavLeft>
+          <NavTitle style={{ color: "#0086ff" }}>{sensorInfo?.name}</NavTitle>
+        </Navbar>
         <div className="__content">
           <div className="__navbar">
             {Object.keys(settingTabs).map((tabId) => {
@@ -70,9 +84,17 @@ const SensorSettingPopup = ({ sensorId }, ref) => {
 
           <div className="__setting-content">
             {currentTab === SENSOR_SETTING_TAB ? (
-              <SensorSettingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorSettingHandler} />
+              <SensorSettingTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveSensorSettingHandler}
+              />
             ) : (
-              <SensorCalibratingTab sensorInfo={sensorInfo} onSaveHandler={onSaveSensorCalibratingHandler} />
+              <SensorCalibratingTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveSensorCalibratingHandler}
+              />
             )}
           </div>
         </div>

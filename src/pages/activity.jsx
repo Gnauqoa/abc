@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Page, Navbar, NavLeft, NavRight, Popover, List, ListItem, Popup, f7 } from "framework7-react";
+import { Page } from "framework7-react";
 import _ from "lodash";
 import DataManagerIST from "../services/data-manager";
 import SensorServices, { defaultSensors } from "../services/sensor-service";
@@ -15,23 +15,24 @@ import {
   SAMPLING_MANUAL,
   TIMER_NO_STOP,
   DEFAULT_SENSOR_ID,
+  DEFAULT_SENSOR_DATA,
 } from "../js/constants";
 
-import BackButton from "../components/atoms/back-button";
-import RoundButton from "../components/atoms/round-button";
+// Import Atom Components
 import dialog from "../components/molecules/dialog/dialog";
-import ActivityPageNav from "../components/molecules/activity-page-nav";
-import Timer from "../components/atoms/timer";
+
+// Import Molecules Components
 import LineChart from "../components/molecules/widget-line-chart";
 import NumberWidget from "../components/molecules/widget-number-chart/number";
 import TableWidget from "../components/molecules/widget-table-chart";
-import SamplingSetting from "../components/molecules/popup-sampling-settings";
-// import DataDisplaySetting from "../components/molecules/data-display-setting";
+import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
+
+// Import Organisms Components
+import ActivityHeader from "../components/organisms/activity-page-header";
+import ActivityFooter from "../components/organisms/activity-page-footer";
+
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import NewPagePopup from "../components/molecules/popup-new-page";
-import DataRunManagementPopup from "../components/molecules/popup-data-run-management";
-import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -40,11 +41,11 @@ export default ({ f7route, f7router, filePath, content }) => {
   let activity;
 
   if (selectedLayout) {
-    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
+        { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
     }
 
@@ -73,11 +74,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
-  const [sensorSettings, setSensorSettings] = useState(activity.sensorSettings);
   const [frequency, setFrequency] = useState(activity.frequency);
   const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
-  const [isFullScreen, setIsFullScreen] = useState(false);
 
   // Belong to Page
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -89,12 +88,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(currentPage.lastDataRunId);
   const [currentSensorValues, setCurrentSensorValues] = useState({});
 
-  // const displaySettingPopup = useRef();
-  const newPagePopup = useRef();
-  const dataRunManagementPopup = useRef();
+  const tableRef = useRef();
   const lineChartRef = useRef([]);
   let prevChartDataRef = useRef([]);
-  const tableRef = useRef();
 
   useEffect(() => {
     DataManagerIST.init();
@@ -106,9 +102,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     let subscriberId = null;
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
-    const subscribedSensorIds = widgets
-      .map((widget) => (widget.sensor.id !== DEFAULT_SENSOR_ID ? parseInt(widget.sensor.id) : false))
-      .filter(Boolean);
+    const subscribedSensorIds = [
+      ...new Set(
+        widgets.flatMap((widget) =>
+          widget.sensors
+            .map((sensor) => (sensor.id !== DEFAULT_SENSOR_ID ? parseInt(sensor.id) : false))
+            .filter(Boolean)
+        )
+      ),
+    ];
 
     subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
 
@@ -117,58 +119,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     };
   }, [widgets]);
 
+  // =========================================================================================
   // =========================== Functions associate with Activity ===========================
-  function handleActivityNameChange(e) {
-    setName(e.target.value);
-  }
-
-  // function handleSensorSettingSubmit(setting) {
-  //   let sensorSettingsCpy = [...sensorSettings];
-  //   if (sensorSettingsCpy.filter((e) => e.sensorDetailId == setting.sensorDetailId).length === 0) {
-  //     sensorSettingsCpy.push({ ...setting });
-  //   } else {
-  //     var foundIndex = sensorSettingsCpy.findIndex((e) => e.sensorDetailId == setting.sensorDetailId);
-  //     sensorSettingsCpy[foundIndex] = setting;
-  //   }
-
-  //   setSensorSettings(sensorSettingsCpy);
-  //   displaySettingPopup.current.f7Popup().close();
-  // }
-
-  function handleFrequencySelect(frequency) {
-    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
-    const result = DataManagerIST.setCollectingDataFrequency(frequency);
-    result && setFrequency(frequency);
-  }
-
-  function handleSetTimerInMs(timerNumber) {
-    setTimerStopTime(timerNumber);
-  }
-
-  const saveActivity = () => {
-    // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets };
-      } else {
-        return page;
-      }
-    });
-    // Get modify sensors and custom sensors
-    const { sensors, customSensors } = SensorServices.exportSensors();
-    const updatedActivity = {
-      ...activity,
-      name,
-      pages: updatedPage,
-      dataRuns: updatedDataRuns,
-      frequency: frequency,
-      sensors: sensors,
-      customSensors: customSensors,
-    };
-
-    return updatedActivity;
-  };
+  // =========================================================================================
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
 
@@ -209,41 +162,58 @@ export default ({ f7route, f7router, filePath, content }) => {
     );
   }
 
-  function handleFullScreen() {
-    try {
-      if (f7.device.electron) {
-        window._cdvElectronIpc.setFullscreen(!isFullScreen);
-        setIsFullScreen(!isFullScreen);
-      } else if (f7.device.desktop) {
-        if (!document.fullscreenEnabled) {
-          setIsFullScreen(false);
-          return;
-        }
-
-        if (isFullScreen) {
-          document.exitFullscreen();
-        } else {
-          const appEl = f7.el;
-          appEl.requestFullscreen();
-        }
-        setIsFullScreen(!isFullScreen);
-      }
-    } catch (e) {
-      console.log(e);
-      setIsFullScreen(false);
-    }
+  function handleActivityNameChange(e) {
+    setName(e.target.value);
   }
 
+  function handleFrequencySelect(frequency) {
+    setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
+    const result = DataManagerIST.setCollectingDataFrequency(frequency);
+    result && setFrequency(frequency);
+  }
+
+  function handleSetTimerInMs(timerNumber) {
+    setTimerStopTime(timerNumber);
+  }
+
+  const saveActivity = () => {
+    // Collecting data from dataRuns
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets };
+      } else {
+        return page;
+      }
+    });
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServices.exportSensors();
+    const updatedActivity = {
+      ...activity,
+      name,
+      pages: updatedPage,
+      dataRuns: updatedDataRuns,
+      frequency: frequency,
+      sensors: sensors,
+      customSensors: customSensors,
+    };
+
+    return updatedActivity;
+  };
+
+  // =====================================================================================
   // =========================== Functions associate with Page ===========================
+  // =====================================================================================
   function handleNewPage(chartType) {
     if (!chartType) return;
-    let defaultWidgets = [{ id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } }];
+    let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
       defaultWidgets = [
-        { id: 0, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
-        { id: 1, sensor: { id: DEFAULT_SENSOR_ID, index: 0 } },
+        { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
+        { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
     }
+
     const newPage = {
       layout: chartType,
       widgets: defaultWidgets,
@@ -295,12 +265,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     prevChartDataRef.current[currentPageIndex] = null;
   }
 
-  function handleSensorChange(widgetId, sensor) {
+  function handleSensorChange(widgetId, sensorIndex, sensor) {
     const updatedWidgets = widgets.map((w) => {
-      if (w.id === widgetId) {
-        return { ...w, sensor };
+      if (w.id !== widgetId) {
+        return w;
       }
-      return w;
+
+      const newSensors = [...w.sensors];
+      newSensors[sensorIndex] = { ...sensor };
+      return { ...w, sensors: newSensors };
     });
     const updatePages = pages.map((page, index) => {
       if (index === currentPageIndex) {
@@ -308,23 +281,18 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
       return page;
     });
+
     setWidgets(updatedWidgets);
     setPages(updatePages);
   }
 
+  // ========================================================================================
   // =========================== Functions associate with DataRun ===========================
-  function handleExportExcel() {
-    DataManagerIST.exportDataRunExcel();
-  }
-
+  // ========================================================================================
   function setLastDataRunIdForCurrentPage(dataRunId) {
     let updatedPages = _.cloneDeep(pages);
     updatedPages[currentPageIndex].lastDataRunId = dataRunId;
     setPages(() => updatedPages);
-  }
-
-  function handleChangeDataRun() {
-    console.log("handleChangeDataRun");
   }
 
   function handleStopCollecting() {
@@ -357,33 +325,53 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleDataManagerCallback(emittedDatas) {
     // console.log(">>>>> AUTO - data manager:", emittedDatas);
     const updatedSensorValues = { ...currentSensorValues };
-    emittedDatas.forEach((data) => {
+
+    for (const [key, data] of Object.entries(emittedDatas)) {
       const time = data[1];
       const sensorId = data[2];
       const values = data.slice(3);
       const sensorValues = { time, sensorId, values };
-      updatedSensorValues[sensorId] = sensorValues;
-    });
+
+      updatedSensorValues[key] = sensorValues;
+    }
+
     setCurrentSensorValues((sensorValues) => Object.assign({}, sensorValues, updatedSensorValues));
   }
 
-  function getCurrentValue(sensor, isTable = false) {
-    if (!isTable) return currentSensorValues[sensor.id]?.values[sensor.index] || "";
-    const data = currentSensorValues[sensor.id];
-    return data ? { time: data.time, values: data.values } : {};
+  // ================================================================================================
+  // =========================== Functions associate with retrieving data ===========================
+  // ================================================================================================
+  function getCurrentValues(sensors, isTable = false) {
+    const defaultNumberSensorIndex = 0;
+    const numberSensor = sensors[defaultNumberSensorIndex] || DEFAULT_SENSOR_DATA;
+    if (!isTable) return currentSensorValues[numberSensor.id]?.values[numberSensor.index] || "";
+
+    const tableDatas = [];
+    sensors.forEach((sensor) => {
+      const currentSensorValue = currentSensorValues[sensor.id];
+      const tableData = currentSensorValue ? { time: currentSensorValue.time, values: currentSensorValue.values } : {};
+      tableDatas.push(tableData);
+    });
+
+    return tableDatas;
   }
 
-  function getDataForTable(sensor) {
-    const tableData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
-    return tableData;
+  function getDatasForTable(sensors) {
+    const sensorIds = [];
+    for (const sensor of sensors) {
+      sensorIds.push(sensor.id);
+    }
+
+    const tableDatas = DataManagerIST.getWidgetDatasRunData(currentDataRunId, sensorIds);
+    return tableDatas;
   }
 
-  function getDataForChart(sensor) {
+  function getDataForChart(sensors) {
     if (!lineChartRef.current[currentPageIndex]) return;
+    const defaultSensorIndex = 0;
+    const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-    const chartData = DataManagerIST.getWidgetDataRunData(currentDataRunId, sensor.id);
-    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
-
+    // Update current value for Line Chart
     const sensorValue = currentSensorValues[sensor.id];
     if (sensorValue) {
       let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
@@ -395,60 +383,92 @@ export default ({ f7route, f7router, filePath, content }) => {
       });
     }
 
-    if (data.length > 0) {
-      if (_.isEqual(data, prevChartDataRef.current[currentPageIndex])) return;
-      prevChartDataRef.current[currentPageIndex] = data;
+    let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    let currentData;
+    const chartDatas = dataRunPreviews.map((dataRunPreview) => {
+      let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
+      const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+      if (dataRunPreview.id === currentDataRunId) {
+        currentData = data;
+      }
+
+      return {
+        name: dataRunPreview.name,
+        data: data,
+      };
+    });
+
+    if (currentData && currentData.length > 0 && !_.isEqual(currentData, prevChartDataRef.current[currentPageIndex])) {
       lineChartRef.current[currentPageIndex].setChartData({
-        chartData: [
-          {
-            name: `Lần ${DataManagerIST.dataRunsSize()}`,
-            data: data,
-          },
-        ],
+        chartDatas: chartDatas,
         xUnit: "ms",
         yUnit: "",
         maxHz: 10,
         curSensor: sensor,
       });
+      prevChartDataRef.current[currentPageIndex] = currentData;
     }
   }
 
+  // =========================== Functions associate with Table ===========================
+  const handleTableAddColumn = (widgetId) => {
+    const currentWidget = widgets[widgetId];
+    if (!currentWidget) return;
+
+    const updatedWidgets = widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = [...w.sensors, DEFAULT_SENSOR_DATA];
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setWidgets(updatedWidgets);
+    setPages(updatePages);
+  };
+
+  const handleTableDeleteColumn = (widgetId, sensorIndex) => {
+    const updatedWidgets = widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = w.sensors.filter((s, i) => i !== sensorIndex);
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setWidgets(updatedWidgets);
+    setPages(updatePages);
+  };
+
   return (
     <Page className="bg-color-regal-blue activity">
-      <Navbar>
-        <NavLeft>
-          <BackButton disabled={isRunning} onClick={handleActivityBack} />
-          <RoundButton
-            disabled={isRunning}
-            icon="add_chart"
-            popupOpen=".new-page-popup"
-            popoverClose
-            title="Cài đặt dữ liệu hiển thị"
-          />
-          <RoundButton disabled={isRunning || pages?.length === 1} icon="delete_forever" onClick={handlePageDelete} />
-        </NavLeft>
-        <input value={name} type="text" name="name" onChange={handleActivityNameChange} className="activity-name" />
-        <NavRight>
-          <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
-          <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
-          <RoundButton
-            disabled={isRunning}
-            icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
-            onClick={handleFullScreen}
-          />
-        </NavRight>
-      </Navbar>
-      <Popover className="setting-popover-menu">
-        <List>
-          <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
-          {/* <ListItem link="#" popoverClose title="Chia sẻ" /> */}
-        </List>
-      </Popover>
-      <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
-      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
-
       <div className="full-height display-flex flex-direction-column justify-content-space-between">
+        <ActivityHeader
+          name={name}
+          pageLength={pages?.length}
+          isRunning={isRunning}
+          handleActivityNameChange={handleActivityNameChange}
+          handleActivityBack={handleActivityBack}
+          handleActivitySave={handleActivitySave}
+          handleNewPage={handleNewPage}
+          handlePageDelete={handlePageDelete}
+        />
         <div className="activity-layout">
           <WirelessSensorContainer></WirelessSensorContainer>
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
@@ -458,19 +478,21 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
-                    data={getDataForTable(widgets[0].sensor)}
-                    currentValue={getCurrentValue(widgets[0].sensor, true)}
+                    datas={getDatasForTable(widgets[0].sensors)}
+                    currentValues={getCurrentValues(widgets[0].sensors, true)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    handleTableAddColumn={handleTableAddColumn}
+                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
                   <NumberWidget
                     key={`${currentPageIndex}_number`}
-                    value={getCurrentValue(widgets[0].sensor)}
+                    value={getCurrentValues(widgets[0].sensors)}
                     widget={widgets[0]}
                     handleSensorChange={handleSensorChange}
                   />
@@ -480,7 +502,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
-                    data={getDataForChart(widgets[1].sensor)}
+                    data={getDataForChart(widgets[1].sensors)}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
@@ -490,13 +512,15 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
-                    data={getDataForTable(widgets[1].sensor)}
-                    currentValue={getCurrentValue(widgets[1].sensor, true)}
+                    datas={getDatasForTable(widgets[1].sensors)}
+                    currentValues={getCurrentValues(widgets[1].sensors, true)}
                     widget={widgets[1]}
                     handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    handleTableAddColumn={handleTableAddColumn}
+                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
               </div>
@@ -507,7 +531,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}
-                  data={getDataForChart(widgets[0].sensor)}
+                  data={getDataForChart(widgets[0].sensors)}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
@@ -517,19 +541,21 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <TableWidget
                   ref={tableRef}
                   key={`${currentPageIndex}_table`}
-                  data={getDataForTable(widgets[0].sensor)}
-                  currentValue={getCurrentValue(widgets[0].sensor, true)}
+                  datas={getDatasForTable(widgets[0].sensors)}
+                  currentValues={getCurrentValues(widgets[0].sensors, true)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
                   samplingMode={samplingMode}
+                  handleTableAddColumn={handleTableAddColumn}
+                  handleTableDeleteColumn={handleTableDeleteColumn}
                 />
               )}
               {layout === LAYOUT_NUMBER && (
                 <NumberWidget
                   key={`${currentPageIndex}_number`}
-                  value={getCurrentValue(widgets[0].sensor)}
+                  value={getCurrentValues(widgets[0].sensors)}
                   widget={widgets[0]}
                   handleSensorChange={handleSensorChange}
                 />
@@ -537,35 +563,18 @@ export default ({ f7route, f7router, filePath, content }) => {
             </div>
           )}
         </div>
-        <div className="activity-footer display-flex justify-content-space-between">
-          <div className="__toolbar-left">
-            <SamplingSetting
-              isRunning={isRunning}
-              frequency={frequency}
-              handleFrequencySelect={handleFrequencySelect}
-              handleSetTimerInMs={handleSetTimerInMs}
-              handleGetManualSample={handleGetManualSample}
-            />
-          </div>
-          <div className="__toolbar-center">
-            <ActivityPageNav
-              navOrder={`${currentPageIndex + 1}/${pages.length}`}
-              isDisabled={isRunning}
-              onNextPage={handlePageNext}
-              onPrevPage={handlePagePrev}
-            />
-          </div>
-          <div className="__toolbar-right">
-            <Timer isRunning={isRunning} />
-            <div className="sample">
-              {isRunning ? (
-                <RoundButton icon="stop" color="#FF0000" onClick={handleSampleClick} />
-              ) : (
-                <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleSampleClick} />
-              )}
-            </div>
-          </div>
-        </div>
+        <ActivityFooter
+          isRunning={isRunning}
+          frequency={frequency}
+          pageLength={pages?.length}
+          currentPageIndex={currentPageIndex}
+          handlePageNext={handlePageNext}
+          handlePagePrev={handlePagePrev}
+          handleFrequencySelect={handleFrequencySelect}
+          handleSetTimerInMs={handleSetTimerInMs}
+          handleGetManualSample={handleGetManualSample}
+          handleSampleClick={handleSampleClick}
+        />
       </div>
     </Page>
   );

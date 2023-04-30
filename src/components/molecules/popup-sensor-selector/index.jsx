@@ -36,7 +36,7 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
         setSelectedSensorState(hideDisplayUnit ? name : `${name}${unit !== "" ? ` (${unit})` : ""}`);
       }
     }
-  }, []);
+  }, [selectedSensor]);
 
   const changeHandler = (value) => {
     const selectedValueString = value;

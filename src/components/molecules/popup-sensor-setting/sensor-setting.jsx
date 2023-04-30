@@ -4,13 +4,13 @@ import { List, ListInput, Button, f7 } from "framework7-react";
 import "./index.scss";
 import CustomDropdownInput from "./custom-list-input";
 
-const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
+const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   const [formField, setFormField] = React.useState({});
 
   useEffect(() => {
     const unitInfos = sensorInfo.data;
     if (Array.isArray(unitInfos) && unitInfos.length > 0) {
-      const unitInfo = unitInfos[0];
+      const unitInfo = unitInfos[sensorDataIndex || 0];
       setFormField({
         unitId: unitInfo.id,
         unitName: unitInfo.name || "",
@@ -18,7 +18,7 @@ const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
         unitOfMeasure: unitInfo.unit || "",
         minValue: unitInfo.min || "0",
         maxValue: unitInfo.max || "0",
-        formatFloatingPoint: unitInfo.formatFloatingPoint || "0",
+        formatFloatingPoint: unitInfo.formatFloatingPoint || "1",
       });
     }
   }, [sensorInfo]);
@@ -31,7 +31,7 @@ const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
       unitOfMeasure: unitInfo.unit || "",
       minValue: unitInfo.min || "0",
       maxValue: unitInfo.max || "0",
-      formatFloatingPoint: unitInfo.formatFloatingPoint || "0",
+      formatFloatingPoint: unitInfo.formatFloatingPoint || "1",
     });
     f7.popover.close();
   };
@@ -71,7 +71,7 @@ const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
 
     const parsedMinValue = Number(formField.minValue || "0");
     const parsedMaxValue = Number(formField.maxValue || "0");
-    const parsedFormatFloatingPoint = Number(formField.formatFloatingPoint || "0");
+    const parsedFormatFloatingPoint = Number(formField.formatFloatingPoint || "1");
     const newSensorUnitInfo = {
       id: formField.unitId,
       name: formField.displayedNamed,
@@ -157,7 +157,7 @@ const SensorSettingTab = ({ sensorInfo, onSaveHandler }) => {
           label="Format số lẻ:"
           type="text"
           validateOnBlur
-          value={formField.formatFloatingPoint || 0}
+          value={formField.formatFloatingPoint}
           onChange={formFieldHandler}
         ></ListInput>
       </List>

@@ -22,7 +22,7 @@
 
 .activity-layout {
   width: 98%;
-  height: calc(100% - 80px);
+  height: calc(100% - 80px - 60px);
   margin: auto;
   display: flex;
   gap: 1%;
@@ -30,10 +30,17 @@
   .__card-sensors {
     width: 15%;
     min-width: 120px;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 4%;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 1px;
+  }
+
+  .__card-sensors::-webkit-scrollbar {
+    display: none;
   }
 
   .__card-widget {

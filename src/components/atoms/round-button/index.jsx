@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "framework7-react";
 import clsx from "clsx";
 
-export default ({ color, icon, customIcon, onClick, disabled, popoverOpen, popupOpen }) => {
+const RoundButton = ({ color, icon, customIcon, onClick, disabled, popoverOpen, popupOpen }) => {
   return (
     <Button
       disabled={disabled}
@@ -18,3 +18,5 @@ export default ({ color, icon, customIcon, onClick, disabled, popoverOpen, popup
     ></Button>
   );
 };
+
+export default RoundButton;

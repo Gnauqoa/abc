@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
-import { Button } from "framework7-react";
+// import { Button } from "framework7-react";
 import "./index.scss";
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
@@ -14,15 +14,13 @@ import {
   DEFAULT_ROWS,
   FIRST_COLUMN_DEFAULT_OPT,
   FIRST_COLUMN_CUSTOM_OPT,
-  emptyRow,
-  defaultRows,
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
   SUMMARIZE_OPTION,
 } from "../../../utils/widget-table-utils";
 
 import ExpandableOptions from "../expandable-options";
-
+import SummarizedTable from "./summarize";
 const FIRST_COLUMN_OPTIONS = [
   {
     id: FIRST_COLUMN_DEFAULT_OPT,
@@ -36,24 +34,54 @@ const FIRST_COLUMN_OPTIONS = [
   },
 ];
 
-const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayout, isRunning, samplingMode }, ref) => {
+const TableWidget = (
+  {
+    datas,
+    currentValues,
+    widget,
+    handleSensorChange,
+    chartLayout,
+    isRunning,
+    samplingMode,
+    handleTableAddColumn,
+    handleTableDeleteColumn,
+  },
+  ref
+) => {
+  // ========================== Create variables depending on number of columns ==========================
+  const numColumns = widget.sensors.length;
+  const emptyRow = { column0: "" };
+  for (let i = 0; i < numColumns; i++) {
+    emptyRow[`column${i + 1}`] = "";
+  }
+  const defaultRows = Array.from({ length: DEFAULT_ROWS }, () => emptyRow);
+
+  // ========================== Declare variables ==========================
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
   const [userInputs, setUserInputs] = useState({});
-  const [selectedRow, setSelectedRow] = useState(0);
+  const [selectedElement, setSelectedElement] = useState({
+    selectedRow: 0,
+    selectedColumn: 0,
+  });
+
+  const [isShowSummarizedData, setIsShowSummarizedData] = useState(false);
+  const expandOptions = expandableOptions.map((option) => {
+    if (option.id !== SUMMARIZE_OPTION) return option;
+    return { ...option, selected: isShowSummarizedData };
+  });
 
   const [firstColumnOption, setFirstColumnOption] = useState(FIRST_COLUMN_DEFAULT_OPT);
-
-  const headerRowRef = useRef(null);
   const lastRowRef = useRef(null);
+  const sensorsUnit = widget.sensors.map((sensor) => {
+    return sensor.id === DEFAULT_SENSOR_ID ? "" : SensorServices.getUnit(sensor.id, sensor.index);
+  });
 
-  const sensorUnit =
-    widget.sensor.id === DEFAULT_SENSOR_ID ? "" : SensorServices.getUnit(widget.sensor.id, widget.sensor.index);
-
+  // ========================== useImperativeHandle and useEffect Functions ==========================
   useImperativeHandle(ref, () => ({
     handleSamplingManual() {
-      let transformedRows = convertDataToTableRows(data);
-      const newRow = convertCurrentValueToTableRow(currentValue);
+      let transformedRows = convertDataToTableRows(datas);
+      const newRow = convertCurrentsValueToTableRow(currentValues);
       if (!newRow) {
         // if the user is not select sensor and manually
         // sampling, just put the current buffer to dataRuns
@@ -61,31 +89,36 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
         return;
       }
 
+      const { selectedRow } = selectedElement;
+
       setNumRows(transformedRows.length);
       let curSelectedRow = selectedRow;
       let displayedSelectedRow = selectedRow;
+      const sensorIds = widget.sensors.map((sensor) => parseInt(sensor.id));
 
       if (selectedRow === transformedRows.length) {
-        DataManagerIST.appendManualSample(widget.sensor.id, currentValue.values);
-        // transformedRows.push(newRow);
+        DataManagerIST.appendManualSample(sensorIds, currentValues);
         curSelectedRow = transformedRows.length + 1;
 
         // set the displayedSelectedRow = next current selected row
         displayedSelectedRow = curSelectedRow;
       } else {
-        DataManagerIST.updateDataRunDataAtIndex(selectedRow, widget.sensor.id, currentValue.values);
+        DataManagerIST.updateDataRunDataAtIndex(selectedRow, sensorIds, currentValues);
         curSelectedRow = selectedRow + 1 >= transformedRows.length ? transformedRows.length : selectedRow + 1;
 
         // We set the displayedSelectedRow = the current selected row
         displayedSelectedRow = selectedRow;
       }
-      setSelectedRow(curSelectedRow);
+      setSelectedElement({
+        ...selectedElement,
+        selectedRow: curSelectedRow,
+      });
 
       transformedRows = [
         ...transformedRows.slice(0, displayedSelectedRow),
         newRow,
         ...transformedRows.slice(displayedSelectedRow + 1),
-        displayedSelectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
+        displayedSelectedRow < numRows && createLastRow(userInputs[numRows]),
       ];
 
       setRows(
@@ -103,27 +136,31 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
   }, [samplingMode]);
 
   useEffect(() => {
-    let transformedRows = convertDataToTableRows(data);
+    let transformedRows = convertDataToTableRows(datas);
     setNumRows(transformedRows.length);
 
+    const { selectedRow } = selectedElement;
+
     if (!isRunning || samplingMode === SAMPLING_MANUAL) {
-      const newRow = convertCurrentValueToTableRow(currentValue);
-      if (!newRow) return;
+      const newRow = convertCurrentsValueToTableRow(currentValues);
 
       if (!isRunning) {
         transformedRows.push(newRow);
       } else {
         // Preventing loosing selection row when move from auto to manual.
         // As the the selected rows is still the last row from auto
-        if (data.length === 0) {
-          setSelectedRow(0);
+        if (datas[0]?.length === 0) {
+          setSelectedElement({
+            ...selectedElement,
+            selectedRow: 0,
+          });
         }
 
         transformedRows = [
           ...transformedRows.slice(0, selectedRow),
           newRow,
           ...transformedRows.slice(selectedRow + 1),
-          selectedRow < numRows && { colum1: userInputs[numRows] || "", colum2: "---" },
+          selectedRow < numRows && createLastRow(userInputs[numRows]),
         ];
       }
     }
@@ -135,49 +172,103 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     );
 
     if (samplingMode === SAMPLING_AUTO || !isRunning) {
-      setSelectedRow(transformedRows.length - 1);
+      setSelectedElement({
+        ...selectedElement,
+        selectedRow: transformedRows.length - 1,
+      });
     }
 
     isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
-  }, [data, firstColumnOption]);
+  }, [datas, firstColumnOption]);
 
-  const convertDataToTableRows = (data) => {
-    const transformedRows = data.map((item, index) => ({
-      colum1: firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? item.time : userInputs[index] || "",
-      colum2: item.values[widget.sensor.index],
-    }));
+  // ========================== Utils functions ==========================
+  const convertDataToTableRows = (datas) => {
+    if (datas.length === 0) return [];
+    const dataLength = getMaxDataSize(datas);
+
+    const transformedRows = [];
+    for (let rowIndex = 0; rowIndex < dataLength; rowIndex++) {
+      const transformedRow = {};
+
+      for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+        const cellData = datas[columnIndex][rowIndex] || {};
+        const { time, values } = cellData;
+
+        const firstColumnValue = firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? time : userInputs[columnIndex] || "";
+
+        transformedRow["column0"] = firstColumnValue || transformedRow["column0"];
+        transformedRow[`column${columnIndex + 1}`] = values?.[widget.sensors[columnIndex].index] ?? "";
+      }
+
+      transformedRows.push(transformedRow);
+    }
+
     return transformedRows;
   };
 
-  const convertCurrentValueToTableRow = (currentValue) => {
-    const { time, values } = currentValue;
-    if (!time || !values) return false;
+  const convertCurrentsValueToTableRow = (currentValues) => {
+    const newRow = {};
 
-    const newRow = {
-      colum1:
-        firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "",
-      colum2: values[widget.sensor.index] || "",
-    };
+    for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+      const { time, values } = currentValues[columnIndex];
+      const widgetSensor = widget.sensors[columnIndex];
+      const firstColumnValue =
+        firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (isRunning ? time || "" : "") : userInputs[numRows] || "";
+
+      newRow["column0"] = firstColumnValue;
+      newRow[`column${columnIndex + 1}`] = values?.[widgetSensor?.index] ?? "";
+    }
+
     return newRow;
   };
 
-  const handleFirstColumSelector = ({ target: { value } }) => {
-    setFirstColumnOption(value);
+  const getMaxDataSize = (datas) => {
+    return datas.reduce((maxSize, data) => Math.max(maxSize, data.length), 0);
   };
 
-  const handleChangeSelectedColumn = (event) => {
-    const selectedRow = event.currentTarget.id;
-    isRunning &&
-      samplingMode === SAMPLING_MANUAL &&
-      selectedRow &&
-      parseInt(selectedRow) <= numRows &&
-      setSelectedRow(parseInt(selectedRow));
+  const createLastRow = (firstColumnValue) => {
+    const row = { column0: firstColumnValue };
+    for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+      let cellValue = "---";
+      if (widget.sensors[columnIndex]?.id === DEFAULT_SENSOR_ID) cellValue = "";
+      row[`column${columnIndex + 1}`] = cellValue;
+    }
+    return row;
   };
 
   const scrollToRef = (ref) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
+  };
+
+  // ========================== Handler functions ==========================
+  const handleFirstColumSelector = ({ target: { value } }) => {
+    setFirstColumnOption(value);
+  };
+
+  const handleChangeSelectedColumn = (event) => {
+    const cellId = event.currentTarget.id;
+    const [cellRow, cellColumn] = cellId.split("_");
+    const { selectedRow, selectedColumn } = selectedElement;
+
+    let newCellRow = selectedRow;
+    let newCellColumn = selectedColumn;
+
+    if (isRunning && samplingMode === SAMPLING_MANUAL && cellRow && parseInt(cellRow) <= numRows) {
+      newCellRow = parseInt(cellRow);
+    }
+
+    if (newCellColumn !== parseInt(cellColumn)) {
+      newCellColumn = parseInt(cellColumn);
+    } else {
+      newCellColumn = 0;
+    }
+
+    setSelectedElement({
+      selectedRow: newCellRow,
+      selectedColumn: newCellColumn,
+    });
   };
 
   const userInputHandler = (event) => {
@@ -188,13 +279,28 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     });
   };
 
+  const deleteColumnHandler = () => {
+    const { selectedColumn } = selectedElement;
+    if (!selectedColumn || numColumns <= 1) return;
+
+    const deleteSensorIndex = selectedColumn - 1;
+    handleTableDeleteColumn(widget.id, deleteSensorIndex);
+  };
+
+  const summarizeTableHandler = () => {
+    setIsShowSummarizedData(!isShowSummarizedData);
+  };
+
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
+        handleTableAddColumn(widget.id);
         break;
       case DELETE_COLUMN_OPTION:
+        deleteColumnHandler();
         break;
       case SUMMARIZE_OPTION:
+        summarizeTableHandler();
         break;
       default:
         break;
@@ -205,10 +311,12 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
     <div className="wapper">
       <div className="wapper__chart">
         <table className="wapper__chart__table">
-          {/* ========================== TABLE HEADER ========================== */}
-          <div className="wapper__chart__table__header">
-            <div className="__header-column">
-              <div className="__header-name">
+          {/* ========================== TABLE BODY ========================== */}
+          <tbody className="wapper__chart__table__body">
+            {/* ========================== TABLE HEADER ========================== */}
+            <tr key="header-row" className="__header-column">
+              {/* ========================== FIXED FIRST COLUMN ========================== */}
+              <td key="header-row-fixed-column" className="__header-name" style={PAGE_SETTINGS[chartLayout]["td"]}>
                 <select
                   className="custom-select"
                   disabled={isRunning}
@@ -227,50 +335,78 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                     );
                   })}
                 </select>
-              </div>
-              <div className="__header-unit">
-                {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
-              </div>
-            </div>
+                <div className="__header-unit">
+                  {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
+                </div>
+              </td>
 
-            <div className="__header-column">
-              <div className="__header-name">
-                <SensorSelector
-                  className="sensor-selector "
-                  disabled={isRunning}
-                  selectedSensor={widget.sensor}
-                  hideDisplayUnit={true}
-                  onChange={(sensor) => handleSensorChange(widget.id, sensor)}
-                  style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
-                ></SensorSelector>
-              </div>
-              <div className="__header-unit">
-                <span className="header-unit__input">{sensorUnit !== "" ? `(${sensorUnit})` : "--------"}</span>
-              </div>
-            </div>
-          </div>
-          {/* ========================== TABLE BODY ========================== */}
-          <tbody className="wapper__chart__table__body">
-            {[...rows, emptyRow, emptyRow].map((row, index) => {
+              {/* ========================== DYNAMIC COLUMN ========================== */}
+              {widget.sensors.map((sensor, sensorIndex) => (
+                <td
+                  key={`header-row-dynamic-column-${sensorIndex}`}
+                  className="__header-name"
+                  style={PAGE_SETTINGS[chartLayout]["td"]}
+                >
+                  <SensorSelector
+                    className="sensor-selector "
+                    disabled={isRunning}
+                    selectedSensor={sensor}
+                    hideDisplayUnit={true}
+                    onChange={(sensor) => handleSensorChange(widget.id, sensorIndex, sensor)}
+                    style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
+                  ></SensorSelector>
+                  <div className="__header-unit">
+                    <span className="header-unit__input">
+                      {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
+                    </span>
+                  </div>
+                </td>
+              ))}
+            </tr>
+
+            {/* ========================== TABLE CONTENT ========================== */}
+            {[...rows, emptyRow, emptyRow].map((row, rowIndex) => {
+              const { selectedRow, selectedColumn } = selectedElement;
+
               let ref;
               if (!isRunning) ref = null;
               else if (samplingMode === SAMPLING_AUTO) {
-                ref = index === numRows + 1 ? lastRowRef : null;
+                ref = rowIndex === numRows + 1 ? lastRowRef : null;
               } else if (samplingMode === SAMPLING_MANUAL) {
-                ref = index === selectedRow + 1 ? lastRowRef : null;
+                ref = rowIndex === selectedRow + 1 ? lastRowRef : null;
               }
 
+              // Create N number of columns
+              const dynamicColumns = [];
+              for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+                const style = {};
+                if (rowIndex === selectedRow) style["color"] = "#11b444";
+                if (columnIndex + 1 === selectedColumn) style["background"] = "#F2ECEC";
+
+                dynamicColumns.push(
+                  <td
+                    key={`data-row-${rowIndex}-${columnIndex}`}
+                    id={`${rowIndex}_${columnIndex + 1}`}
+                    onClick={handleChangeSelectedColumn}
+                    style={PAGE_SETTINGS[chartLayout]["td"]}
+                  >
+                    <span className="span-value " style={style}>
+                      {row[`column${columnIndex + 1}`]}
+                    </span>
+                  </td>
+                );
+              }
               return (
-                <tr key={index} ref={ref}>
+                <tr key={`data-row-${rowIndex}`} ref={ref}>
                   {/* ========================== FIXED FIRST COLUMN ========================== */}
-                  <td>
+                  <td key={`fixed-data-row-${rowIndex}`} style={PAGE_SETTINGS[chartLayout]["td"]}>
                     {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
-                      <span className="span-input">{row.colum1}</span>
+                      <span className="span-input">{row.column0}</span>
                     ) : (
                       <input
-                        id={index}
+                        id={`${rowIndex}_0`}
                         type="text"
-                        value={userInputs[index] || ""}
+                        value={userInputs[rowIndex] || ""}
                         onChange={userInputHandler}
                         disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
                       />
@@ -278,23 +414,20 @@ const TableWidget = ({ data, currentValue, widget, handleSensorChange, chartLayo
                   </td>
 
                   {/* ========================== SECOND COLUMN ========================== */}
-                  <td id={index} onClick={handleChangeSelectedColumn}>
-                    <span className="span-value " style={index === selectedRow ? { color: "#11b444" } : {}}>
-                      {row.colum2}
-                    </span>
-                  </td>
+                  {dynamicColumns}
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {isShowSummarizedData && (
+        <SummarizedTable chartLayout={chartLayout} datas={datas} sensors={widget.sensors}></SummarizedTable>
+      )}
+
       <div className="expandable-options">
-        <ExpandableOptions
-          expandIcon={tableChartIcon}
-          options={expandableOptions}
-          onChooseOption={onChooseOptionHandler}
-        />
+        <ExpandableOptions expandIcon={tableChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
       </div>
     </div>
   );

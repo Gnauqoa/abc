@@ -3,7 +3,7 @@ import { Link } from "framework7-react";
 import nextImg from "../../../img/activity/next.png";
 import prevImg from "../../../img/activity/prev.png";
 
-export default ({ onNextPage, onPrevPage, isDisabled, navOrder }) => {
+const ActivityPageNav = ({ onNextPage, onPrevPage, isDisabled, navOrder }) => {
   return (
     <div className="activity-nav >">
       <Link onClick={onPrevPage} className={`prev ${isDisabled ? "disabled" : ""}`} href="#">
@@ -16,3 +16,5 @@ export default ({ onNextPage, onPrevPage, isDisabled, navOrder }) => {
     </div>
   );
 };
+
+export default ActivityPageNav;

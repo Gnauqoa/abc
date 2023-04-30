@@ -5,7 +5,8 @@ import "./number.scss";
 import SensorSelector from "../popup-sensor-selector";
 
 export default ({ value, widget, handleSensorChange }) => {
-  const sensor = widget.sensor;
+  const defaultSensorIndex = 0;
+  const sensor = widget.sensors[defaultSensorIndex];
   useEffect(() => {
     function handleResize() {
       $(".__value").css("font-size", $(".number-widget").width() / 7 + "px");
@@ -23,8 +24,8 @@ export default ({ value, widget, handleSensorChange }) => {
       </div>
       <div className="sensor-select-container">
         <SensorSelector
-          selectedSensor={widget.sensor}
-          onChange={(sensor) => handleSensorChange(widget.id, sensor)}
+          selectedSensor={sensor}
+          onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
         ></SensorSelector>
       </div>
     </div>
