@@ -25,7 +25,7 @@ import dialog from "../components/molecules/dialog/dialog";
 import LineChart from "../components/molecules/widget-line-chart";
 import NumberWidget from "../components/molecules/widget-number-chart/number";
 import TableWidget from "../components/molecules/widget-table-chart";
-import WirelessSensorContainer from "../components/molecules/widget-wireless-sensor";
+import SensorContainer from "../components/molecules/widget-sensor-container";
 
 // Import Organisms Components
 import ActivityHeader from "../components/organisms/activity-page-header";
@@ -473,7 +473,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           ble={ble}
         />
         <div className="activity-layout">
-          <WirelessSensorContainer></WirelessSensorContainer>
+          <SensorContainer ble={ble} />
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
               <div className="__card-widget __card-left">

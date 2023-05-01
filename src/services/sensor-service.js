@@ -204,6 +204,11 @@ export class SensorServices {
     return sensorInfo !== undefined && sensorInfo[0] !== undefined ? sensorInfo[0] : {};
   }
 
+  isSensorExist(sensorId) {
+    const sensorIndex = this.sensors.findIndex((sensor) => sensor.id === sensorId);
+    return sensorIndex !== -1 || sensorIndex !== 0;
+  }
+
   updateSensorSetting(sensorId, sensorUnitData) {
     const newSensors = this.sensors.map((sensor) => {
       if (sensor.id === sensorId) {

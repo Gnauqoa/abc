@@ -201,3 +201,7 @@ export const SENSOR_STATUS_OFFLINE = "offline";
 
 export const DEFAULT_SENSOR_ID = -1;
 export const DEFAULT_SENSOR_DATA = { id: DEFAULT_SENSOR_ID, index: 0 };
+
+export const WIDGET_SENSOR_ACTIVE = 0;
+export const WIDGET_SENSOR_INACTIVE = 1;
+export const WIDGET_SENSOR_ID_INACTIVE = -1;

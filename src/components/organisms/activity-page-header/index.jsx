@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Navbar, NavLeft, NavRight, Popover, List, ListItem, f7 } from "framework7-react";
 import BackButton from "../../atoms/back-button";
 import RoundButton from "../../atoms/round-button";
@@ -18,8 +18,6 @@ const ActivityHeader = ({
   handlePageDelete,
   ble,
 }) => {
-  const newPagePopup = useRef();
-  const dataRunManagementPopup = useRef();
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   function handleExportExcel() {
@@ -92,8 +90,8 @@ const ActivityHeader = ({
         </List>
       </Popover>
 
-      <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
-      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
+      <NewPagePopup handleNewPage={handleNewPage} />
+      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} />
       {ble.renderScanPopup()}
     </div>
   );

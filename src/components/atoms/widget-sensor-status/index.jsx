@@ -2,15 +2,16 @@ import React from "react";
 import { Button, Icon } from "framework7-react";
 
 import batteryIcon from "../../../img/battery/100.png";
+import { WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 
-const WirelessSensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect }) => {
+const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, isWireless, status }) => {
   const onDisconnectHandler = () => {
     onDisconnect(sensorId);
   };
   return (
     <>
-      {sensorId === undefined || sensorData === undefined || (sensorIcon === undefined || sensorId) === -1 ? (
+      {status === WIDGET_SENSOR_INACTIVE ? (
         <div className="__inactive">
           <div className="__icon">
             <Icon material="error" size="60"></Icon>
@@ -21,27 +22,29 @@ const WirelessSensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect }
         <div className="__active">
           <div className="__icon">
             <div className="__sensor-icon">
-              <img src={sensorIcon.icon || ""} alt={sensorIcon.label} />
+              <img src={sensorIcon?.icon || ""} alt={sensorIcon?.label} />
             </div>
             <div className="__sensor-name">
-              <span>{sensorIcon.label}</span>
+              <span>{sensorIcon?.label}</span>
             </div>
           </div>
           <div className="__sensor-info">
             <div className="__close-button">
-              <Button
-                onClick={onDisconnectHandler}
-                iconIos={"material:highlight_off"}
-                iconMd={"material:highlight_off"}
-                iconAurora={"material:highlight_off"}
-                iconSize={30}
-              ></Button>
+              {isWireless && (
+                <Button
+                  onClick={onDisconnectHandler}
+                  iconIos={"material:highlight_off"}
+                  iconMd={"material:highlight_off"}
+                  iconAurora={"material:highlight_off"}
+                  iconSize={30}
+                ></Button>
+              )}
             </div>
             <div className="__sensor-value">
               <span>{sensorData}</span>
             </div>
             <div className="__sensor-unit">
-              <span>{sensorIcon.unit}</span>
+              <span>{sensorIcon?.unit}</span>
             </div>
             <div className="__signal-battery">
               <img src={batteryIcon} alt="battery" />
@@ -53,4 +56,4 @@ const WirelessSensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect }
   );
 };
 
-export default WirelessSensorStatus;
+export default SensorStatus;

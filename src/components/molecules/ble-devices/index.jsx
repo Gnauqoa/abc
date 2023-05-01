@@ -49,6 +49,16 @@ export default function useBleDevices() {
         }
       );
 
+      // setDevices((draft) => [
+      //   ...draft,
+      //   {
+      //     id: "00:11:22:33:FF:EE",
+      //     name: "ohstem-Test Device",
+      //     rssi: -50,
+      //     isConnected: true,
+      //   },
+      // ]);
+
       timeoutScanRef.current = setTimeout(handleStopScan, 30000);
     } catch (err) {
       console.error("scan error", err.message);
@@ -89,6 +99,11 @@ export default function useBleDevices() {
         console.error(`Disconnected device ${id} error`, err);
       }
     );
+
+    // setDevices((draft) => {
+    //   const device = draft.find((d) => d.id === id);
+    //   device.isConnected = false;
+    // });
   }
 
   function connect(id) {
@@ -115,6 +130,11 @@ export default function useBleDevices() {
         });
       }
     );
+
+    // setDevices((draft) => {
+    //   const device = draft.find((d) => d.id === id);
+    //   device.isConnected = true;
+    // });
   }
 
   async function sendData(id, data) {
