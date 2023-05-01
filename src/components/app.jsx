@@ -47,28 +47,30 @@ const MyApp = () => {
     // Init cordova APIs (see cordova-app.js)
     if (f7.device.cordova) {
       cordovaApp.init(f7);
-      if (f7.device.android) {
-        navigator.geolocation.getCurrentPosition(
-          () => {},
-          (err) => {
-            logger.error("Cannot enable location", err);
-          }
-        );
-      }
-      /*
-      ble.isEnabled(
-        () => {},
-        () => {
-          // Bluetooth not yet enabled so we try to enable it
-          ble.enable(
+
+      if (f7.device.android || f7.device.ios) {
+        if (f7.device.android) {
+          navigator.geolocation.getCurrentPosition(
             () => {},
             (err) => {
-              logger.error("Cannot enable bluetooth", err);
+              logger.error("Cannot enable location", err);
             }
           );
         }
-      );
-      */
+
+        ble.isEnabled(
+          () => {},
+          () => {
+            // Bluetooth not yet enabled so we try to enable it
+            ble.enable(
+              () => {},
+              (err) => {
+                console.error("Cannot enable bluetooth", err);
+              }
+            );
+          }
+        );
+      }
     }
 
     // Call F7 APIs here
