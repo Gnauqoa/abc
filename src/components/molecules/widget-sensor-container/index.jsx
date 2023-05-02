@@ -23,9 +23,14 @@ const SensorContainer = ({ ble }) => {
   useEffect(() => {
     let intervalId = setInterval(() => {
       const buffer = DataManagerIST.getBuffer();
-      const wiredSensorsInfo = Object.keys(buffer).map((sensorId) => {
-        const { icon, label, unit } = SensorServices.getSensorIcon(sensorId);
-        return {
+      const wiredSensorsInfo = [];
+
+      for (const sensorId of Object.keys(buffer)) {
+        const sensorIcon = SensorServices.getSensorIcon(sensorId);
+        if (!sensorIcon) continue;
+        const { icon, label, unit } = sensorIcon;
+
+        const sensorInfo = {
           sensorId: parseInt(sensorId),
           sensorDatas: buffer[sensorId],
           sensorIcon: {
@@ -35,7 +40,9 @@ const SensorContainer = ({ ble }) => {
           },
           isWireless: false,
         };
-      });
+
+        wiredSensorsInfo.push(sensorInfo);
+      }
 
       setWiredSensorsInfo(wiredSensorsInfo);
     }, CHECK_SENSOR_STATUS_INTERVAL);
@@ -46,10 +53,15 @@ const SensorContainer = ({ ble }) => {
   }, []);
 
   useEffect(() => {
-    const wirelessSensorsInfo = ble.connectedDevices.map((sensor) => {
-      const { icon, label, unit } = SensorServices.getSensorIcon(1);
-      return {
-        sensorId: sensor.id,
+    const wirelessSensorsInfo = [];
+
+    for (const device of Object.keys(ble.connectedDevices)) {
+      const sensorIcon = SensorServices.getSensorIcon(1);
+      if (!sensorIcon) continue;
+      const { icon, label, unit } = sensorIcon;
+
+      const sensorInfo = {
+        sensorId: device.id,
         sensorDatas: 1.0,
         sensorIcon: {
           icon: icon,
@@ -58,7 +70,8 @@ const SensorContainer = ({ ble }) => {
         },
         isWireless: true,
       };
-    });
+      wirelessSensorsInfo.push(sensorInfo);
+    }
 
     setWirelessSensorsInfo(wirelessSensorsInfo);
   }, [ble.connectedDevices]);

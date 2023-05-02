@@ -196,7 +196,7 @@ export class SensorServices {
 
   getSensorIcon(sensorId) {
     const sensorIcon = sensorIcons[sensorId];
-    return sensorIcon !== undefined ? sensorIcon : {};
+    return sensorIcon !== undefined ? sensorIcon : null;
   }
 
   getSensorInfo(sensorId) {
