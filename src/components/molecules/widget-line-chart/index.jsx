@@ -131,6 +131,7 @@ const getAllCurrentNotes = ({ sensorId, sensorIndex, datasetIndex }) => {
     const newNoteElement = {
       ...sampleNote,
       content: note.content,
+      backgroundColor: note.backgroundColor,
       xValue: note.xValue,
       yValue: note.yValue,
       xAdjust: note.xAdjust,
@@ -189,54 +190,63 @@ const onClickChartHandler = (event, elements, chart) => {
 const onEnterNoteElement = ({ chart, element }) => {
   noteElement = element;
   chart.config.options.plugins.zoom.pan.enabled = false;
+  chart.update();
+  return true;
 };
 
 const onLeaveNoteElement = ({ chart, element }) => {
   const noteElementId = element?.options?.id;
   let label = chart.config.options.plugins.annotation.annotations[noteElementId];
+  let currentNote = allNotes[noteElementId];
 
   if (label) {
-    const oldXPixel = chart.scales.x.getPixelForValue(label.xValue);
-    const oldYPixel = chart.scales.y.getPixelForValue(label.yValue);
+    const oldXPixel = chart.scales.x.getPixelForValue(currentNote.xValue);
+    const oldYPixel = chart.scales.y.getPixelForValue(currentNote.yValue);
     const newAdjustPos = {
       xAdjust: element.centerX - oldXPixel,
       yAdjust: element.centerY - oldYPixel,
     };
 
-    label = {
+    chart.config.options.plugins.annotation.annotations[noteElementId] = {
       ...label,
       ...newAdjustPos,
-    };
-
-    const currentNote = {
-      ...allNotes[noteElementId],
-      ...newAdjustPos,
+      backgroundColor: currentNote.backgroundColor,
     };
 
     allNotes = {
       ...allNotes,
-      [noteElementId]: currentNote,
+      [noteElementId]: {
+        ...currentNote,
+        ...newAdjustPos,
+      },
     };
-
-    chart.config.options.plugins.annotation.annotations[noteElementId] = { ...label };
   }
 
   chart.config.options.plugins.zoom.pan.enabled = true;
+  chart.update();
 
   noteElement = undefined;
   lastNoteEvent = undefined;
+  return true;
 };
 
 const onClickNoteElement = ({ element }) => {
+  const elementNoteId = element?.options?.id;
+
   if (selectedNoteElement === element) {
-    selectedNoteElement.options.backgroundColor = NOTE_BACKGROUND_COLOR;
+    element.options.backgroundColor = NOTE_BACKGROUND_COLOR;
+    allNotes[elementNoteId].backgroundColor = NOTE_BACKGROUND_COLOR;
     selectedNoteElement = null;
   } else {
     if (selectedNoteElement !== null) {
-      selectedNoteElement.options.backgroundColor = NOTE_BACKGROUND_COLOR;
+      const prevNoteElementId = selectedNoteElement.options.id;
+      selectedNoteElement.backgroundColor = NOTE_BACKGROUND_COLOR;
+      allNotes[prevNoteElementId].backgroundColor = NOTE_BACKGROUND_COLOR;
     }
+
+    element.options.backgroundColor = NOTE_BACKGROUND_COLOR_ACTIVE;
+    allNotes[elementNoteId].backgroundColor = NOTE_BACKGROUND_COLOR_ACTIVE;
     selectedNoteElement = element;
-    selectedNoteElement.options.backgroundColor = NOTE_BACKGROUND_COLOR_ACTIVE;
   }
 
   return true;
@@ -262,17 +272,22 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
     } else if (newNoteContent) {
       const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
       const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointElement.element.y);
+
       const newNote = {
         id: noteId,
-        content: newNoteContent,
         datasetIndex: selectedPointElement.datasetIndex,
         sensorId: sensorInstance.id,
         sensorIndex: sensorInstance.index,
+
+        content: newNoteContent,
+        backgroundColor: NOTE_BACKGROUND_COLOR,
         xValue: xValueNoteElement,
         yValue: yValueNoteElement,
         xAdjust: -60,
         yAdjust: -60,
       };
+
+      console.log(newNote);
 
       const newNoteElement = {
         ...sampleNote,

@@ -12,11 +12,11 @@ const DISCONNECT_ICON_CLASSNAMES = "icon material-icons";
 const CHECK_SENSOR_STATUS_INTERVAL = 1000;
 
 const SensorContainer = ({ ble }) => {
-  const sensorSettingPopup = useRef();
   const [wiredSensorsInfo, setWiredSensorsInfo] = useState([]);
   const [wirelessSensorsInfo, setWirelessSensorsInfo] = useState([]);
   const [sensorsDataIndex, setSensorsDataIndex] = useState({});
   const [selectedSensorId, setSelectedSensorId] = useState();
+  const [openedPopup, setOpenedPopup] = useState(false);
 
   const sensorsInfo = [...wiredSensorsInfo, ...wirelessSensorsInfo];
 
@@ -87,10 +87,7 @@ const SensorContainer = ({ ble }) => {
       if (!isExist) return;
 
       setSelectedSensorId(sensorId);
-      if (sensorSettingPopup.current) {
-        sensorSettingPopup.current = f7.popup.create({ el: ".sensor-setting-popup", animate: true });
-        sensorSettingPopup.current.open();
-      }
+      setOpenedPopup(true);
     }
   }, []);
 
@@ -111,10 +108,11 @@ const SensorContainer = ({ ble }) => {
   return (
     <div className="__card-sensors">
       <SensorSettingPopup
+        openedPopup={openedPopup}
+        onClosePopup={() => setOpenedPopup(false)}
         sensorId={selectedSensorId}
         sensorDataIndex={sensorsDataIndex?.[selectedSensorId]}
         onSaveSetting={onSaveSettingHandler}
-        ref={sensorSettingPopup}
       />
       {sensorsInfo.length !== 0 ? (
         sensorsInfo.map((sensorInfo) => {

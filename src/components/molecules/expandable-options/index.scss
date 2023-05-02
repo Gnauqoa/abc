@@ -48,3 +48,30 @@
     transform: translateX(0%);
   }
 }
+
+@media only screen and (max-height: 600px) {
+  .row {
+    gap: 5px;
+    .container {
+      height: 40px;
+    }
+
+    .expand-button {
+      width: 45px;
+      height: 45px;
+    }
+  }
+}
+@media only screen and (max-height: 400px) {
+  .row {
+    gap: 2px;
+    .container {
+      height: 35px;
+    }
+
+    .expand-button {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}

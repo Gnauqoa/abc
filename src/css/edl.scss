@@ -95,7 +95,7 @@
       display: flex;
       width: 250px;
       height: 44px;
-      line-height: 44px;
+      // line-height: 44px;
 
       .image {
         display: flex;
@@ -170,7 +170,7 @@
 }
 
 .data-run-management-popup {
-  display: block;
+  // display: block;
   width: 640px;
   height: 500px;
   left: calc(50% - 320px);
@@ -178,4 +178,122 @@
 }
 .data-run-management-popup.popup {
   border-radius: 40px;
+}
+
+// Mobile device
+@media only screen and (max-height: 400px) {
+  .new-page-popup {
+    .responsive {
+      height: 100px;
+    }
+  }
+
+  .data-run-management-popup {
+    width: 340px;
+    height: 260px;
+    left: calc(50% - 170px);
+    top: calc(50% - 130px);
+  }
+}
+
+// Mobile device
+@media only screen and (max-height: 600px) {
+  .new-page-popup {
+    .responsive {
+      height: 120px;
+    }
+  }
+
+  .data-run-management-popup {
+    width: 340px;
+    height: 260px;
+    left: calc(50% - 170px);
+    top: calc(50% - 130px);
+  }
+
+  .navbar-inner {
+    height: 32px;
+    a {
+      width: 30px;
+      height: 30px;
+      i {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .activity-name {
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .activity-layout {
+    width: 98%;
+    height: calc(100% - 80px - 36px);
+    gap: 1%;
+    margin: 1%;
+
+    .__card-sensors {
+      width: 10%;
+    }
+    .__card-left {
+      width: 38%;
+    }
+    .__card-right {
+      width: 52%;
+    }
+  }
+
+  .activity-footer {
+    height: 36px;
+    padding-top: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    .__toolbar-left {
+      .frequency {
+        width: 200px;
+        height: 32px;
+
+        .image {
+          width: 36px;
+          height: 32px;
+
+          img {
+            width: 28px;
+            height: 28px;
+          }
+        }
+
+        .button {
+          height: 32px !important;
+        }
+      }
+    }
+    .__toolbar-right {
+      .timer {
+        width: 100px;
+        height: 32px;
+        font-size: 16px;
+        line-height: 32px;
+        padding-left: 15px;
+      }
+
+      a {
+        height: 32px;
+        width: 32px;
+      }
+    }
+
+    .activity-nav {
+      height: 32px;
+      img {
+        height: 26px;
+        width: 26px;
+      }
+      .order {
+        font-size: 20px;
+      }
+    }
+  }
 }
