@@ -12,6 +12,7 @@
     <icon src="res/icon/electron/app.png" target="app" />
     <icon src="res/icon/electron/installer.png" target="installer" />
     <preference name="DisallowOverscroll" value="true" />
+    <preference name="Orientation" value="landscape" />
     <preference name="BackupWebStorage" value="local" />
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="ShowSplashScreenSpinner" value="false" />
