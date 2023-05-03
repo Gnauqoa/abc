@@ -151,7 +151,7 @@
   width: 35%;
 }
 
-@media only screen and (max-height: 600px) {
+@media only screen and (min-height: 600px) {
   .wapper {
     .summarize {
       height: 100px;
@@ -161,23 +161,25 @@
     }
 
     .expandable-options {
+      height: 50px;
       left: 15px;
       padding-bottom: 5px;
     }
   }
 }
-@media only screen and (max-height: 400px) {
+@media only screen and (max-height: 600px) {
   .wapper {
     .summarize {
-      height: 100px;
+      height: 120px;
       font-size: 16px;
       margin-bottom: 2px;
-      margin-top: 20px;
+      margin-top: 10px;
     }
 
     .expandable-options {
-      left: 10px;
-      padding-bottom: 2px;
+      height: 35px;
+      left: 3px;
+      padding-bottom: 3px;
     }
   }
 }

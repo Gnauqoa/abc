@@ -59,3 +59,22 @@ body {
     border-radius: 4px;
   }
 }
+
+@media only screen and (max-height: 600px) {
+  .line-chart-wapper {
+    .sensor-selector {
+      height: 40px;
+    }
+    .sensor-selector .button {
+      font-size: 10px;
+    }
+
+    .canvas-container .expandable-options {
+      height: 40px;
+      width: 100%;
+      position: relative;
+      left: -55px;
+      bottom: 32px;
+    }
+  }
+}
