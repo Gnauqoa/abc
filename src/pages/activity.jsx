@@ -33,7 +33,7 @@ import ActivityFooter from "../components/organisms/activity-page-footer";
 
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import useBleDevices from "../components/molecules/ble-devices";
+import useDeviceManager from "../components/molecules/device-manager";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -92,7 +92,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   const tableRef = useRef();
   const lineChartRef = useRef([]);
   let prevChartDataRef = useRef([]);
-  const ble = useBleDevices();
+  const deviceManager = useDeviceManager();
 
   useEffect(() => {
     DataManagerIST.init();
@@ -470,7 +470,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           handleActivitySave={handleActivitySave}
           handleNewPage={handleNewPage}
           handlePageDelete={handlePageDelete}
-          ble={ble}
+          deviceManager={deviceManager}
         />
         <div className="activity-layout">
           <SensorContainer ble={ble} />

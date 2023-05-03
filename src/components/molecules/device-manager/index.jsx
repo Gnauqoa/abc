@@ -1,15 +1,18 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { useImmer } from "use-immer";
 import { Popup, Page, Navbar, NavRight, Link, Block, Button, List, ListItem } from "framework7-react";
 import "./index.scss";
 
+import SensorServices from "../../../services/sensor-service";
+
 const BLE_SERVICE_ID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_RX_ID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_TX_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
-const DEVICE_PREFIX = "ohstem-";
+const DEVICE_PREFIX = "inno-";
 const LIMIT_BYTE_BLE = 99;
+import { USB_TYPE, BLE_TYPE } from "../../../js/constants";
 
-export default function useBleDevices() {
+export default function useDeviceManager() {
   const [devices, setDevices] = useImmer([]);
   const scanPopupRef = useRef(null);
   const timeoutScanRef = useRef(null);
@@ -26,8 +29,8 @@ export default function useBleDevices() {
         (device) => {
           console.log(JSON.stringify(device));
           if (
-            device?.name?.substring(0, DEVICE_PREFIX.length) === DEVICE_PREFIX ||
-            device?.advertising?.kCBAdvDataLocalName?.substring(0, DEVICE_PREFIX.length) === DEVICE_PREFIX
+            device?.name?.includes(DEVICE_PREFIX) ||
+            device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
           ) {
             const deviceIndex = devices.findIndex((d) => d.id === device.id);
             if (deviceIndex < 0) {
@@ -36,11 +39,13 @@ export default function useBleDevices() {
                 deviceName = device.advertising.kCBAdvDataLocalName;
               }
               const newFoundDevice = {
-                id: device.id,
-                name: deviceName,
+                deviceId: device.id,
+                code: deviceName,
                 rssi: device.rssi,
+                type: BLE_TYPE,
               };
-              setDevices((draft) => [...draft, newFoundDevice]);
+              const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
+              sensor && setDevices((draft) => [...draft, { ...sensor, ...newFoundDevice }]);
             }
           }
         },
@@ -77,26 +82,26 @@ export default function useBleDevices() {
 
   //   }, []);
 
-  function toggleConnectDevice(id) {
-    const device = devices.find((d) => d.id === id);
+  function toggleConnectDevice(deviceId) {
+    const device = devices.find((d) => d.deviceId === deviceId);
     if (device.isConnected) {
-      disconnect(id);
+      disconnect(deviceId);
     } else {
-      connect(id);
+      connect(deviceId);
     }
   }
 
-  function disconnect(id) {
+  function disconnect(deviceId) {
     ble.disconnect(
-      id,
+      deviceId,
       () => {
         setDevices((draft) => {
-          const device = draft.find((d) => d.id === id);
+          const device = draft.find((d) => d.deviceId === deviceId);
           device.isConnected = false;
         });
       },
       (err) => {
-        console.error(`Disconnected device ${id} error`, err);
+        console.error(`Disconnected device ${deviceId} error`, err);
       }
     );
 
@@ -106,26 +111,26 @@ export default function useBleDevices() {
     // });
   }
 
-  function connect(id) {
+  function connect(deviceId) {
     ble.connect(
-      id,
+      deviceId,
       () => {
         setDevices((draft) => {
-          const device = draft.find((d) => d.id === id);
+          const device = draft.find((d) => d.deviceId === deviceId);
           device.isConnected = true;
         });
         ble.requestConnectionPriority(
-          id,
+          deviceId,
           "high",
           () => {},
           () => {
-            console.error(`Device ${id} requestConnectionPriority error`);
+            console.error(`Device ${deviceId} requestConnectionPriority error`);
           }
         );
       },
       () => {
         setDevices((draft) => {
-          const device = draft.find((d) => d.id === id);
+          const device = draft.find((d) => d.deviceId === deviceId);
           device.isConnected = false;
         });
       }
@@ -137,7 +142,7 @@ export default function useBleDevices() {
     // });
   }
 
-  async function sendData(id, data) {
+  async function sendData(deviceId, data) {
     try {
       const encoder = new TextEncoder();
       const encodedAll = encoder.encode(`${data}\r`);
@@ -145,11 +150,11 @@ export default function useBleDevices() {
         const chunkSize = Math.round(data.length / Math.ceil(encodedAll.length / LIMIT_BYTE_BLE));
         const chunks = data.match(new RegExp(".{1," + chunkSize + "}", "g"));
         for (const item of chunks) {
-          await sendBleData(id, encoder.encode(item));
+          await sendBleData(deviceId, encoder.encode(item));
         }
-        await sendBleData(id, encoder.encode("\r"));
+        await sendBleData(deviceId, encoder.encode("\r"));
       } else {
-        await sendBleData(id, encoder.encode(`${data}\r`));
+        await sendBleData(deviceId, encoder.encode(`${data}\r`));
       }
     } catch (err) {
       console.error("sendData error", err);
@@ -157,10 +162,10 @@ export default function useBleDevices() {
     }
   }
 
-  function sendBleData(id, data) {
+  function sendBleData(deviceId, data) {
     return new Promise((resolve, reject) => {
       ble.write(
-        id,
+        deviceId,
         BLE_SERVICE_ID,
         BLE_RX_ID,
         data.buffer,
@@ -168,16 +173,16 @@ export default function useBleDevices() {
           resolve(res);
         },
         (err) => {
-          console.error(`sendDataToDevice ${id} error`, err);
+          console.error(`sendDataToDevice ${deviceId} error`, err);
           reject(err);
         }
       );
     });
   }
 
-  function receiveDataCallback(id, callback) {
+  function receiveDataCallback(deviceId, callback) {
     ble.startNotification(
-      id,
+      deviceId,
       BLE_SERVICE_ID,
       BLE_TX_ID,
       (buffer) => {
@@ -211,13 +216,13 @@ export default function useBleDevices() {
           </Block>
           <Block>
             <List dividersIos outlineIos strongIos>
-              {devices.map((device) => (
+              {devices.map((d) => (
                 <ListItem
-                  key={device.id}
+                  key={d.deviceId}
                   link="#"
-                  title={device.name}
-                  after={device.isConnected ? "Ngắt kết nối" : "Kết nối"}
-                  onClick={() => toggleConnectDevice(device.id)}
+                  title={d.name}
+                  after={d.isConnected ? "Ngắt kết nối" : "Kết nối"}
+                  onClick={() => toggleConnectDevice(d.deviceId)}
                 ></ListItem>
               ))}
             </List>
