@@ -24,6 +24,7 @@ export const defaultSensors = [
   },
   {
     id: 1,
+    code: "inno-001-co2",
     name: "Cảm biến nồng độ khí C02",
     data: [
       {
@@ -37,21 +38,25 @@ export const defaultSensors = [
   },
   {
     id: 2,
+    code: "inno-002-do",
     name: "Cảm biến Oxi hòa tan trong nước",
     data: [{ id: "inno-002-do", name: "DO", unit: "mg/L", min: 0, max: 20 }],
   },
   {
     id: 3,
+    code: "inno-003-o2",
     name: "Cảm biến nồng độ Oxi trong không khí",
     data: [{ id: "inno-003-o2", name: "Nồng độ Oxi không khí", unit: "%", min: 0, max: 30 }],
   },
   {
     id: 4,
+    code: "inno-004-tem",
     name: "Cảm biến nhiệt độ",
     data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125 }],
   },
   {
     id: 5,
+    code: "inno-005-hum",
     name: "Cảm biến nhiệt độ và độ ẩm không khí",
     data: [
       { id: "inno-005-hum-00", name: "Nhiệt độ", unit: "°C", min: 0, max: 80 },
@@ -60,6 +65,7 @@ export const defaultSensors = [
   },
   {
     id: 6,
+    code: "inno-006-sal",
     name: "Cảm biến độ mặn nước",
     data: [
       { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50 },
@@ -74,16 +80,19 @@ export const defaultSensors = [
   },
   {
     id: 7,
+    code: "inno-007-ph",
     name: "Cảm biến PH",
     data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14 }],
   },
   {
     id: 8,
+    code: "inno-008-dba",
     name: "Cảm biến cường độ âm thanh",
     data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150 }],
   },
   {
     id: 9,
+    code: "inno-009-kpa",
     name: "Cảm biến áp suất khí",
     data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 50 }],
   },
@@ -232,6 +241,11 @@ export class SensorServices {
   importSensors(sensors, customSensors) {
     this.sensors = [...sensors];
     this.customSensors = [...customSensors];
+  }
+
+  getSensorByCode(code) {
+    const sensorInfo = this.sensors.filter((sensor) => code.includes(sensor.code));
+    return sensorInfo.length > 0 ? sensorInfo[0] : null;
   }
 }
 

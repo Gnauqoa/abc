@@ -16,7 +16,7 @@ const ActivityHeader = ({
   handleActivitySave,
   handleNewPage,
   handlePageDelete,
-  ble,
+  deviceManager,
 }) => {
   const newPagePopup = useRef();
   const dataRunManagementPopup = useRef();
@@ -75,7 +75,7 @@ const ActivityHeader = ({
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
           <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
-          <RoundButton icon="bluetooth" onClick={() => ble.openScanPopup()} />
+          <RoundButton icon="bluetooth" onClick={() => deviceManager.openScanPopup()} />
           <RoundButton
             disabled={isRunning}
             icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
@@ -94,7 +94,7 @@ const ActivityHeader = ({
 
       <NewPagePopup handleNewPage={handleNewPage} ref={newPagePopup} />
       <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} ref={dataRunManagementPopup} />
-      {ble.renderScanPopup()}
+      {deviceManager.renderScanPopup()}
     </div>
   );
 };
