@@ -2,10 +2,10 @@ import React from "react";
 import { Button, Icon } from "framework7-react";
 
 import batteryIcon from "../../../img/battery/100.png";
-import { WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
+import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 
-const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, isWireless, status }) => {
+const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, type, status }) => {
   const onDisconnectHandler = () => {
     onDisconnect(sensorId);
   };
@@ -30,7 +30,7 @@ const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, isWirele
           </div>
           <div className="__sensor-info">
             <div className="__close-button">
-              {isWireless && (
+              {type === BLE_TYPE && (
                 <Button
                   onClick={onDisconnectHandler}
                   iconIos={"material:highlight_off"}

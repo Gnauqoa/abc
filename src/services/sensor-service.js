@@ -9,6 +9,7 @@ import soundSensorIcon from "../img/sensor-info/sound.png";
 import salinitySensorIcon from "../img/sensor-info/salinity.png";
 import tempSensorIcon from "../img/sensor-info/temp.png";
 import pressureSensorIcon from "../img/sensor-info/pressure.png";
+import { BLE_TYPE, USB_TYPE } from "../js/constants";
 
 export const defaultSensors = [
   {
@@ -26,6 +27,7 @@ export const defaultSensors = [
     id: 1,
     code: "inno-001-co2",
     name: "Cảm biến nồng độ khí C02",
+    type: USB_TYPE,
     data: [
       {
         id: "inno-001-co2",
@@ -40,24 +42,28 @@ export const defaultSensors = [
     id: 2,
     code: "inno-002-do",
     name: "Cảm biến Oxi hòa tan trong nước",
+    type: USB_TYPE,
     data: [{ id: "inno-002-do", name: "DO", unit: "mg/L", min: 0, max: 20 }],
   },
   {
     id: 3,
     code: "inno-003-o2",
     name: "Cảm biến nồng độ Oxi trong không khí",
+    type: USB_TYPE,
     data: [{ id: "inno-003-o2", name: "Nồng độ Oxi không khí", unit: "%", min: 0, max: 30 }],
   },
   {
     id: 4,
     code: "inno-004-tem",
     name: "Cảm biến nhiệt độ",
+    type: USB_TYPE,
     data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125 }],
   },
   {
     id: 5,
     code: "inno-005-hum",
     name: "Cảm biến nhiệt độ và độ ẩm không khí",
+    type: USB_TYPE,
     data: [
       { id: "inno-005-hum-00", name: "Nhiệt độ", unit: "°C", min: 0, max: 80 },
       { id: "inno-005-temp-01", name: "Độ ẩm", unit: "%", min: 0, max: 100 },
@@ -67,6 +73,7 @@ export const defaultSensors = [
     id: 6,
     code: "inno-006-sal",
     name: "Cảm biến độ mặn nước",
+    type: USB_TYPE,
     data: [
       { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50 },
       {
@@ -82,19 +89,29 @@ export const defaultSensors = [
     id: 7,
     code: "inno-007-ph",
     name: "Cảm biến PH",
+    type: USB_TYPE,
     data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14 }],
   },
   {
     id: 8,
     code: "inno-008-dba",
     name: "Cảm biến cường độ âm thanh",
+    type: USB_TYPE,
     data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150 }],
   },
   {
     id: 9,
     code: "inno-009-kpa",
     name: "Cảm biến áp suất khí",
+    type: USB_TYPE,
     data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 50 }],
+  },
+  {
+    id: 10,
+    code: "inno-010-test",
+    name: "Cảm biến áp suất khí",
+    type: BLE_TYPE,
+    data: [{ id: "inno-010-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 50 }],
   },
 ];
 
@@ -144,6 +161,11 @@ const sensorIcons = {
     icon: pressureSensorIcon,
     label: "Áp suất khí",
     unit: "kPa",
+  },
+  10: {
+    icon: phSensorIcon,
+    label: "PH",
+    unit: "pH",
   },
 };
 
@@ -209,8 +231,8 @@ export class SensorServices {
   }
 
   getSensorInfo(sensorId) {
-    const sensorInfo = this.sensors.filter((sensor) => sensor.id === sensorId);
-    return sensorInfo !== undefined && sensorInfo[0] !== undefined ? sensorInfo[0] : {};
+    const sensorInfo = this.sensors.filter((sensor) => sensor.id === Number(sensorId));
+    return sensorInfo !== undefined && sensorInfo[0] !== undefined ? sensorInfo[0] : null;
   }
 
   isSensorExist(sensorId) {

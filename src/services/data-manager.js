@@ -561,6 +561,7 @@ export class DataManager {
       const dataLength = data[2];
       const sensorsData = [];
       const sensorInfo = SensorServices.getSensorInfo(parseInt(sensorId));
+      if (sensorInfo === null) return;
 
       for (let i = 0; i < dataLength; i++) {
         const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
@@ -734,7 +735,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (6 - 6) + 6).toFixed(0);
+      const sensorId = (Math.random() * (9 - 9) + 9).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));

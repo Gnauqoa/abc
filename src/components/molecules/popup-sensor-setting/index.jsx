@@ -29,7 +29,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
 
   const getSensors = () => {
     const sensorInfo = SensorServices.getSensorInfo(sensorId);
-    setSensorInfo(sensorInfo);
+    sensorInfo !== null && setSensorInfo(sensorInfo);
   };
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {

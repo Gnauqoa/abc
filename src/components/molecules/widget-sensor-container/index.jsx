@@ -11,26 +11,25 @@ import SensorServices from "../../../services/sensor-service";
 const DISCONNECT_ICON_CLASSNAMES = "icon material-icons";
 const CHECK_SENSOR_STATUS_INTERVAL = 1000;
 
-const SensorContainer = ({ ble }) => {
-  const [wiredSensorsInfo, setWiredSensorsInfo] = useState([]);
-  const [wirelessSensorsInfo, setWirelessSensorsInfo] = useState([]);
+const SensorContainer = () => {
+  const [sensorsInfo, setSensorsInfo] = useState([]);
   const [sensorsDataIndex, setSensorsDataIndex] = useState({});
   const [selectedSensorId, setSelectedSensorId] = useState();
   const [openedPopup, setOpenedPopup] = useState(false);
 
-  const sensorsInfo = [...wiredSensorsInfo, ...wirelessSensorsInfo];
-
   useEffect(() => {
     let intervalId = setInterval(() => {
       const buffer = DataManagerIST.getBuffer();
-      const wiredSensorsInfo = [];
+      const sensors = [];
 
       for (const sensorId of Object.keys(buffer)) {
         const sensorIcon = SensorServices.getSensorIcon(sensorId);
-        if (!sensorIcon) continue;
+        const sensorInfo = SensorServices.getSensorInfo(sensorId);
+
+        if (!sensorIcon || !sensorInfo) continue;
         const { icon, label, unit } = sensorIcon;
 
-        const sensorInfo = {
+        const sensor = {
           sensorId: parseInt(sensorId),
           sensorDatas: buffer[sensorId],
           sensorIcon: {
@@ -38,43 +37,19 @@ const SensorContainer = ({ ble }) => {
             label: label,
             unit: unit,
           },
-          isWireless: false,
+          type: sensorInfo.type,
         };
 
-        wiredSensorsInfo.push(sensorInfo);
+        sensors.push(sensor);
       }
 
-      setWiredSensorsInfo(wiredSensorsInfo);
+      setSensorsInfo(sensors);
     }, CHECK_SENSOR_STATUS_INTERVAL);
 
     return () => {
       clearInterval(intervalId);
     };
   }, []);
-
-  useEffect(() => {
-    const wirelessSensorsInfo = [];
-
-    for (const device of Object.keys(ble.connectedDevices)) {
-      const sensorIcon = SensorServices.getSensorIcon(1);
-      if (!sensorIcon) continue;
-      const { icon, label, unit } = sensorIcon;
-
-      const sensorInfo = {
-        sensorId: device.id,
-        sensorDatas: 1.0,
-        sensorIcon: {
-          icon: icon,
-          label: label,
-          unit: unit,
-        },
-        isWireless: true,
-      };
-      wirelessSensorsInfo.push(sensorInfo);
-    }
-
-    setWirelessSensorsInfo(wirelessSensorsInfo);
-  }, [ble.connectedDevices]);
 
   const onChooseSensorHandler = useCallback((event) => {
     if (event.target.className === DISCONNECT_ICON_CLASSNAMES) return;
@@ -93,7 +68,7 @@ const SensorContainer = ({ ble }) => {
 
   const onDisconnectHandler = (sensorId) => {
     console.log("remove sensorId: ", sensorId);
-    ble.disconnect(sensorId);
+    // useDeviceManager.disconnect(sensorId);
   };
 
   const onSaveSettingHandler = (sensorId, newSensorUnitInfo) => {
@@ -114,33 +89,27 @@ const SensorContainer = ({ ble }) => {
         sensorDataIndex={sensorsDataIndex?.[selectedSensorId]}
         onSaveSetting={onSaveSettingHandler}
       />
-      {sensorsInfo.length !== 0 ? (
-        sensorsInfo.map((sensorInfo) => {
-          const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
-          const sensorData = sensorInfo.sensorDatas?.[dataIndex];
-          return (
-            <div
-              key={sensorInfo.sensorId}
-              id={sensorInfo.sensorId}
-              className="wireless-sensor-info"
-              onClick={onChooseSensorHandler}
-            >
-              <SensorStatus
-                sensorId={sensorInfo.sensorId}
-                sensorData={sensorData}
-                sensorIcon={sensorInfo.sensorIcon}
-                onDisconnect={onDisconnectHandler}
-                isWireless={sensorInfo.isWireless}
-                status={WIDGET_SENSOR_ACTIVE}
-              ></SensorStatus>
-            </div>
-          );
-        })
-      ) : (
-        <div key={WIDGET_SENSOR_ID_INACTIVE} id={WIDGET_SENSOR_ID_INACTIVE} className="wireless-sensor-info">
-          <SensorStatus sensorId={WIDGET_SENSOR_ID_INACTIVE} status={WIDGET_SENSOR_INACTIVE}></SensorStatus>
-        </div>
-      )}
+      {sensorsInfo.map((sensorInfo) => {
+        const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
+        const sensorData = sensorInfo.sensorDatas?.[dataIndex];
+        return (
+          <div
+            key={sensorInfo.sensorId}
+            id={sensorInfo.sensorId}
+            className="wireless-sensor-info"
+            onClick={onChooseSensorHandler}
+          >
+            <SensorStatus
+              sensorId={sensorInfo.sensorId}
+              sensorData={sensorData}
+              sensorIcon={sensorInfo.sensorIcon}
+              onDisconnect={onDisconnectHandler}
+              type={sensorInfo.type}
+              status={WIDGET_SENSOR_ACTIVE}
+            ></SensorStatus>
+          </div>
+        );
+      })}
     </div>
   );
 };
