@@ -595,8 +595,8 @@ export class DataManager {
       const sensorId = parseInt(data[0]);
       const source = data[1];
 
-      if (source === BLE_TYPE && this.uartConnections.has(sensorId)) {
-        return;
+      if (source === BLE_TYPE) {
+        if (this.uartConnections.has(sensorId)) return;
       } else {
         this.uartConnections.delete(sensorId);
       }
