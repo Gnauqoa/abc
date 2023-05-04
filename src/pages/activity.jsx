@@ -473,7 +473,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           deviceManager={deviceManager}
         />
         <div className="activity-layout">
-          <SensorContainer />
+          <SensorContainer deviceManager={deviceManager} />
           {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(layout) && (
             <>
               <div className="__card-widget __card-left">

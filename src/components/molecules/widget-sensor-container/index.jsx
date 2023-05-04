@@ -11,7 +11,7 @@ import SensorServices from "../../../services/sensor-service";
 const DISCONNECT_ICON_CLASSNAMES = "icon material-icons";
 const CHECK_SENSOR_STATUS_INTERVAL = 1000;
 
-const SensorContainer = () => {
+const SensorContainer = ({ deviceManager }) => {
   const [sensorsInfo, setSensorsInfo] = useState([]);
   const [sensorsDataIndex, setSensorsDataIndex] = useState({});
   const [selectedSensorId, setSelectedSensorId] = useState();
@@ -68,7 +68,7 @@ const SensorContainer = () => {
 
   const onDisconnectHandler = (sensorId) => {
     console.log("remove sensorId: ", sensorId);
-    // useDeviceManager.disconnect(sensorId);
+    deviceManager.disconnect({ id: sensorId });
   };
 
   const onSaveSettingHandler = (sensorId, newSensorUnitInfo) => {
