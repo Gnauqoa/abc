@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Page, Navbar, Button, f7, Popup, NavLeft, NavTitle } from "framework7-react";
 
 import SensorServices from "../../../services/sensor-service";
@@ -17,7 +17,8 @@ const settingTabs = {
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
 };
 
-const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) => {
+const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
+  const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [sensorInfo, setSensorInfo] = useState({});
 
@@ -28,20 +29,20 @@ const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) =
 
   const getSensors = () => {
     const sensorInfo = SensorServices.getSensorInfo(sensorId);
-    setSensorInfo(sensorInfo);
+    sensorInfo !== null && setSensorInfo(sensorInfo);
   };
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServices.updateSensorSetting(sensorId, newSensorUnitInfo);
     onSaveSetting(sensorId, newSensorUnitInfo);
     getSensors();
-    f7.popup.close();
+    onClosePopup();
   };
 
   const onSaveSensorCalibratingHandler = (calculatedValues) => {
     const { k, offset } = calculatedValues;
     console.log("y = ax + b => ", `y = ${k}x + ${offset}`);
-    f7.popup.close();
+    onClosePopup();
   };
 
   const onChangeTab = (event) => {
@@ -50,7 +51,12 @@ const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) =
   };
 
   return (
-    <Popup className="sensor-setting-popup" ref={ref}>
+    <Popup
+      opened={openedPopup}
+      onPopupClosed={onClosePopup}
+      className="sensor-setting-popup"
+      ref={sensorSettingPopupRef}
+    >
       <Page className="sensor-setting">
         <Navbar>
           <NavLeft>
@@ -103,4 +109,4 @@ const SensorSettingPopup = ({ sensorId, sensorDataIndex, onSaveSetting }, ref) =
   );
 };
 
-export default forwardRef(SensorSettingPopup);
+export default SensorSettingPopup;

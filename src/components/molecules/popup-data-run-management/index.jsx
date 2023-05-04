@@ -1,8 +1,9 @@
-import React, { forwardRef, useRef } from "react";
+import React, { useRef } from "react";
 import { Navbar, Button, Page, Popup } from "framework7-react";
 import DataManagerIST from "../../../services/data-manager";
 
-const DataRunManagementPopup = ({ handleChangeDataRun }, ref) => {
+const DataRunManagementPopup = ({ handleChangeDataRun }) => {
+  const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const inputRef = useRef();
 
@@ -22,7 +23,7 @@ const DataRunManagementPopup = ({ handleChangeDataRun }, ref) => {
   };
 
   return (
-    <Popup className="data-run-management-popup" ref={ref}>
+    <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef}>
       <Page className="data-run-management">
         <Navbar className="data-run-management-header" title="Quản lý dữ liệu"></Navbar>
         <div className="list-data-run">
@@ -62,4 +63,4 @@ const DataRunManagementPopup = ({ handleChangeDataRun }, ref) => {
   );
 };
 
-export default forwardRef(DataRunManagementPopup);
+export default DataRunManagementPopup;

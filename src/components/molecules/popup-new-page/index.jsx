@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { useRef } from "react";
 import { f7, Button } from "framework7-react";
 import { Page, Link, Navbar, NavTitle, Row, Col, NavLeft, Block, Popup } from "framework7-react";
 
@@ -18,14 +18,15 @@ import numberImg from "../../../img/layout/number.png";
 import tableChartImg from "../../../img/layout/table-chart.png";
 import tableImg from "../../../img/layout/table.png";
 
-const NewPagePopup = ({ handleNewPage }, ref) => {
+const NewPagePopup = ({ handleNewPage }) => {
+  const newPagePopupRef = useRef();
   const conSelectHandler = (event) => {
     const chartType = event.currentTarget.id;
     handleNewPage(chartType);
     f7.popup.close();
   };
   return (
-    <Popup className="new-page-popup" ref={ref}>
+    <Popup className="new-page-popup" ref={newPagePopupRef}>
       <Page className="bg-color-regal-blue">
         <Navbar>
           <NavLeft>
@@ -82,4 +83,4 @@ const NewPagePopup = ({ handleNewPage }, ref) => {
   );
 };
 
-export default forwardRef(NewPagePopup);
+export default NewPagePopup;

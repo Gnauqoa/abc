@@ -145,6 +145,11 @@ const sensorIcons = {
     label: "Áp suất khí",
     unit: "kPa",
   },
+  10: {
+    icon: phSensorIcon,
+    label: "PH",
+    unit: "pH",
+  },
 };
 
 export class SensorServices {
@@ -205,12 +210,17 @@ export class SensorServices {
 
   getSensorIcon(sensorId) {
     const sensorIcon = sensorIcons[sensorId];
-    return sensorIcon !== undefined ? sensorIcon : {};
+    return sensorIcon !== undefined ? sensorIcon : null;
   }
 
   getSensorInfo(sensorId) {
-    const sensorInfo = this.sensors.filter((sensor) => sensor.id === sensorId);
-    return sensorInfo !== undefined && sensorInfo[0] !== undefined ? sensorInfo[0] : {};
+    const sensorInfo = this.sensors.filter((sensor) => sensor.id === Number(sensorId));
+    return sensorInfo !== undefined && sensorInfo[0] !== undefined ? sensorInfo[0] : null;
+  }
+
+  isSensorExist(sensorId) {
+    const sensorIndex = this.sensors.findIndex((sensor) => sensor.id === sensorId);
+    return sensorIndex !== -1 || sensorIndex !== 0;
   }
 
   updateSensorSetting(sensorId, sensorUnitData) {

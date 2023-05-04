@@ -10,7 +10,6 @@ import { SAMPLING_AUTO, SAMPLING_MANUAL, DEFAULT_SENSOR_ID } from "../../../js/c
 import tableChartIcon from "../../../img/expandable-options/table.png";
 import {
   expandableOptions,
-  PAGE_SETTINGS,
   DEFAULT_ROWS,
   FIRST_COLUMN_DEFAULT_OPT,
   FIRST_COLUMN_CUSTOM_OPT,
@@ -316,13 +315,12 @@ const TableWidget = (
             {/* ========================== TABLE HEADER ========================== */}
             <tr key="header-row" className="__header-column">
               {/* ========================== FIXED FIRST COLUMN ========================== */}
-              <td key="header-row-fixed-column" className="__header-name" style={PAGE_SETTINGS[chartLayout]["td"]}>
+              <td key="header-row-fixed-column" className="__header-name">
                 <select
                   className="custom-select"
                   disabled={isRunning}
                   value={firstColumnOption}
                   onChange={handleFirstColumSelector}
-                  style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
                 >
                   <option value={"defaultSensorSelectedValue"} disabled>
                     Chọn thông tin
@@ -342,18 +340,13 @@ const TableWidget = (
 
               {/* ========================== DYNAMIC COLUMN ========================== */}
               {widget.sensors.map((sensor, sensorIndex) => (
-                <td
-                  key={`header-row-dynamic-column-${sensorIndex}`}
-                  className="__header-name"
-                  style={PAGE_SETTINGS[chartLayout]["td"]}
-                >
+                <td key={`header-row-dynamic-column-${sensorIndex}`} className="__header-name">
                   <SensorSelector
                     className="sensor-selector "
                     disabled={isRunning}
                     selectedSensor={sensor}
                     hideDisplayUnit={true}
                     onChange={(sensor) => handleSensorChange(widget.id, sensorIndex, sensor)}
-                    style={PAGE_SETTINGS[chartLayout]["header-name-selector"]}
                   ></SensorSelector>
                   <div className="__header-unit">
                     <span className="header-unit__input">
@@ -388,7 +381,6 @@ const TableWidget = (
                     key={`data-row-${rowIndex}-${columnIndex}`}
                     id={`${rowIndex}_${columnIndex + 1}`}
                     onClick={handleChangeSelectedColumn}
-                    style={PAGE_SETTINGS[chartLayout]["td"]}
                   >
                     <span className="span-value " style={style}>
                       {row[`column${columnIndex + 1}`]}
@@ -399,7 +391,7 @@ const TableWidget = (
               return (
                 <tr key={`data-row-${rowIndex}`} ref={ref}>
                   {/* ========================== FIXED FIRST COLUMN ========================== */}
-                  <td key={`fixed-data-row-${rowIndex}`} style={PAGE_SETTINGS[chartLayout]["td"]}>
+                  <td key={`fixed-data-row-${rowIndex}`}>
                     {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
                       <span className="span-input">{row.column0}</span>
                     ) : (

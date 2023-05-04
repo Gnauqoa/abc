@@ -11,6 +11,7 @@ const BLE_TX_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 const DEVICE_PREFIX = "inno-";
 const LIMIT_BYTE_BLE = 99;
 import { USB_TYPE, BLE_TYPE } from "../../../js/constants";
+import DataManagerIST from "../../../services/data-manager";
 
 export default function useDeviceManager() {
   const [devices, setDevices] = useImmer([]);
@@ -53,8 +54,22 @@ export default function useDeviceManager() {
           console.error("ble.startScan", err);
         }
       );
-
       timeoutScanRef.current = setTimeout(handleStopScan, 30000);
+
+      // const dummyDeviceId = "test-device-id";
+      // const dummyDeviceName = "inno-009-kpa";
+      // const deviceIndex = devices.findIndex((d) => d.id === dummyDeviceId);
+      // if (deviceIndex < 0) {
+      //   let deviceName = dummyDeviceName || dummyDeviceId;
+      //   const newFoundDevice = {
+      //     deviceId: dummyDeviceId,
+      //     code: deviceName,
+      //     rssi: "dummy",
+      //     type: BLE_TYPE,
+      //   };
+      //   const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
+      //   sensor && setDevices((draft) => [...draft, { ...sensor, ...newFoundDevice }]);
+      // }
     } catch (err) {
       console.error("scan error", err.message);
     }
@@ -68,20 +83,27 @@ export default function useDeviceManager() {
     });
   }
 
-  //   useEffect(() => {
-
-  //   }, []);
-
   function toggleConnectDevice(deviceId) {
     const device = devices.find((d) => d.deviceId === deviceId);
     if (device.isConnected) {
-      disconnect(deviceId);
+      disconnect({ deviceId });
     } else {
       connect(deviceId);
     }
   }
 
-  function disconnect(deviceId) {
+  function disconnect({ deviceId, id }) {
+    let device;
+    if (deviceId !== undefined) {
+      device = devices.find((d) => d.deviceId === deviceId);
+    } else if (id !== undefined) {
+      device = devices.find((d) => d.id === id);
+    } else return;
+
+    if (device === undefined) return;
+    id = device.id;
+    deviceId = device.deviceId;
+
     ble.disconnect(
       deviceId,
       () => {
@@ -89,11 +111,19 @@ export default function useDeviceManager() {
           const device = draft.find((d) => d.deviceId === deviceId);
           device.isConnected = false;
         });
+
+        DataManagerIST.callbackSensorDisconnected([id]);
       },
       (err) => {
         console.error(`Disconnected device ${deviceId} error`, err);
       }
     );
+
+    // setDevices((draft) => {
+    //   const device = draft.find((d) => d.deviceId === deviceId);
+    //   device.isConnected = false;
+    // });
+    // DataManagerIST.callbackSensorDisconnected([id]);
   }
 
   function connect(deviceId) {
@@ -112,6 +142,7 @@ export default function useDeviceManager() {
             console.error(`Device ${deviceId} requestConnectionPriority error`);
           }
         );
+        receiveDataCallback(deviceId, onDataCallback);
       },
       () => {
         setDevices((draft) => {
@@ -120,6 +151,27 @@ export default function useDeviceManager() {
         });
       }
     );
+
+    // setDevices((draft) => {
+    //   const device = draft.find((d) => d.deviceId === deviceId);
+    //   device.isConnected = true;
+    // });
+    // receiveDataCallback(deviceId, onDataCallback);
+  }
+
+  function onDataCallback(data) {
+    if (data === undefined) return;
+
+    data = data.trim();
+
+    const dataSplit = data.split(",");
+    const dataSplitLength = dataSplit.length;
+
+    if (dataSplitLength < 4 || dataSplit[0] !== "@" || dataSplit[dataSplitLength - 1] !== "*") return;
+
+    // [sensorId, usbPort, dataLength, datas]
+    const dataParsed = [dataSplit[1], BLE_TYPE, dataSplitLength - 3, ...dataSplit.slice(2, dataSplitLength - 1)];
+    DataManagerIST.callbackReadSensor(dataParsed);
   }
 
   async function sendData(deviceId, data) {
@@ -173,6 +225,8 @@ export default function useDeviceManager() {
         console.error(`receiveBleNotification error`, err);
       }
     );
+
+    // callback("@,9,5.33,*");
   }
 
   function renderScanPopup() {

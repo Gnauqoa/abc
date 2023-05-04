@@ -11,6 +11,20 @@
   height: auto;
 }
 
+// Mobile device
+@media only screen and (max-height: 400px) {
+  .responsive {
+    height: 100px;
+  }
+}
+
+// Mobile device
+@media only screen and (max-height: 600px) {
+  .responsive {
+    height: 150px;
+  }
+}
+
 .full-height {
   height: 100%;
 }

@@ -4,6 +4,7 @@ import chartUtils from "./chartjs-utils";
 import interpolateIcon from "../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../img/expandable-options/auto-scale.png";
 import noteIcon from "../img/expandable-options/note.png";
+import noteSelectedIcon from "../img/expandable-options/note-selected.png";
 
 export const X_FORMAT_FLOATING = 3;
 export const X_DEFAULT_UNIT = "s";
@@ -27,6 +28,8 @@ export const expandableOptions = [
   {
     id: NOTE_OPTION,
     icon: noteIcon,
+    // selectedIcon: noteSelectedIcon,
+    // selected: true,
   },
   {
     id: INTERPOLATE_OPTION,

@@ -1,5 +1,4 @@
 .sensor-setting-popup {
-  display: block;
   left: calc(50% - 400px);
   top: calc(50% - 300px);
 }
@@ -244,6 +243,153 @@
           width: fit-content;
           border-radius: 9999px;
           min-width: 100px;
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-height: 600px) {
+  .sensor-setting-popup {
+    left: calc(50% - 250px);
+    top: calc(50% - 150px);
+  }
+  .sensor-setting-popup.popup {
+    width: 500px;
+    height: 300px;
+    border-radius: 25px;
+  }
+
+  .sensor-setting {
+    .navbar {
+      position: relative !important;
+    }
+    .page-content {
+      padding-top: 0px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .__header .navbar-inner .title {
+      font-size: 10px;
+    }
+
+    .__content {
+      .__navbar {
+        width: 25%;
+        margin: 30px 10px 0 10px;
+        .nav-button {
+          font-size: 10px;
+        }
+      }
+
+      .__setting-content {
+        width: 70%;
+        overflow-y: auto;
+
+        .__setting {
+          .display-setting-input {
+            .item-title.item-label {
+              margin-right: 0px;
+              width: 35%;
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              min-height: 0px;
+              .button {
+                font-size: 12px;
+
+                span {
+                  font-size: 12px;
+                }
+              }
+
+              .input-with-value {
+                font-size: 12px;
+              }
+
+              .popover-choose-sensor-unit {
+                width: 260px;
+              }
+
+              input {
+                height: 30px;
+              }
+            }
+          }
+        }
+
+        .__calibrating {
+          .__label-calibrating-type {
+            font-weight: 600;
+            font-size: 14px;
+            padding-left: 15px;
+          }
+
+          .display-setting-input {
+            .item-title.item-label {
+              margin-right: 0px;
+              width: 35%;
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              min-height: 0px;
+
+              .button {
+                font-size: 12px;
+
+                span {
+                  font-size: 12px;
+                }
+              }
+
+              .input-with-value {
+                font-size: 12px;
+              }
+
+              .popover-choose-sensor-unit {
+                width: 260px;
+              }
+
+              input {
+                height: 30px;
+              }
+            }
+          }
+
+          .display-setting-input-button {
+            .item-input-wrap {
+              height: 30px;
+              min-height: 0px;
+              margin-left: 0px;
+
+              .input-with-value {
+                font-size: 12px;
+              }
+            }
+
+            .item-title.item-label {
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              .input-with-value {
+                font-size: 12px;
+              }
+            }
+            .sampling-button {
+              font-size: 10px;
+            }
+          }
+        }
+
+        .buttons {
+          margin-bottom: 10px;
+          .save-button {
+            font-size: 10px;
+          }
         }
       }
     }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { std, mean, max, min } from "mathjs";
-import { PAGE_SETTINGS } from "../../../utils/widget-table-utils";
 import "./index.scss";
 
 const SUMMARIZE_COUNT_TYPE = 0;
@@ -165,7 +164,7 @@ const SummarizedTable = ({ chartLayout, datas, sensors }) => {
         <tbody className="wapper__chart__table__body">
           {summarizeRows.map((row, rowIndex) => {
             const rowData = row.map((column, columnIndex) => (
-              <td key={`summarize-row-${rowIndex}-${columnIndex}`} style={PAGE_SETTINGS[chartLayout]["td"]}>
+              <td key={`summarize-row-${rowIndex}-${columnIndex}`}>
                 <span className="span-value">{column}</span>
               </td>
             ));
