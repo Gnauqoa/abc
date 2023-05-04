@@ -89,27 +89,33 @@ const SensorContainer = ({ deviceManager }) => {
         sensorDataIndex={sensorsDataIndex?.[selectedSensorId]}
         onSaveSetting={onSaveSettingHandler}
       />
-      {sensorsInfo.map((sensorInfo) => {
-        const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
-        const sensorData = sensorInfo.sensorDatas?.[dataIndex];
-        return (
-          <div
-            key={sensorInfo.sensorId}
-            id={sensorInfo.sensorId}
-            className="wireless-sensor-info"
-            onClick={onChooseSensorHandler}
-          >
-            <SensorStatus
-              sensorId={sensorInfo.sensorId}
-              sensorData={sensorData}
-              sensorIcon={sensorInfo.sensorIcon}
-              onDisconnect={onDisconnectHandler}
-              type={sensorInfo.type}
-              status={WIDGET_SENSOR_ACTIVE}
-            ></SensorStatus>
-          </div>
-        );
-      })}
+      {sensorsInfo.length !== 0 ? (
+        sensorsInfo.map((sensorInfo) => {
+          const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
+          const sensorData = sensorInfo.sensorDatas?.[dataIndex];
+          return (
+            <div
+              key={sensorInfo.sensorId}
+              id={sensorInfo.sensorId}
+              className="wireless-sensor-info"
+              onClick={onChooseSensorHandler}
+            >
+              <SensorStatus
+                sensorId={sensorInfo.sensorId}
+                sensorData={sensorData}
+                sensorIcon={sensorInfo.sensorIcon}
+                onDisconnect={onDisconnectHandler}
+                type={sensorInfo.type}
+                status={WIDGET_SENSOR_ACTIVE}
+              ></SensorStatus>
+            </div>
+          );
+        })
+      ) : (
+        <div className="wireless-sensor-info" onClick={onChooseSensorHandler}>
+          <SensorStatus status={WIDGET_SENSOR_INACTIVE}></SensorStatus>
+        </div>
+      )}
     </div>
   );
 };
