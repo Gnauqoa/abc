@@ -162,6 +162,8 @@ export default function useDeviceManager() {
   function onDataCallback(data) {
     if (data === undefined) return;
 
+    data = data.trim();
+
     const dataSplit = data.split(",");
     const dataSplitLength = dataSplit.length;
 
