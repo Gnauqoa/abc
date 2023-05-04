@@ -127,6 +127,7 @@ export default function useDeviceManager() {
             console.error(`Device ${deviceId} requestConnectionPriority error`);
           }
         );
+        receiveDataCallback(deviceId, (data) => console.log(data));
       },
       () => {
         setDevices((draft) => {
