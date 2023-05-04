@@ -1,7 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { f7 } from "framework7-react";
 import "./index.scss";
-import { WIDGET_SENSOR_ACTIVE, WIDGET_SENSOR_INACTIVE, WIDGET_SENSOR_ID_INACTIVE } from "../../../js/constants";
+import {
+  WIDGET_SENSOR_ACTIVE,
+  WIDGET_SENSOR_INACTIVE,
+  WIDGET_SENSOR_ID_INACTIVE,
+  USB_TYPE,
+  BLE_TYPE,
+} from "../../../js/constants";
 
 import SensorStatus from "../../atoms/widget-sensor-status";
 import SensorSettingPopup from "../popup-sensor-setting";
@@ -23,21 +29,25 @@ const SensorContainer = ({ deviceManager }) => {
       const sensors = [];
 
       for (const sensorId of Object.keys(buffer)) {
-        const sensorIcon = SensorServices.getSensorIcon(sensorId);
-        const sensorInfo = SensorServices.getSensorInfo(sensorId);
+        const parsedSensorId = parseInt(sensorId);
+        const sensorIcon = SensorServices.getSensorIcon(parsedSensorId);
+        const sensorInfo = SensorServices.getSensorInfo(parsedSensorId);
+
+        const uartConnections = DataManagerIST.getUartConnections();
 
         if (!sensorIcon || !sensorInfo) continue;
         const { icon, label, unit } = sensorIcon;
+        const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
 
         const sensor = {
-          sensorId: parseInt(sensorId),
-          sensorDatas: buffer[sensorId],
+          sensorId: parsedSensorId,
+          sensorDatas: buffer[parsedSensorId],
           sensorIcon: {
             icon: icon,
             label: label,
             unit: unit,
           },
-          type: sensorInfo.type,
+          type: type,
         };
 
         sensors.push(sensor);

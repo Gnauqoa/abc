@@ -8,6 +8,7 @@ import {
   EMIT_DATA_MANUAL_FREQUENCY,
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
+  BLE_TYPE,
 } from "../js/constants";
 
 const TIME_STAMP_ID = 0;
@@ -90,6 +91,8 @@ export class DataManager {
     // Parameters for Timer
     this.timerCollectingTime = 0;
     this.timerSubscriber = {};
+
+    this.uartConnections = new Set();
   }
 
   init() {
@@ -450,6 +453,10 @@ export class DataManager {
     this.buffer[parseInt(sensorId)] = sensorsData;
   }
 
+  getUartConnections() {
+    return this.uartConnections;
+  }
+
   // -------------------------------- Export -------------------------------- //
   /** Export the current data run to a CSV file.
    * @function
@@ -557,17 +564,19 @@ export class DataManager {
    */
   callbackReadSensor(data) {
     try {
-      const sensorId = data[0];
+      const sensorId = parseInt(data[0]);
+      const source = data[1];
       const dataLength = data[2];
       const sensorsData = [];
-      const sensorInfo = SensorServices.getSensorInfo(parseInt(sensorId));
+      const sensorInfo = SensorServices.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
 
       for (let i = 0; i < dataLength; i++) {
         const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
         sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
-      this.buffer[parseInt(sensorId)] = sensorsData;
+      this.buffer[sensorId] = sensorsData;
+      source !== BLE_TYPE && this.uartConnections.add(sensorId);
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }
@@ -580,8 +589,9 @@ export class DataManager {
    */
   callbackSensorDisconnected(data) {
     try {
-      const sensorId = data[0];
-      delete this.buffer[parseInt(sensorId)];
+      const sensorId = parseInt(data[0]);
+      delete this.buffer[sensorId];
+      this.uartConnections.delete(sensorId);
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -735,7 +745,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (9 - 9) + 9).toFixed(0);
+      const sensorId = (Math.random() * (8 - 8) + 8).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));

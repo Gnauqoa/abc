@@ -57,7 +57,7 @@ export default function useDeviceManager() {
       timeoutScanRef.current = setTimeout(handleStopScan, 30000);
 
       // const dummyDeviceId = "test-device-id";
-      // const dummyDeviceName = "inno-010-test";
+      // const dummyDeviceName = "inno-009-kpa";
       // const deviceIndex = devices.findIndex((d) => d.id === dummyDeviceId);
       // if (deviceIndex < 0) {
       //   let deviceName = dummyDeviceName || dummyDeviceId;
@@ -226,7 +226,7 @@ export default function useDeviceManager() {
       }
     );
 
-    // callback("@,10,5.33,*");
+    // callback("@,9,5.33,*");
   }
 
   function renderScanPopup() {
