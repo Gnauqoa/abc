@@ -576,7 +576,10 @@ export class DataManager {
         sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
       this.buffer[sensorId] = sensorsData;
-      source !== BLE_TYPE && this.uartConnections.add(sensorId);
+
+      if (source !== BLE_TYPE) {
+        this.uartConnections.add(sensorId);
+      }
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }
@@ -590,8 +593,15 @@ export class DataManager {
   callbackSensorDisconnected(data) {
     try {
       const sensorId = parseInt(data[0]);
+      const source = data[1];
+
+      if (source === BLE_TYPE && this.uartConnections.has(sensorId)) {
+        return;
+      } else {
+        this.uartConnections.delete(sensorId);
+      }
+
       delete this.buffer[sensorId];
-      this.uartConnections.delete(sensorId);
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -745,7 +755,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (8 - 8) + 8).toFixed(0);
+      const sensorId = (Math.random() * (9 - 9) + 9).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));

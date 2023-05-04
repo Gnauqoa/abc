@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { useImmer } from "use-immer";
-import { Popup, Page, Navbar, NavRight, Link, Block, Button, List, ListItem } from "framework7-react";
+import { Popup, Page, Navbar, NavRight, Link, Block, Button, List, ListItem, NavTitle } from "framework7-react";
 import "./index.scss";
 
 import SensorServices from "../../../services/sensor-service";
@@ -12,6 +12,8 @@ const DEVICE_PREFIX = "inno-";
 const LIMIT_BYTE_BLE = 99;
 import { USB_TYPE, BLE_TYPE } from "../../../js/constants";
 import DataManagerIST from "../../../services/data-manager";
+
+import signalStrengthIconFull from "../../../img/scan-devices/signal-strength-full.png";
 
 export default function useDeviceManager() {
   const [devices, setDevices] = useImmer([]);
@@ -33,7 +35,7 @@ export default function useDeviceManager() {
             device?.name?.includes(DEVICE_PREFIX) ||
             device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
           ) {
-            const deviceIndex = devices.findIndex((d) => d.id === device.id);
+            const deviceIndex = devices.findIndex((d) => d.deviceId === dummyDeviceId || d.isConnected === false);
             if (deviceIndex < 0) {
               let deviceName = device.name || device.id;
               if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
@@ -56,19 +58,23 @@ export default function useDeviceManager() {
       );
       timeoutScanRef.current = setTimeout(handleStopScan, 30000);
 
-      // const dummyDeviceId = "test-device-id";
-      // const dummyDeviceName = "inno-009-kpa";
-      // const deviceIndex = devices.findIndex((d) => d.id === dummyDeviceId);
-      // if (deviceIndex < 0) {
-      //   let deviceName = dummyDeviceName || dummyDeviceId;
-      //   const newFoundDevice = {
-      //     deviceId: dummyDeviceId,
-      //     code: deviceName,
-      //     rssi: "dummy",
-      //     type: BLE_TYPE,
-      //   };
-      //   const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-      //   sensor && setDevices((draft) => [...draft, { ...sensor, ...newFoundDevice }]);
+      // const dummyDeviceIds = ["C6:A1:7A:4B:C1:EB"];
+      // const dummyDeviceNames = ["inno-009-kpa"];
+      // for (let i = 0; i < dummyDeviceIds.length; i++) {
+      //   const dummyDeviceId = dummyDeviceIds[i];
+      //   const dummyDeviceName = dummyDeviceNames[i];
+      //   const deviceIndex = devices.findIndex((d) => d.deviceId === dummyDeviceId || d.isConnected === false);
+      //   if (deviceIndex < 0) {
+      //     let deviceName = dummyDeviceName || dummyDeviceId;
+      //     const newFoundDevice = {
+      //       deviceId: dummyDeviceId,
+      //       code: deviceName,
+      //       rssi: "-85",
+      //       type: BLE_TYPE,
+      //     };
+      //     const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
+      //     sensor && setDevices((draft) => [...draft, { ...sensor, ...newFoundDevice }]);
+      //   }
       // }
     } catch (err) {
       console.error("scan error", err.message);
@@ -112,7 +118,7 @@ export default function useDeviceManager() {
           device.isConnected = false;
         });
 
-        DataManagerIST.callbackSensorDisconnected([id]);
+        DataManagerIST.callbackSensorDisconnected([id, BLE_TYPE]);
       },
       (err) => {
         console.error(`Disconnected device ${deviceId} error`, err);
@@ -123,7 +129,7 @@ export default function useDeviceManager() {
     //   const device = draft.find((d) => d.deviceId === deviceId);
     //   device.isConnected = false;
     // });
-    // DataManagerIST.callbackSensorDisconnected([id]);
+    // DataManagerIST.callbackSensorDisconnected([id, BLE_TYPE]);
   }
 
   function connect(deviceId) {
@@ -160,6 +166,7 @@ export default function useDeviceManager() {
   }
 
   function onDataCallback(data) {
+    console.log("onDataCallback: ", data);
     if (data === undefined) return;
 
     data = data.trim();
@@ -233,13 +240,14 @@ export default function useDeviceManager() {
     return (
       <Popup ref={scanPopupRef} className="edl-popup scan-devices">
         <Page>
-          <Navbar title="Kết nối Cảm biến không dây">
+          <Navbar>
+            <NavTitle style={{ color: "#0086ff" }}>Kết nối Cảm biến không dây</NavTitle>
             <NavRight>
               <Link iconIos="material:close" iconMd="material:close" iconAurora="material:close" popupClose></Link>
             </NavRight>
           </Navbar>
-          <Block>
-            Tìm kiếm cảm biến{" "}
+          <Block className="scan-block">
+            <span>Tìm kiếm cảm biến</span>
             <Button
               className="scan-button"
               onClick={scan}
@@ -248,17 +256,18 @@ export default function useDeviceManager() {
               iconAurora="material:search"
             ></Button>
           </Block>
-          <Block>
+          <Block className="devices-block">
             <List dividersIos outlineIos strongIos>
-              {devices.map((d) => (
-                <ListItem
-                  key={d.deviceId}
-                  link="#"
-                  title={d.name}
-                  after={d.isConnected ? "Ngắt kết nối" : "Kết nối"}
-                  onClick={() => toggleConnectDevice(d.deviceId)}
-                ></ListItem>
-              ))}
+              {devices.map((d) => {
+                if (!d.isConnected)
+                  return (
+                    <ListItem key={d.deviceId} link="#" title={d.name} onClick={() => toggleConnectDevice(d.deviceId)}>
+                      <div className="item-after">
+                        <img src={signalStrengthIconFull} alt={"signalStrengthIconFull"} />
+                      </div>
+                    </ListItem>
+                  );
+              })}
             </List>
           </Block>
         </Page>
