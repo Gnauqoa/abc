@@ -6,12 +6,10 @@ const PROJECT_FILE_EXT = ".edl";
 export async function searchProjects() {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.dataDirectory,
+      cordova.file.externalDataDirectory,
       function (rootEntry) {
         try {
-          getAllFiles(rootEntry, (files) => {
-            resolve(files);
-          });
+          getAllFiles(rootEntry, (files) => resolve(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
         }
@@ -24,18 +22,18 @@ export async function searchProjects() {
 export async function openProject(filePath) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.dataDirectory,
-      function (rootEntry) {
-        rootEntry.getFile(
-          filePath,
-          { create: false, exclusive: false },
-          (fileEntry) => {
-            readFile(fileEntry, (fileContent) => {
-              resolve(fileContent);
-            });
-          },
-          (error) => reject(new Error("onErrorGetFile: " + error))
-        );
+      cordova.file.externalDataDirectory,
+      (rootEntry) => {
+        try {
+          rootEntry.getFile(
+            filePath,
+            { create: false, exclusive: false },
+            (fileEntry) => readFile(fileEntry, (fileContent) => resolve(fileContent)),
+            (error) => reject(new Error("onErrorGetFile: " + error))
+          );
+        } catch (error) {
+          reject(new Error("getFile: " + error));
+        }
       },
       (error) => reject(new Error("onErrorLoadFs: " + error))
     );
@@ -45,7 +43,7 @@ export async function openProject(filePath) {
 export async function saveProject(fileName, filePath, content) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.dataDirectory,
+      cordova.file.externalDataDirectory,
       (rootEntry) => {
         const callbackGetSaveFiles = (files) => {
           const fileNames = files.map((file) => {
@@ -58,14 +56,11 @@ export async function saveProject(fileName, filePath, content) {
           createFile(rootEntry, newFilePath, content);
         };
 
-        if (filePath) {
-          createFile(rootEntry, filePath, content);
-        } else {
-          try {
-            getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
-          } catch (error) {
-            reject(new Error("getAllFiles: " + error));
-          }
+        try {
+          if (filePath) createFile(rootEntry, filePath, content);
+          else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
+        } catch (error) {
+          reject(new Error("getAllFiles: " + error));
         }
       },
       () => reject(new Error("onErrorLoadFs: " + error))
@@ -76,17 +71,12 @@ export async function saveProject(fileName, filePath, content) {
 export async function removeProject(filePath) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.dataDirectory,
-      function (rootEntry) {
+      cordova.file.externalDataDirectory,
+      (rootEntry) => {
         rootEntry.getFile(
           filePath,
           { create: false, exclusive: false },
-          (fileEntry) => {
-            fileEntry.remove(
-              () => resolve(true),
-              (error) => reject(new Error("onErrorRemoveFile: " + error))
-            );
-          },
+          (fileEntry) => removeFile(fileEntry, (result) => resolve(result)),
           (error) => reject(new Error("onErrorGetFile: " + error))
         );
       },
@@ -124,9 +114,7 @@ function createFile(rootEntry, filePath, content) {
   rootEntry.getFile(
     filePath,
     { create: true, exclusive: false },
-    (fileEntry) => {
-      writeFile(fileEntry, content);
-    },
+    (fileEntry) => writeFile(fileEntry, content),
     () => console.log("onErrorCreateFile")
   );
 }
@@ -159,5 +147,12 @@ function readFile(fileEntry, callback) {
       reader.readAsText(file);
     },
     (error) => console.log("onErrorReadFile: ", error)
+  );
+}
+
+function removeFile(fileEntry, callback) {
+  fileEntry.remove(
+    () => callback(true),
+    (error) => console.log("onErrorRemoveFile: ", error)
   );
 }

@@ -33,7 +33,7 @@ import ActivityFooter from "../components/organisms/activity-page-footer";
 
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import useDeviceManager from "../components/molecules/device-manager";
+import useDeviceManager from "../components/molecules/popup-scan-devices";
 
 const recentFilesService = new storeService("recent-files");
 

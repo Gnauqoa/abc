@@ -16,7 +16,6 @@ export class DeviceManager {
 
   initializeVariables() {
     this.devices = [];
-    this.timeoutScanId;
     this.checkConnectionIntervalId;
   }
 
@@ -67,7 +66,6 @@ export class DeviceManager {
           console.error("ble.startScan", err);
         }
       );
-      this.timeoutScanId = setTimeout(this.handleStopScan, 30000);
 
       // const dummyDeviceIds = ["C6:A1:7A:4B:C1:EB"];
       // const dummyDeviceNames = ["inno-009-kpa"];
@@ -180,7 +178,6 @@ export class DeviceManager {
 
   // ============================== Utils functions =============================
   handleStopScan(callback) {
-    clearTimeout(this.timeoutScanId);
     ble.stopScan(callback, (err) => {
       console.error("handleStopScan", err);
       callback();
