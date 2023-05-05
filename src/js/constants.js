@@ -208,3 +208,6 @@ export const WIDGET_SENSOR_ID_INACTIVE = -1;
 
 export const BLE_TYPE = "ble";
 export const USB_TYPE = "usb";
+
+// TABLES DEFINED
+export const USER_INPUTS_TABLE = "user-inputs";
