@@ -143,8 +143,13 @@ export const prompt = (title, text, callbackOk, callbackCancel, defaultValue) =>
     callbackOk($(`#${dialogId} .input`).val());
     close();
   });
+
   $(`#${dialogId} .cancel-button`).on("click", () => {
     callbackCancel();
+    close();
+  });
+
+  $(`#${dialogId} .skip-button`).on("click", () => {
     close();
   });
 };

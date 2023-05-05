@@ -21,6 +21,7 @@ async function saveFile(
     defaultPath: JSON.parse(content).name,
   }
 ) {
+  // console.
   if (f7.device.electron) {
     try {
       return await window.fileApi.save(filePath, content, option);

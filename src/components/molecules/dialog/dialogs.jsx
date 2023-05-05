@@ -277,7 +277,17 @@ export default class extends Component {
         <div id="dialog-prompt" className="dialog-component">
           <div className="dialog-content">
             <div className="content">
-              <div className="title"></div>
+              <div className="header">
+                <div className="skip-button">
+                  <Icon
+                    ios="material:arrow_back"
+                    md="material:arrow_back"
+                    iconAurora="material:arrow_back"
+                    className="prevent-select"
+                  ></Icon>
+                </div>
+                <div className="title"></div>
+              </div>
               <div className="text"></div>
               <div className="text-1">
                 <div className="form-group">

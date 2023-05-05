@@ -151,7 +151,7 @@ const TableWidget = (
   }, [samplingMode]);
 
   useEffect(() => {
-    if (debounceUserInputs !== {}) userInputsStorage.save({ id: tableId, userInputs: debounceUserInputs });
+    userInputsStorage.save({ id: tableId, userInputs: debounceUserInputs });
   }, [debounceUserInputs]);
 
   useEffect(() => {

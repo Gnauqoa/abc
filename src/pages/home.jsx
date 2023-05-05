@@ -7,12 +7,17 @@ import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
 import dialog from "../components/molecules/dialog/dialog";
+import { USER_INPUTS_TABLE } from "../js/constants";
 
 const recentFilesService = new storeService("recent-files");
+const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 
 export default ({ f7router }) => {
   const files = recentFilesService.all();
   const inputFile = useRef(null);
+
+  // Clear all Previous Tables
+  userInputsStorage.deleteAll();
 
   async function handleFileOpen(filePath) {
     if (f7.device.electron) {
