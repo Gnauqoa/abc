@@ -1,0 +1,118 @@
+.project-management-popup {
+  // display: block;
+  width: 640px;
+  height: 500px;
+  left: calc(50% - 320px);
+  top: calc(50% - 250px);
+}
+.project-management-popup.popup {
+  border-radius: 40px;
+}
+
+.project-management {
+  display: inline-block;
+  .project-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 15%;
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+    }
+  }
+  .page-content {
+    display: flex;
+    flex-direction: column;
+    border-color: #000000;
+    margin-left: 10%;
+    margin-right: 10%;
+    overflow-x: hidden;
+
+    .list-project {
+      height: 80%;
+      width: 100%;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      overflow-y: auto;
+
+      .list-item {
+        display: flex;
+        align-items: center;
+        height: 50px;
+
+        .list-button i {
+          display: flex;
+          align-items: center;
+          width: 10%;
+        }
+
+        .project-name {
+          width: 80%;
+          height: 30px;
+          padding-left: 20px;
+          margin-right: 10%;
+          border-width: 0px;
+          font-size: 20px;
+          color: #0086ff;
+          cursor: pointer;
+        }
+      }
+
+      .list-item:last-child {
+        margin-bottom: 0px;
+      }
+    }
+  }
+}
+
+// Mobile device
+@media only screen and (max-height: 400px) {
+  .project-management-popup {
+    width: 340px;
+    height: 260px;
+    left: calc(50% - 170px);
+    top: calc(50% - 130px);
+  }
+
+  .project-management-popup.popup {
+    border-radius: 20px;
+  }
+
+  .project-management {
+    .project-management-header .navbar-inner {
+      font-size: 18px;
+    }
+
+    .page-content {
+      margin-left: 5%;
+      margin-right: 5%;
+
+      .list-project {
+        margin-top: 10px;
+        margin-bottom: 10px;
+
+        .list-item {
+          height: 35px;
+
+          .project-name {
+            height: 25px;
+            font-size: 16px;
+          }
+
+          .list-button {
+            i {
+              font-size: 25px !important;
+            }
+          }
+        }
+
+        .list-item:last-child {
+          margin-bottom: 0px;
+        }
+      }
+    }
+  }
+}

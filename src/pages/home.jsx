@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavTitle, f7 } from "framework7-react";
 
 import newImg from "../img/home/new-activity.png";
@@ -8,6 +8,7 @@ import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
 import dialog from "../components/molecules/dialog/dialog";
 import { USER_INPUTS_TABLE } from "../js/constants";
+import ProjectManagementPopup from "../components/molecules/popup-projects-management";
 
 const recentFilesService = new storeService("recent-files");
 const userInputsStorage = new storeService(USER_INPUTS_TABLE);
@@ -15,6 +16,7 @@ const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 export default ({ f7router }) => {
   const files = recentFilesService.all();
   const inputFile = useRef(null);
+  const [isProjectManagementOpened, setIsProjectManagementOpened] = useState(false);
 
   // Clear all Previous Tables
   userInputsStorage.deleteAll();
@@ -39,6 +41,10 @@ export default ({ f7router }) => {
       }
     } else if (f7.device.desktop) {
       inputFile.current.click();
+      // setIsProjectManagementOpened(true);
+    } else if (f7.device.android) {
+      // openFile(filePath);
+      setIsProjectManagementOpened(true);
     }
   }
 
@@ -98,6 +104,11 @@ export default ({ f7router }) => {
         )}
       </div>
       <input type="file" id="activity-file" ref={inputFile} style={{ display: "none" }} onChange={handleFileUpload} />
+      <ProjectManagementPopup
+        f7router={f7router}
+        opened={isProjectManagementOpened}
+        onClose={() => setIsProjectManagementOpened(false)}
+      ></ProjectManagementPopup>
     </Page>
   );
 };

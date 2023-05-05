@@ -557,3 +557,22 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
     return;
   }
 }
+
+export function getUniqueFileName(fileName, existingFileNames) {
+  let newFileName = fileName;
+  let counter = 1;
+
+  while (existingFileNames.includes(newFileName)) {
+    const matches = newFileName.match(/^(.*) \((\d+)\)$/);
+    if (matches) {
+      // Increment the counter if the file name already has a number in parentheses
+      newFileName = `${matches[1]} (${parseInt(matches[2]) + 1})`;
+    } else {
+      // Add a number in parentheses to the file name
+      newFileName = `${newFileName} (${counter})`;
+    }
+    counter++;
+  }
+
+  return newFileName;
+}
