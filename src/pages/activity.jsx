@@ -72,6 +72,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     return;
   }
 
+  const [previousActivity, setPreviousActivity] = useState({});
+
   // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
@@ -127,9 +129,13 @@ export default ({ f7route, f7router, filePath, content }) => {
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
 
+    const isEqual = _.isEqual(updatedActivity, previousActivity);
+    if (isEqual) return;
+
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
       savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+      setPreviousActivity(_.cloneDeep(updatedActivity));
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -138,6 +144,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           setName(name);
           const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
           savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+          setPreviousActivity(_.cloneDeep(updatedActivity));
         },
         () => {},
         name
@@ -147,21 +154,26 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   async function handleActivityBack() {
     const updatedActivity = saveActivity();
-
-    dialog.prompt(
-      "Bạn có muốn lưu lại những thay đổi này không?",
-      "Tên hoạt động",
-      async (name) => {
-        setName(name);
-        const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
-        savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
-        f7router.navigate("/");
-      },
-      () => {
-        f7router.navigate("/");
-      },
-      name
-    );
+    const isEqual = _.isEqual(updatedActivity, previousActivity);
+    if (isEqual) {
+      f7router.navigate("/");
+    } else {
+      dialog.prompt(
+        "Bạn có muốn lưu lại những thay đổi này không?",
+        "Tên hoạt động",
+        async (name) => {
+          setName(name);
+          const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+          savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+          setPreviousActivity(_.cloneDeep(updatedActivity));
+          f7router.navigate("/");
+        },
+        () => {
+          f7router.navigate("/");
+        },
+        name
+      );
+    }
   }
 
   function handleActivityNameChange(e) {

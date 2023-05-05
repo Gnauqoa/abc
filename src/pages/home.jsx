@@ -41,9 +41,7 @@ export default ({ f7router }) => {
       }
     } else if (f7.device.desktop) {
       inputFile.current.click();
-      // setIsProjectManagementOpened(true);
     } else if (f7.device.android) {
-      // openFile(filePath);
       setIsProjectManagementOpened(true);
     }
   }

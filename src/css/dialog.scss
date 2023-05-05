@@ -26,18 +26,20 @@
       .header {
         display: flex;
         align-items: center;
-        .skip-button {
-          width: 15%;
-          display: flex;
-          justify-content: center;
-        }
-        .title {
-          padding: 20px;
-          padding-left: 10px;
-          font-size: 20px;
-          font-weight: 600;
-          color: #6a6f75;
-        }
+      }
+
+      .skip-button {
+        width: 15%;
+        display: flex;
+        justify-content: center;
+      }
+
+      .title {
+        padding: 20px;
+        padding-left: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        color: #6a6f75;
       }
 
       .text {
@@ -45,6 +47,7 @@
         font-size: 16px;
         font-weight: 600;
         color: #888c91;
+        word-wrap: break-word;
       }
       .buttons {
         padding: 20px;

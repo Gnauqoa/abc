@@ -41,7 +41,9 @@ async function saveFile(
     return;
   } else if (f7.device.android) {
     try {
-      return await saveProject(JSON.parse(content).name || "EDL", filePath, content);
+      const savedPath = await saveProject(JSON.parse(content).name || "EDL", filePath, content);
+      dialog.alert("Lưu thành công", `Lưu file thành công tại ${savedPath}`, () => {});
+      return;
     } catch (err) {
       console.log("Save file error", err);
       dialog.alert(

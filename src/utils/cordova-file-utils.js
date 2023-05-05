@@ -54,11 +54,14 @@ export async function saveProject(fileName, filePath, content) {
           const newFilePath = PROJECT_FOLDER + "/" + newFileName;
 
           createFile(rootEntry, newFilePath, content);
+          resolve(cordova.file.externalDataDirectory + newFilePath);
         };
 
         try {
-          if (filePath) createFile(rootEntry, filePath, content);
-          else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
+          if (filePath) {
+            createFile(rootEntry, filePath, content);
+            resolve(cordova.file.externalDataDirectory + filePath);
+          } else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
         }
