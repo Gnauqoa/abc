@@ -79,7 +79,7 @@ export class DeviceManager {
       //     let deviceName = dummyDeviceName || dummyDeviceId;
       //     const newFoundDevice = {
       //       deviceId: dummyDeviceId,
-      //       code: deviceName
+      //       code: deviceName,
       //       rssi: "-85",
       //       type: BLE_TYPE,
       //       isConnected: false,
@@ -87,6 +87,7 @@ export class DeviceManager {
       //     const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
       //     if (sensor === null) return [];
       //     this.devices.push({ ...sensor, ...newFoundDevice });
+      //     callback([...this.devices]);
       //   }
       // }
     } catch (err) {
@@ -123,7 +124,7 @@ export class DeviceManager {
     // const device = this.devices.find((d) => d.deviceId === deviceId);
     // device.isConnected = true;
     // this.receiveDataCallback(deviceId, this.onDataCallback);
-    // return [...this.devices];
+    // callback([...this.devices]);
   }
 
   disconnect({ deviceId, id, callback }) {
@@ -154,7 +155,7 @@ export class DeviceManager {
     // const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
     // currentDevice.isConnected = false;
     // DataManagerIST.callbackSensorDisconnected([id, BLE_TYPE]);
-    // return [...this.devices];
+    // callback([...this.devices]);
   }
 
   async sendData(deviceId, data) {

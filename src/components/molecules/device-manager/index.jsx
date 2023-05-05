@@ -57,7 +57,12 @@ export default function useDeviceManager() {
               {devices.map((d) => {
                 if (!d.isConnected)
                   return (
-                    <ListItem key={d.deviceId} link="#" title={d.name} onClick={() => connect(d.deviceId)}>
+                    <ListItem
+                      key={d.deviceId}
+                      link="#"
+                      title={`${d.name} (${d.code})`}
+                      onClick={() => connect(d.deviceId)}
+                    >
                       <div className="item-after">
                         <img src={signalStrengthIconFull} alt={"signalStrengthIconFull"} />
                       </div>
