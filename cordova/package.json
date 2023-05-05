@@ -44,7 +44,8 @@
     },
     "platforms": [
       "electron",
-      "android"
+      "android",
+      "ios"
     ]
   },
   "build": {

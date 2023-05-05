@@ -49,7 +49,6 @@ const SensorContainer = ({ deviceManager }) => {
           },
           type: type,
         };
-
         sensors.push(sensor);
       }
 
@@ -77,8 +76,7 @@ const SensorContainer = ({ deviceManager }) => {
   }, []);
 
   const onDisconnectHandler = (sensorId) => {
-    console.log("remove sensorId: ", sensorId);
-    deviceManager.disconnect({ id: sensorId });
+    deviceManager?.disconnect({ id: sensorId });
   };
 
   const onSaveSettingHandler = (sensorId, newSensorUnitInfo) => {

@@ -4,8 +4,9 @@ import "./index.scss";
 import SensorSelector from "../popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
+import StoreService from "../../../services/store-service";
 
-import { SAMPLING_AUTO, SAMPLING_MANUAL, DEFAULT_SENSOR_ID } from "../../../js/constants";
+import { SAMPLING_AUTO, SAMPLING_MANUAL, DEFAULT_SENSOR_ID, USER_INPUTS_TABLE } from "../../../js/constants";
 
 import tableChartIcon from "../../../img/expandable-options/table.png";
 import {
@@ -20,6 +21,10 @@ import {
 
 import ExpandableOptions from "../expandable-options";
 import SummarizedTable from "./summarize";
+import useDebounce from "../../../hooks/useDebounce";
+
+const userInputsStorage = new StoreService(USER_INPUTS_TABLE);
+
 const FIRST_COLUMN_OPTIONS = [
   {
     id: FIRST_COLUMN_DEFAULT_OPT,
@@ -35,6 +40,7 @@ const FIRST_COLUMN_OPTIONS = [
 
 const TableWidget = (
   {
+    id: tableId,
     datas,
     currentValues,
     widget,
@@ -59,6 +65,7 @@ const TableWidget = (
   const [rows, setRows] = useState(defaultRows);
   const [numRows, setNumRows] = useState(0);
   const [userInputs, setUserInputs] = useState({});
+  const debounceUserInputs = useDebounce(userInputs, 500);
   const [selectedElement, setSelectedElement] = useState({
     selectedRow: 0,
     selectedColumn: 0,
@@ -131,8 +138,21 @@ const TableWidget = (
   }));
 
   useEffect(() => {
-    setFirstColumnOption(samplingMode === SAMPLING_AUTO ? FIRST_COLUMN_DEFAULT_OPT : FIRST_COLUMN_CUSTOM_OPT);
+    const prevUserInputs = userInputsStorage.find(tableId);
+    if (prevUserInputs) setUserInputs({ ...prevUserInputs.userInputs });
+  }, []);
+
+  useEffect(() => {
+    if (samplingMode === SAMPLING_AUTO && firstColumnOption === FIRST_COLUMN_CUSTOM_OPT) {
+      setFirstColumnOption(FIRST_COLUMN_DEFAULT_OPT);
+    } else if (samplingMode === SAMPLING_MANUAL && firstColumnOption === FIRST_COLUMN_DEFAULT_OPT) {
+      setFirstColumnOption(FIRST_COLUMN_CUSTOM_OPT);
+    }
   }, [samplingMode]);
+
+  useEffect(() => {
+    if (debounceUserInputs !== {}) userInputsStorage.save({ id: tableId, userInputs: debounceUserInputs });
+  }, [debounceUserInputs]);
 
   useEffect(() => {
     let transformedRows = convertDataToTableRows(datas);
@@ -271,8 +291,10 @@ const TableWidget = (
   };
 
   const userInputHandler = (event) => {
-    const inputRow = event.target.id;
+    const inputSelectedRow = event.target.id;
     const inputValue = event.target.value;
+    const inputRow = inputSelectedRow.split("_")[0];
+
     setUserInputs((prev) => {
       return { ...prev, [inputRow]: inputValue };
     });

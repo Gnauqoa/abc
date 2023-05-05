@@ -94,69 +94,6 @@
       }
     }
   }
-
-  @media only screen and (max-height: 600px) {
-    .__icon {
-      .__sensor-icon img {
-        width: 26px;
-      }
-
-      .__sensor-name {
-        font-size: 14px;
-      }
-    }
-    .__sensor-info {
-      .__close-button .button .icon {
-        width: 20px;
-      }
-      .__sensor-value {
-        font-size: 16px;
-      }
-
-      .__sensor-unit {
-        font-size: 14px;
-      }
-
-      .__signal-battery img {
-        width: 28px;
-      }
-    }
-  }
-
-  @media only screen and (max-height: 400px) {
-    .__icon {
-      .__sensor-icon img {
-        width: 24px;
-      }
-
-      .__sensor-name {
-        font-size: 12px;
-      }
-    }
-    .__sensor-info {
-      .__close-button {
-        a {
-          margin-top: -2px;
-          margin-right: -2px;
-          i {
-            font-size: 20px !important;
-          }
-        }
-      }
-
-      .__sensor-value {
-        font-size: 14px;
-      }
-
-      .__sensor-unit {
-        font-size: 12px;
-      }
-
-      .__signal-battery img {
-        width: 24px;
-      }
-    }
-  }
 }
 
 .__inactive {
@@ -199,5 +136,90 @@
     align-items: center;
 
     color: #ffffff !important;
+  }
+}
+
+@media only screen and (min-height: 600px) {
+  .__active {
+    .__icon {
+      .__sensor-icon img {
+        width: 26px;
+      }
+
+      .__sensor-name {
+        font-size: 14px;
+      }
+    }
+    .__sensor-info {
+      .__close-button .button .icon {
+        width: 20px;
+      }
+      .__sensor-value {
+        font-size: 16px;
+      }
+
+      .__sensor-unit {
+        font-size: 14px;
+      }
+
+      .__signal-battery img {
+        width: 28px;
+      }
+    }
+  }
+
+  .__inactive {
+    .__text {
+      line-height: 20px;
+      font-size: 14px;
+    }
+  }
+}
+
+@media only screen and (max-height: 600px) {
+  .__active {
+    .__icon {
+      .__sensor-icon img {
+        width: 24px;
+      }
+
+      .__sensor-name {
+        font-size: 12px;
+      }
+    }
+    .__sensor-info {
+      .__close-button {
+        a {
+          margin-top: -2px;
+          margin-right: -2px;
+          i {
+            font-size: 20px !important;
+          }
+        }
+      }
+
+      .__sensor-value {
+        font-size: 14px;
+      }
+
+      .__sensor-unit {
+        font-size: 12px;
+      }
+
+      .__signal-battery img {
+        width: 24px;
+      }
+    }
+  }
+
+  .__inactive {
+    .__icon {
+      height: 60%;
+    }
+
+    .__text {
+      line-height: 20px;
+      font-size: 12px;
+    }
   }
 }

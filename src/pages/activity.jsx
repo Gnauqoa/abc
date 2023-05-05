@@ -16,6 +16,7 @@ import {
   TIMER_NO_STOP,
   DEFAULT_SENSOR_ID,
   DEFAULT_SENSOR_DATA,
+  USER_INPUTS_TABLE,
 } from "../js/constants";
 
 // Import Atom Components
@@ -36,6 +37,7 @@ import storeService from "../services/store-service";
 import useDeviceManager from "../components/molecules/device-manager";
 
 const recentFilesService = new storeService("recent-files");
+const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
   const selectedLayout = f7route.params.layout;
@@ -98,6 +100,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     SensorServices.importSensors(activity.sensors, activity.customSensors);
+
+    // Clear all Previous Tables
+    userInputsStorage.deleteAll();
   }, []);
 
   useEffect(() => {
@@ -481,13 +486,14 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
+                    id={`${currentPageIndex}_table`}
                     datas={getDatasForTable(widgets[0].sensors)}
                     currentValues={getCurrentValues(widgets[0].sensors, true)}
                     widget={widgets[0]}
-                    handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_TABLE_CHART}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    handleSensorChange={handleSensorChange}
                     handleTableAddColumn={handleTableAddColumn}
                     handleTableDeleteColumn={handleTableDeleteColumn}
                   />
@@ -515,13 +521,14 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <TableWidget
                     ref={tableRef}
                     key={`${currentPageIndex}_table`}
+                    id={`${currentPageIndex}_table`}
                     datas={getDatasForTable(widgets[1].sensors)}
                     currentValues={getCurrentValues(widgets[1].sensors, true)}
                     widget={widgets[1]}
-                    handleSensorChange={handleSensorChange}
                     chartLayout={LAYOUT_NUMBER_TABLE}
                     isRunning={isRunning}
                     samplingMode={samplingMode}
+                    handleSensorChange={handleSensorChange}
                     handleTableAddColumn={handleTableAddColumn}
                     handleTableDeleteColumn={handleTableDeleteColumn}
                   />
@@ -544,13 +551,14 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <TableWidget
                   ref={tableRef}
                   key={`${currentPageIndex}_table`}
+                  id={`${currentPageIndex}_table`}
                   datas={getDatasForTable(widgets[0].sensors)}
                   currentValues={getCurrentValues(widgets[0].sensors, true)}
                   widget={widgets[0]}
-                  handleSensorChange={handleSensorChange}
                   chartLayout={LAYOUT_TABLE}
                   isRunning={isRunning}
                   samplingMode={samplingMode}
+                  handleSensorChange={handleSensorChange}
                   handleTableAddColumn={handleTableAddColumn}
                   handleTableDeleteColumn={handleTableDeleteColumn}
                 />
