@@ -46,6 +46,14 @@ const ActivityHeader = ({
           appEl.requestFullscreen();
         }
         setIsFullScreen(!isFullScreen);
+      } else if (f7.device.android) {
+        if (isFullScreen) {
+          AndroidFullScreen.showSystemUI(console.log("leanMode It worked!"), (error) => console.error(error));
+        } else {
+          AndroidFullScreen.immersiveMode(console.log("immersiveMode It worked!"), (error) => console.error(error));
+        }
+
+        setIsFullScreen(!isFullScreen);
       }
     } catch (e) {
       console.log(e);

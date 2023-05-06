@@ -30,8 +30,9 @@ const ActivityFooter = ({
       </div>
       <div className="__toolbar-center">
         <ActivityPageNav
-          navOrder={`${currentPageIndex + 1}/${pageLength}`}
-          isDisabled={isRunning || pageLength === 1}
+          pageLength={pageLength}
+          currentPageIndex={currentPageIndex}
+          isRunning={isRunning}
           onNextPage={handlePageNext}
           onPrevPage={handlePagePrev}
         />

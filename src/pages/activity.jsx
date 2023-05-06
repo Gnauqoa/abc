@@ -16,7 +16,6 @@ import {
   TIMER_NO_STOP,
   DEFAULT_SENSOR_ID,
   DEFAULT_SENSOR_DATA,
-  USER_INPUTS_TABLE,
 } from "../js/constants";
 
 // Import Atom Components
@@ -34,10 +33,9 @@ import ActivityFooter from "../components/organisms/activity-page-footer";
 
 import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
-import useDeviceManager from "../components/molecules/device-manager";
+import useDeviceManager from "../components/molecules/popup-scan-devices";
 
 const recentFilesService = new storeService("recent-files");
-const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
   const selectedLayout = f7route.params.layout;
@@ -74,6 +72,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     return;
   }
 
+  const [previousActivity, setPreviousActivity] = useState({});
+
   // Belong to Activity
   const [name, setName] = useState(activity.name);
   const [pages, setPages] = useState(activity.pages);
@@ -100,9 +100,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     SensorServices.importSensors(activity.sensors, activity.customSensors);
-
-    // Clear all Previous Tables
-    userInputsStorage.deleteAll();
+    setPreviousActivity(_.cloneDeep(activity));
   }, []);
 
   useEffect(() => {
@@ -132,9 +130,13 @@ export default ({ f7route, f7router, filePath, content }) => {
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
 
+    const isEqual = _.isEqual(updatedActivity, previousActivity);
+    if (isEqual) return;
+
     if (name.length) {
       const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivity));
       savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+      setPreviousActivity(_.cloneDeep(updatedActivity));
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -143,6 +145,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           setName(name);
           const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
           savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+          setPreviousActivity(_.cloneDeep(updatedActivity));
         },
         () => {},
         name
@@ -152,21 +155,26 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   async function handleActivityBack() {
     const updatedActivity = saveActivity();
-
-    dialog.prompt(
-      "Bạn có muốn lưu lại những thay đổi này không?",
-      "Tên hoạt động",
-      async (name) => {
-        setName(name);
-        const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
-        savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
-        f7router.navigate("/");
-      },
-      () => {
-        f7router.navigate("/");
-      },
-      name
-    );
+    const isEqual = _.isEqual(updatedActivity, previousActivity);
+    if (isEqual) {
+      f7router.navigate("/");
+    } else {
+      dialog.prompt(
+        "Bạn có muốn lưu lại những thay đổi này không?",
+        "Tên hoạt động",
+        async (name) => {
+          setName(name);
+          const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
+          savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
+          setPreviousActivity(_.cloneDeep(updatedActivity));
+          // f7router.navigate("/");
+        },
+        () => {
+          f7router.navigate("/");
+        },
+        name
+      );
+    }
   }
 
   function handleActivityNameChange(e) {

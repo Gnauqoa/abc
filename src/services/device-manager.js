@@ -16,7 +16,6 @@ export class DeviceManager {
 
   initializeVariables() {
     this.devices = [];
-    this.timeoutScanId;
     this.checkConnectionIntervalId;
   }
 
@@ -67,7 +66,6 @@ export class DeviceManager {
           console.error("ble.startScan", err);
         }
       );
-      this.timeoutScanId = setTimeout(this.handleStopScan, 30000);
 
       // const dummyDeviceIds = ["C6:A1:7A:4B:C1:EB"];
       // const dummyDeviceNames = ["inno-009-kpa"];
@@ -96,30 +94,34 @@ export class DeviceManager {
   }
 
   connect({ deviceId, callback }) {
-    ble.connect(
-      deviceId,
-      () => {
-        const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
-        currentDevice.isConnected = true;
+    try {
+      ble.connect(
+        deviceId,
+        () => {
+          const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
+          currentDevice.isConnected = true;
 
-        ble.requestConnectionPriority(
-          deviceId,
-          "high",
-          () => {},
-          () => {
-            console.error(`Device ${deviceId} requestConnectionPriority error`);
-          }
-        );
+          ble.requestConnectionPriority(
+            deviceId,
+            "high",
+            () => {},
+            () => {
+              console.error(`Device ${deviceId} requestConnectionPriority error`);
+            }
+          );
 
-        this.receiveDataCallback(deviceId, this.onDataCallback);
-        callback([...this.devices]);
-      },
-      () => {
-        const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
-        this.devices = newDevices;
-        callback([...this.devices]);
-      }
-    );
+          this.receiveDataCallback(deviceId, this.onDataCallback);
+          callback([...this.devices]);
+        },
+        () => {
+          const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
+          this.devices = newDevices;
+          callback([...this.devices]);
+        }
+      );
+    } catch (error) {
+      console.error("ble.connect", error);
+    }
 
     // const device = this.devices.find((d) => d.deviceId === deviceId);
     // device.isConnected = true;
@@ -180,26 +182,33 @@ export class DeviceManager {
 
   // ============================== Utils functions =============================
   handleStopScan(callback) {
-    clearTimeout(this.timeoutScanId);
-    ble.stopScan(callback, (err) => {
-      console.error("handleStopScan", err);
-      callback();
-    });
+    try {
+      ble.stopScan(callback, (err) => {
+        console.error("handleStopScan", err);
+        callback();
+      });
+    } catch (error) {
+      console.error("ble.stopScan", error);
+    }
   }
 
   receiveDataCallback(deviceId, callback) {
-    ble.startNotification(
-      deviceId,
-      BLE_SERVICE_ID,
-      BLE_TX_ID,
-      (buffer) => {
-        const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
-        callback(data);
-      },
-      (err) => {
-        console.error(`receiveBleNotification error`, err);
-      }
-    );
+    try {
+      ble.startNotification(
+        deviceId,
+        BLE_SERVICE_ID,
+        BLE_TX_ID,
+        (buffer) => {
+          const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
+          callback(data);
+        },
+        (err) => {
+          console.error(`receiveBleNotification error`, err);
+        }
+      );
+    } catch (error) {
+      console.error("ble.startNotification", error);
+    }
 
     // callback("@,9,5.33,*");
   }

@@ -211,3 +211,7 @@ export const USB_TYPE = "usb";
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
+
+// ANDROID SAVE EXPORT PROJECTS VARIABLES
+export const PROJECT_FOLDER = "InnoLabProject";
+export const PROJECT_FILE_EXT = ".edl";
