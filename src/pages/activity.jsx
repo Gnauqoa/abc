@@ -100,6 +100,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     SensorServices.importSensors(activity.sensors, activity.customSensors);
+    setPreviousActivity(_.cloneDeep(activity));
   }, []);
 
   useEffect(() => {
@@ -166,7 +167,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           const savedFilePath = await saveFile(filePath, JSON.stringify({ ...updatedActivity, name }));
           savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
           setPreviousActivity(_.cloneDeep(updatedActivity));
-          f7router.navigate("/");
+          // f7router.navigate("/");
         },
         () => {
           f7router.navigate("/");

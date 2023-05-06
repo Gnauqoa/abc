@@ -54,13 +54,13 @@ export async function saveProject(fileName, filePath, content) {
           const newFilePath = PROJECT_FOLDER + "/" + newFileName;
 
           createFile(rootEntry, newFilePath, content);
-          resolve(cordova.file.externalDataDirectory + newFilePath);
+          formatReturnPath(cordova.file.externalDataDirectory, newFilePath, (returnPath) => resolve(returnPath));
         };
 
         try {
           if (filePath) {
             createFile(rootEntry, filePath, content);
-            resolve(cordova.file.externalDataDirectory + filePath);
+            formatReturnPath(cordova.file.externalDataDirectory, filePath, (returnPath) => resolve(returnPath));
           } else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
@@ -87,6 +87,22 @@ export async function removeProject(filePath) {
     );
   });
 }
+
+const formatReturnPath = (rootPath, filePath, callback) => {
+  window.resolveLocalFileSystemURL(
+    cordova.file.externalRootDirectory,
+    function (entry) {
+      const fileSystemName = entry.filesystem.name;
+      const returnPath = String(rootPath + filePath).replace(/^.*\/Android/, `${fileSystemName}/Android`);
+      callback(returnPath);
+    },
+    function (error) {
+      console.error(error);
+      callback(null);
+    }
+  );
+};
+
 function getAllFiles(rootEntry, callback) {
   rootEntry.getDirectory(
     PROJECT_FOLDER,
