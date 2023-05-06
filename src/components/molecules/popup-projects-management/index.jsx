@@ -2,19 +2,21 @@ import React, { useEffect, useRef, useState } from "react";
 import { Navbar, Button, Page, Popup } from "framework7-react";
 import { searchProjects, openProject, removeProject } from "../../../utils/cordova-file-utils";
 import "./index.scss";
+import { PROJECT_FOLDER } from "../../../js/constants";
 
 const ProjectManagementPopup = ({ f7router, opened, onClose }) => {
   const dataRunManagementPopupRef = useRef();
   const [projects, setProjects] = useState([]);
 
   async function onDeleteProjects(project) {
-    const result = await removeProject(project.path);
-    if (result) setProjects(projects.filter((p) => p.path !== project.path || p.name !== project.name));
+    const filePath = PROJECT_FOLDER + "/" + project.name;
+    const result = await removeProject(filePath);
+    if (result) setProjects(projects.filter((p) => p.name !== project.name));
     console.log("DELETE_PROJECT: ", JSON.stringify(project), JSON.stringify(result));
   }
 
   async function onChooseProject(project) {
-    const { path: filePath } = project;
+    const filePath = PROJECT_FOLDER + "/" + project.name;
     const fileContent = await openProject(filePath);
     const content = JSON.parse(fileContent);
 

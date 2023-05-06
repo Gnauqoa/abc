@@ -1,12 +1,21 @@
+import { f7 } from "framework7-react";
+
+import { PROJECT_FILE_EXT, PROJECT_FOLDER } from "../js/constants";
 import { getUniqueFileName } from "./core";
 
-const PROJECT_FOLDER = "InnoLabProject";
-const PROJECT_FILE_EXT = ".edl";
+let DEFAULT_ROOT_DIRECTORY;
+let hasExternalMem;
+try {
+  hasExternalMem = cordova.file.externalDataDirectory ? true : false;
+  DEFAULT_ROOT_DIRECTORY = hasExternalMem ? cordova.file.externalDataDirectory : cordova.file.dataDirectory;
+} catch (error) {
+  console.log("cordova-file-utils: ", error);
+}
 
 export async function searchProjects() {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.externalDataDirectory,
+      DEFAULT_ROOT_DIRECTORY,
       function (rootEntry) {
         try {
           getAllFiles(rootEntry, (files) => resolve(files));
@@ -22,7 +31,7 @@ export async function searchProjects() {
 export async function openProject(filePath) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.externalDataDirectory,
+      DEFAULT_ROOT_DIRECTORY,
       (rootEntry) => {
         try {
           rootEntry.getFile(
@@ -43,7 +52,7 @@ export async function openProject(filePath) {
 export async function saveProject(fileName, filePath, content) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.externalDataDirectory,
+      DEFAULT_ROOT_DIRECTORY,
       (rootEntry) => {
         const callbackGetSaveFiles = (files) => {
           const fileNames = files.map((file) => {
@@ -54,13 +63,13 @@ export async function saveProject(fileName, filePath, content) {
           const newFilePath = PROJECT_FOLDER + "/" + newFileName;
 
           createFile(rootEntry, newFilePath, content);
-          formatReturnPath(cordova.file.externalDataDirectory, newFilePath, (returnPath) => resolve(returnPath));
+          formatReturnPath(DEFAULT_ROOT_DIRECTORY, newFilePath, (returnPath) => resolve(returnPath));
         };
 
         try {
           if (filePath) {
             createFile(rootEntry, filePath, content);
-            formatReturnPath(cordova.file.externalDataDirectory, filePath, (returnPath) => resolve(returnPath));
+            formatReturnPath(DEFAULT_ROOT_DIRECTORY, filePath, (returnPath) => resolve(returnPath));
           } else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
@@ -74,7 +83,7 @@ export async function saveProject(fileName, filePath, content) {
 export async function removeProject(filePath) {
   return new Promise((resolve, reject) => {
     window.resolveLocalFileSystemURL(
-      cordova.file.externalDataDirectory,
+      DEFAULT_ROOT_DIRECTORY,
       (rootEntry) => {
         rootEntry.getFile(
           filePath,
@@ -93,7 +102,11 @@ const formatReturnPath = (rootPath, filePath, callback) => {
     cordova.file.externalRootDirectory,
     function (entry) {
       const fileSystemName = entry.filesystem.name;
-      const returnPath = String(rootPath + filePath).replace(/^.*\/Android/, `${fileSystemName}/Android`);
+
+      const matcherPattern = hasExternalMem ? /^.*\/Android/ : /^.*\/files/;
+      const replacePattern = hasExternalMem ? `${fileSystemName}/Android` : "";
+      const returnPath = String(rootPath + filePath).replace(matcherPattern, replacePattern);
+
       callback(returnPath);
     },
     function (error) {
@@ -113,7 +126,6 @@ function getAllFiles(rootEntry, callback) {
         for (const entry of entries) {
           files.push({
             name: entry.name,
-            path: entry.fullPath,
           });
         }
         callback(files);
