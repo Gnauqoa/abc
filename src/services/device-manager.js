@@ -1,10 +1,13 @@
-import { BLE_RX_ID } from "../js/constants";
-import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX } from "../js/constants";
+import { f7 } from "framework7-react";
+
+import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID } from "../js/constants";
 
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
+import { WebBle } from "./electron-ble";
 
 const CHECKING_CONNECTION_INTERVAL = 1000;
+const webBle = new WebBle();
 
 export class DeviceManager {
   constructor() {
@@ -33,61 +36,41 @@ export class DeviceManager {
   // ============================== BLE functions =============================
   scan({ callback }) {
     try {
-      ble.startScan(
-        [],
-        (device) => {
-          // console.log(JSON.stringify(device));
-          if (
-            device?.name?.includes(DEVICE_PREFIX) ||
-            device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
-          ) {
-            // console.log("this.devices", JSON.stringify(this.devices));
-            const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
-            if (deviceIndex < 0) {
-              let deviceName = device.name || device.id;
-              if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
-                deviceName = device.advertising.kCBAdvDataLocalName;
+      if (f7.device.electron) {
+        webBle.startScanning(callback);
+      } else if (f7.device.android || f7.device.ios) {
+        ble.startScan(
+          [],
+          (device) => {
+            if (
+              device?.name?.includes(DEVICE_PREFIX) ||
+              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
+            ) {
+              const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
+              if (deviceIndex < 0) {
+                let deviceName = device.name || device.id;
+                if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
+                  deviceName = device.advertising.kCBAdvDataLocalName;
+                }
+                const newFoundDevice = {
+                  deviceId: device.id,
+                  code: deviceName,
+                  rssi: device.rssi,
+                  type: BLE_TYPE,
+                  isConnected: false,
+                };
+
+                const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
+                sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
               }
-              const newFoundDevice = {
-                deviceId: device.id,
-                code: deviceName,
-                rssi: device.rssi,
-                type: BLE_TYPE,
-                isConnected: false,
-              };
-
-              const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-              sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
+              callback([...this.devices]);
             }
-            callback([...this.devices]);
+          },
+          (err) => {
+            console.error("ble.startScan", err);
           }
-        },
-        (err) => {
-          console.error("ble.startScan", err);
-        }
-      );
-
-      // const dummyDeviceIds = ["C6:A1:7A:4B:C1:EB"];
-      // const dummyDeviceNames = ["inno-009-kpa"];
-      // for (let i = 0; i < dummyDeviceIds.length; i++) {
-      //   const dummyDeviceId = dummyDeviceIds[i];
-      //   const dummyDeviceName = dummyDeviceNames[i];
-      //   const deviceIndex = this.devices.findIndex((d) => d.deviceId === dummyDeviceId || d.isConnected === false);
-      //   if (deviceIndex < 0) {
-      //     let deviceName = dummyDeviceName || dummyDeviceId;
-      //     const newFoundDevice = {
-      //       deviceId: dummyDeviceId,
-      //       code: deviceName,
-      //       rssi: "-85",
-      //       type: BLE_TYPE,
-      //       isConnected: false,
-      //     };
-      //     const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-      //     if (sensor === null) return [];
-      //     this.devices.push({ ...sensor, ...newFoundDevice });
-      //     callback([...this.devices]);
-      //   }
-      // }
+        );
+      }
     } catch (err) {
       console.error("scan error", err.message);
     }
@@ -95,30 +78,34 @@ export class DeviceManager {
 
   connect({ deviceId, callback }) {
     try {
-      ble.connect(
-        deviceId,
-        () => {
-          const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
-          currentDevice.isConnected = true;
+      if (f7.device.electron) {
+        webBle.connect(deviceId, callback, this.onDataCallback);
+      } else if (f7.device.android || f7.device.ios) {
+        ble.connect(
+          deviceId,
+          () => {
+            const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
+            currentDevice.isConnected = true;
 
-          ble.requestConnectionPriority(
-            deviceId,
-            "high",
-            () => {},
-            () => {
-              console.error(`Device ${deviceId} requestConnectionPriority error`);
-            }
-          );
+            ble.requestConnectionPriority(
+              deviceId,
+              "high",
+              () => {},
+              () => {
+                console.error(`Device ${deviceId} requestConnectionPriority error`);
+              }
+            );
 
-          this.receiveDataCallback(deviceId, this.onDataCallback);
-          callback([...this.devices]);
-        },
-        () => {
-          const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
-          this.devices = newDevices;
-          callback([...this.devices]);
-        }
-      );
+            this.receiveDataCallback(deviceId, this.onDataCallback);
+            callback([...this.devices]);
+          },
+          () => {
+            const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
+            this.devices = newDevices;
+            callback([...this.devices]);
+          }
+        );
+      }
     } catch (error) {
       console.error("ble.connect", error);
     }
@@ -183,10 +170,12 @@ export class DeviceManager {
   // ============================== Utils functions =============================
   handleStopScan(callback) {
     try {
-      ble.stopScan(callback, (err) => {
-        console.error("handleStopScan", err);
-        callback();
-      });
+      if (f7.device.android || f7.device.ios) {
+        ble.stopScan(callback, (err) => {
+          console.error("handleStopScan", err);
+          callback();
+        });
+      }
     } catch (error) {
       console.error("ble.stopScan", error);
     }
