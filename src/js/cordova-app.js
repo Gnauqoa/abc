@@ -89,14 +89,6 @@ var cordovaApp = {
         }
 
         if (currentView && currentView.router && currentView.router.history.length > 1) {
-          if (
-            currentView.router.currentRoute.path.includes("/dashboards/") ||
-            currentView.router.currentRoute.path.includes("/codes/")
-          ) {
-            e.preventDefault();
-            return false;
-          }
-
           currentView.router.back();
           e.preventDefault();
           return false;
@@ -170,14 +162,16 @@ var cordovaApp = {
     // Save f7 instance
     cordovaApp.f7 = f7;
 
-    // Handle Android back button
-    cordovaApp.handleAndroidBackButton();
+    document.addEventListener("deviceready", () => {
+      // Handle Android back button
+      cordovaApp.handleAndroidBackButton();
 
-    // Handle Splash Screen
-    cordovaApp.handleSplashscreen();
+      // Handle Splash Screen
+      cordovaApp.handleSplashscreen();
 
-    // Handle Keyboard
-    cordovaApp.handleKeyboard();
+      // Handle Keyboard
+      cordovaApp.handleKeyboard();
+    });
   },
 };
 
