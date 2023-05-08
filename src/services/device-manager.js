@@ -5,6 +5,7 @@ import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID } from ".
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
+import * as core from "../utils/core";
 
 const CHECKING_CONNECTION_INTERVAL = 1000;
 const webBle = new WebBle();
@@ -34,9 +35,11 @@ export class DeviceManager {
   }
 
   // ============================== BLE functions =============================
-  scan({ callback }) {
+  async scan({ callback }) {
     try {
       if (f7.device.electron) {
+        window._cdvElectronIpc.selectBleDevice(""); // Cancel current scan
+        await core.sleep(200);
         webBle.startScanning(callback);
       } else if (f7.device.android || f7.device.ios) {
         ble.startScan(
@@ -109,11 +112,6 @@ export class DeviceManager {
     } catch (error) {
       console.error("ble.connect", error);
     }
-
-    // const device = this.devices.find((d) => d.deviceId === deviceId);
-    // device.isConnected = true;
-    // this.receiveDataCallback(deviceId, this.onDataCallback);
-    // callback([...this.devices]);
   }
 
   disconnect({ deviceId, id, callback }) {
@@ -128,23 +126,21 @@ export class DeviceManager {
     id = device.id;
     deviceId = device.deviceId;
 
-    ble.disconnect(
-      deviceId,
-      () => {
-        const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
-        currentDevice.isConnected = false;
-        // console.log("this.devices", JSON.stringify(this.devices));
-        callback([...this.devices]);
-      },
-      (err) => {
-        console.error(`Disconnected device ${deviceId} error`, err);
-      }
-    );
-
-    // const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
-    // currentDevice.isConnected = false;
-    // DataManagerIST.callbackSensorDisconnected([id, BLE_TYPE]);
-    // callback([...this.devices]);
+    if (f7.device.electron) {
+      webBle.disconnect(deviceId, () => callback([]));
+    } else if (f7.device.android || f7.device.ios) {
+      ble.disconnect(
+        deviceId,
+        () => {
+          const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
+          currentDevice.isConnected = false;
+          callback([...this.devices]);
+        },
+        (err) => {
+          console.error(`Disconnected device ${deviceId} error`, err);
+        }
+      );
+    }
   }
 
   async sendData(deviceId, data) {
