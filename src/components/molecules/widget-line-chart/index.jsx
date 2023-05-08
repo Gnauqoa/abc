@@ -308,7 +308,7 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
     chartInstance.update();
   };
 
-  dialog.modifyNoteLineChart("Thêm note", handleOpenPopup);
+  dialog.modifyNoteLineChart("Thêm chú giải", handleOpenPopup);
 };
 
 // ======================================= CHART LEGEND =======================================

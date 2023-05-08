@@ -24,7 +24,7 @@
       color: #ffffff;
 
       img {
-        width: 45px;
+        width: 40px;
       }
     }
 
@@ -35,9 +35,14 @@
       justify-content: center;
       text-align: center;
       color: #ffffff;
-      font-size: 16px;
+      font-size: 14px;
       font-family: var(--f7-font-family);
       font-weight: 600;
+
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-bottom: 5px;
+      word-wrap: break-word;
     }
   }
 
@@ -84,13 +89,27 @@
     }
     .__signal-battery {
       width: 100%;
+      height: 40px;
       display: flex;
       justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-right: 20px;
 
-      img {
+      .battery,
+      .connection {
+        display: flex;
+        justify-content: center; /* center horizontally */
+        align-items: center; /* center vertically */
+        height: 100%; /* set the height to make sure the image is centered */
+      }
+
+      .battery img {
         width: 32px;
-        padding-right: 10px;
-        padding-bottom: 10px;
+      }
+
+      .connection img {
+        width: 12px;
       }
     }
   }
@@ -111,16 +130,22 @@
     align-items: center;
 
     color: #d9d9d9 !important;
+
+    .icon {
+      font-size: 60px;
+    }
   }
 
   .__text {
-    height: 30%;
-    width: 100%;
+    height: 25%;
     line-height: 20px;
     color: #000000;
     text-align: center;
     font-family: var(--f7-font-family);
-    font-size: 18px;
+    font-size: 16px;
+    padding-left: 5px;
+    padding-right: 5px;
+    word-wrap: break-word;
   }
 }
 
@@ -128,55 +153,11 @@
   background: #d9d9d9;
 
   .__icon {
-    height: 70%;
-    width: 100%;
-
-    display: flex !important;
-    justify-content: center;
-    align-items: center;
-
     color: #ffffff !important;
   }
 }
 
-@media only screen and (min-height: 600px) {
-  .__active {
-    .__icon {
-      .__sensor-icon img {
-        width: 26px;
-      }
-
-      .__sensor-name {
-        font-size: 14px;
-      }
-    }
-    .__sensor-info {
-      .__close-button .button .icon {
-        width: 20px;
-      }
-      .__sensor-value {
-        font-size: 16px;
-      }
-
-      .__sensor-unit {
-        font-size: 14px;
-      }
-
-      .__signal-battery img {
-        width: 28px;
-      }
-    }
-  }
-
-  .__inactive {
-    .__text {
-      line-height: 20px;
-      font-size: 14px;
-    }
-  }
-}
-
-@media only screen and (max-height: 600px) {
+@media only screen and (max-height: 800px) {
   .__active {
     .__icon {
       .__sensor-icon img {
@@ -193,7 +174,7 @@
           margin-top: -2px;
           margin-right: -2px;
           i {
-            font-size: 20px !important;
+            font-size: 20px;
           }
         }
       }
@@ -206,8 +187,19 @@
         font-size: 12px;
       }
 
-      .__signal-battery img {
-        width: 24px;
+      .__signal-battery {
+        height: 30px;
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+
+        .battery img {
+          width: 24px;
+        }
+
+        .connection img {
+          width: 10px;
+        }
       }
     }
   }
@@ -215,11 +207,16 @@
   .__inactive {
     .__icon {
       height: 60%;
+      .icon {
+        height: 40px;
+        width: 40px;
+        font-size: 40px;
+      }
     }
 
     .__text {
       line-height: 20px;
-      font-size: 12px;
+      font-size: 10px;
     }
   }
 }

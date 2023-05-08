@@ -192,6 +192,7 @@
   &#dialog-sample-setting {
     .title {
       color: #0086ff;
+      text-align: center;
     }
 
     .items {
@@ -254,6 +255,7 @@
   &#dialog-modify-note-line-chart {
     .title {
       color: #0086ff;
+      text-align: center;
     }
 
     .items {
@@ -645,23 +647,5 @@
         margin-bottom: 0px;
       }
     }
-    // .button {
-    //   display: flex;
-    //   align-items: flex-end;
-    //   justify-content: center;
-
-    //   .close-button {
-    //     background: #09a8fa;
-    //     color: white;
-    //     width: fit-content;
-    //     border-radius: 9999px;
-    //     min-width: 100px;
-    //     margin-right: 15px;
-
-    //     &.delete-mode {
-    //       background: #ff3b30;
-    //     }
-    //   }
-    // }
   }
 }

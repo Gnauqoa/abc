@@ -2,6 +2,8 @@ import React from "react";
 import { Button, Icon } from "framework7-react";
 
 import batteryIcon from "../../../img/battery/100.png";
+import uartIcon from "../../../img/connections/uart.png";
+import bleIcon from "../../../img/connections/ble.png";
 import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 
@@ -14,7 +16,7 @@ const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, type, st
       {status === WIDGET_SENSOR_INACTIVE ? (
         <div className="__inactive">
           <div className="__icon">
-            <Icon material="error" size="60"></Icon>
+            <Icon material="error"></Icon>
           </div>
           <div className="__text">Chưa kết nối cảm biến</div>
         </div>
@@ -47,7 +49,12 @@ const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, type, st
               <span>{sensorIcon?.unit}</span>
             </div>
             <div className="__signal-battery">
-              <img src={batteryIcon} alt="battery" />
+              <div className="battery">
+                <img src={batteryIcon} alt="battery" />
+              </div>
+              <div className="connection">
+                {type === BLE_TYPE ? <img src={bleIcon} alt="bleIcon" /> : <img src={uartIcon} alt="uartIcon" />}
+              </div>
             </div>
           </div>
         </div>

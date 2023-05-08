@@ -7,7 +7,6 @@ import CustomDropdownInput from "./custom-list-input";
 
 const CALIBRATING_1_POINT = 1;
 const CALIBRATING_2_POINTS = 2;
-const defaultCalibratingValues = [0, 1];
 
 const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   const [formField, setFormField] = React.useState({});
@@ -22,8 +21,8 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
         unitId: unitInfo.id,
         unitName: unitInfo.name || "",
         calibratingType: calibrationType || CALIBRATING_1_POINT,
-        calibrationValues: calibrationValues || [1, 0], // { a: 1, b: 0 } y = a * x + b
-        calibrationValuesRead: [1, 0], // { a: 1, b: 0 }
+        calibrationValues: calibrationValues || [], // { a: 1, b: 0 } y = a * x + b
+        calibrationValuesRead: [], // { a: 1, b: 0 }
       });
     }
   }, [sensorInfo]);
@@ -77,28 +76,32 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     }
   };
 
-  const convertCalibrationValues = (calibrationValues) => {
+  const convertCalibrationValues = (calibrationValues, calibratingType) => {
     const defaultReturn = { data1: 1, data2: 0 };
     const [data1, data2] = calibrationValues;
     const data1Float = Number(data1);
     const data2Float = Number(data2);
 
     if (Number.isNaN(data1Float)) {
-      f7.dialog.alert("Giá trị chuẩn điểm 1 phải là số");
+      f7.dialog.alert(`Giá trị chuẩn ${calibratingType === CALIBRATING_1_POINT ? "điểm 1" : "điểm 2"} phải là số`);
       return defaultReturn;
     }
 
     if (Number.isNaN(data2Float)) {
-      f7.dialog.alert("Giá trị chuẩn điểm 2 phải là số");
+      f7.dialog.alert(`Giá trị đọc được ${calibratingType === CALIBRATING_2_POINTS ? "điểm 1" : "điểm 2"} phải là số`);
       return defaultReturn;
     }
     return { data1: data1Float, data2: data2Float };
   };
+
   const onSubmitHandler = (event) => {
     event.preventDefault();
 
-    const { data1: v1, data2: v2 } = convertCalibrationValues(formField.calibrationValues);
-    const { data1: r1, data2: r2 } = convertCalibrationValues(formField.calibrationValuesRead);
+    const { data1: v1, data2: v2 } = convertCalibrationValues(formField.calibrationValues, CALIBRATING_1_POINT);
+    const { data1: r1, data2: r2 } =
+      formField.calibratingType === CALIBRATING_2_POINTS
+        ? convertCalibrationValues(formField.calibrationValuesRead, CALIBRATING_2_POINTS)
+        : { data1: 1, data2: 0 };
 
     const k = ((v1 - v2) / (r1 - r2)).toFixed(2);
     const offset = (v1 - k * r1).toFixed(2);
@@ -110,7 +113,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     <>
       <List className="__calibrating" form noHairlinesMd inlineLabels>
         <CustomDropdownInput
-          labelName="Thông tin hiệu chỉnh:"
+          labelName="Thông tin cài đặt:"
           buttonName={formField.unitName}
           popOverName="popover-sensor-unit"
         >
@@ -149,11 +152,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                 label="Giá trị chuẩn:"
                 type="text"
                 validateOnBlur
-                value={
-                  formField.calibrationValues
-                    ? formField.calibrationValues[calibrateType]
-                    : defaultCalibratingValues[calibrateType]
-                }
+                value={formField.calibrationValues?.[calibrateType]}
                 onChange={formFieldHandler}
               ></ListInput>
 
@@ -162,11 +161,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                   <div className="item-inner">
                     <div className="item-title item-label">Giá trị đọc được</div>
                     <div className="item-input-wrap">
-                      <span className="input-with-value">
-                        {formField.calibrationValuesRead
-                          ? formField.calibrationValuesRead[calibrateType]
-                          : defaultCalibratingValues[calibrateType]}
-                      </span>
+                      <span className="input-with-value">{formField.calibrationValuesRead?.[calibrateType]}</span>
                     </div>
                     <div className="sampling-button">
                       <Button
