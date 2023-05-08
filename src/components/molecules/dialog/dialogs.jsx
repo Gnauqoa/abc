@@ -231,7 +231,7 @@ export default class extends Component {
               <div className="title" />
               <div className="items">
                 <div className="item">
-                  <div className="text">Chu kỳ: </div>
+                  <div className="text">Chú giải: </div>
                   <input
                     type="text"
                     className="input"

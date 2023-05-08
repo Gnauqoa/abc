@@ -110,7 +110,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     <>
       <List className="__calibrating" form noHairlinesMd inlineLabels>
         <CustomDropdownInput
-          labelName="Thông tin hiệu chỉnh:"
+          labelName="Thông tin cài đặt:"
           buttonName={formField.unitName}
           popOverName="popover-sensor-unit"
         >
