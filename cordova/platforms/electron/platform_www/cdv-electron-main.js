@@ -141,6 +141,7 @@ app.on("ready", () => {
   });
 
   createWindow();
+  setupBluetooth(mainWindow);
 });
 
 // Quit when all windows are closed.
@@ -367,6 +368,28 @@ async function listSerialPorts() {
 function listPorts() {
   listSerialPorts();
   setTimeout(listPorts, 3000);
+}
+
+function setupBluetooth(win) {
+  let btCallback;
+
+  // Setup handling of bluetooth scan results
+  win.webContents.on("select-bluetooth-device", (event, devices, callback) => {
+    // Store the callback for calling once a device is selected
+    btCallback = callback;
+
+    // Allow the WebBluetooth API to wait for a custom UI chooser
+    event.preventDefault();
+
+    // Notify the render process of found devices
+    win.webContents.send("webble-scan", devices);
+  });
+
+  // Resolve a request when a device is selected
+  ipcMain.on("webble-selected", (event, deviceId) => {
+    if (btCallback) btCallback(deviceId);
+    btCallback = null;
+  });
 }
 
 // Set a timeout that will check for new serialPorts every 2 seconds.
