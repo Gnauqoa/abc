@@ -1,4 +1,4 @@
-.use-prompt-popup.popup {
+.use-prompt-dialog-popup.popup {
   width: 400px;
   height: 250px;
 
@@ -7,105 +7,110 @@
   border-radius: 25px;
 }
 
-.use-prompt-popup-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 25%;
-
-  .navbar-inner {
-    color: #0086ff;
+.use-prompt-dialog {
+  .use-prompt-dialog-header {
     display: flex;
-    justify-content: center;
-    line-height: 100px;
-    font-size: larger;
-  }
-}
-
-.use-prompt-popup-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-
-  .title {
-    color: #0086ff;
-    text-align: center;
+    justify-content: space-between;
+    align-items: center;
+    height: 25%;
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+    }
   }
 
-  .items {
+  .use-prompt-dialog-content {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 0 20px 30px 20px;
+    justify-content: space-around;
 
-    .item {
-      height: 50px;
+    .title {
+      color: #0086ff;
+    }
+
+    .items {
       display: flex;
+      flex-direction: column;
       justify-content: center;
-      gap: 10px;
+      padding: 0 20px 30px 20px;
 
-      .text {
-        color: #0086ff;
-        font-size: 18px;
-        font-weight: 500;
-        align-self: center;
-      }
+      .item {
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
 
-      .input {
-        &::placeholder {
-          color: #cbd1dc;
-        }
-        &:focus {
-          outline: none;
-          border-color: #275efe;
+        .text {
+          color: #0086ff;
+          font-size: 18px;
+          font-weight: 500;
+          align-self: center;
         }
 
-        padding: 8px 16px;
-        padding-right: 40px;
-        font-size: 14px;
-        border: 1px solid #cdd9ed;
-        background: #fff;
-        transition: border 0.3s ease;
-        white-space: nowrap;
-        display: block;
-        position: relative;
-        -webkit-box-flex: 1;
-        flex: 1 1 auto;
-        margin-top: 0;
-        margin-bottom: 0;
-        border-radius: 10px;
-      }
-    }
-  }
+        .input {
+          &::placeholder {
+            color: #cbd1dc;
+          }
+          &:focus {
+            outline: none;
+            border-color: #275efe;
+          }
 
-  .buttons {
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-
-    .ok-button {
-      background: #09a8fa;
-      color: white;
-      width: fit-content;
-      border-radius: 9999px;
-      min-width: 100px;
-      margin-right: 15px;
-
-      &.delete-mode {
-        background: #ff3b30;
+          padding: 8px 16px;
+          padding-right: 40px;
+          font-size: 14px;
+          border: 1px solid #cdd9ed;
+          background: #fff;
+          transition: border 0.3s ease;
+          white-space: nowrap;
+          display: block;
+          position: relative;
+          -webkit-box-flex: 1;
+          flex: 1 1 auto;
+          margin-top: 0;
+          margin-bottom: 0;
+          border-radius: 10px;
+        }
       }
     }
 
-    .cancel-button {
-      background: #b2b2b2;
-      color: white;
-      width: fit-content;
-      border-radius: 9999px;
-      min-width: 100px;
-      float: left;
-      margin-right: 15px;
+    .buttons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+
+      .ok-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        margin-right: 15px;
+
+        &.delete-mode {
+          background: #ff3b30;
+        }
+      }
+      .ok-button:hover {
+        background-color: #09a8fa !important;
+      }
+
+      .cancel-button {
+        background: #b2b2b2;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        float: left;
+        margin-right: 15px;
+      }
+      .cancel-button:hover {
+        background-color: #b2b2b2 !important;
+      }
     }
   }
 }
