@@ -57,7 +57,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           layout: selectedLayout,
           widgets: defaultWidgets,
           lastDataRunId: null,
-          name: "Trang 1",
+          name: "1",
         },
       ],
       frequency: 1,
@@ -244,7 +244,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       layout: chartType,
       widgets: defaultWidgets,
       lastDataRunId: null,
-      name: `Trang ${pages.length + 1}`,
+      name: pages.length,
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -574,8 +574,6 @@ export default ({ f7route, f7router, filePath, content }) => {
         <ActivityFooter
           isRunning={isRunning}
           frequency={frequency}
-          pageLength={pages?.length}
-          currentPageIndex={currentPageIndex}
           handlePageNext={handlePageNext}
           handlePagePrev={handlePagePrev}
           handleFrequencySelect={handleFrequencySelect}
