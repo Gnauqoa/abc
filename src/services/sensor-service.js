@@ -38,9 +38,13 @@ export const defaultSensors = [
   },
   {
     id: 2,
-    code: "inno-002",
+    code: "BLE-9100",
     name: "Cảm biến Oxi hòa tan trong nước",
-    data: [{ id: "inno-002-do", name: "DO", unit: "mg/L", min: 0, max: 20 }],
+    data: [
+      { id: "BLE-9100-mg", name: "mg/L", unit: "mg/L", min: 0, max: 30 },
+      { id: "BLE-9100-percent", name: "%", unit: "%", min: 0, max: 300 },
+      { id: "BLE-9100-temp", name: "Nhiệt độ", unit: "°C", min: 0, max: 100 }
+    ],
   },
   {
     id: 3,
@@ -95,6 +99,18 @@ export const defaultSensors = [
     code: "inno-009",
     name: "Cảm biến áp suất khí",
     data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 50 }],
+  },
+  {
+    id: 10,
+    code: "BLE-9909",
+    name: "Cảm biến chất lượng nước",
+    data: [
+      { id: "BLE-9909-PH", name: "PH", unit: "", min: 0, max: 14 },
+      { id: "BLE-9909-EC", name: "EC", unit: "uS/cm", min: 0, max: 9999 },
+      { id: "BLE-9909-TDS", name: "TDS", unit: "ppm", min: 0, max: 1000 },
+      { id: "BLE-9909-SALT1", name: "SALT", unit: "%", min: 0, max: 999 },
+      { id: "BLE-9909-SALT2", name: "SALT", unit: "ppm", min: 0, max: 99 },
+    ],
   },
 ];
 
