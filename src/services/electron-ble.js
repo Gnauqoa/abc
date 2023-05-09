@@ -84,13 +84,9 @@ export class WebBle {
       return;
     }
 
-    console.log(device);
-
     if (device.code.includes ('BLE-9909')) {
-      console.log('This is BLE 9909');
       this.ble9909SensorReceiveDataCallback(device, callback);
     } else if (device.code.includes ('BLE-9100')) {
-      console.log('This is BLE 9100');
       this.ble9100SensorReceiveDataCallback(device, callback);
     } else {
       //this.innoLabSensorReceiveDataCallback(device, callback);
@@ -302,31 +298,52 @@ export class WebBle {
           message[i-1]=~(hibit|lobit1);
 
         }
-        
-        let do_mg = ((message[3] << 8) + message[4])/100;
-        console.log('DO (mg/L) = ' + do_mg);
-        let do_percent = ((message[5] << 8) + message[6])/10;
-        console.log('DO (%) = ' + do_percent);
-        let temp = ((message[13] << 8) + message[14])/100;
-        console.log('Temp (*C) = ' + (((temp/10.0) * (9.0/5.0)) + 32.0));
-        let batt = ((message[15] << 8) + message[16]);
-        console.log('Battery (%) = ' + batt/32);
+
+        let hold_reading = message[17] >> 4;
+
+        let backlight = (message[17] & 0x0F) >> 3
+
+        let ec = ((message[5] << 8) + message[6]);
+
+        let tds = ((message[7] << 8) + message[8]);
+
+        let salt_tds = ((message[9] << 8) + message[10]);
+
+        let salt_sg = ((message[11] << 8) + message[12])/100;
+
+        let ph = ((message[3] << 8) + message[4])/100;
+
+        let temp = ((message[13] << 8) + message[14])/10;
+
+        let batt = parseInt(((message[15] << 8) + message[16])/32);
 
         var sensorData = [];
 
-        sensorData.push(do_mg);
-        sensorData.push(do_percent);
+        sensorData.push(ph);
+        sensorData.push(ec);
+        sensorData.push(tds);
+        sensorData.push(salt_sg);
+        sensorData.push(salt_tds);
         sensorData.push(temp);
 
-        var dataArray = [sensorId, batt/32, BLE_TYPE, dataLength]
+        var dataArray = [device.id, batt, BLE_TYPE, 24]
         sensorData.forEach(function (d, i) {
           dataArray.push(d);
         });
 
-        console.log(dataArray);
-
         callback(dataArray);
       });
+
+      let intervalId = setInterval(function () {
+        characteristic.readValue().catch((error) => {
+          console.error(error);
+          if (error.message.includes('GATT Server is disconnected')) {
+            console.log('Sensor just disconnected');
+            clearInterval(intervalId);
+          }
+          
+        });
+      }, 500);
     })
     .catch((err) => {
       console.log("receiveDataCallback error", err.message);
@@ -337,11 +354,7 @@ export class WebBle {
     this.servers[device.deviceId]
     .getPrimaryService(0xFF01)
     .then((service) => service.getCharacteristic(0xFF02))
-    .then((characteristic) => {
-      characteristic.startNotifications();
-      device.intervalId = setInterval(function () {characteristic.readValue();}, 500);
-      return characteristic;
-    })
+    .then((characteristic) => characteristic.startNotifications())
     .then((characteristic) => {
       characteristic.removeEventListener("characteristicvaluechanged", () => {});
       //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
@@ -404,7 +417,7 @@ export class WebBle {
         //console.log('DO (mg/L) = ' + do_mg);
         let do_percent = ((message[5] << 8) + message[6])/10;
         //console.log('DO (%) = ' + do_percent);
-        let temp = ((message[13] << 8) + message[14])/100;
+        let temp = ((message[13] << 8) + message[14])/10;
         //console.log('Temp (*C) = ' + (((temp/10.0) * (9.0/5.0)) + 32.0));
         let batt = parseInt(((message[15] << 8) + message[16])/32);
         //console.log('Battery (%) = ' + batt);
@@ -422,6 +435,17 @@ export class WebBle {
 
         callback(dataArray);
       });
+
+      let intervalId = setInterval(function () {
+        characteristic.readValue().catch((error) => {
+          console.error(error);
+          if (error.message.includes('GATT Server is disconnected')) {
+            console.log('Sensor just disconnected');
+            clearInterval(intervalId);
+          }
+          
+        });
+      }, 500);
     })
     .catch((err) => {
       console.log("receiveDataCallback error", err.message);
