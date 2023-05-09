@@ -16,22 +16,23 @@ export class WebBle {
   }
 
   handleScannedDevice(device) {
-    const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.deviceId);
-    if (deviceIndex < 0) {
-      const newFoundDevice = {
+    const existingDevice = this.devices.find((d) => d.deviceId === device.deviceId);
+    if (existingDevice) {
+      existingDevice.isConnected = false;
+    } else {
+      const newDevice = {
         deviceId: device.deviceId,
         code: device.deviceName,
         type: BLE_TYPE,
         isConnected: false,
       };
 
-      const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-      sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
+      const sensor = SensorServices.getSensorByCode(newDevice.code);
+      sensor !== null && this.devices.push({ ...sensor, ...newDevice });
     }
   }
 
   startScanning = async (callback) => {
-    this.devices = [];
     this.scanCallback = callback;
     // Make the request for devices
     let options = {
