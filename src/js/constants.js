@@ -9,7 +9,7 @@ export const LAYOUT_NUMBER_CHART = "number-chart";
 export const LAYOUT_NUMBER_TABLE = "number-table";
 
 // Bluetooth
-export const DEVICE_PREFIX = "ohstem-";
+export const DEVICE_PREFIX = "inno-";
 export const XBOT_PREFIX = "xbot";
 export const MIN_SCAN_TIME = 8000; // millisecond
 export const MAX_SCAN_TIME = 15000; // millisecond

@@ -12,7 +12,7 @@ import {
 } from "../js/constants";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 3;
+const NUM_NON_DATA_SENSORS_CALLBACK = 4;
 
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
@@ -565,8 +565,9 @@ export class DataManager {
   callbackReadSensor(data) {
     try {
       const sensorId = parseInt(data[0]);
-      const source = data[1];
-      const dataLength = data[2];
+      const battery = data[1];
+      const source = data[2];
+      const dataLength = data[3];
       const sensorsData = [];
       const sensorInfo = SensorServices.getSensorInfo(sensorId);
       if (sensorInfo === null) return;

@@ -201,16 +201,7 @@ export class DeviceManager {
   onDataCallback(data) {
     if (data === undefined) return;
 
-    data = data.trim();
-
-    const dataSplit = data.split(",");
-    const dataSplitLength = dataSplit.length;
-
-    if (dataSplitLength < 4 || dataSplit[0] !== "@" || dataSplit[dataSplitLength - 1] !== "*") return;
-
-    // [sensorId, usbPort, dataLength, datas]
-    const dataParsed = [dataSplit[1], BLE_TYPE, dataSplitLength - 3, ...dataSplit.slice(2, dataSplitLength - 1)];
-    DataManagerIST.callbackReadSensor(dataParsed);
+    DataManagerIST.callbackReadSensor(data);
   }
 
   sendBleData(deviceId, data) {
