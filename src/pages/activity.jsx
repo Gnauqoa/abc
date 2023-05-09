@@ -106,7 +106,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.init();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     SensorServices.importSensors(activity.sensors, activity.customSensors);
-    setPreviousActivity(_.cloneDeep(activity));
+    if (content) setPreviousActivity(_.cloneDeep(activity));
 
     // Init states
     setPages(activity.pages);

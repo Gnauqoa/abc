@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 
-import PromptPopup from "../components/molecules/popup-prompt";
+import PromptPopup from "../components/molecules/popup-prompt-dialog";
 
 const usePrompt = ({ title, defaultValue, onClosePopup }) => {
   const [isShow, setIsShow] = useState(false);
