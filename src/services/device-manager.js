@@ -38,9 +38,11 @@ export class DeviceManager {
   async scan({ callback }) {
     try {
       if (f7.device.electron) {
-        window._cdvElectronIpc.selectBleDevice(""); // Cancel current scan
-        await core.sleep(200);
-        webBle.startScanning(callback);
+        webBle.cancelScanning();
+        webBle.startScanning((devices) => {
+          this.devices = devices;
+          callback(devices);
+        });
       } else if (f7.device.android || f7.device.ios) {
         ble.startScan(
           [],
@@ -82,7 +84,14 @@ export class DeviceManager {
   connect({ deviceId, callback }) {
     try {
       if (f7.device.electron) {
-        webBle.connect(deviceId, callback, this.onDataCallback);
+        webBle.connect(
+          deviceId,
+          (devices) => {
+            this.devices = devices;
+            callback(devices);
+          },
+          this.onDataCallback
+        );
       } else if (f7.device.android || f7.device.ios) {
         ble.connect(
           deviceId,
@@ -127,7 +136,10 @@ export class DeviceManager {
     deviceId = device.deviceId;
 
     if (f7.device.electron) {
-      webBle.disconnect(deviceId, () => callback([]));
+      webBle.disconnect(deviceId, (devices) => {
+        this.devices = devices;
+        callback(devices);
+      });
     } else if (f7.device.android || f7.device.ios) {
       ble.disconnect(
         deviceId,

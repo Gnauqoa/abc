@@ -45,6 +45,11 @@ export class WebBle {
     this.currentChosenDevice = await navigator.bluetooth.requestDevice(options);
   };
 
+  cancelScanning = async () => {
+    window._cdvElectronIpc.selectBleDevice("");
+    await core.sleep(200);
+  };
+
   connect = async (deviceId, connectedCallback, dataCallback) => {
     window._cdvElectronIpc.selectBleDevice(deviceId);
 
@@ -64,8 +69,11 @@ export class WebBle {
     console.log('Disconnect: ', deviceId);
     if (this.servers[deviceId]) {
       this.servers[deviceId] = await this.servers[deviceId].disconnect();
+
+      const device = this.devices.find((d) => d.deviceId === deviceId);
+      device.isConnected = false;
+      callback([...this.devices]);
     }
-    callback();
   };
 
   receiveDataCallback(deviceId, callback) {
