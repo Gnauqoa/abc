@@ -22,9 +22,9 @@ const PromptPopup = ({ title, defaultValue, isShow, onClosePopup }) => {
 
   return (
     <Popup ref={promptPopupRef} className="use-prompt-popup" opened={isShow} onPopupClose={() => onClose(defaultValue)}>
-      <Page className="use-prompt">
-        <Navbar className="use-prompt-header" title={title}></Navbar>
-        <div className="content">
+      <Page>
+        <Navbar className="use-prompt-popup-header" title={title}></Navbar>
+        <div className="use-prompt-popup-content">
           <div className="items">
             <div className="item">
               <div className="text">Chú giải: </div>
