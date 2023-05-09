@@ -50,13 +50,13 @@ export class WebBle {
     await core.sleep(200);
   };
 
-  connect = async (deviceId, connectedCallback, dataCallback) => {
+  connect = async (deviceId, connectedCallback, disconnectedCallback, dataCallback) => {
     window._cdvElectronIpc.selectBleDevice(deviceId);
 
     await core.sleep(100);
 
     this.chosenDevices[deviceId] = this.currentChosenDevice;
-
+    this.currentChosenDevice.addEventListener("gattserverdisconnected", disconnectedCallback);
     this.servers[deviceId] = await this.currentChosenDevice.gatt.connect();
     const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
     currentDevice.isConnected = true;

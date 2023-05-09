@@ -88,7 +88,14 @@ export class DeviceManager {
           deviceId,
           (devices) => {
             this.devices = devices;
-            callback(devices);
+            callback([]); // Electron should return empty to start new scan
+          },
+          () => {
+            console.log(`Device ${deviceId} is disconnected.`);
+            webBle.disconnect(deviceId, (devices) => {
+              this.devices = devices;
+              callback([]); // Electron should return empty to start new scan
+            });
           },
           this.onDataCallback
         );
@@ -138,7 +145,7 @@ export class DeviceManager {
     if (f7.device.electron) {
       webBle.disconnect(deviceId, (devices) => {
         this.devices = devices;
-        callback(devices);
+        callback([]); // Electron should return empty to start new scan
       });
     } else if (f7.device.android || f7.device.ios) {
       ble.disconnect(
