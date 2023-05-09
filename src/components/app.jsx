@@ -9,6 +9,7 @@ import MainMenu from "../pages/menu/menu";
 import Dialogs from "./molecules/dialog/dialogs";
 
 import dataManager from "../services/data-manager";
+import { ActivityContextProvider } from "../context/ActivityContext";
 
 const MyApp = () => {
   const device = getDevice();
@@ -80,12 +81,14 @@ const MyApp = () => {
   });
 
   return (
-    <App {...f7params}>
-      <Dialogs />
-      <MainMenu />
-      {/* Your main view, should have "view-main" class */}
-      <View main className="safe-areas" url="/" />
-    </App>
+    <ActivityContextProvider>
+      <App {...f7params}>
+        <Dialogs />
+        <MainMenu />
+        {/* Your main view, should have "view-main" class */}
+        <View main className="safe-areas" url="/" />
+      </App>
+    </ActivityContextProvider>
   );
 };
 export default MyApp;
