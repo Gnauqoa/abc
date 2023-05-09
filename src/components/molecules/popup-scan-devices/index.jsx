@@ -12,6 +12,7 @@ import {
   ListItem,
   NavTitle,
   Preloader,
+  f7,
 } from "framework7-react";
 import "./index.scss";
 
@@ -32,7 +33,7 @@ export default function useDeviceManager() {
 
   function scan() {
     DeviceManagerIST.scan({ callback: callbackSetDevices });
-    timeoutScanId.current = setTimeout(() => stopScan(), 30000);
+    timeoutScanId.current = setTimeout(() => stopScan(), 20000);
     setIsScanning(true);
   }
 
@@ -44,6 +45,9 @@ export default function useDeviceManager() {
 
   function connect(deviceId) {
     DeviceManagerIST.connect({ deviceId, callback: callbackSetDevices });
+    if (f7.device.electron) {
+      scanPopupRef.current.f7Popup().close();
+    }
   }
 
   function disconnect({ deviceId, id }) {
@@ -52,7 +56,7 @@ export default function useDeviceManager() {
 
   function renderScanPopup() {
     return (
-      <Popup ref={scanPopupRef} className="edl-popup scan-devices">
+      <Popup ref={scanPopupRef} className="edl-popup scan-devices" onPopupOpened={scan}>
         <Page>
           <Navbar>
             <NavTitle style={{ color: "#0086ff" }}>Kết nối Cảm biến không dây</NavTitle>

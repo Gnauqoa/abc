@@ -33,6 +33,13 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   quitApp: () => ipcRenderer.invoke("quitApp"),
 
   setFullscreen: (isFullscreen) => ipcRenderer.invoke("setFullscreen", isFullscreen),
+
+  onScanBleResults: (callback) => {
+    ipcRenderer.on("webble-scan", callback);
+  },
+
+  selectBleDevice: (deviceId) => ipcRenderer.send("webble-selected", deviceId),
+
 });
 
 contextBridge.exposeInMainWorld("fileApi", {

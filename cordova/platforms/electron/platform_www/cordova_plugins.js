@@ -224,58 +224,6 @@ cordova.define('cordova/plugin_list', function (require, exports, module) {
         ]
     },
     {
-        "file": "plugins/cordova-plugin-statusbar/www/statusbar.js",
-        "id": "cordova-plugin-statusbar.statusbar",
-        "pluginId": "cordova-plugin-statusbar",
-        "clobbers": [
-            "window.StatusBar"
-        ]
-    },
-    {
-        "file": "plugins/cordova-plugin-statusbar/src/browser/StatusBarProxy.js",
-        "id": "cordova-plugin-statusbar.StatusBarProxy",
-        "pluginId": "cordova-plugin-statusbar",
-        "runs": true
-    },
-    {
-        "file": "plugins/cordova-plugin-keyboard/www/keyboard.js",
-        "id": "cordova-plugin-keyboard.keyboard",
-        "pluginId": "cordova-plugin-keyboard",
-        "clobbers": [
-            "window.Keyboard"
-        ]
-    },
-    {
-        "file": "plugins/cordova-plugin-splashscreen/src/browser/SplashScreenProxy.js",
-        "id": "cordova-plugin-splashscreen.SplashScreenProxy",
-        "pluginId": "cordova-plugin-splashscreen",
-        "runs": true
-    },
-    {
-        "file": "plugins/cordova-plugin-splashscreen/www/splashscreen.js",
-        "id": "cordova-plugin-splashscreen.SplashScreen",
-        "pluginId": "cordova-plugin-splashscreen",
-        "clobbers": [
-            "navigator.splashscreen"
-        ]
-    },
-    {
-        "file": "plugins/cordova-plugin-ble-central/www/ble.js",
-        "id": "cordova-plugin-ble-central.ble",
-        "pluginId": "cordova-plugin-ble-central",
-        "clobbers": [
-            "ble"
-        ]
-    },
-    {
-        "file": "plugins/cordova-plugin-ble-central/src/browser/BLECentralPlugin.js",
-        "id": "cordova-plugin-ble-central.BLECentralPlugin",
-        "pluginId": "cordova-plugin-ble-central",
-        "merges": [
-            "ble"
-        ]
-    },
-    {
         "file": "plugins/cordova-plugin-file/www/DirectoryEntry.js",
         "id": "cordova-plugin-file.DirectoryEntry",
         "pluginId": "cordova-plugin-file",
@@ -471,8 +419,7 @@ cordova.define('cordova/plugin_list', function (require, exports, module) {
     "cordova-plugin-keyboard": "1.2.0",
     "cordova-plugin-splashscreen": "6.0.2",
     "cordova-plugin-file": "7.0.0",
-    "cordova-plugin-fullscreen": "1.3.0",
-    "cordova-plugin-ble-central": "1.6.3"
+    "cordova-plugin-fullscreen": "1.3.0"
 }
             // BOTTOM OF METADATA
         });
