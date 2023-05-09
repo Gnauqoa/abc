@@ -27,7 +27,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    // this.dummySensorData();
   }
 
   initializeVariables() {
