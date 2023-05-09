@@ -7,7 +7,7 @@ const defaultPages = [
     layout: LAYOUT_NUMBER,
     widgets: defaultWidgets,
     lastDataRunId: null,
-    name: "Trang 1",
+    name: "1",
   },
 ];
 

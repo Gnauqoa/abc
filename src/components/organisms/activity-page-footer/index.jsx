@@ -8,8 +8,6 @@ import ActivityPageNav from "../../molecules/activity-page-nav";
 const ActivityFooter = ({
   isRunning,
   frequency,
-  pageLength,
-  currentPageIndex,
   handlePageNext,
   handlePagePrev,
   handleFrequencySelect,
@@ -29,13 +27,7 @@ const ActivityFooter = ({
         />
       </div>
       <div className="__toolbar-center">
-        <ActivityPageNav
-          pageLength={pageLength}
-          currentPageIndex={currentPageIndex}
-          isRunning={isRunning}
-          onNextPage={handlePageNext}
-          onPrevPage={handlePagePrev}
-        />
+        <ActivityPageNav onNextPage={handlePageNext} onPrevPage={handlePagePrev} />
       </div>
       <div className="__toolbar-right">
         <Timer isRunning={isRunning} />
