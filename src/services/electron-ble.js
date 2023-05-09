@@ -31,6 +31,7 @@ export class WebBle {
   }
 
   startScanning = async (callback) => {
+    this.devices = [];
     this.scanCallback = callback;
     // Make the request for devices
     let options = {
@@ -53,19 +54,24 @@ export class WebBle {
     await core.sleep(200);
   };
 
-  connect = async (deviceId, connectedCallback, disconnectedCallback, dataCallback) => {
-    window._cdvElectronIpc.selectBleDevice(deviceId);
+  connect = async (deviceId, successCallback, errorCallback, dataCallback) => {
+    try {
+      window._cdvElectronIpc.selectBleDevice(deviceId);
 
-    await core.sleep(100);
+      await core.sleep(100);
 
-    this.chosenDevices[deviceId] = this.currentChosenDevice;
-    this.currentChosenDevice.addEventListener("gattserverdisconnected", disconnectedCallback);
-    this.servers[deviceId] = await this.currentChosenDevice.gatt.connect();
-    const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
-    currentDevice.isConnected = true;
+      this.chosenDevices[deviceId] = this.currentChosenDevice;
+      this.servers[deviceId] = await this.currentChosenDevice.gatt.connect();
+      this.currentChosenDevice.addEventListener("gattserverdisconnected", errorCallback);
+      const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
+      currentDevice.isConnected = true;
 
-    connectedCallback([...this.devices]);
-    this.receiveDataCallback(currentDevice, dataCallback);
+      successCallback([...this.devices]);
+      this.receiveDataCallback(currentDevice, dataCallback);
+    } catch (error) {
+      console.error("connect error", error);
+      errorCallback();
+    }
   };
 
   disconnect = async (deviceId, callback) => {
@@ -449,6 +455,6 @@ export class WebBle {
     })
     .catch((err) => {
       console.log("receiveDataCallback error", err.message);
-    });
+      });
   }
 }

@@ -81,21 +81,27 @@ export class DeviceManager {
     }
   }
 
-  connect({ deviceId, callback }) {
+  connect({ deviceId, successCallback, errorCallback }) {
+    const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
     try {
       if (f7.device.electron) {
         webBle.connect(
           deviceId,
           (devices) => {
             this.devices = devices;
-            callback([]); // Electron should return empty to start new scan
+            successCallback([]); // Electron should return empty to start new scan
           },
-          () => {
-            console.log(`Device ${deviceId} is disconnected.`);
-            webBle.disconnect(deviceId, (devices) => {
-              this.devices = devices;
-              callback([]); // Electron should return empty to start new scan
-            });
+          (event) => {
+            if (event) {
+              console.log(`Device ${deviceId} is disconnected.`);
+              webBle.disconnect(deviceId, (devices) => {
+                this.devices = devices;
+                errorCallback(); // Empty param for no error popup
+              });
+            } else {
+              console.error(`Connecting to device ${deviceId} is error.`);
+              errorCallback(currentDevice);
+            }
           },
           this.onDataCallback
         );
@@ -103,7 +109,6 @@ export class DeviceManager {
         ble.connect(
           deviceId,
           () => {
-            const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
             currentDevice.isConnected = true;
 
             ble.requestConnectionPriority(
@@ -116,17 +121,18 @@ export class DeviceManager {
             );
 
             this.receiveDataCallback(deviceId, this.onDataCallback);
-            callback([...this.devices]);
+            successCallback([...this.devices]);
           },
           () => {
             const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
             this.devices = newDevices;
-            callback([...this.devices]);
+            errorCallback();
           }
         );
       }
     } catch (error) {
       console.error("ble.connect", error);
+      errorCallback(currentDevice);
     }
   }
 

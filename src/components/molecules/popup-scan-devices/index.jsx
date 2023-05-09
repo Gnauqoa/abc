@@ -18,6 +18,8 @@ import "./index.scss";
 
 import signalStrengthIconFull from "../../../img/scan-devices/signal-strength-full.png";
 import DeviceManagerIST from "../../../services/device-manager";
+import dialog from "../dialog/dialog";
+import * as core from "../../../utils/core";
 
 export default function useDeviceManager() {
   const [devices, setDevices] = useImmer([]);
@@ -32,6 +34,7 @@ export default function useDeviceManager() {
   }
 
   function scan() {
+    setDevices([]);
     DeviceManagerIST.scan({ callback: callbackSetDevices });
     timeoutScanId.current = setTimeout(() => stopScan(), 20000);
     setIsScanning(true);
@@ -43,11 +46,25 @@ export default function useDeviceManager() {
     setIsScanning(false);
   }
 
-  function connect(deviceId) {
-    DeviceManagerIST.connect({ deviceId, callback: callbackSetDevices });
+  function handleConnectError(device) {
+    f7.dialog.close();
+    if (device) {
+      dialog.alert("Lỗi kết nối Bluetooth", `"${device.name}" bị mất kết nối`, () => {});
+    }
+  }
+
+  async function handleConnectSuccess() {
+    await core.sleep(1000);
+    f7.dialog.close();
+    setDevices([]);
     if (f7.device.electron) {
       scanPopupRef.current.f7Popup().close();
     }
+  }
+
+  function connect(deviceId) {
+    f7.dialog.preloader("Đang kết nối...");
+    DeviceManagerIST.connect({ deviceId, successCallback: handleConnectSuccess, errorCallback: handleConnectError });
   }
 
   function disconnect({ deviceId, id }) {
