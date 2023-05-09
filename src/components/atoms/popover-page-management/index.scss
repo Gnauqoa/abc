@@ -10,4 +10,10 @@
   .page-name.selected {
     background: rgb(232, 228, 228);
   }
+
+  .popover-inner {
+    .page-name {
+      text-transform: none;
+    }
+  }
 }
