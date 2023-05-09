@@ -243,19 +243,21 @@ export class DeviceManager {
 
   startCheckingConnection() {
     setInterval(() => {
-      for (const device of this.devices) {
-        ble.isConnected(
-          device.deviceId,
-          () => {},
-          () => {
-            const buffer = DataManagerIST.getBuffer();
-            if (Object.keys(buffer).includes(String(device.id))) {
-              DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
-              const currentDevice = this.devices.find((d) => d.deviceId === device.deviceId);
-              currentDevice.isConnected = false;
+      if (f7.device.android || f7.device.ios) {
+        for (const device of this.devices) {
+          ble.isConnected(
+            device.deviceId,
+            () => {},
+            () => {
+              const buffer = DataManagerIST.getBuffer();
+              if (Object.keys(buffer).includes(String(device.id))) {
+                DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
+                const currentDevice = this.devices.find((d) => d.deviceId === device.deviceId);
+                currentDevice.isConnected = false;
+              }
             }
-          }
-        );
+          );
+        }
       }
     }, CHECKING_CONNECTION_INTERVAL);
   }
