@@ -27,7 +27,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   initializeVariables() {
@@ -797,7 +797,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (9 - 5) + 5).toFixed(0);
+      const sensorId = (Math.random() * (11 - 1) + 1).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 
