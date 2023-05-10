@@ -29,6 +29,7 @@ export const ActivityContext = React.createContext({
   handleDeletePage: () => {},
   handleNewPage: () => {},
   changePageName: () => {},
+  handleDeleteDataRun: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -44,15 +45,8 @@ export const ActivityContextProvider = ({ children }) => {
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
 
-    let newCurDataRunId;
-    if (DataManagerIST.isDataRunIdExist(pages[newPageIndex].lastDataRunId)) {
-      newCurDataRunId = pages[newPageIndex].lastDataRunId;
-    } else {
-      newCurDataRunId = DataManagerIST.getCurrentDataRunId();
-    }
-
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(newCurDataRunId);
+    setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
   };
 
   const handleDeletePage = () => {
@@ -61,16 +55,9 @@ export const ActivityContextProvider = ({ children }) => {
     const newPages = pages.filter((page, index) => index !== deletedPageIndex);
     const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
 
-    let newCurDataRunId;
-    if (DataManagerIST.isDataRunIdExist(newPages[newPageIndex].lastDataRunId)) {
-      newCurDataRunId = newPages[newPageIndex].lastDataRunId;
-    } else {
-      newCurDataRunId = DataManagerIST.getCurrentDataRunId();
-    }
-
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(newCurDataRunId);
+    setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
 
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
@@ -100,6 +87,18 @@ export const ActivityContextProvider = ({ children }) => {
     }
   };
 
+  const handleDeleteDataRun = (oldDataRunId, newDataRunId) => {
+    const newPages = pages.map((page) => {
+      if (page.lastDataRunId === oldDataRunId) {
+        return { ...page, lastDataRunId: newDataRunId };
+      }
+      return page;
+    });
+
+    setPages(newPages);
+    setCurrentDataRunId(newDataRunId);
+  };
+
   // ======================= Datarun functions =======================
   return (
     <ActivityContext.Provider
@@ -119,6 +118,7 @@ export const ActivityContextProvider = ({ children }) => {
         handleDeletePage,
         handleNewPage,
         changePageName,
+        handleDeleteDataRun,
       }}
     >
       {children}

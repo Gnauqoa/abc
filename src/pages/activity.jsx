@@ -111,6 +111,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     // Init states
     setPages(activity.pages);
     setFrequency(activity.frequency);
+    setCurrentDataRunId(activity.pages[0].lastDataRunId);
   }, []);
 
   useEffect(() => {

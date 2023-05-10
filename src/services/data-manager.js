@@ -432,6 +432,7 @@ export class DataManager {
         name: dataRun.name,
         data: dataRun.data,
         interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
       };
 
       // console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
@@ -445,7 +446,13 @@ export class DataManager {
   exportActivityDataRun() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name, data: dataRun.data, interval: dataRun.interval };
+      return {
+        id: dataRunId,
+        name: dataRun.name,
+        data: dataRun.data,
+        interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
+      };
     });
     return dataRunInfos;
   }

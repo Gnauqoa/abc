@@ -10,7 +10,7 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const [dataRunName, setDataRunName] = useState({});
-  const { currentDataRunId, setCurrentDataRunId } = useActivityContext();
+  const { currentDataRunId, handleDeleteDataRun } = useActivityContext();
 
   const onSaveDataRun = (dataRunId) => {
     const newName = dataRunName[dataRunId];
@@ -19,7 +19,7 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
 
   const onDeleteDataRun = (dataRunId) => {
     const result = DataManagerIST.deleteDataRun(dataRunId);
-    result && setCurrentDataRunId(DataManagerIST.getCurrentDataRunId());
+    result && handleDeleteDataRun(dataRunId, DataManagerIST.getCurrentDataRunId());
   };
 
   const onChangeDataRunName = (event) => {
