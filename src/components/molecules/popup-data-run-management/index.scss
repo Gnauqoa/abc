@@ -47,11 +47,8 @@
     margin-top: 10px;
     width: 100%;
 
-    tr .data-column {
-      width: 40%;
-    }
-    tr .detail-column {
-      width: 60%;
+    table {
+      width: 100%;
     }
 
     tr.selected {
@@ -60,9 +57,16 @@
     }
 
     tr {
-      width: 100%;
+      // width: 100%;
       height: 50px;
       display: flex;
+
+      .data-column {
+        width: 40%;
+      }
+      .detail-column {
+        width: 60%;
+      }
 
       td {
         display: flex;
@@ -93,11 +97,11 @@
 
       .detail-column {
         .timestamp {
-          width: 70%;
+          width: 85%;
         }
         .list-buttons {
           display: flex;
-          width: 30%;
+          width: 15%;
         }
       }
     }

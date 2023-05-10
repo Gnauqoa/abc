@@ -26,6 +26,7 @@ const SensorContainer = ({ deviceManager }) => {
   useEffect(() => {
     let intervalId = setInterval(() => {
       const buffer = DataManagerIST.getBuffer();
+      const batteryStatus = DataManagerIST.getBatteryStatus();
       const sensors = [];
 
       for (const sensorId of Object.keys(buffer)) {
@@ -42,6 +43,7 @@ const SensorContainer = ({ deviceManager }) => {
         const sensor = {
           sensorId: parsedSensorId,
           sensorDatas: buffer[parsedSensorId],
+          sensorBattery: batteryStatus[parsedSensorId],
           sensorIcon: {
             icon: icon,
             label: label,
@@ -111,6 +113,7 @@ const SensorContainer = ({ deviceManager }) => {
               <SensorStatus
                 sensorId={sensorInfo.sensorId}
                 sensorData={sensorData}
+                sensorBattery={sensorInfo.sensorBattery}
                 sensorIcon={sensorInfo.sensorIcon}
                 onDisconnect={onDisconnectHandler}
                 type={sensorInfo.type}

@@ -14,6 +14,7 @@ const PageManagement = () => {
 
   const { prompt, showModal } = usePrompt({
     title: "Đổi tên trang hiện tại",
+    inputLabel: "Tên trang",
     defaultValue: pages[currentPageIndex].name,
     onClosePopup: onCloseChangeNamePopup,
   });

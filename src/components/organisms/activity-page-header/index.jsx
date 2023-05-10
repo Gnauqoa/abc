@@ -24,10 +24,6 @@ const ActivityHeader = ({
     DataManagerIST.exportDataRunExcel();
   }
 
-  function handleChangeDataRun() {
-    console.log("handleChangeDataRun");
-  }
-
   function handleFullScreen() {
     try {
       if (f7.device.electron) {
@@ -99,7 +95,7 @@ const ActivityHeader = ({
       </Popover>
 
       <NewPagePopup handleNewPage={handleNewPage} />
-      <DataRunManagementPopup handleChangeDataRun={handleChangeDataRun} />
+      <DataRunManagementPopup />
       {deviceManager.renderScanPopup()}
     </div>
   );

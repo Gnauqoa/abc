@@ -597,3 +597,20 @@ export function getCurrentTime() {
   const createdAtWithoutAMPM = formattedDate.replace(/ (AM|PM)/, "");
   return createdAtWithoutAMPM;
 }
+export function getPageName(listPageName) {
+  let newFileName = String(listPageName.length + 1);
+  try {
+    for (let i = 0; i < listPageName.length; i++) {
+      if (!listPageName.includes(newFileName)) break;
+
+      const matches = newFileName.match(/^\d$/);
+      if (matches) {
+        newFileName = parseInt(matches[0]) + 1;
+        newFileName = newFileName.toString();
+      } else break;
+    }
+  } catch (error) {
+    console.log("getPageName: ", error);
+  }
+  return newFileName;
+}
