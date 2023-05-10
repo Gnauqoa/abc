@@ -32,55 +32,51 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
     <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef}>
       <Page className="data-run-management">
         <Navbar title="Quản lý dữ liệu"></Navbar>
-        <div className="data-run-management-header ">
-          <div className="data-name-column">Dữ liệu</div>
-          <div className="data-time-column">Thời gian</div>
-        </div>
-        <table className="data-run-management-content">
-          <tbody>
-            {dataRunPreviews.map((item) => (
-              <tr key={item.id} className={currentDataRunId === item.id ? `selected` : ""}>
-                <td className="data-column">
-                  <img src={dataManagementIcon || ""} alt={dataManagementIcon} />
-                  <input
-                    id={item.id}
-                    className="data-run-name"
-                    defaultValue={item.name}
-                    onChange={onChangeDataRunName}
-                  />
-                </td>
-                <td className="detail-column">
-                  <span className="timestamp">{item.createdAt}</span>
-                  <div className="list-buttons">
-                    <Button
-                      iconIos={"material:edit"}
-                      iconMd={"material:edit"}
-                      iconAurora={"material:edit"}
-                      iconSize={35}
-                      iconColor="gray"
-                      onClick={() => onSaveDataRun(item.id)}
-                    ></Button>
-                    <Button
-                      iconIos={"material:delete"}
-                      iconMd={"material:delete"}
-                      iconAurora={"material:delete"}
-                      iconSize={35}
-                      iconColor="gray"
-                      onClick={() => onDeleteDataRun(item.id)}
-                    ></Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {/* <div className="list-data-run">
-          {dataRunPreviews.map((item) => (
-            <div className="list-item" key={item.id}>
 
-            </div>
-          ))}
-        </div> */}
+        <div className="data-run-management-content">
+          <div className="data-run-management-header ">
+            <div className="data-name-column">Dữ liệu</div>
+            <div className="data-time-column">Thời gian</div>
+          </div>
+          <table>
+            <tbody>
+              {dataRunPreviews.map((item) => (
+                <tr key={item.id} className={currentDataRunId === item.id ? `selected` : ""}>
+                  <td className="data-column">
+                    <img src={dataManagementIcon || ""} alt={dataManagementIcon} />
+                    <input
+                      id={item.id}
+                      className="data-run-name"
+                      defaultValue={item.name}
+                      onChange={onChangeDataRunName}
+                    />
+                  </td>
+                  <td className="detail-column">
+                    <span className="timestamp">{item.createdAt}</span>
+                    <div className="list-buttons">
+                      <Button
+                        iconIos={"material:edit"}
+                        iconMd={"material:edit"}
+                        iconAurora={"material:edit"}
+                        iconSize={35}
+                        iconColor="gray"
+                        onClick={() => onSaveDataRun(item.id)}
+                      ></Button>
+                      <Button
+                        iconIos={"material:delete"}
+                        iconMd={"material:delete"}
+                        iconAurora={"material:delete"}
+                        iconSize={35}
+                        iconColor="gray"
+                        onClick={() => onDeleteDataRun(item.id)}
+                      ></Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Page>
     </Popup>
   );
