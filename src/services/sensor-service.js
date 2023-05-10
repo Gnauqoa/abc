@@ -111,11 +111,11 @@ export const defaultSensors = [
     ]
   },
   {
-    id: 10,
-    code: "inno-010",
+    id: 11,
+    code: "inno-011",
     name: "Cảm biến điện áp",
     data: [
-      { id: "inno-010-volt", name: "Điện áp", unit: "V", min: -20, max: 20, dec: 1 },
+      { id: "inno-011-volt", name: "Điện áp", unit: "V", min: -20, max: 20, dec: 1 },
     ]
   },
   {
