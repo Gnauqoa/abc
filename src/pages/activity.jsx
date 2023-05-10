@@ -391,6 +391,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     let currentData;
+    const dataRunIds = [];
     const chartDatas = dataRunPreviews.map((dataRunPreview) => {
       let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
       const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
@@ -398,13 +399,20 @@ export default ({ f7route, f7router, filePath, content }) => {
         currentData = data;
       }
 
+      dataRunIds.push(dataRunPreview.id);
+
       return {
         name: dataRunPreview.name,
         data: data,
       };
     });
 
-    if (currentData && currentData.length > 0 && !_.isEqual(currentData, prevChartDataRef.current[currentPageIndex])) {
+    if (
+      currentData &&
+      currentData.length > 0 &&
+      (!_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]) ||
+        !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]))
+    ) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: chartDatas,
         xUnit: "ms",
@@ -412,7 +420,9 @@ export default ({ f7route, f7router, filePath, content }) => {
         maxHz: 10,
         curSensor: sensor,
       });
-      prevChartDataRef.current[currentPageIndex] = currentData;
+
+      prevChartDataRef.current.data[currentPageIndex] = currentData;
+      prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
     }
   }
 

@@ -1,6 +1,8 @@
 import React, { useContext, useState, useRef } from "react";
 import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER } from "../js/constants";
 
+import DataManagerIST from "../services/data-manager";
+
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
 const defaultPages = [
   {
@@ -35,13 +37,22 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex].lastDataRunId);
-  let prevChartDataRef = useRef([]);
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
 
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
-    prevChartDataRef.current[currentPageIndex] = null;
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+
+    let newCurDataRunId;
+    if (DataManagerIST.isDataRunIdExist(pages[newPageIndex].lastDataRunId)) {
+      newCurDataRunId = pages[newPageIndex].lastDataRunId;
+    } else {
+      newCurDataRunId = DataManagerIST.getCurrentDataRunId();
+    }
+
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
+    setCurrentDataRunId(newCurDataRunId);
   };
 
   const handleDeletePage = () => {
@@ -50,19 +61,31 @@ export const ActivityContextProvider = ({ children }) => {
     const newPages = pages.filter((page, index) => index !== deletedPageIndex);
     const newPageIndex = currentPageIndex + 1 === numPages ? currentPageIndex - 1 : currentPageIndex;
 
+    let newCurDataRunId;
+    if (DataManagerIST.isDataRunIdExist(newPages[newPageIndex].lastDataRunId)) {
+      newCurDataRunId = newPages[newPageIndex].lastDataRunId;
+    } else {
+      newCurDataRunId = DataManagerIST.getCurrentDataRunId();
+    }
+
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
-    prevChartDataRef.current[currentPageIndex] = null;
+    setCurrentDataRunId(newCurDataRunId);
+
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
   };
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
-    prevChartDataRef.current[currentPageIndex] = null;
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+
+    const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(null);
+    setCurrentDataRunId(newCurDataRunId);
   };
 
   const changePageName = (pageIndex, newPageName) => {

@@ -374,6 +374,10 @@ export class DataManager {
     return this.curDataRunId;
   }
 
+  isDataRunIdExist(dataRunId) {
+    return Object.keys(this.dataRuns).hasOwnProperty(dataRunId);
+  }
+
   /**
    * Appends sensor data to a data run.
    * @param {string} dataRunId - The ID of the data run to append data to.

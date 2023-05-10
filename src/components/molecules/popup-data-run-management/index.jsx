@@ -39,7 +39,7 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
         <table className="data-run-management-content">
           <tbody>
             {dataRunPreviews.map((item) => (
-              <tr key={item.id} className={currentDataRunId === item.id && `selected`}>
+              <tr key={item.id} className={currentDataRunId === item.id ? `selected` : ""}>
                 <td className="data-column">
                   <img src={dataManagementIcon || ""} alt={dataManagementIcon} />
                   <input
