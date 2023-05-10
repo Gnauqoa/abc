@@ -1,6 +1,6 @@
 import { f7 } from "framework7-react";
 
-import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID } from "../js/constants";
+import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_YINMIK_PREFIX } from "../js/constants";
 
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
@@ -49,7 +49,9 @@ export class DeviceManager {
           (device) => {
             if (
               device?.name?.includes(DEVICE_PREFIX) ||
-              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
+              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX) ||
+              device?.name?.includes(DEVICE_YINMIK_PREFIX) ||
+              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_YINMIK_PREFIX)
             ) {
               const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
               if (deviceIndex < 0) {
@@ -209,8 +211,53 @@ export class DeviceManager {
         BLE_SERVICE_ID,
         BLE_TX_ID,
         (buffer) => {
-          const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
-          callback(data);
+          //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
+          let data = buffer;
+
+          if (data.getUint8(0) != 0xAA) {
+            // Invalid data, ignore
+            return;
+          }
+
+          var sensorId = data.getUint8(1);
+          var sensorSerial = data.getUint8(2); // TODO: Will use later
+          var battery = data.getUint8(3);
+          var dataLength = data.getUint8(4);
+          var checksum = data.getUint8(5 + dataLength);
+          var calculatedChecksum = 0xFF;
+          for (var i=0; i<(dataLength+5); i++) {
+            calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
+          }
+
+          if (calculatedChecksum != checksum) {
+            console.log('Invalid data received');
+            return;
+          }
+
+          var dataRead = 0;
+          var sensorData = [];
+
+          while (dataRead < dataLength) {
+            // read next 4 bytes
+            var rawBytes = [data.getUint8(dataRead+5), data.getUint8(dataRead+6),
+              data.getUint8(dataRead+7), data.getUint8(dataRead+8)];
+
+            var view = new DataView(new ArrayBuffer(4));
+
+            rawBytes.forEach(function (b, i) {
+                view.setUint8(3-i, b);
+            });
+
+            sensorData.push(view.getFloat32(0));
+            dataRead += 4;
+          }
+
+          var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+          sensorData.forEach(function (d, i) {
+            dataArray.push(d);
+          });
+
+          callback(dataArray);
         },
         (err) => {
           console.error(`receiveBleNotification error`, err);
@@ -219,8 +266,6 @@ export class DeviceManager {
     } catch (error) {
       console.error("ble.startNotification", error);
     }
-
-    // callback("@,9,5.33,*");
   }
 
   onDataCallback(data) {
