@@ -19,13 +19,14 @@ export const defaultSensors = [
         id: "inno-000-time-00",
         name: "Thời gian",
         unit: "s",
+        dec: 0
       },
     ],
   },
   {
     id: 1,
-    code: "inno-001-co2",
-    name: "Cảm biến nồng độ khí C02",
+    code: "inno-001",
+    name: "Cảm biến nồng độ khí CO2",
     data: [
       {
         id: "inno-001-co2",
@@ -33,68 +34,96 @@ export const defaultSensors = [
         unit: "ppm",
         min: 0,
         max: 5000,
+        dec: 0
       },
     ],
   },
   {
     id: 2,
-    code: "inno-002-do",
+    code: "inno-002",
     name: "Cảm biến Oxi hòa tan trong nước",
-    data: [{ id: "inno-002-do", name: "DO", unit: "mg/L", min: 0, max: 20 }],
+    data: [
+      { id: "inno-002-mg", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 20, dec: 2 },
+      { id: "inno-002-percent", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 100, dec: 1 },
+    ],
   },
   {
     id: 3,
-    code: "inno-003-o2",
+    code: "inno-003",
     name: "Cảm biến nồng độ Oxi trong không khí",
-    data: [{ id: "inno-003-o2", name: "Nồng độ Oxi không khí", unit: "%", min: 0, max: 30 }],
+    data: [{ id: "inno-003-o2", name: "Nồng độ Oxi không khí", unit: "%", min: 0, max: 30, dec: 1 }],
   },
   {
     id: 4,
-    code: "inno-004-tem",
+    code: "inno-004",
     name: "Cảm biến nhiệt độ",
-    data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125 }],
+    data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125, dec: 1 }],
   },
   {
     id: 5,
-    code: "inno-005-hum",
+    code: "inno-005",
     name: "Cảm biến nhiệt độ và độ ẩm không khí",
     data: [
-      { id: "inno-005-hum-00", name: "Nhiệt độ", unit: "°C", min: 0, max: 80 },
-      { id: "inno-005-temp-01", name: "Độ ẩm", unit: "%", min: 0, max: 100 },
+      { id: "inno-005-hum", name: "Nhiệt độ", unit: "°C", min: 0, max: 80, dec: 1 },
+      { id: "inno-005-temp", name: "Độ ẩm", unit: "%", min: 0, max: 100, dec: 0 },
     ],
   },
   {
     id: 6,
-    code: "inno-006-sal",
+    code: "inno-006",
     name: "Cảm biến độ mặn nước",
     data: [
-      { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50 },
+      { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50, dec: 1 },
       {
         id: "inno-006-ec-01",
         name: "Độ dẫn điện",
         unit: "mS/cm",
-        min: 0,
+        min: 10,
         max: 20,
+        dec: 2
       },
     ],
   },
   {
     id: 7,
-    code: "inno-007-ph",
+    code: "inno-007",
     name: "Cảm biến PH",
-    data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14 }],
+    data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14, dec: 1 }],
   },
   {
     id: 8,
-    code: "inno-008-dba",
+    code: "inno-008",
     name: "Cảm biến cường độ âm thanh",
-    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150 }],
+    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150, dec: 1 }],
   },
   {
     id: 9,
-    code: "inno-009-kpa",
+    code: "inno-009",
     name: "Cảm biến áp suất khí",
-    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 50 }],
+    data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 250, dec: 0 }],
+  },
+  {
+    id: 65,
+    code: "BLE-9909",
+    name: "Cảm biến chất lượng nước",
+    data: [
+      { id: "BLE-9909-PH", name: "PH", unit: "", min: 0, max: 14, dec: 2 },
+      { id: "BLE-9909-EC", name: "EC", unit: "uS/cm", min: 0, max: 9999, dec: 0 },
+      { id: "BLE-9909-TDS", name: "TDS", unit: "ppm", min: 0, max: 9999, dec: 0 },
+      { id: "BLE-9909-SALT%", name: "SALT %", unit: "%", min: 0, max: 25, dec: 2 },
+      { id: "BLE-9909-SALTPPM", name: "SALT ppm", unit: "ppm", min: 0, max: 9999, dec: 0 },
+      { id: "BLE-9909-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 60, dec: 1 }
+    ],
+  },
+  {
+    id: 66,
+    code: "BLE-9100",
+    name: "Cảm biến Oxi hòa tan trong nước",
+    data: [
+      { id: "BLE-9100-MG", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 30, dec: 2 },
+      { id: "BLE-9100-%", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 300, dec: 1 },
+      { id: "BLE-9100-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 100, dec: 1 }
+    ],
   },
 ];
 
@@ -109,7 +138,6 @@ const sensorIcons = {
     label: "DO",
     unit: "mg/L",
   },
-
   3: {
     icon: o2SensorIcon,
     label: "O2",
@@ -145,10 +173,15 @@ const sensorIcons = {
     label: "Áp suất khí",
     unit: "kPa",
   },
-  10: {
+  65: {
     icon: phSensorIcon,
     label: "PH",
     unit: "pH",
+  },
+  66: {
+    icon: doSensorIcon,
+    label: "DO",
+    unit: "mg/L",
   },
 };
 

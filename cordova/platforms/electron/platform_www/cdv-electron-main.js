@@ -36,7 +36,10 @@ const hostname = cdvElectronSettings.hostname;
 const isFileProtocol = scheme === "file";
 
 const { SerialPort } = require("serialport");
-const { DelimiterParser } = require('@serialport/parser-delimiter')
+const { DelimiterParser } = require('@serialport/parser-delimiter');
+
+const BLE_TYPE = "ble";
+const USB_TYPE = "usb";
 
 // CP2104
 const VID = '10C4'
@@ -87,6 +90,7 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow(browserWindowOpts);
   mainWindow.setMenuBarVisibility(false);
+  mainWindow.removeMenu();
 
   // Load a local HTML file or a remote URL.
   const cdvUrl = cdvElectronSettings.browserWindowInstance.loadURL.url;
@@ -313,10 +317,11 @@ async function listSerialPorts() {
 
               var sensorId = data[1];
               var sensorSerial = data[2]; // TODO: Will use later
-              var dataLength = data[3];
-              var checksum = data[4 + dataLength];
+              var battery = data[3]; // TODO: Will use later
+              var dataLength = data[4];
+              var checksum = data[5 + dataLength];
               var calculatedChecksum = 0xFF;
-              for (var i=0; i<(dataLength+4); i++) {
+              for (var i=0; i<(dataLength+5); i++) {
                 calculatedChecksum = calculatedChecksum ^ data[i];
               }
 
@@ -330,7 +335,7 @@ async function listSerialPorts() {
 
               while (dataRead < dataLength) {
                 // read next 4 bytes
-                var rawBytes = data.slice(dataRead+4, dataRead+8);
+                var rawBytes = data.slice(dataRead+5, dataRead+9);
 
                 var view = new DataView(new ArrayBuffer(4));
 
@@ -342,7 +347,7 @@ async function listSerialPorts() {
                 dataRead += 4;
               }
 
-              var dataArray = [sensorId, sensorSerial, dataLength]
+              var dataArray = [sensorId, battery, USB_TYPE, dataLength]
               sensorData.forEach(function (d, i) {
                 dataArray.push(d);
               });
