@@ -212,21 +212,21 @@ export class DeviceManager {
         BLE_TX_ID,
         (buffer) => {
           //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
-          let data = buffer;
+          let data = new Uint8Array(buffer);
 
-          if (data.getUint8(0) != 0xAA) {
+          if (data[0] != 0xAA) {
             // Invalid data, ignore
             return;
           }
 
-          var sensorId = data.getUint8(1);
-          var sensorSerial = data.getUint8(2); // TODO: Will use later
-          var battery = data.getUint8(3);
-          var dataLength = data.getUint8(4);
-          var checksum = data.getUint8(5 + dataLength);
+          var sensorId = data[1];
+          var sensorSerial = data[2]; // TODO: Will use later
+          var battery = data[3];
+          var dataLength = data[4];
+          var checksum = data[5 + dataLength];
           var calculatedChecksum = 0xFF;
           for (var i=0; i<(dataLength+5); i++) {
-            calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
+            calculatedChecksum = calculatedChecksum ^ data[i];
           }
 
           if (calculatedChecksum != checksum) {
@@ -239,8 +239,8 @@ export class DeviceManager {
 
           while (dataRead < dataLength) {
             // read next 4 bytes
-            var rawBytes = [data.getUint8(dataRead+5), data.getUint8(dataRead+6),
-              data.getUint8(dataRead+7), data.getUint8(dataRead+8)];
+            var rawBytes = [data[dataRead+5], data[dataRead+6],
+            data[dataRead+7], data[dataRead+8]];
 
             var view = new DataView(new ArrayBuffer(4));
 
