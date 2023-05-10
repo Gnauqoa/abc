@@ -9,10 +9,14 @@ export class WebBle {
     this.currentChosenDevice = null;
     this.servers = {};
     this.scanCallback = null;
-    window._cdvElectronIpc.onScanBleResults((event, devices) => {
-      devices.forEach((d) => this.handleScannedDevice(d));
-      this.scanCallback([...this.devices]);
-    });
+    try {
+      window._cdvElectronIpc.onScanBleResults((event, devices) => {
+        devices.forEach((d) => this.handleScannedDevice(d));
+        this.scanCallback([...this.devices]);
+      });
+    } catch(error) {
+      console.log(error);
+    }
   }
 
   handleScannedDevice(device) {
