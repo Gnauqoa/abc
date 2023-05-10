@@ -103,6 +103,22 @@ export const defaultSensors = [
     data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 250, dec: 0 }],
   },
   {
+    id: 10,
+    code: "inno-010",
+    name: "Cảm biến dòng điện",
+    data: [
+      { id: "inno-010-amp", name: "Dòng điện", unit: "mA", min: -2500, max: 2500, dec: 1 },
+    ]
+  },
+  {
+    id: 11,
+    code: "inno-011",
+    name: "Cảm biến điện áp",
+    data: [
+      { id: "inno-011-volt", name: "Điện áp", unit: "V", min: -20, max: 20, dec: 1 },
+    ]
+  },
+  {
     id: 65,
     code: "BLE-9909",
     name: "Cảm biến chất lượng nước",
@@ -173,9 +189,19 @@ const sensorIcons = {
     label: "Áp suất khí",
     unit: "kPa",
   },
+  10: {
+    icon: pressureSensorIcon,
+    label: "Dòng điện",
+    unit: "A",
+  },
+  11: {
+    icon: pressureSensorIcon,
+    label: "Điện áp",
+    unit: "V",
+  },
   65: {
     icon: phSensorIcon,
-    label: "PH",
+    label: "Chất lượng nước",
     unit: "pH",
   },
   66: {
