@@ -90,6 +90,7 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow(browserWindowOpts);
   mainWindow.setMenuBarVisibility(false);
+  mainWindow.removeMenu();
 
   // Load a local HTML file or a remote URL.
   const cdvUrl = cdvElectronSettings.browserWindowInstance.loadURL.url;
