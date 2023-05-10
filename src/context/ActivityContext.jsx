@@ -20,7 +20,7 @@ export const ActivityContext = React.createContext({
   setIsRunning: () => {},
   currentPageIndex: 0,
   setCurrentPageIndex: () => {},
-  currentDataRunId: false,
+  currentDataRunId: null,
   setCurrentDataRunId: () => {},
   prevChartDataRef: [],
   handleNavigatePage: () => {},
@@ -37,7 +37,7 @@ export const ActivityContextProvider = ({ children }) => {
   const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex].lastDataRunId);
   let prevChartDataRef = useRef([]);
 
-  // Pages functions
+  // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
     prevChartDataRef.current[currentPageIndex] = null;
     setCurrentPageIndex(newPageIndex);
@@ -76,6 +76,8 @@ export const ActivityContextProvider = ({ children }) => {
       setPages(newPages);
     }
   };
+
+  // ======================= Datarun functions =======================
   return (
     <ActivityContext.Provider
       value={{

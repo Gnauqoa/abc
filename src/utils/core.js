@@ -576,3 +576,24 @@ export function getUniqueFileName(fileName, existingFileNames) {
 
   return newFileName;
 }
+
+export function getCurrentTime() {
+  const now = new Date();
+  const formattedDate = now
+    .toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+    .replace(",", "")
+    .replace(/\//g, "-")
+    .replace(/\s/g, " ")
+    .replace(":", "-");
+
+  // Remove AM/PM and underscore
+  const createdAtWithoutAMPM = formattedDate.replace(/ (AM|PM)/, "");
+  return createdAtWithoutAMPM;
+}
