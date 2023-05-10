@@ -1,13 +1,26 @@
 import React from "react";
 import { Button, Icon } from "framework7-react";
 
-import batteryIcon from "../../../img/sensor-info/battery/100.png";
+import batteryIcon100 from "../../../img/sensor-info/battery/100.png";
+import batteryIcon75 from "../../../img/sensor-info/battery/75.png";
+import batteryIcon50 from "../../../img/sensor-info/battery/50.png";
+import batteryIcon25 from "../../../img/sensor-info/battery/25.png";
+
 import uartIcon from "../../../img/sensor-info/connections/uart.png";
 import bleIcon from "../../../img/sensor-info/connections/ble.png";
 import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 
-const SensorStatus = ({ sensorId, sensorData, sensorIcon, onDisconnect, type, status }) => {
+const SensorStatus = ({ sensorId, sensorData, sensorBattery, sensorIcon, onDisconnect, type, status }) => {
+  let batteryIcon = batteryIcon25;
+  if (sensorBattery > 75) {
+    batteryIcon = batteryIcon100;
+  } else if (sensorBattery > 50) {
+    batteryIcon = batteryIcon75;
+  } else if (sensorBattery > 25) {
+    batteryIcon = batteryIcon50;
+  }
+
   const onDisconnectHandler = () => {
     onDisconnect(sensorId);
   };

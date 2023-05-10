@@ -6,15 +6,16 @@ import "./index.scss";
 import dataManagementIcon from "../../../img/activity/data-management.png";
 import { useActivityContext } from "../../../context/ActivityContext";
 
-const DataRunManagementPopup = ({ handleChangeDataRun }) => {
+const DataRunManagementPopup = () => {
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-  const [dataRunName, setDataRunName] = useState({});
+  const [dataRunNameEdited, setDataRunNameEdited] = useState({});
   const { currentDataRunId, handleDeleteDataRun } = useActivityContext();
 
-  const onSaveDataRun = (dataRunId) => {
-    const newName = dataRunName[dataRunId];
-    DataManagerIST.updateDataRun(dataRunId, newName);
+  const onSaveDataRun = () => {
+    for (const [dataRunId, newDataRunName] of Object.entries(dataRunNameEdited)) {
+      DataManagerIST.updateDataRun(dataRunId, newDataRunName);
+    }
   };
 
   const onDeleteDataRun = (dataRunId) => {
@@ -25,11 +26,11 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
   const onChangeDataRunName = (event) => {
     const dataRunId = event.target.id;
     const newName = event.target.value.trimStart();
-    setDataRunName((values) => ({ ...values, [dataRunId]: newName }));
+    setDataRunNameEdited((values) => ({ ...values, [dataRunId]: newName }));
   };
 
   return (
-    <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef}>
+    <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef} onPopupClose={onSaveDataRun}>
       <Page className="data-run-management">
         <Navbar title="Quản lý dữ liệu"></Navbar>
 
@@ -54,14 +55,14 @@ const DataRunManagementPopup = ({ handleChangeDataRun }) => {
                   <td className="detail-column">
                     <span className="timestamp">{item.createdAt}</span>
                     <div className="list-buttons">
-                      <Button
+                      {/* <Button
                         iconIos={"material:edit"}
                         iconMd={"material:edit"}
                         iconAurora={"material:edit"}
                         iconSize={35}
                         iconColor="gray"
                         onClick={() => onSaveDataRun(item.id)}
-                      ></Button>
+                      ></Button> */}
                       <Button
                         iconIos={"material:delete"}
                         iconMd={"material:delete"}

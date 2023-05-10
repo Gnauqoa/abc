@@ -21,12 +21,7 @@ const PromptPopup = ({ title, defaultValue, isShow, onClosePopup }) => {
   }, [defaultValue]);
 
   return (
-    <Popup
-      ref={promptPopupRef}
-      className="use-prompt-dialog-popup"
-      opened={isShow}
-      onPopupClose={() => onClose(defaultValue)}
-    >
+    <Popup ref={promptPopupRef} className="use-prompt-dialog-popup" opened={isShow} onPopupClose={() => onClose(input)}>
       <Page className="use-prompt-dialog">
         <Navbar className="use-prompt-dialog-header" title={title}></Navbar>
         <div className="use-prompt-dialog-content">

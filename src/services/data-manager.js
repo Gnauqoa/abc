@@ -93,6 +93,7 @@ export class DataManager {
     this.timerSubscriber = {};
 
     this.uartConnections = new Set();
+    this.batteryStatus = {};
   }
 
   init() {
@@ -609,7 +610,9 @@ export class DataManager {
         const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
         sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
+
       this.buffer[sensorId] = sensorsData;
+      this.batteryStatus[sensorId] = parseInt(battery);
 
       if (source !== BLE_TYPE) {
         this.uartConnections.add(sensorId);
@@ -636,6 +639,7 @@ export class DataManager {
       }
 
       delete this.buffer[sensorId];
+      delete this.batteryStatus[sensorId];
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -692,6 +696,10 @@ export class DataManager {
 
   getBuffer() {
     return this.buffer;
+  }
+
+  getBatteryStatus() {
+    return this.batteryStatus;
   }
 
   removeWirelessSensor(sensorId) {
@@ -790,10 +798,11 @@ export class DataManager {
   dummySensorData() {
     setInterval(() => {
       const sensorId = (Math.random() * (9 - 5) + 5).toFixed(0);
+      const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
-      const dummyData = [sensorId, 96, sensorSerialId, sensorInfo.data.length];
+      const dummyData = [sensorId, battery, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);

@@ -35,6 +35,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import useDeviceManager from "../components/molecules/popup-scan-devices";
 import { useActivityContext } from "../context/ActivityContext";
+import { getPageName } from "../utils/core";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -241,11 +242,13 @@ export default ({ f7route, f7router, filePath, content }) => {
       ];
     }
 
+    const listPageNames = pages.map((page) => page.name);
+    const newFileName = getPageName(listPageNames);
     const newPage = {
       layout: chartType,
       widgets: defaultWidgets,
       lastDataRunId: null,
-      name: pages.length,
+      name: newFileName,
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
