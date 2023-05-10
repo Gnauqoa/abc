@@ -1,9 +1,9 @@
 import React from "react";
 import { Button, Icon } from "framework7-react";
 
-import batteryIcon from "../../../img/battery/100.png";
-import uartIcon from "../../../img/connections/uart.png";
-import bleIcon from "../../../img/connections/ble.png";
+import batteryIcon from "../../../img/sensor-info/battery/100.png";
+import uartIcon from "../../../img/sensor-info/connections/uart.png";
+import bleIcon from "../../../img/sensor-info/connections/ble.png";
 import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 

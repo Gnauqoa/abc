@@ -39,7 +39,8 @@ const PageManagement = () => {
           <List>
             {pages.map((page, index) => (
               <Button
-                className={`page-name ${index === currentPageIndex && "selected"}`}
+                key={`page-${index}`}
+                className={`page-name ${index === currentPageIndex ? "selected" : ""}`}
                 onClick={() => handleChangePage(index)}
               >
                 {page.name}

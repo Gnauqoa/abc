@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { exportDataRunsToExcel } from "./../utils/core";
+import { exportDataRunsToExcel, getCurrentTime } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import SensorServices from "./sensor-service";
 import {
@@ -27,7 +27,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   initializeVariables() {
@@ -312,9 +312,11 @@ export class DataManager {
     }, 0);
 
     const dataRunName = name || `Lần ${maxDataRunNum + 1}`;
+    const createdAt = getCurrentTime();
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
       name: dataRunName,
+      createdAt: createdAt,
       data: {},
       interval: this.collectingDataInterval,
     };
@@ -348,8 +350,32 @@ export class DataManager {
       // console.log(`DATA_MANAGER-deleteDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
+
+    // find the index of dataRunId in dataRuns
+    const listDataRunIds = Object.keys(this.dataRuns);
+    const index = listDataRunIds.indexOf(dataRunId);
+    listDataRunIds.splice(index, 1);
+
+    let newCurrentDataRunId;
+    if (index < listDataRunIds.length) {
+      newCurrentDataRunId = listDataRunIds[index];
+    } else if (index > 0) {
+      newCurrentDataRunId = listDataRunIds[index - 1];
+    } else {
+      newCurrentDataRunId = null;
+    }
+
+    this.curDataRunId = newCurrentDataRunId;
     delete this.dataRuns[dataRunId];
     return true;
+  }
+
+  getCurrentDataRunId() {
+    return this.curDataRunId;
+  }
+
+  isDataRunIdExist(dataRunId) {
+    return Object.keys(this.dataRuns).hasOwnProperty(dataRunId);
   }
 
   /**
@@ -385,7 +411,7 @@ export class DataManager {
   getActivityDataRunPreview() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name };
+      return { id: dataRunId, name: dataRun.name, createdAt: dataRun.createdAt };
     });
     return dataRunInfos;
   }
@@ -406,6 +432,7 @@ export class DataManager {
         name: dataRun.name,
         data: dataRun.data,
         interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
       };
 
       // console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
@@ -419,7 +446,13 @@ export class DataManager {
   exportActivityDataRun() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name, data: dataRun.data, interval: dataRun.interval };
+      return {
+        id: dataRunId,
+        name: dataRun.name,
+        data: dataRun.data,
+        interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
+      };
     });
     return dataRunInfos;
   }
@@ -760,7 +793,7 @@ export class DataManager {
       const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
-      const dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
+      const dummyData = [sensorId, 96, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);

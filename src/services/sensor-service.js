@@ -1,14 +1,14 @@
 import _ from "lodash";
 
-import o2SensorIcon from "../img/sensor-info/o2.png";
-import doSensorIcon from "../img/sensor-info/do.png";
-import co2SensorIcon from "../img/sensor-info/co2.png";
-import phSensorIcon from "../img/sensor-info/ph.png";
-import tempHumiditySensorIcon from "../img/sensor-info/temp-humidity.png";
-import soundSensorIcon from "../img/sensor-info/sound.png";
-import salinitySensorIcon from "../img/sensor-info/salinity.png";
-import tempSensorIcon from "../img/sensor-info/temp.png";
-import pressureSensorIcon from "../img/sensor-info/pressure.png";
+import o2SensorIcon from "../img/sensor-info/sensor-icons/o2.png";
+import doSensorIcon from "../img/sensor-info/sensor-icons/do.png";
+import co2SensorIcon from "../img/sensor-info/sensor-icons/co2.png";
+import phSensorIcon from "../img/sensor-info/sensor-icons/ph.png";
+import tempHumiditySensorIcon from "../img/sensor-info/sensor-icons/temp-humidity.png";
+import soundSensorIcon from "../img/sensor-info/sensor-icons/sound.png";
+import salinitySensorIcon from "../img/sensor-info/sensor-icons/salinity.png";
+import tempSensorIcon from "../img/sensor-info/sensor-icons/temp.png";
+import pressureSensorIcon from "../img/sensor-info/sensor-icons/pressure.png";
 
 export const defaultSensors = [
   {
@@ -19,7 +19,7 @@ export const defaultSensors = [
         id: "inno-000-time-00",
         name: "Thời gian",
         unit: "s",
-        dec: 0
+        dec: 0,
       },
     ],
   },
@@ -34,7 +34,7 @@ export const defaultSensors = [
         unit: "ppm",
         min: 0,
         max: 5000,
-        dec: 0
+        dec: 0,
       },
     ],
   },
@@ -80,7 +80,7 @@ export const defaultSensors = [
         unit: "mS/cm",
         min: 10,
         max: 20,
-        dec: 2
+        dec: 2,
       },
     ],
   },
@@ -112,7 +112,7 @@ export const defaultSensors = [
       { id: "BLE-9909-TDS", name: "TDS", unit: "ppm", min: 0, max: 9999, dec: 0 },
       { id: "BLE-9909-SALT%", name: "SALT %", unit: "%", min: 0, max: 25, dec: 2 },
       { id: "BLE-9909-SALTPPM", name: "SALT ppm", unit: "ppm", min: 0, max: 9999, dec: 0 },
-      { id: "BLE-9909-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 60, dec: 1 }
+      { id: "BLE-9909-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 60, dec: 1 },
     ],
   },
   {
@@ -122,7 +122,7 @@ export const defaultSensors = [
     data: [
       { id: "BLE-9100-MG", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 30, dec: 2 },
       { id: "BLE-9100-%", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 300, dec: 1 },
-      { id: "BLE-9100-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 100, dec: 1 }
+      { id: "BLE-9100-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 100, dec: 1 },
     ],
   },
 ];
