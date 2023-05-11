@@ -63,6 +63,11 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       return false;
     }
 
+    if (![0, 1, 2, 3].includes(sensorUnitInfo.formatFloatingPoint)) {
+      f7.dialog.alert("Giá trị định dạng phải là 0, 1, 2 hoặc 3");
+      return false;
+    }
+
     return true;
   };
 
@@ -89,21 +94,23 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   return (
     <>
       <List className="__setting" form noHairlinesMd inlineLabels>
-        <CustomDropdownInput
-          labelName="Thông tin cài đặt:"
-          buttonName={formField.unitName}
-          popOverName="popover-sensor-unit"
-        >
-          <List className="list-frequency">
-            {sensorInfo?.data?.map((sensorUnit) => {
-              return (
-                <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
-                  <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
-                </Button>
-              );
-            })}
-          </List>
-        </CustomDropdownInput>
+        {sensorInfo?.data?.length > 1 && (
+          <CustomDropdownInput
+            labelName="Thông tin cài đặt:"
+            buttonName={formField.unitName}
+            popOverName="popover-sensor-unit"
+          >
+            <List className="list-frequency">
+              {sensorInfo?.data?.map((sensorUnit) => {
+                return (
+                  <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
+                    <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
+                  </Button>
+                );
+              })}
+            </List>
+          </CustomDropdownInput>
+        )}
 
         <ListInput
           className="display-setting-input label-color-black"

@@ -26,8 +26,15 @@
   }
 }
 
-@media only screen and (max-height: 600px) {
+@media only screen and (max-height: 800px) {
   .sensor-select-container .sensor-selector .button {
     font-size: 10px;
+  }
+
+  .__value {
+    font-size: 60px !important;
+    .__unit {
+      font-size: 30px !important;
+    }
   }
 }

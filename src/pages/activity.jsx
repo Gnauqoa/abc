@@ -394,7 +394,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
 
     let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    let currentData;
+    let currentData = [];
     const dataRunIds = [];
     const chartDatas = dataRunPreviews.map((dataRunPreview) => {
       let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
@@ -412,10 +412,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     });
 
     if (
-      currentData &&
-      currentData.length > 0 &&
-      (!_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]) ||
-        !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]))
+      !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]) ||
+      !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex])
     ) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: chartDatas,

@@ -112,19 +112,21 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
   return (
     <>
       <List className="__calibrating" form noHairlinesMd inlineLabels>
-        <CustomDropdownInput
-          labelName="Thông tin cài đặt:"
-          buttonName={formField.unitName}
-          popOverName="popover-sensor-unit"
-        >
-          {sensorInfo?.data?.map((sensorUnit) => {
-            return (
-              <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
-                <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
-              </Button>
-            );
-          })}
-        </CustomDropdownInput>
+        {sensorInfo?.data?.length > 1 && (
+          <CustomDropdownInput
+            labelName="Thông tin cài đặt:"
+            buttonName={formField.unitName}
+            popOverName="popover-sensor-unit"
+          >
+            {sensorInfo?.data?.map((sensorUnit) => {
+              return (
+                <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
+                  <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
+                </Button>
+              );
+            })}
+          </CustomDropdownInput>
+        )}
 
         <CustomDropdownInput
           labelName="Kiểu hiệu chỉnh:"
