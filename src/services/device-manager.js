@@ -172,26 +172,6 @@ export class DeviceManager {
     }
   }
 
-  async sendData(deviceId, data) {
-    try {
-      const encoder = new TextEncoder();
-      const encodedAll = encoder.encode(`${data}\r`);
-      if (encodedAll.length > LIMIT_BYTE_BLE) {
-        const chunkSize = Math.round(data.length / Math.ceil(encodedAll.length / LIMIT_BYTE_BLE));
-        const chunks = data.match(new RegExp(".{1," + chunkSize + "}", "g"));
-        for (const item of chunks) {
-          await sendBleData(deviceId, encoder.encode(item));
-        }
-        await sendBleData(deviceId, encoder.encode("\r"));
-      } else {
-        await sendBleData(deviceId, encoder.encode(`${data}\r`));
-      }
-    } catch (err) {
-      console.error("sendData error", err);
-      throw new Error("sendData error");
-    }
-  }
-
   // ============================== Utils functions =============================
   handleStopScan(callback) {
     try {
@@ -276,7 +256,12 @@ export class DeviceManager {
     DataManagerIST.callbackReadSensor(data);
   }
 
-  sendBleData(deviceId, data) {
+  writeBleData(deviceId, data) {
+    if (f7.device.electron) {
+      return webBle.writeData(deviceId, data);
+    }
+
+    // For mobile
     return new Promise((resolve, reject) => {
       ble.write(
         deviceId,
@@ -287,7 +272,6 @@ export class DeviceManager {
           resolve(res);
         },
         (err) => {
-          console.error(`sendDataToDevice ${deviceId} error`, err);
           reject(err);
         }
       );
@@ -295,30 +279,27 @@ export class DeviceManager {
   }
 
   startCheckingConnection() {
-    setInterval(() => {
+    setInterval(async () => {
       for (const device of this.devices) {
-        if (device.isConnected) continue;
+        if (device.isConnected) {
+          // TODO >>> Clean up. Just a demo for writing data to device.
+          try {
+            const encodedData = Uint8Array.of(1);
+            await this.writeBleData(device.deviceId, encodedData);
+            console.log("Write BLE success to device", device.deviceId);
+          } catch (error) {
+            console.error("Write BLE error", error);
+          }
+          // <<< End TODO
+
+          continue;
+        }
+
         const buffer = DataManagerIST.getBuffer();
         if (Object.keys(buffer).includes(String(device.id))) {
           DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
         }
       }
-      // if (f7.device.android || f7.device.ios) {
-      //   for (const device of this.devices) {
-      //     ble.isConnected(
-      //       device.deviceId,
-      //       () => {},
-      //       () => {
-      //         const buffer = DataManagerIST.getBuffer();
-      //         if (Object.keys(buffer).includes(String(device.id))) {
-      //           DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
-      //           const currentDevice = this.devices.find((d) => d.deviceId === device.deviceId);
-      //           currentDevice.isConnected = false;
-      //         }
-      //       }
-      //     );
-      //   }
-      // }
     }, CHECKING_CONNECTION_INTERVAL);
   }
 }
