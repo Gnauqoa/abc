@@ -53,13 +53,15 @@ export class DeviceManager {
               device?.name?.includes(DEVICE_YINMIK_PREFIX) ||
               device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_YINMIK_PREFIX)
             ) {
-              const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
-              if (deviceIndex < 0) {
+              const existingDevice = this.devices.find((d) => d.deviceId === device.id);
+              if (existingDevice) {
+                existingDevice.isConnected = false;
+              } else {
                 let deviceName = device.name || device.id;
                 if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
                   deviceName = device.advertising.kCBAdvDataLocalName;
                 }
-                const newFoundDevice = {
+                const newDevice = {
                   deviceId: device.id,
                   code: deviceName,
                   rssi: device.rssi,
@@ -67,8 +69,8 @@ export class DeviceManager {
                   isConnected: false,
                 };
 
-                const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-                sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
+                const sensor = SensorServices.getSensorByCode(newDevice.code);
+                sensor !== null && this.devices.push({ ...sensor, ...newDevice });
               }
               callback([...this.devices]);
             }
@@ -126,8 +128,8 @@ export class DeviceManager {
             successCallback([...this.devices]);
           },
           () => {
-            const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
-            this.devices = newDevices;
+            const device = this.devices.find((d) => d.deviceId === deviceId);
+            device.isConnected = false;
             errorCallback();
           }
         );
