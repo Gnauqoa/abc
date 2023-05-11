@@ -3,7 +3,7 @@ import { Popup, Page, Navbar, Button } from "framework7-react";
 
 import "./index.scss";
 
-const PromptPopup = ({ title, defaultValue, isShow, onClosePopup }) => {
+const PromptPopup = ({ title, inputLabel, defaultValue, isShow, onClosePopup }) => {
   const [input, setInput] = useState(defaultValue);
   const promptPopupRef = React.useRef(null);
 
@@ -21,18 +21,13 @@ const PromptPopup = ({ title, defaultValue, isShow, onClosePopup }) => {
   }, [defaultValue]);
 
   return (
-    <Popup
-      ref={promptPopupRef}
-      className="use-prompt-dialog-popup"
-      opened={isShow}
-      onPopupClose={() => onClose(defaultValue)}
-    >
+    <Popup ref={promptPopupRef} className="use-prompt-dialog-popup" opened={isShow} onPopupClose={() => onClose(input)}>
       <Page className="use-prompt-dialog">
         <Navbar className="use-prompt-dialog-header" title={title}></Navbar>
         <div className="use-prompt-dialog-content">
           <div className="items">
             <div className="item">
-              <div className="text">Chú giải: </div>
+              <div className="text">{inputLabel}: </div>
               <input type="text" className="input" value={input} onChange={onChangeInput} />
             </div>
           </div>

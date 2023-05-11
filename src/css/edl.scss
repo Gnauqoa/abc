@@ -144,7 +144,7 @@
 
   .order {
     padding: 0 10px 0 10px;
-    max-width: 200px;
+    max-width: 400px;
     justify-content: flex-start;
   }
 
@@ -176,30 +176,12 @@
   border-radius: 20px;
 }
 
-.data-run-management-popup {
-  // display: block;
-  width: 640px;
-  height: 500px;
-  left: calc(50% - 320px);
-  top: calc(50% - 250px);
-}
-.data-run-management-popup.popup {
-  border-radius: 40px;
-}
-
 // Mobile device
 @media only screen and (max-height: 400px) {
   .new-page-popup {
     .responsive {
       height: 100px;
     }
-  }
-
-  .data-run-management-popup {
-    width: 340px;
-    height: 260px;
-    left: calc(50% - 170px);
-    top: calc(50% - 130px);
   }
 }
 

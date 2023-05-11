@@ -14,6 +14,7 @@ const PageManagement = () => {
 
   const { prompt, showModal } = usePrompt({
     title: "Đổi tên trang hiện tại",
+    inputLabel: "Tên trang",
     defaultValue: pages[currentPageIndex].name,
     onClosePopup: onCloseChangeNamePopup,
   });
@@ -39,7 +40,8 @@ const PageManagement = () => {
           <List>
             {pages.map((page, index) => (
               <Button
-                className={`page-name ${index === currentPageIndex && "selected"}`}
+                key={`page-${index}`}
+                className={`page-name ${index === currentPageIndex ? "selected" : ""}`}
                 onClick={() => handleChangePage(index)}
               >
                 {page.name}

@@ -9,10 +9,14 @@ export class WebBle {
     this.currentChosenDevice = null;
     this.servers = {};
     this.scanCallback = null;
-    window._cdvElectronIpc.onScanBleResults((event, devices) => {
-      devices.forEach((d) => this.handleScannedDevice(d));
-      this.scanCallback([...this.devices]);
-    });
+    try {
+      window._cdvElectronIpc.onScanBleResults((event, devices) => {
+        devices.forEach((d) => this.handleScannedDevice(d));
+        this.scanCallback([...this.devices]);
+      });
+    } catch(error) {
+      console.log(error);
+    }
   }
 
   handleScannedDevice(device) {
@@ -188,54 +192,52 @@ export class WebBle {
           Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
           0xBB - stop byte (already cut off by serial delimiter parser)
         */
-          let data = event.target.value;
+        let data = event.target.value;
 
-          if (data.getUint8(0) != 0xAA) {
-            // Invalid data, ignore
-            return;
-          }
+        if (data.getUint8(0) != 0xAA) {
+          // Invalid data, ignore
+          return;
+        }
 
-          var sensorId = data.getUint8(1);
-          var sensorSerial = data.getUint8(2); // TODO: Will use later
-          var battery = data.getUint8(3);
-          var dataLength = data.getUint8(4);
-          var checksum = data.getUint8(5 + dataLength);
-          var calculatedChecksum = 0xFF;
-          for (var i=0; i<(dataLength+5); i++) {
-            calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
-          }
+        var sensorId = data.getUint8(1);
+        var sensorSerial = data.getUint8(2); // TODO: Will use later
+        var battery = data.getUint8(3);
+        var dataLength = data.getUint8(4);
+        var checksum = data.getUint8(5 + dataLength);
+        var calculatedChecksum = 0xFF;
+        for (var i=0; i<(dataLength+5); i++) {
+          calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
+        }
 
-          if (calculatedChecksum != checksum) {
-            console.log('Invalid data received');
-            return;
-          }
+        if (calculatedChecksum != checksum) {
+          console.log('Invalid data received');
+          return;
+        }
 
-          var dataRead = 0;
-          var sensorData = [];
+        var dataRead = 0;
+        var sensorData = [];
 
-          while (dataRead < dataLength) {
-            // read next 4 bytes
-            var rawBytes = [data.getUint8(dataRead+5), data.getUint8(dataRead+6),
-              data.getUint8(dataRead+7), data.getUint8(dataRead+8)];
+        while (dataRead < dataLength) {
+          // read next 4 bytes
+          var rawBytes = [data.getUint8(dataRead+5), data.getUint8(dataRead+6),
+            data.getUint8(dataRead+7), data.getUint8(dataRead+8)];
 
-            var view = new DataView(new ArrayBuffer(4));
+          var view = new DataView(new ArrayBuffer(4));
 
-            rawBytes.forEach(function (b, i) {
-                view.setUint8(3-i, b);
-            });
-
-            sensorData.push(view.getFloat32(0));
-            dataRead += 4;
-          }
-
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
-          sensorData.forEach(function (d, i) {
-            dataArray.push(d);
+          rawBytes.forEach(function (b, i) {
+              view.setUint8(3-i, b);
           });
 
-          //console.log(dataArray);
+          sensorData.push(view.getFloat32(0));
+          dataRead += 4;
+        }
 
-          callback(dataArray);
+        var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+        sensorData.forEach(function (d, i) {
+          dataArray.push(d);
+        });
+
+        callback(dataArray);
       });
     })
     .catch((err) => {
@@ -442,20 +444,6 @@ export class WebBle {
 
         callback(dataArray);
       });
-
-      let intervalId = setInterval(function () {
-        characteristic.readValue().catch((error) => {
-          console.error(error);
-          if (error.message.includes('GATT Server is disconnected')) {
-            console.log('Sensor just disconnected');
-            clearInterval(intervalId);
-          }
-          
-        });
-      }, 500);
     })
-    .catch((err) => {
-      console.log("receiveDataCallback error", err.message);
-      });
   }
 }

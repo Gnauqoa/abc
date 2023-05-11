@@ -1,6 +1,8 @@
 import React, { useContext, useState, useRef } from "react";
 import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER } from "../js/constants";
 
+import DataManagerIST from "../services/data-manager";
+
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
 const defaultPages = [
   {
@@ -20,13 +22,14 @@ export const ActivityContext = React.createContext({
   setIsRunning: () => {},
   currentPageIndex: 0,
   setCurrentPageIndex: () => {},
-  currentDataRunId: false,
+  currentDataRunId: null,
   setCurrentDataRunId: () => {},
   prevChartDataRef: [],
   handleNavigatePage: () => {},
   handleDeletePage: () => {},
   handleNewPage: () => {},
   changePageName: () => {},
+  handleDeleteDataRun: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -35,11 +38,13 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex].lastDataRunId);
-  let prevChartDataRef = useRef([]);
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
 
-  // Pages functions
+  // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
-    prevChartDataRef.current[currentPageIndex] = null;
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
   };
@@ -53,16 +58,21 @@ export const ActivityContextProvider = ({ children }) => {
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
-    prevChartDataRef.current[currentPageIndex] = null;
+
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
   };
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
-    prevChartDataRef.current[currentPageIndex] = null;
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+
+    const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
-    setCurrentDataRunId(null);
+    setCurrentDataRunId(newCurDataRunId);
   };
 
   const changePageName = (pageIndex, newPageName) => {
@@ -76,6 +86,20 @@ export const ActivityContextProvider = ({ children }) => {
       setPages(newPages);
     }
   };
+
+  const handleDeleteDataRun = (oldDataRunId, newDataRunId) => {
+    const newPages = pages.map((page) => {
+      if (page.lastDataRunId === oldDataRunId) {
+        return { ...page, lastDataRunId: newDataRunId };
+      }
+      return page;
+    });
+
+    setPages(newPages);
+    setCurrentDataRunId(newDataRunId);
+  };
+
+  // ======================= Datarun functions =======================
   return (
     <ActivityContext.Provider
       value={{
@@ -94,6 +118,7 @@ export const ActivityContextProvider = ({ children }) => {
         handleDeletePage,
         handleNewPage,
         changePageName,
+        handleDeleteDataRun,
       }}
     >
       {children}

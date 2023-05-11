@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 
 import PromptPopup from "../components/molecules/popup-prompt-dialog";
 
-const usePrompt = ({ title, defaultValue, onClosePopup }) => {
+const usePrompt = ({ title, inputLabel, defaultValue, onClosePopup }) => {
   const [isShow, setIsShow] = useState(false);
 
   const onClose = (newInput) => {
@@ -15,7 +15,15 @@ const usePrompt = ({ title, defaultValue, onClosePopup }) => {
   };
 
   const prompt = useMemo(() => {
-    return <PromptPopup title={title} defaultValue={defaultValue} isShow={isShow} onClosePopup={onClose} />;
+    return (
+      <PromptPopup
+        title={title}
+        inputLabel={inputLabel}
+        defaultValue={defaultValue}
+        isShow={isShow}
+        onClosePopup={onClose}
+      />
+    );
   }, [isShow]);
 
   return { prompt, showModal };

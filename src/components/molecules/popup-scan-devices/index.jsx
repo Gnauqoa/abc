@@ -30,6 +30,7 @@ export default function useDeviceManager() {
   const callbackSetDevices = (devices) => setDevices(devices);
 
   function openScanPopup() {
+    setDevices([]);
     scanPopupRef.current.f7Popup().open();
   }
 
@@ -53,12 +54,14 @@ export default function useDeviceManager() {
     }
   }
 
-  async function handleConnectSuccess() {
+  async function handleConnectSuccess(devices) {
     await core.sleep(1000);
     f7.dialog.close();
-    setDevices([]);
     if (f7.device.electron) {
+      setDevices([]);
       scanPopupRef.current.f7Popup().close();
+    } else {
+      setDevices(devices);
     }
   }
 

@@ -1,6 +1,6 @@
 import { f7 } from "framework7-react";
 
-import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID } from "../js/constants";
+import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_YINMIK_PREFIX } from "../js/constants";
 
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
@@ -49,15 +49,19 @@ export class DeviceManager {
           (device) => {
             if (
               device?.name?.includes(DEVICE_PREFIX) ||
-              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX)
+              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_PREFIX) ||
+              device?.name?.includes(DEVICE_YINMIK_PREFIX) ||
+              device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_YINMIK_PREFIX)
             ) {
-              const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
-              if (deviceIndex < 0) {
+              const existingDevice = this.devices.find((d) => d.deviceId === device.id);
+              if (existingDevice) {
+                existingDevice.isConnected = false;
+              } else {
                 let deviceName = device.name || device.id;
                 if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
                   deviceName = device.advertising.kCBAdvDataLocalName;
                 }
-                const newFoundDevice = {
+                const newDevice = {
                   deviceId: device.id,
                   code: deviceName,
                   rssi: device.rssi,
@@ -65,8 +69,8 @@ export class DeviceManager {
                   isConnected: false,
                 };
 
-                const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-                sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
+                const sensor = SensorServices.getSensorByCode(newDevice.code);
+                sensor !== null && this.devices.push({ ...sensor, ...newDevice });
               }
               callback([...this.devices]);
             }
@@ -124,8 +128,8 @@ export class DeviceManager {
             successCallback([...this.devices]);
           },
           () => {
-            const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
-            this.devices = newDevices;
+            const device = this.devices.find((d) => d.deviceId === deviceId);
+            device.isConnected = false;
             errorCallback();
           }
         );
@@ -209,8 +213,53 @@ export class DeviceManager {
         BLE_SERVICE_ID,
         BLE_TX_ID,
         (buffer) => {
-          const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
-          callback(data);
+          //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
+          let data = new Uint8Array(buffer);
+
+          if (data[0] != 0xAA) {
+            // Invalid data, ignore
+            return;
+          }
+
+          var sensorId = data[1];
+          var sensorSerial = data[2]; // TODO: Will use later
+          var battery = data[3];
+          var dataLength = data[4];
+          var checksum = data[5 + dataLength];
+          var calculatedChecksum = 0xFF;
+          for (var i=0; i<(dataLength+5); i++) {
+            calculatedChecksum = calculatedChecksum ^ data[i];
+          }
+
+          if (calculatedChecksum != checksum) {
+            console.log('Invalid data received');
+            return;
+          }
+
+          var dataRead = 0;
+          var sensorData = [];
+
+          while (dataRead < dataLength) {
+            // read next 4 bytes
+            var rawBytes = [data[dataRead+5], data[dataRead+6],
+            data[dataRead+7], data[dataRead+8]];
+
+            var view = new DataView(new ArrayBuffer(4));
+
+            rawBytes.forEach(function (b, i) {
+                view.setUint8(3-i, b);
+            });
+
+            sensorData.push(view.getFloat32(0));
+            dataRead += 4;
+          }
+
+          var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+          sensorData.forEach(function (d, i) {
+            dataArray.push(d);
+          });
+
+          callback(dataArray);
         },
         (err) => {
           console.error(`receiveBleNotification error`, err);
@@ -219,8 +268,6 @@ export class DeviceManager {
     } catch (error) {
       console.error("ble.startNotification", error);
     }
-
-    // callback("@,9,5.33,*");
   }
 
   onDataCallback(data) {
