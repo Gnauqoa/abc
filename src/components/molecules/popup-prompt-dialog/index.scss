@@ -1,10 +1,14 @@
-.use-prompt-dialog-popup.popup {
-  width: 400px;
-  height: 250px;
+@media (min-width: 630px) and (min-height: 630px) {
+  .use-prompt-dialog-popup.popup:not(.popup-tablet-fullscreen) {
+    width: 400px;
+    height: 250px;
 
-  left: calc(50% + 100px);
-  top: calc(50% + 100px);
-  border-radius: 25px;
+    left: calc(50% - 200px);
+    top: calc(50% - 125px);
+    margin-top: 0px;
+    margin-left: 0px;
+    border-radius: 25px;
+  }
 }
 
 .use-prompt-dialog {
@@ -36,7 +40,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 0 20px 30px 20px;
+      padding: 30px 20px 30px 20px;
 
       .item {
         height: 50px;
@@ -116,18 +120,18 @@
 }
 
 @media only screen and (max-height: 600px) {
-  .use-prompt-popup.popup {
-    width: 300px;
+  .use-prompt-dialog-popup.popup:not(.popup-tablet-fullscreen) {
+    width: 400px;
     height: 250px;
 
-    left: calc(50% - 150px);
-    top: calc(50% - 100px);
+    left: calc(50% - 200px);
+    top: calc(50% - 125px);
     border-radius: 25px;
   }
 
   .use-prompt-header {
     .navbar-inner {
-      line-height: 400px;
+      line-height: 40px;
       .title {
         font-size: 20px;
       }

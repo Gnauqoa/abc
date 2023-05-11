@@ -14,7 +14,7 @@ export const NOTE_OPTION = 1;
 export const INTERPOLATE_OPTION = 2;
 
 export const X_UPPER_LOWER_MARGIN = 2;
-export const Y_UPPER_LOWER_MARGIN_SCALE = 0.05;
+export const Y_UPPER_LOWER_MARGIN_SCALE = 0.1;
 export const X_MIN_VALUE = -10;
 export const Y_MIN_VALUE = 5;
 

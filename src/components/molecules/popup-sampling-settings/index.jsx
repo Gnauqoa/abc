@@ -10,11 +10,6 @@ import {
 } from "../../../js/constants";
 import dialog from "../dialog/dialog";
 
-const FREQUENCY_UNITS = {
-  "": 1,
-  k: 1000,
-};
-
 const SamplingSetting = ({
   isRunning,
   frequency,
@@ -34,8 +29,7 @@ const SamplingSetting = ({
       } else {
         const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
         const frequencyNumber = Number(frequencySplit[0]);
-        const subUnit = frequencySplit[1];
-        handleFrequencySelect(frequencyNumber * FREQUENCY_UNITS[subUnit]);
+        handleFrequencySelect(frequencyNumber);
       }
     } catch (error) {
       console.log("Sampling-settings: ", error);
@@ -54,8 +48,7 @@ const SamplingSetting = ({
     } else {
       const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
       const frequencyNumber = Number(frequencySplit[0]);
-      const subUnit = frequencySplit[1];
-      handleFrequencySelect(frequencyNumber * FREQUENCY_UNITS[subUnit]);
+      handleFrequencySelect(frequencyNumber);
     }
     f7.popover.close();
   };
@@ -72,8 +65,6 @@ const SamplingSetting = ({
         textColor="black"
         bgColor="white"
         style={{
-          width: "140px",
-          height: "44px",
           ...(isManualMode ? { borderRadius: "0px" } : { borderRadius: "0 10px 10px 0" }),
         }}
         raised
@@ -84,12 +75,7 @@ const SamplingSetting = ({
       <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
         <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-            const frequency =
-              f === SAMPLING_MANUAL_FREQUENCY
-                ? SAMPLING_MANUAL_NAME
-                : f < 1000
-                ? `${f} ${FREQUENCY_UNIT}`
-                : `${f / 1000} kHz`;
+            const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f} ${FREQUENCY_UNIT}`;
             return (
               <Button
                 key={frequency}

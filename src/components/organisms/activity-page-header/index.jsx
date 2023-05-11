@@ -77,7 +77,7 @@ const ActivityHeader = ({
         <NavRight>
           <RoundButton disabled={isRunning} icon="save" onClick={handleActivitySave} />
           <RoundButton disabled={isRunning} icon="settings" popoverOpen=".setting-popover-menu" />
-          <RoundButton icon="bluetooth" onClick={() => deviceManager.openScanPopup()} />
+          <RoundButton disabled={isRunning} icon="bluetooth" onClick={() => deviceManager.openScanPopup()} />
           <RoundButton
             disabled={isRunning}
             icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}

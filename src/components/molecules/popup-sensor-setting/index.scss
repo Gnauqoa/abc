@@ -1,12 +1,13 @@
-.sensor-setting-popup {
-  width: 800px;
-  height: 600px;
-  left: calc(50% - 400px);
-  top: calc(50% - 300px);
-}
-
-.sensor-setting-popup.popup {
-  border-radius: 25px;
+@media (min-width: 630px) and (min-height: 630px) {
+  .sensor-setting-popup.popup:not(.popup-tablet-fullscreen) {
+    width: 800px;
+    height: 600px;
+    left: calc(50% - 400px);
+    top: calc(50% - 300px);
+    margin-top: 0px;
+    margin-left: 0px;
+    border-radius: 25px;
+  }
 }
 
 .sensor-setting {
@@ -251,14 +252,22 @@
 }
 
 @media only screen and (max-height: 600px) {
-  .sensor-setting-popup {
+  // .sensor-setting-popup {
+  //   width: 500px;
+  //   height: 300px;
+  //   left: calc(50% - 250px);
+  //   top: calc(50% - 150px);
+  // }
+
+  // .sensor-setting-popup.popup {
+  //   border-radius: 15px;
+  // }
+
+  .sensor-setting-popup.popup:not(.popup-tablet-fullscreen) {
     width: 500px;
     height: 300px;
     left: calc(50% - 250px);
     top: calc(50% - 150px);
-  }
-
-  .sensor-setting-popup.popup {
     border-radius: 15px;
   }
 
