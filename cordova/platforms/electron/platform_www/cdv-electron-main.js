@@ -36,7 +36,10 @@ const hostname = cdvElectronSettings.hostname;
 const isFileProtocol = scheme === "file";
 
 const { SerialPort } = require("serialport");
-const { DelimiterParser } = require('@serialport/parser-delimiter')
+const { DelimiterParser } = require('@serialport/parser-delimiter');
+
+const BLE_TYPE = "ble";
+const USB_TYPE = "usb";
 
 // CP2104
 const VID = '10C4'
@@ -87,6 +90,7 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow(browserWindowOpts);
   mainWindow.setMenuBarVisibility(false);
+  mainWindow.removeMenu();
 
   // Load a local HTML file or a remote URL.
   const cdvUrl = cdvElectronSettings.browserWindowInstance.loadURL.url;
@@ -141,6 +145,7 @@ app.on("ready", () => {
   });
 
   createWindow();
+  setupBluetooth(mainWindow);
 });
 
 // Quit when all windows are closed.
@@ -245,11 +250,9 @@ ipcMain.handle("quitApp", () => {
 
 ipcMain.handle("setFullscreen", (_, isFullscreen) => {
   if (isFullscreen) {
-    mainWindow.setAlwaysOnTop(true, "screen-saver");
     mainWindow.setFullScreen(true);
   } else {
     mainWindow.setFullScreen(false);
-    mainWindow.setAlwaysOnTop(true, "floating");
   }
 });
 
@@ -297,7 +300,16 @@ async function listSerialPorts() {
 
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xBB] }))
             parser.on("data", function (data) {
-              //console.log(data);
+              /* Each sensor data record has following structure
+                0xAA - start byte
+                Sensor ID - 1 byte
+                Sensor Serial ID - 1 byte
+                Data length - 1 byte
+                Sensor data [0..len] - 4 byte per data
+                Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
+                0xBB - stop byte (already cut off by serial delimiter parser)
+              */
+
               if (data[0] != 0xAA) {
                 // Invalid data, ignore
                 return;
@@ -305,14 +317,25 @@ async function listSerialPorts() {
 
               var sensorId = data[1];
               var sensorSerial = data[2]; // TODO: Will use later
-              var checksum = data[data.dataLength-1]; // TODO: Will use later
-              var dataLength = data[3];
+              var battery = data[3]; // TODO: Will use later
+              var dataLength = data[4];
+              var checksum = data[5 + dataLength];
+              var calculatedChecksum = 0xFF;
+              for (var i=0; i<(dataLength+5); i++) {
+                calculatedChecksum = calculatedChecksum ^ data[i];
+              }
+
+              if (calculatedChecksum != checksum) {
+                console.log('Invalid data received');
+                return;
+              }
+
               var dataRead = 0;
               var sensorData = [];
 
               while (dataRead < dataLength) {
                 // read next 4 bytes
-                var rawBytes = data.slice(dataRead+4, dataRead+8);
+                var rawBytes = data.slice(dataRead+5, dataRead+9);
 
                 var view = new DataView(new ArrayBuffer(4));
 
@@ -320,11 +343,11 @@ async function listSerialPorts() {
                     view.setUint8(3-i, b);
                 });
 
-                sensorData.push(view.getFloat32(0).toFixed(3));
+                sensorData.push(view.getFloat32(0).toFixed(2));
                 dataRead += 4;
               }
 
-              var dataArray = [sensorId, sensorSerial, dataLength]
+              var dataArray = [sensorId, battery, USB_TYPE, dataLength]
               sensorData.forEach(function (d, i) {
                 dataArray.push(d);
               });
@@ -350,6 +373,28 @@ async function listSerialPorts() {
 function listPorts() {
   listSerialPorts();
   setTimeout(listPorts, 3000);
+}
+
+function setupBluetooth(win) {
+  let btCallback;
+
+  // Setup handling of bluetooth scan results
+  win.webContents.on("select-bluetooth-device", (event, devices, callback) => {
+    // Store the callback for calling once a device is selected
+    btCallback = callback;
+
+    // Allow the WebBluetooth API to wait for a custom UI chooser
+    event.preventDefault();
+
+    // Notify the render process of found devices
+    win.webContents.send("webble-scan", devices);
+  });
+
+  // Resolve a request when a device is selected
+  ipcMain.on("webble-selected", (event, deviceId) => {
+    if (btCallback) btCallback(deviceId);
+    btCallback = null;
+  });
 }
 
 // Set a timeout that will check for new serialPorts every 2 seconds.

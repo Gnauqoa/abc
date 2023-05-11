@@ -1,0 +1,150 @@
+.scan-devices {
+  width: 460px;
+  height: 500px;
+  left: calc(50% - 230px);
+  top: calc(50% - 250px);
+
+  .navbar {
+    position: relative;
+  }
+
+  .page-content {
+    padding-top: 0px;
+  }
+
+  .scan-block {
+    // display: flex;
+    background-color: #a8c0e3;
+    justify-content: space-between;
+
+    .title {
+      padding-left: 15px;
+      align-self: center;
+      color: #1069ee;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      i {
+        font-size: 30px;
+        border-radius: 15px;
+        background-color: white;
+      }
+    }
+
+    .preloader {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      .preloader-inner {
+        width: 70%;
+        height: 70%;
+        position: relative;
+      }
+    }
+
+    .scan-button {
+      width: 40px;
+      height: 40px;
+      display: inline-block;
+      margin-right: 10px;
+    }
+  }
+
+  .text-align-center {
+    display: flex;
+    justify-content: space-between;
+    background-color: #a8c0e3;
+  }
+
+  .devices-block {
+    .list {
+      ul {
+        padding-bottom: 20px;
+      }
+      ul::before {
+        content: none;
+      }
+      ul::after {
+        content: none;
+      }
+    }
+
+    .item-inner {
+      border-bottom: 1px solid;
+
+      padding-right: 5px;
+
+      .item-title {
+        font-size: 18px;
+      }
+
+      .item-after img {
+        width: 20px;
+      }
+    }
+
+    .item-inner::after {
+      content: none;
+    }
+
+    .item-inner::before {
+      content: none;
+    }
+  }
+}
+
+.scan-devices.popup {
+  border-radius: 40px;
+}
+
+// Mobile device
+@media only screen and (max-height: 600px) {
+  .scan-devices {
+    width: 460px;
+    height: 300px;
+    left: calc(50% - 230px);
+    top: calc(50% - 150px);
+
+    .scan-block {
+      .title {
+        padding-left: 0px;
+        font-size: 16px;
+      }
+
+      a i {
+        font-size: 24px;
+        border-radius: 15px;
+      }
+
+      .preloader .preloader-inner {
+        width: 60%;
+        height: 60%;
+      }
+    }
+
+    .devices-block {
+      .item-content {
+        padding-left: 0px;
+        padding-right: 0px;
+      }
+      .item-inner {
+        .item-title {
+          font-size: 14px;
+        }
+
+        .item-after img {
+          width: 16px;
+        }
+      }
+    }
+  }
+
+  .scan-devices.popup {
+    border-radius: 20px;
+  }
+}

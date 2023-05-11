@@ -5,12 +5,11 @@ import cordovaApp from "../js/cordova-app";
 
 import routes from "../js/routes";
 import store from "../js/store";
-import { ConnectContextProvider } from "./connect/connect-context";
-import logger from "../services/logger-service";
 import MainMenu from "../pages/menu/menu";
-import Dialogs from "./dialogs";
+import Dialogs from "./molecules/dialog/dialogs";
 
 import dataManager from "../services/data-manager";
+import { ActivityContextProvider } from "../context/ActivityContext";
 
 const MyApp = () => {
   const device = getDevice();
@@ -54,43 +53,42 @@ const MyApp = () => {
             logger.error("Cannot enable location", err);
           }
         );
+
+        ble.isEnabled(
+          () => {},
+          () => {
+            // Bluetooth not yet enabled so we try to enable it
+            ble.enable(
+              () => {},
+              (err) => {
+                console.error("Cannot enable bluetooth", err);
+              }
+            );
+          }
+        );
       }
-      /*
-      ble.isEnabled(
-        () => {},
-        () => {
-          // Bluetooth not yet enabled so we try to enable it
-          ble.enable(
-            () => {},
-            (err) => {
-              logger.error("Cannot enable bluetooth", err);
-            }
-          );
-        }
-      );
-      */
     }
 
     // Call F7 APIs here
     if (f7.device.electron) {
       window._cdvElectronIpc.onDeviceData((event, value) => {
-          dataManager.callbackReadSensor(value);
+        dataManager.callbackReadSensor(value);
       });
       window._cdvElectronIpc.onDeviceDisconnected((event, value) => {
         dataManager.callbackSensorDisconnected(value);
-    })
+      });
     }
   });
 
   return (
-    <App {...f7params}>
-      <ConnectContextProvider>
+    <ActivityContextProvider>
+      <App {...f7params}>
         <Dialogs />
         <MainMenu />
         {/* Your main view, should have "view-main" class */}
         <View main className="safe-areas" url="/" />
-      </ConnectContextProvider>
-    </App>
+      </App>
+    </ActivityContextProvider>
   );
 };
 export default MyApp;

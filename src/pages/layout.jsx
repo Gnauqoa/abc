@@ -1,7 +1,7 @@
 import React from "react";
 import { Page, Link, Navbar, NavTitle, Row, Col, NavLeft, Block } from "framework7-react";
 
-import BackButton from "../components/back-button";
+import BackButton from "../components/atoms/back-button";
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,

@@ -21,28 +21,50 @@
 }
 
 .activity-layout {
-  width: 90%;
-  height: calc(100% - 80px);
+  width: 98%;
+  height: calc(100% - 80px - 60px);
   margin: auto;
   display: flex;
-  gap: 20px;
-  .__card {
-    background-color: #ffffff;
-    border-radius: 15px;
-    width: 100%;
+  gap: 1%;
+
+  .__card-sensors {
+    width: 15%;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 4%;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 1px;
   }
+
+  .__card-sensors::-webkit-scrollbar {
+    display: none;
+  }
+
+  .__card-widget {
+    border-radius: 15px;
+    width: 85%;
+    background-color: #ffffff;
+  }
+
   .__card-left {
-    width: 33%;
+    width: 27%;
     .sensor-select-container-table-chart {
       width: 47%;
     }
   }
   .__card-right {
+    width: 57%;
     .sensor-select-vertical-mount-container {
       left: 37%;
     }
-    width: 67%;
   }
+}
+
+.activity-sensors {
+  background-color: #000000;
 }
 
 .activity-footer {
@@ -73,7 +95,7 @@
       display: flex;
       width: 250px;
       height: 44px;
-      line-height: 44px;
+      // line-height: 44px;
 
       .image {
         display: flex;
@@ -112,6 +134,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 10px;
 
   .prev,
   .next {
@@ -120,9 +143,15 @@
   }
 
   .order {
-    color: #ffffff;
-    font-size: 24px;
     padding: 0 10px 0 10px;
+    max-width: 400px;
+    justify-content: flex-start;
+  }
+
+  .order.button {
+    color: white;
+    font-size: 18px;
+    text-transform: none;
   }
 
   /* Added CSS for disabled state */
@@ -145,4 +174,115 @@
   left: calc(50% - 250px);
   top: calc(50% - 170px);
   border-radius: 20px;
+}
+
+// Mobile device
+@media only screen and (max-height: 400px) {
+  .new-page-popup {
+    .responsive {
+      height: 100px;
+    }
+  }
+}
+
+// Mobile device
+@media only screen and (max-height: 600px) {
+  .new-page-popup {
+    .responsive {
+      height: 120px;
+    }
+  }
+
+  .data-run-management-popup {
+    width: 340px;
+    height: 260px;
+    left: calc(50% - 170px);
+    top: calc(50% - 130px);
+  }
+
+  .navbar-inner {
+    height: 32px;
+    a {
+      width: 30px;
+      height: 30px;
+      i {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .activity-name {
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .activity-layout {
+    width: 98%;
+    height: calc(100% - 80px - 36px);
+    gap: 1%;
+    margin: 1%;
+
+    .__card-sensors {
+      width: 10%;
+    }
+    .__card-left {
+      width: 38%;
+    }
+    .__card-right {
+      width: 52%;
+    }
+  }
+
+  .activity-footer {
+    height: 36px;
+    padding-top: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    .__toolbar-left {
+      .frequency {
+        width: 200px;
+        height: 32px;
+
+        .image {
+          width: 36px;
+          height: 32px;
+
+          img {
+            width: 28px;
+            height: 28px;
+          }
+        }
+
+        .button {
+          height: 32px !important;
+        }
+      }
+    }
+    .__toolbar-right {
+      .timer {
+        width: 100px;
+        height: 32px;
+        font-size: 16px;
+        line-height: 32px;
+        padding-left: 15px;
+      }
+
+      a {
+        height: 32px;
+        width: 32px;
+      }
+    }
+
+    .activity-nav {
+      height: 32px;
+      img {
+        height: 26px;
+        width: 26px;
+      }
+      .order {
+        font-size: 20px;
+      }
+    }
+  }
 }

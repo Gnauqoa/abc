@@ -1,18 +1,21 @@
 import { v4 as uuidv4 } from "uuid";
-import { findGCD, getLCM, exportDataRunsToExcel } from "./../utils/core";
+import { exportDataRunsToExcel, getCurrentTime } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
-import { sensors } from "./sensor-service";
+import SensorServices from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
   EMIT_DATA_MANUAL_FREQUENCY,
-  TIMER_INTERVAL,
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
+  BLE_TYPE,
 } from "../js/constants";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 3;
+const NUM_NON_DATA_SENSORS_CALLBACK = 4;
+
+// TODO: Fix when collecting data with timer, if any happen like manual sampling,
+// change frequency or start/stop collecting data. Stop timer
 
 /**
  * Class representing a data manager that stores and manages data runs and subscriptions.
@@ -24,7 +27,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    // this.dummySensorData();
   }
 
   initializeVariables() {
@@ -64,24 +67,6 @@ export class DataManager {
      */
     this.emitter = new EventEmitter();
 
-    // /**
-    //  * Intervals for emitting subscribers.
-    //  * @type {number[]}
-    //  */
-    // this.emitSubscribersIntervals = FREQUENCIES.map((e) => (1 / e) * 1000);
-
-    // /**
-    //  * Maximum interval for emitting subscribers.
-    //  * @type {number}
-    //  */
-    // this.maxEmitSubscribersInterval = getLCM(this.emitSubscribersIntervals);
-
-    // /**
-    //  * Interval for emitting subscribers.
-    //  * @type {number}
-    //  */
-    // this.emitSubscribersInterval = findGCD(this.emitSubscribersIntervals);
-
     /**
      * Total time for collecting data.
      * @type {number}
@@ -101,11 +86,14 @@ export class DataManager {
     this.collectingDataInterval = 1000;
 
     this.samplingMode = SAMPLING_AUTO;
-    this.sensorIds = sensors.map((sensor) => sensor.id);
+    this.sensorIds = SensorServices.getSensors().map((sensor) => sensor.id);
 
     // Parameters for Timer
     this.timerCollectingTime = 0;
     this.timerSubscriber = {};
+
+    this.uartConnections = new Set();
+    this.batteryStatus = {};
   }
 
   init() {
@@ -317,14 +305,22 @@ export class DataManager {
      * @property {string} name - The name of the data run.
      * @property {Array} data - An array of sensor data collected during the data run.
      */
-    const dataRunName = name || `Lần ${Object.keys(this.dataRuns).length + 1}`;
+    // Find the max dataRun Name
+    const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
+      const dataRunNameSplitted = dataRun.name.split(" ");
+      const value = Number(dataRunNameSplitted?.[1]);
+      return !Number.isNaN(value) && Math.max(maxValue, value);
+    }, 0);
+
+    const dataRunName = name || `Lần ${maxDataRunNum + 1}`;
+    const createdAt = getCurrentTime();
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
       name: dataRunName,
-      data: [],
+      createdAt: createdAt,
+      data: {},
       interval: this.collectingDataInterval,
     };
-    // console.log(`DATA_MANAGER-createDataRun-${this.curDataRunId}`);
     return this.curDataRunId;
   }
 
@@ -337,7 +333,7 @@ export class DataManager {
   updateDataRun(dataRunId, dataRunName) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun || !dataRun.name) {
-      // console.log(`updateDataRun: dataRunId ${dataRunId} does not exist`);
+      // console.log(`DATA_MANAGER-updateDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
     dataRun.name = dataRunName;
@@ -350,12 +346,37 @@ export class DataManager {
    * @returns {boolean} - Returns true if the data run was successfully deleted, false otherwise.
    */
   deleteDataRun(dataRunId) {
-    if (!this.dataRuns[dataRunId]) {
-      // console.log(`deleteDataRun: dataRunId ${dataRunId} does not exist`);
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-deleteDataRun: dataRunId ${dataRunId} does not exist`);
       return false;
     }
+
+    // find the index of dataRunId in dataRuns
+    const listDataRunIds = Object.keys(this.dataRuns);
+    const index = listDataRunIds.indexOf(dataRunId);
+    listDataRunIds.splice(index, 1);
+
+    let newCurrentDataRunId;
+    if (index < listDataRunIds.length) {
+      newCurrentDataRunId = listDataRunIds[index];
+    } else if (index > 0) {
+      newCurrentDataRunId = listDataRunIds[index - 1];
+    } else {
+      newCurrentDataRunId = null;
+    }
+
+    this.curDataRunId = newCurrentDataRunId;
     delete this.dataRuns[dataRunId];
     return true;
+  }
+
+  getCurrentDataRunId() {
+    return this.curDataRunId;
+  }
+
+  isDataRunIdExist(dataRunId) {
+    return Object.keys(this.dataRuns).hasOwnProperty(dataRunId);
   }
 
   /**
@@ -363,14 +384,25 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to append data to.
    * @param {object} sensorsData - An object containing the data from all sensors.
    */
-  appendDataRun(dataRunId, sensorsData) {
+  appendDataRun(dataRunId, parsedTime, curBuffer) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
-      // console.log(`appendDataRun: dataRunId ${dataRunId} does not exist`);
-      return;
+      // console.log(`DATA_MANAGER-appendDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
     }
+    const dataRunData = dataRun.data;
 
-    dataRun.data.push(sensorsData);
+    Object.keys(curBuffer).forEach((sensorId) => {
+      const sensorData = {
+        time: parsedTime,
+        values: curBuffer[sensorId],
+      };
+      if (Object.keys(dataRunData).includes(sensorId)) {
+        dataRunData[sensorId].push(sensorData);
+      } else {
+        dataRunData[sensorId] = [sensorData];
+      }
+    });
   }
 
   /**
@@ -380,19 +412,7 @@ export class DataManager {
   getActivityDataRunPreview() {
     const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
       const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name };
-    });
-    return dataRunInfos;
-  }
-
-  /**
-   * Returns an array of data runs associated with a given activity, each containing the data run ID, name, and data.
-   * @returns {Array.<{id: string, name: string, data: Array}>} An array of objects containing the data run ID, name, and data.
-   */
-  getActivityDataRun() {
-    const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
-      const dataRun = this.dataRuns[dataRunId];
-      return { id: dataRunId, name: dataRun.name, data: dataRun.data, interval: dataRun.interval };
+      return { id: dataRunId, name: dataRun.name, createdAt: dataRun.createdAt };
     });
     return dataRunInfos;
   }
@@ -413,6 +433,7 @@ export class DataManager {
         name: dataRun.name,
         data: dataRun.data,
         interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
       };
 
       // console.log(`DATA_MANAGER-importActivityDataRun-dataRunId_${dataRun.id}`);
@@ -420,57 +441,54 @@ export class DataManager {
   }
 
   /**
-   * Parses dataRun.data of DataManager into a Activity DataRun format
-   * @param {Array(Object.<time: string, ...[Object.<sensorId: Array(string)>]} dataRun - The data run to be parsed
-   * @returns {Array} An array of sensor SensorData objects with time, sensorId, and array of values
+   * Returns an array of data runs associated with a given activity, each containing the data run ID, name, and data.
+   * @returns {Array.<{id: string, name: string, data: Array}>} An array of objects containing the data run ID, name, and data.
    */
-  parseActivityDataRun = (dataRun) => {
-    /**
-     * @typedef {Object} SensorData
-     * @property {number} time - The timestamp of the sensor data
-     * @property {number} sensorId - The ID of the sensor
-     * @property {Array} values - The sensor data values
-     */
-    const parsedDataRun = [];
-    if (!dataRun) return parsedDataRun;
-
-    dataRun.forEach((sample) => {
-      const sensorDatas = Object.keys(sample)
-        .map((sensorId) => {
-          const parsedSensorId = parseInt(sensorId);
-          if (parsedSensorId === 0) return false;
-          return {
-            time: sample[0][0],
-            sensorId: parsedSensorId,
-            values: sample[parsedSensorId],
-          };
-        })
-        .filter(Boolean);
-      parsedDataRun.push(...sensorDatas);
+  exportActivityDataRun() {
+    const dataRunInfos = Object.keys(this.dataRuns).map((dataRunId) => {
+      const dataRun = this.dataRuns[dataRunId];
+      return {
+        id: dataRunId,
+        name: dataRun.name,
+        data: dataRun.data,
+        interval: dataRun.interval,
+        createdAt: dataRun.createdAt,
+      };
     });
+    return dataRunInfos;
+  }
 
-    return parsedDataRun;
-  };
-
-  /**
-   * Returns the data associated with a given data run ID.
-   * @param {string} dataRunId - The ID of the data run.
-   * @returns {(Array|boolean)} Returns an array of data associated with the data run ID if it exists, otherwise false.
-   */
-  getDataRunData(dataRunId) {
-    if (this.dataRuns.hasOwnProperty(dataRunId)) {
-      return this.dataRuns[dataRunId].data;
+  getWidgetDatasRunData(currentDataRunId, sensorIds) {
+    const dataRun = this.dataRuns[currentDataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-getWidgetDatasRunData: dataRunId ${currentDataRunId} does not exist`);
+      return [];
     }
-    return false;
+
+    const widgetDatas = [];
+    for (const sensorId of sensorIds) {
+      const sensorData = dataRun.data[parseInt(sensorId)];
+      widgetDatas.push(sensorData ? [...sensorData] : []);
+    }
+
+    return widgetDatas;
   }
 
   setCurrentDataRun(dataRunId) {
     if (this.dataRuns.hasOwnProperty(dataRunId)) {
       this.curDataRunId = dataRunId;
-      // console.log(`DATA_MANAGER-setCurrentDataRun-${dataRunId}`);
       return true;
     }
     return false;
+  }
+
+  addCustomSensor(sensorId) {
+    const sensorsData = [];
+    this.buffer[parseInt(sensorId)] = sensorsData;
+  }
+
+  getUartConnections() {
+    return this.uartConnections;
   }
 
   // -------------------------------- Export -------------------------------- //
@@ -481,74 +499,98 @@ export class DataManager {
    * @returns {void}
    */
   exportDataRunExcel() {
-    const recordedSensors = new Set();
-    const invertedSensorsInfo = {};
-    const headers = [];
-    let currentIndex = 0;
-
-    const dataRunsInfo = Object.keys(this.dataRuns).map((id) => ({
-      id: id,
+    const dataRunsInfo = Object.entries(this.dataRuns).map(([id, { interval, name }]) => ({
+      id,
+      interval,
+      maxTimeStamp: 0,
+      headers: [],
       sheetRows: [],
-      sheetName: this.dataRuns[id].name,
+      sheetName: name,
+      recordedSensors: new Set([TIME_STAMP_ID]),
+      invertedSensorsInfo: {},
     }));
 
-    // Get all sensor IDs in all data runs and find max record time
-    for (const dataRun of Object.values(this.dataRuns)) {
-      for (const sample of dataRun.data) {
-        Object.keys(sample).forEach((sensorId) => {
-          recordedSensors.add(sensorId);
-        });
-      }
-    }
+    for (const dataRunInfo of dataRunsInfo) {
+      let currentIndex = 0;
+      const dataRunData = this.dataRuns[dataRunInfo.id].data;
 
-    // Create Row Names with all sensor that had been recorded
-    for (const sensorId of recordedSensors) {
-      const sensorInfo = sensors[sensorId];
-      const subSensorIds = Object.keys(sensorInfo.data);
-      invertedSensorsInfo[sensorId] = {
-        name: sensorInfo.name,
-        sensorIndexInRow: currentIndex,
-        numSubSensor: subSensorIds.length,
-      };
-      currentIndex += subSensorIds.length;
+      // Collect all sensor IDs and find max record time for each data run
+      for (const [sensorId, sensorData] of Object.entries(dataRunData)) {
+        dataRunInfo.recordedSensors.add(sensorId);
 
-      if (sensorId === TIME_STAMP_ID) {
-        headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit})`);
-        continue;
+        const lastSensorData = sensorData[sensorData.length - 1];
+        const lastSensorDataTime = lastSensorData.time && parseInt(parseFloat(lastSensorData.time) * 1000);
+        dataRunInfo.maxTimeStamp = Math.max(dataRunInfo.maxTimeStamp, lastSensorDataTime || 0);
       }
-      for (const subSensorId of subSensorIds) {
-        headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
+
+      // Create Row Names with all sensor that had been recorded
+      const sensors = SensorServices.getAllSensors();
+      for (const sensorId of dataRunInfo.recordedSensors) {
+        const sensorInfo = sensors[sensorId];
+        const subSensorIds = Object.keys(sensorInfo.data);
+        dataRunInfo.invertedSensorsInfo[sensorId] = {
+          name: sensorInfo.name,
+          sensorIndexInRow: currentIndex,
+          numSubSensor: subSensorIds.length,
+        };
+        currentIndex += subSensorIds.length;
+
+        if (sensorId === TIME_STAMP_ID) {
+          dataRunInfo.headers.push(`${sensorInfo.data[0].name} (${sensorInfo.data[0].unit})`);
+          continue;
+        }
+        for (const subSensorId of subSensorIds) {
+          dataRunInfo.headers.push(`${sensorInfo.data[subSensorId].name} (${sensorInfo.data[subSensorId].unit})`);
+        }
       }
     }
 
     dataRunsInfo.forEach((dataRunInfo) => {
-      const dataRunData = this.dataRuns[dataRunInfo.id].data;
-      dataRunInfo.sheetRows.push(headers);
-
-      dataRunData.forEach((sample) => {
-        const row = new Array(headers.length).fill("");
-        Object.keys(sample).forEach((sensorId) => {
-          const invertedSensor = invertedSensorsInfo[sensorId];
-          const sensorData = sample[sensorId];
-
-          if (sensorId === TIME_STAMP_ID) {
-            const parsedTimeStamp = (sensorData / 1000).toFixed(3);
-            row[invertedSensor.sensorIndexInRow] = parsedTimeStamp;
-            return;
-          }
-          for (let i = 0; i < invertedSensor.numSubSensor; i++) {
-            row[invertedSensor.sensorIndexInRow + i] = sensorData[i];
-          }
-        });
-        dataRunInfo.sheetRows.push(row);
+      const { headers, interval: stepInterval, maxTimeStamp, recordedSensors, invertedSensorsInfo, id } = dataRunInfo;
+      // dataRunData: {sensorId: [sensorData]}
+      const dataRunData = this.dataRuns[id].data;
+      const sheetRows = [headers];
+      const sensorDataIndices = {};
+      recordedSensors.forEach((sensorId) => {
+        sensorDataIndices[sensorId] = 0;
       });
+
+      for (let timeStamp = 0; timeStamp <= maxTimeStamp; timeStamp += stepInterval) {
+        // Create default rows, Assign timeStamp for each row
+        let hasData = false;
+        const row = new Array(headers.length).fill("");
+        row[TIME_STAMP_ID] = (timeStamp / 1000).toFixed(3);
+
+        for (const sensorId of recordedSensors) {
+          const invertedSensor = invertedSensorsInfo[sensorId];
+          const sensorDataIndex = sensorDataIndices[sensorId];
+
+          if (sensorId === TIME_STAMP_ID || !dataRunData[sensorId] || sensorDataIndex >= dataRunData[sensorId].length) {
+            continue;
+          }
+
+          const sensorData = dataRunData[sensorId][sensorDataIndex];
+          const sensorDataTime = parseInt(parseFloat(sensorData.time) * 1000);
+
+          if (sensorDataTime === timeStamp) {
+            sensorDataIndices[sensorId] = sensorDataIndex + 1;
+            hasData = true;
+            for (let i = 0; i < invertedSensor.numSubSensor; i++) {
+              row[invertedSensor.sensorIndexInRow + i] = sensorData.values[i];
+            }
+          }
+        }
+        if (hasData) {
+          sheetRows.push([...row]);
+        }
+      }
+      dataRunInfo.sheetRows = sheetRows;
     });
 
     exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
   }
 
   // -------------------------------- Read sensor data -------------------------------- //
-
   /**
    * Callback function called in DeviceManager when there is data available
    * @param {string} sensorsData - The format sensor data (@, id, data1, data2, data3, data 4, *).
@@ -556,13 +598,25 @@ export class DataManager {
    */
   callbackReadSensor(data) {
     try {
-      const sensorId = data[0];
-      const dataLength = data[2];
+      const sensorId = parseInt(data[0]);
+      const battery = data[1];
+      const source = data[2];
+      const dataLength = data[3];
       const sensorsData = [];
+      const sensorInfo = SensorServices.getSensorInfo(sensorId);
+      if (sensorInfo === null) return;
+
       for (let i = 0; i < dataLength; i++) {
-        sensorsData.push(data[NUM_NON_DATA_SENSORS_CALLBACK + i]);
+        const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
+        sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
-      this.buffer[parseInt(sensorId)] = sensorsData;
+
+      this.buffer[sensorId] = sensorsData;
+      this.batteryStatus[sensorId] = parseInt(battery);
+
+      if (source !== BLE_TYPE) {
+        this.uartConnections.add(sensorId);
+      }
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }
@@ -575,8 +629,17 @@ export class DataManager {
    */
   callbackSensorDisconnected(data) {
     try {
-      const sensorId = data[0];
-      delete this.buffer[parseInt(sensorId)];
+      const sensorId = parseInt(data[0]);
+      const source = data[1];
+
+      if (source === BLE_TYPE) {
+        if (this.uartConnections.has(sensorId)) return;
+      } else {
+        this.uartConnections.delete(sensorId);
+      }
+
+      delete this.buffer[sensorId];
+      delete this.batteryStatus[sensorId];
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -592,22 +655,59 @@ export class DataManager {
    * @param {string} dataRunId - The ID of the data run to retrieve.
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
-  getManualSample(sensorId, sensorIndex, isAppend = true) {
-    const dataRunId = this.curDataRunId;
+  appendManualSample(sensorIds, sensorValues) {
+    const curBuffer = { ...this.buffer };
     const parsedTime = this.getParsedCollectingDataTime();
-    isAppend && this.appendDataRun(dataRunId, { ...this.buffer, 0: [parsedTime] });
-    return isAppend ? this.buffer[sensorId][sensorIndex] : { ...this.buffer };
-  }
 
-  updateDataRunDataAtIndex(selectedIndex, curBuffer) {
-    const newDataRunData = this.dataRuns[this.curDataRunId].data.map((data, index) => {
-      if (index === selectedIndex) {
-        return { ...curBuffer, 0: data[0] };
-      } else {
-        return data;
+    sensorIds.forEach((sensorId, i) => {
+      const sensorValue = sensorValues[i].values;
+
+      if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+        curBuffer[sensorId] = sensorValue;
       }
     });
-    this.dataRuns[this.curDataRunId].data = [...newDataRunData];
+
+    this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+    return { ...this.buffer };
+  }
+
+  updateDataRunDataAtIndex(selectedIndex, sensorIds, sensorValues) {
+    const dataRunData = this.dataRuns[this.curDataRunId]?.data;
+
+    sensorIds.forEach((sensorId, i) => {
+      const sensorValue = sensorValues[i].values;
+      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && sensorValue !== {}) {
+        dataRunData[sensorId][selectedIndex].values = sensorValue;
+      }
+    });
+  }
+
+  /**
+   * Get data for a specific sensor from the buffer.
+   *
+   * @param {string} sensorId - The ID of the sensor to get data for.
+   * @param {number=} sensorIndex - The index of the data to get (if the data is an array).
+   * @returns {any} - The sensor data or the specified data item (if the data is an array).
+   */
+  getDataSensor(sensorId, sensorIndex) {
+    const sensorData = this.buffer[sensorId];
+    return Array.isArray(sensorData) && sensorIndex !== undefined ? sensorData[sensorIndex] : sensorData;
+  }
+
+  getBuffer() {
+    return this.buffer;
+  }
+
+  getBatteryStatus() {
+    return this.batteryStatus;
+  }
+
+  removeWirelessSensor(sensorId) {
+    try {
+      delete this.buffer[parseInt(sensorId)];
+    } catch (e) {
+      console.error(`callbackSensorDisconnected: ${e.message}`);
+    }
   }
 
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
@@ -621,59 +721,26 @@ export class DataManager {
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
-  /**
-   * Runs a scheduler that emits data to subscribers at regular intervals.
-   * This function also handles data collection when in "collecting data mode".
-   */
-  // runEmitSubscribersScheduler() {
-  //   let counter = 0;
-  //   this.emitSubscribersIntervalId = setInterval(() => {
-  //     try {
-  //       const curInterval = counter * this.emitSubscribersInterval;
-  //       if (curInterval % this.collectingDataInterval === 0) {
-  //         this.emitSubscribers();
-
-  //         if (this.isCollectingData) {
-  //           if (this.samplingMode === SAMPLING_AUTO) {
-  //             const parsedTime = this.getParsedCollectingDataTime();
-  //             this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
-  //           }
-
-  //           // Update total time collecting data
-  //           this.collectingDataTime += this.collectingDataInterval;
-  //         }
-  //       }
-
-  //       if (curInterval % TIMER_INTERVAL === 0) {
-  //         this.timerCollectingTime += TIMER_INTERVAL;
-  //         if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
-  //           this.emitter.emit(this.timerSubscriber.subscriberTimerId);
-  //           this.unsubscribeTimer();
-  //         }
-  //       }
-  //       // Increment counter and loop back to 0 if greater than max interval
-  //       counter = (counter + 1) % (this.maxEmitSubscribersInterval / this.emitSubscribersInterval);
-  //     } catch (e) {
-  //       const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
-  //       log.error(schedulerError);
-  //     }
-  //   }, this.emitSubscribersInterval);
-  // }
   runEmitSubscribersScheduler() {
     this.emitSubscribersIntervalId = setInterval(() => {
       try {
-        this.emitSubscribers();
+        const curBuffer = { ...this.buffer };
+        const parsedTime = this.getParsedCollectingDataTime();
 
+        // Emit all subscribers
+        this.emitSubscribers(parsedTime, curBuffer);
+
+        // Append data to data run and increment collecting data time
         if (this.isCollectingData) {
           if (this.samplingMode === SAMPLING_AUTO) {
-            const parsedTime = this.getParsedCollectingDataTime();
-            this.appendDataRun(this.curDataRunId, { ...this.buffer, 0: [parsedTime] });
+            this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
           }
 
           // Update total time collecting data
           this.collectingDataTime += this.collectingDataInterval;
         }
 
+        // Increment timer collecting time and stop if it reaches the stop time
         this.timerCollectingTime += this.collectingDataInterval;
         if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
           this.emitter.emit(this.timerSubscriber.subscriberTimerId);
@@ -689,7 +756,6 @@ export class DataManager {
     // );
   }
 
-  // TODO: stop EmitSubscribersScheduler when object is destroyed. Otherwise leading to leak memory
   stopEmitSubscribersScheduler() {
     // console.log(`DATA_MANAGER-stopEmitSubscribersScheduler-${this.emitSubscribersIntervalId}`);
     clearInterval(this.emitSubscribersIntervalId);
@@ -698,7 +764,7 @@ export class DataManager {
   /**
    * Emit data to all subscribers.
    */
-  emitSubscribers() {
+  emitSubscribers(parsedTime, curBuffer) {
     /**
      * @typedef {Array} EmittedData
      * @property {number | string} 0 - The data run ID, or -1 if not collecting data.
@@ -716,12 +782,14 @@ export class DataManager {
       }
 
       const dataRunId = this.isCollectingData ? this.curDataRunId || -1 : -1;
-      const parsedTime = this.isCollectingData ? this.getParsedCollectingDataTime() : "0.000";
+      const time = this.isCollectingData ? parsedTime : "0.000";
 
-      const emittedDatas = subscriber.sensorIds.map((sensorId) => {
-        const sensorData = this.buffer[sensorId] || [];
-        return [dataRunId, parsedTime, sensorId, ...sensorData];
-      });
+      const emittedDatas = subscriber.sensorIds.reduce((acc, sensorId) => {
+        const sensorData = curBuffer[sensorId] || [];
+        acc[sensorId] = [dataRunId, time, sensorId, ...sensorData];
+        return acc;
+      }, {});
+
       // Notify subscriber
       this.emitter.emit(subscriberId, emittedDatas);
     }
@@ -729,11 +797,12 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (2 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (11 - 1) + 1).toFixed(0);
+      const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 
-      const sensorInfo = sensors.find((sensor) => Number(sensorId) === Number(sensor.id));
-      const dummyData = [sensorId, sensorSerialId, sensorInfo.data.length];
+      const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
+      const dummyData = [sensorId, battery, sensorSerialId, sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);

@@ -9,8 +9,8 @@ export const LAYOUT_NUMBER_CHART = "number-chart";
 export const LAYOUT_NUMBER_TABLE = "number-table";
 
 // Bluetooth
-export const DEVICE_PREFIX = "ohstem-";
-export const XBOT_PREFIX = "xbot";
+export const DEVICE_PREFIX = "inno-";
+export const DEVICE_YINMIK_PREFIX = "BLE-";
 export const MIN_SCAN_TIME = 8000; // millisecond
 export const MAX_SCAN_TIME = 15000; // millisecond
 export const LIMIT_BYTE_BLE = 99;
@@ -198,3 +198,20 @@ export const TIMER_NO_STOP = -1;
 // Sensor
 export const SENSOR_STATUS_ONLINE = "online";
 export const SENSOR_STATUS_OFFLINE = "offline";
+
+export const DEFAULT_SENSOR_ID = -1;
+export const DEFAULT_SENSOR_DATA = { id: DEFAULT_SENSOR_ID, index: 0 };
+
+export const WIDGET_SENSOR_ACTIVE = 0;
+export const WIDGET_SENSOR_INACTIVE = 1;
+export const WIDGET_SENSOR_ID_INACTIVE = -1;
+
+export const BLE_TYPE = "ble";
+export const USB_TYPE = "usb";
+
+// TABLES DEFINED
+export const USER_INPUTS_TABLE = "user-inputs";
+
+// ANDROID SAVE EXPORT PROJECTS VARIABLES
+export const PROJECT_FOLDER = "InnoLabProject";
+export const PROJECT_FILE_EXT = ".edl";

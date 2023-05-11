@@ -1,6 +1,6 @@
 import store from "store";
 import { f7 } from "framework7-react";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
@@ -528,8 +528,9 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
 
   const workbook = utils.book_new();
   dataRunsInfo.forEach((dataRunInfo) => {
-    const workSheet = utils.aoa_to_sheet(dataRunInfo.sheetRows);
-    utils.book_append_sheet(workbook, workSheet, dataRunInfo.sheetName);
+    const { sheetName, sheetRows } = dataRunInfo;
+    const workSheet = utils.aoa_to_sheet(sheetRows);
+    utils.book_append_sheet(workbook, workSheet, sheetName);
   });
   const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
 
@@ -555,4 +556,61 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
     });
     return;
   }
+}
+
+export function getUniqueFileName(fileName, existingFileNames) {
+  let newFileName = fileName;
+  let counter = 1;
+
+  while (existingFileNames.includes(newFileName)) {
+    const matches = newFileName.match(/^(.*) \((\d+)\)$/);
+    if (matches) {
+      // Increment the counter if the file name already has a number in parentheses
+      newFileName = `${matches[1]} (${parseInt(matches[2]) + 1})`;
+    } else {
+      // Add a number in parentheses to the file name
+      newFileName = `${newFileName} (${counter})`;
+    }
+    counter++;
+  }
+
+  return newFileName;
+}
+
+export function getCurrentTime() {
+  const now = new Date();
+  const formattedDate = now
+    .toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+    .replace(",", "")
+    .replace(/\//g, "-")
+    .replace(/\s/g, " ")
+    .replace(":", "-");
+
+  // Remove AM/PM and underscore
+  const createdAtWithoutAMPM = formattedDate.replace(/ (AM|PM)/, "");
+  return createdAtWithoutAMPM;
+}
+export function getPageName(listPageName) {
+  let newFileName = String(listPageName.length + 1);
+  try {
+    for (let i = 0; i < listPageName.length; i++) {
+      if (!listPageName.includes(newFileName)) break;
+
+      const matches = newFileName.match(/^\d$/);
+      if (matches) {
+        newFileName = parseInt(matches[0]) + 1;
+        newFileName = newFileName.toString();
+      } else break;
+    }
+  } catch (error) {
+    console.log("getPageName: ", error);
+  }
+  return newFileName;
 }

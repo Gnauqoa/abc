@@ -23,17 +23,31 @@
       border-radius: 15px;
       max-width: 360px;
 
+      .header {
+        display: flex;
+        align-items: center;
+      }
+
+      .skip-button {
+        width: 15%;
+        display: flex;
+        justify-content: center;
+      }
+
       .title {
         padding: 20px;
+        padding-left: 10px;
         font-size: 20px;
         font-weight: 600;
         color: #6a6f75;
       }
+
       .text {
         padding: 0 20px 20px;
         font-size: 16px;
         font-weight: 600;
         color: #888c91;
+        word-wrap: break-word;
       }
       .buttons {
         padding: 20px;
@@ -178,6 +192,7 @@
   &#dialog-sample-setting {
     .title {
       color: #0086ff;
+      text-align: center;
     }
 
     .items {
@@ -203,6 +218,83 @@
           border: 1px solid #000000;
           border-radius: 10px;
           text-align: center;
+        }
+      }
+    }
+
+    .buttons {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+
+      .ok-button {
+        background: #09a8fa;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        margin-right: 15px;
+
+        &.delete-mode {
+          background: #ff3b30;
+        }
+      }
+
+      .cancel-button {
+        background: #b2b2b2;
+        color: white;
+        width: fit-content;
+        border-radius: 9999px;
+        min-width: 100px;
+        float: left;
+        margin-right: 15px;
+      }
+    }
+  }
+
+  &#dialog-modify-note-line-chart {
+    .title {
+      color: #0086ff;
+      text-align: center;
+    }
+
+    .items {
+      padding: 0 20px 30px 0;
+
+      .item {
+        display: flex;
+        justify-content: space-between;
+
+        .text {
+          color: #0086ff;
+          font-size: 18px;
+          font-weight: 500;
+          padding-top: 15px;
+        }
+
+        .input {
+          &::placeholder {
+            color: #cbd1dc;
+          }
+          &:focus {
+            outline: none;
+            border-color: #275efe;
+          }
+
+          padding: 8px 16px;
+          padding-right: 40px;
+          font-size: 14px;
+          border: 1px solid #cdd9ed;
+          background: #fff;
+          transition: border 0.3s ease;
+          white-space: nowrap;
+          display: block;
+          position: relative;
+          -webkit-box-flex: 1;
+          flex: 1 1 auto;
+          margin-top: 0;
+          margin-bottom: 0;
+          border-radius: 10px;
         }
       }
     }
@@ -493,4 +585,67 @@
 
 .active-note {
   background-color: orange;
+}
+
+.data-run-management {
+  display: inline-block;
+  .data-run-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 15%;
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+    }
+  }
+  .page-content {
+    display: flex;
+    flex-direction: column;
+    border-color: #000000;
+    margin-left: 10%;
+    margin-right: 10%;
+    overflow-x: hidden;
+
+    .list-data-run {
+      height: 80%;
+      width: 100%;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      overflow-y: auto;
+
+      .list-item {
+        display: flex;
+        align-items: center;
+        padding-right: 10px;
+        margin-bottom: 20px;
+
+        .list-button {
+          width: 10%;
+        }
+
+        .list-text {
+          flex: 1;
+          width: 80%;
+          height: 30px;
+          text-align: left;
+          padding-left: 10px;
+          margin-right: 10%;
+          border-width: 0px;
+          font-size: 20px;
+        }
+        .list-text:focus {
+          border-color: #000000;
+          border-radius: 5px;
+          border-width: 1px;
+        }
+      }
+
+      .list-item:last-child {
+        margin-bottom: 0px;
+      }
+    }
+  }
 }

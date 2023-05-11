@@ -1,0 +1,400 @@
+.sensor-setting-popup {
+  width: 800px;
+  height: 600px;
+  left: calc(50% - 400px);
+  top: calc(50% - 300px);
+}
+
+.sensor-setting-popup.popup {
+  border-radius: 25px;
+}
+
+.sensor-setting {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .__header {
+    height: 10%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .navbar-inner {
+      color: #0086ff;
+      display: flex;
+      line-height: 100px;
+      font-size: larger;
+    }
+  }
+
+  .__content {
+    height: 96%;
+    width: 96%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .__navbar {
+      height: 90%;
+      width: 30%;
+      margin: 30px 10px 0 30px;
+
+      display: flex;
+      gap: 15px;
+      flex-direction: column;
+
+      --primary-color: #0086ff;
+      --secondary-color: #d9d9d9;
+
+      .nav-button {
+        text-transform: none;
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .nav-button.active {
+        background: var(--primary-color);
+        color: #ffffff;
+      }
+
+      .nav-button.inactive {
+        background: var(--secondary-color);
+        color: #000000;
+      }
+    }
+
+    .__setting-content {
+      width: 62%;
+      border: #0086ff 1px solid;
+      border-radius: 15px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      background: #ffffff;
+
+      display: flex;
+      flex-direction: column;
+
+      .__setting {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        .display-setting-input {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 35%;
+            display: flex;
+            align-items: center;
+
+            font-family: var(--f7-font-family);
+            // font-weight: 500;
+            font-size: 16px;
+          }
+
+          .item-input-wrap {
+            width: 65%;
+            border-radius: 10px;
+
+            .button {
+              display: flex;
+              justify-content: space-between;
+              border: none !important;
+              text-transform: none;
+              // font-weight: 500;
+              font-size: 20px;
+              color: #0086ff;
+
+              span {
+                font-size: 16px;
+                color: #0086ff;
+              }
+              i {
+                justify-content: flex-end;
+                color: #0086ff;
+              }
+            }
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 16px;
+              font-family: var(--f7-font-family);
+              // font-weight: 500;
+              font-size: 16px;
+            }
+
+            .popover-choose-sensor-unit {
+              width: 260px;
+            }
+          }
+        }
+      }
+
+      .__calibrating {
+        margin-top: 10px;
+        margin-bottom: 10px;
+
+        .__label-calibrating-type {
+          font-weight: 600;
+          font-size: 20px;
+          padding-left: 15px;
+        }
+        .display-setting-input {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 40%;
+            display: flex;
+            align-items: center;
+
+            font-family: var(--f7-font-family);
+            font-size: 16px;
+          }
+
+          .item-input-wrap {
+            width: 60%;
+            border-radius: 10px;
+
+            .button {
+              display: flex;
+              justify-content: space-between;
+              border: none !important;
+              text-transform: none;
+              // font-weight: 500;
+              font-size: 20px;
+              color: #0086ff;
+
+              span {
+                font-size: 16px;
+                color: #0086ff;
+              }
+              i {
+                justify-content: flex-end;
+                color: #0086ff;
+              }
+            }
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 16px;
+              font-family: var(--f7-font-family);
+              // font-weight: 500;
+              font-size: 16px;
+            }
+
+            .popover-choose-sensor-unit {
+              width: 260px;
+            }
+          }
+        }
+
+        .display-setting-input-button {
+          .item-title.item-label {
+            margin-right: 0px;
+            width: 40%;
+            display: flex;
+            align-items: center;
+
+            font-family: var(--f7-font-family);
+            // font-weight: 500;
+            font-size: 16px;
+          }
+
+          .item-input-wrap {
+            width: 35%;
+            height: 40px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            border-radius: 10px;
+
+            .input-with-value {
+              color: #0086ff;
+              font-size: 16px;
+              font-family: var(--f7-font-family);
+              // font-weight: 500;
+              font-size: 16px;
+              margin-left: 10px;
+            }
+          }
+          .sampling-button {
+            width: 25%;
+            text-transform: none;
+            margin-left: 5px;
+
+            background: #09a8fa;
+            color: white;
+            width: fit-content;
+            border-radius: 9999px;
+          }
+        }
+      }
+
+      .buttons {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+
+        .save-button {
+          background: #09a8fa;
+          color: white;
+          width: fit-content;
+          border-radius: 9999px;
+          min-width: 100px;
+        }
+        .save-button:hover {
+          background: #09a8fa;
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-height: 600px) {
+  .sensor-setting-popup {
+    width: 500px;
+    height: 300px;
+    left: calc(50% - 250px);
+    top: calc(50% - 150px);
+  }
+
+  .sensor-setting-popup.popup {
+    border-radius: 15px;
+  }
+
+  .sensor-setting {
+    .navbar {
+      position: relative !important;
+    }
+    .page-content {
+      padding-top: 0px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .__header .navbar-inner .title {
+      font-size: 10px;
+    }
+
+    .__content {
+      .__navbar {
+        width: 25%;
+        margin: 30px 10px 0 10px;
+        .nav-button {
+          font-size: 10px;
+        }
+      }
+
+      .__setting-content {
+        width: 70%;
+        overflow-y: auto;
+        border-radius: 5px;
+
+        .__setting {
+          .display-setting-input {
+            .item-title.item-label {
+              margin-right: 0px;
+              width: 35%;
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              min-height: 0px;
+              .button {
+                font-size: 12px;
+
+                span {
+                  font-size: 12px;
+                }
+              }
+
+              .input-with-value {
+                font-size: 12px;
+              }
+
+              .popover-choose-sensor-unit {
+                width: 260px;
+              }
+
+              input {
+                height: 30px;
+              }
+            }
+          }
+        }
+
+        .__calibrating {
+          .__label-calibrating-type {
+            font-weight: 600;
+            font-size: 14px;
+            padding-left: 15px;
+          }
+
+          .display-setting-input {
+            .item-title.item-label {
+              margin-right: 0px;
+              width: 35%;
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              min-height: 0px;
+
+              .button {
+                font-size: 12px;
+
+                span {
+                  font-size: 12px;
+                }
+              }
+
+              .input-with-value {
+                font-size: 12px;
+              }
+
+              .popover-choose-sensor-unit {
+                width: 260px;
+              }
+
+              input {
+                height: 30px;
+              }
+            }
+          }
+
+          .display-setting-input-button {
+            .item-input-wrap {
+              height: 30px;
+              min-height: 0px;
+              margin-left: 0px;
+
+              .input-with-value {
+                font-size: 12px;
+              }
+            }
+
+            .item-title.item-label {
+              font-size: 10px;
+            }
+
+            .item-input-wrap {
+              .input-with-value {
+                font-size: 12px;
+              }
+            }
+            .sampling-button {
+              font-size: 10px;
+            }
+          }
+        }
+
+        .buttons {
+          margin-bottom: 10px;
+          .save-button {
+            font-size: 10px;
+          }
+        }
+      }
+    }
+  }
+}

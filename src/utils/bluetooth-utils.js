@@ -2,7 +2,7 @@ import { f7 } from "framework7-react";
 // import store from "store";
 import * as core from "./core";
 import * as sharedDataUtils from "./shared-data-utils";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
 
 import {
   DEVICE_PREFIX,

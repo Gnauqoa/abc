@@ -1,0 +1,223 @@
+.__active {
+  display: flex;
+  height: 100%;
+  cursor: pointer;
+  border-radius: inherit;
+
+  .__icon {
+    height: 100%;
+    width: 50%;
+    background: #0086ff;
+    border-top-right-radius: 40px 300px;
+    border-bottom-right-radius: 40px 300px;
+    border-top-left-radius: 50px 50px;
+    border-bottom-left-radius: 50px 50px;
+    display: flex;
+    flex-direction: column;
+
+    .__sensor-icon {
+      height: 100px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+
+      img {
+        // width: 40px;
+        width: 45%;
+      }
+    }
+
+    .__sensor-name {
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      color: #ffffff;
+      font-size: 14px;
+      font-family: var(--f7-font-family);
+      font-weight: 600;
+
+      padding-left: 5px;
+      padding-right: 5px;
+      padding-bottom: 5px;
+      word-wrap: break-word;
+    }
+  }
+
+  .__sensor-info {
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: inherit;
+
+    .__close-button {
+      width: 100%;
+      height: 25%;
+      display: flex;
+      margin-right: -15px;
+      justify-content: flex-end;
+    }
+    .__sensor-value {
+      // width: 100%;
+      width: calc(100% - 20px); /* Subtract 20px from 100% to leave room for padding/margin */
+
+      height: 30%;
+      font-weight: 600;
+      font-family: var(--f7-font-family);
+      font-size: 24px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .__sensor-unit {
+      width: 100%;
+      height: 25%;
+      font-weight: 400;
+      font-family: var(--f7-font-family);
+      font-size: 20px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .__signal-battery {
+      width: 100%;
+      height: 40px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-right: 20px;
+
+      .battery,
+      .connection {
+        display: flex;
+        justify-content: center; /* center horizontally */
+        align-items: center; /* center vertically */
+        height: 100%; /* set the height to make sure the image is centered */
+      }
+
+      .battery img {
+        width: 32px;
+      }
+
+      .connection img {
+        width: 12px;
+      }
+    }
+  }
+}
+
+.__inactive {
+  display: inline-block;
+  height: 100%;
+  cursor: pointer;
+  border-radius: inherit;
+
+  .__icon {
+    height: 70%;
+    width: 100%;
+
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+
+    color: #d9d9d9 !important;
+
+    .icon {
+      font-size: 60px;
+    }
+  }
+
+  .__text {
+    height: 25%;
+    line-height: 20px;
+    color: #000000;
+    text-align: center;
+    font-family: var(--f7-font-family);
+    font-size: 16px;
+    padding-left: 5px;
+    padding-right: 5px;
+    word-wrap: break-word;
+  }
+}
+
+.__inactive:active {
+  background: #d9d9d9;
+
+  .__icon {
+    color: #ffffff !important;
+  }
+}
+
+@media only screen and (max-height: 800px) {
+  .__active {
+    .__icon {
+      .__sensor-icon img {
+        // width: 24px;
+      }
+
+      .__sensor-name {
+        font-size: 12px;
+      }
+    }
+    .__sensor-info {
+      .__close-button {
+        a {
+          margin-top: -2px;
+          margin-right: -2px;
+          i {
+            font-size: 20px;
+          }
+        }
+      }
+
+      .__sensor-value {
+        font-size: 14px;
+      }
+
+      .__sensor-unit {
+        font-size: 12px;
+      }
+
+      .__signal-battery {
+        height: 30px;
+        display: flex;
+        gap: 5px;
+        margin-right: 10px;
+
+        .battery img {
+          width: 24px;
+        }
+
+        .connection img {
+          width: 10px;
+        }
+      }
+    }
+  }
+
+  .__inactive {
+    .__icon {
+      height: 60%;
+      .icon {
+        height: 40px;
+        width: 40px;
+        font-size: 40px;
+      }
+    }
+
+    .__text {
+      line-height: 20px;
+      font-size: 10px;
+    }
+  }
+}

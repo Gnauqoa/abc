@@ -1,6 +1,7 @@
 import { f7 } from "framework7-react";
 import { exportFileToPc } from "../utils/core";
-import dialog from "../components/dialog";
+import dialog from "../components/molecules/dialog/dialog";
+import { saveProject } from "../utils/cordova-file-utils";
 
 function openFile(
   filePath,
@@ -38,6 +39,19 @@ async function saveFile(
       TYPE: "text/json",
     });
     return;
+  } else if (f7.device.android) {
+    try {
+      const savedPath = await saveProject(JSON.parse(content).name || "EDL", filePath, content);
+      dialog.alert("Lưu thành công", `Lưu file thành công tại ${savedPath}`, () => {});
+      return;
+    } catch (err) {
+      console.log("Save file error", err);
+      dialog.alert(
+        "Lỗi không thể lưu",
+        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        () => {}
+      );
+    }
   }
 }
 
