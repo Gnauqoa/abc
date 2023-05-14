@@ -164,7 +164,8 @@ const TableWidget = (
       const newRow = convertCurrentsValueToTableRow(currentValues);
 
       if (!isRunning) {
-        transformedRows.push(newRow);
+        // TODO: comment this out to not display when not isRunning
+        // transformedRows.push(newRow);
       } else {
         // Preventing loosing selection row when move from auto to manual.
         // As the the selected rows is still the last row from auto
@@ -197,7 +198,8 @@ const TableWidget = (
       });
     }
 
-    isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
+    // TODO: comment this out to not display when not isRunning
+    // isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
   }, [datas, firstColumnOption]);
 
   // ========================== Utils functions ==========================

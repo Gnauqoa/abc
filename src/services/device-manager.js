@@ -5,9 +5,8 @@ import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_Y
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
-import * as core from "../utils/core";
 
-const CHECKING_CONNECTION_INTERVAL = 1000;
+const CHECKING_CONNECTION_INTERVAL = 500;
 const webBle = new WebBle();
 
 export class DeviceManager {
@@ -196,7 +195,7 @@ export class DeviceManager {
           //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
           let data = new Uint8Array(buffer);
 
-          if (data[0] != 0xAA) {
+          if (data[0] != 0xaa) {
             // Invalid data, ignore
             return;
           }
@@ -206,13 +205,13 @@ export class DeviceManager {
           var battery = data[3];
           var dataLength = data[4];
           var checksum = data[5 + dataLength];
-          var calculatedChecksum = 0xFF;
-          for (var i=0; i<(dataLength+5); i++) {
+          var calculatedChecksum = 0xff;
+          for (var i = 0; i < dataLength + 5; i++) {
             calculatedChecksum = calculatedChecksum ^ data[i];
           }
 
           if (calculatedChecksum != checksum) {
-            console.log('Invalid data received');
+            console.log("Invalid data received");
             return;
           }
 
@@ -221,20 +220,19 @@ export class DeviceManager {
 
           while (dataRead < dataLength) {
             // read next 4 bytes
-            var rawBytes = [data[dataRead+5], data[dataRead+6],
-            data[dataRead+7], data[dataRead+8]];
+            var rawBytes = [data[dataRead + 5], data[dataRead + 6], data[dataRead + 7], data[dataRead + 8]];
 
             var view = new DataView(new ArrayBuffer(4));
 
             rawBytes.forEach(function (b, i) {
-                view.setUint8(3-i, b);
+              view.setUint8(3 - i, b);
             });
 
             sensorData.push(view.getFloat32(0));
             dataRead += 4;
           }
 
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+          var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
