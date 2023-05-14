@@ -42,7 +42,8 @@ const DataRunManagementPopup = () => {
           <table>
             <tbody>
               {dataRunPreviews.map((item) => (
-                <tr key={item.id} className={currentDataRunId === item.id ? `selected` : ""}>
+                // <tr key={item.id} className={currentDataRunId === item.id ? `selected` : ""}>
+                <tr key={item.id}>
                   <td className="data-column">
                     <img src={dataManagementIcon || ""} alt={dataManagementIcon} />
                     <input

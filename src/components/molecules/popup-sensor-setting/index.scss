@@ -79,6 +79,15 @@
       display: flex;
       flex-direction: column;
 
+      .list {
+        ul::before {
+          content: none;
+        }
+        ul::after {
+          content: none;
+        }
+      }
+
       .__setting {
         margin-top: 10px;
         margin-bottom: 10px;
@@ -135,6 +144,15 @@
       .__calibrating {
         margin-top: 10px;
         margin-bottom: 10px;
+
+        .list {
+          ul::before {
+            content: none;
+          }
+          ul::after {
+            content: none;
+          }
+        }
 
         .__label-calibrating-type {
           font-weight: 600;
@@ -252,17 +270,6 @@
 }
 
 @media only screen and (max-height: 600px) {
-  // .sensor-setting-popup {
-  //   width: 500px;
-  //   height: 300px;
-  //   left: calc(50% - 250px);
-  //   top: calc(50% - 150px);
-  // }
-
-  // .sensor-setting-popup.popup {
-  //   border-radius: 15px;
-  // }
-
   .sensor-setting-popup.popup:not(.popup-tablet-fullscreen) {
     width: 500px;
     height: 300px;
