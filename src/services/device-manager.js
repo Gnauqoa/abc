@@ -5,8 +5,9 @@ import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_Y
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
+import * as core from "../utils/core";
 
-const CHECKING_CONNECTION_INTERVAL = 500;
+const CHECKING_CONNECTION_INTERVAL = 1000;
 const webBle = new WebBle();
 
 export class DeviceManager {
@@ -186,66 +187,316 @@ export class DeviceManager {
   }
 
   receiveDataCallback(deviceId, callback) {
+    const currentDevice = this.devices.find((d) => d.deviceId === deviceId);
+    if (currentDevice === undefined)  {
+      return;
+    }
     try {
-      ble.startNotification(
-        deviceId,
-        BLE_SERVICE_ID,
-        BLE_TX_ID,
-        (buffer) => {
-          //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
-          let data = new Uint8Array(buffer);
-
-          if (data[0] != 0xaa) {
-            // Invalid data, ignore
-            return;
+      console.log(currentDevice.code);
+      if (currentDevice.code.includes('BLE-9909')) {
+        ble.startNotification(
+          deviceId,
+          'FF01',
+          'FF02',
+          (buffer) => {
+            this.decodeDataFromBLE9909Sensor(buffer, callback);
+          },
+          (err) => {
+            console.error(`BLE-9909 startNotification error`, err);
+            console.log(err.message);
           }
+        );
 
-          var sensorId = data[1];
-          var sensorSerial = data[2]; // TODO: Will use later
-          var battery = data[3];
-          var dataLength = data[4];
-          var checksum = data[5 + dataLength];
-          var calculatedChecksum = 0xff;
-          for (var i = 0; i < dataLength + 5; i++) {
-            calculatedChecksum = calculatedChecksum ^ data[i];
+        let intervalId = setInterval(function () {
+          ble.isConnected(
+            deviceId,
+            function() {
+              ble.read(
+                deviceId,
+                'FF01',
+                'FF02',
+                //'180A', //battery service
+                //'2A25', // battery characteristics
+                (buffer) => {
+                  console.log('Got BLE-9909 data');
+                  this.decodeDataFromBLE9909Sensor(buffer, callback);
+                },
+                (err) => {
+                  console.error('Read BLE-9909 sensor data error', JSON.stringify(err));
+                }
+              );
+            },
+            function() {
+                console.log("Sensor already disconnected. Stop reading");
+                clearInterval(intervalId);
+            }
+          );
+        }, 505);
+
+      } else if (currentDevice.code.includes('BLE-9100')) {
+        ble.startNotification(
+          deviceId,
+          '0000ff01-0000-1000-8000-00805f9b34fb',
+          '0000ff02-0000-1000-8000-00805f9b34fb',
+          (buffer) => {
+            this.decodeDataFromBLE9100Sensor(buffer, callback);
+          },
+          (err) => {
+            console.error('BLE-9100 startNotification error', err);
           }
+        );
 
-          if (calculatedChecksum != checksum) {
-            console.log("Invalid data received");
-            return;
+        let intervalId = setInterval(function () {
+          ble.isConnected(
+            deviceId,
+            function() {
+              ble.read(
+                deviceId,
+                'FF01',
+                'FF02',
+                (buffer) => {
+                  this.decodeDataFromBLE9100Sensor(buffer, callback);
+                },
+                (err) => {
+                  console.error('Read BLE-9100 sensor data error', JSON.stringify(err));
+                }
+              );
+            },
+            function() {
+                console.log("Sensor already disconnected. Stop reading");
+                clearInterval(intervalId);
+            }
+          );
+        }, 505);
+      } else {
+        ble.startNotification(
+          deviceId,
+          BLE_SERVICE_ID,
+          BLE_TX_ID,
+          (buffer) => {
+            this.decodeDataFromInnoLabSensor(buffer, callback);
+          },
+          (err) => {
+            console.error(`receiveBleNotification error`, err);
           }
-
-          var dataRead = 0;
-          var sensorData = [];
-
-          while (dataRead < dataLength) {
-            // read next 4 bytes
-            var rawBytes = [data[dataRead + 5], data[dataRead + 6], data[dataRead + 7], data[dataRead + 8]];
-
-            var view = new DataView(new ArrayBuffer(4));
-
-            rawBytes.forEach(function (b, i) {
-              view.setUint8(3 - i, b);
-            });
-
-            sensorData.push(view.getFloat32(0));
-            dataRead += 4;
-          }
-
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
-          sensorData.forEach(function (d, i) {
-            dataArray.push(d);
-          });
-
-          callback(dataArray);
-        },
-        (err) => {
-          console.error(`receiveBleNotification error`, err);
-        }
-      );
+        );
+      }
     } catch (error) {
       console.error("ble.startNotification", error);
     }
+  }
+
+  decodeDataFromInnoLabSensor(buffer, callback) {
+    let data = new Uint8Array(buffer);
+
+    if (data[0] != 0xAA) {
+      // Invalid data, ignore
+      return;
+    }
+
+    var sensorId = data[1];
+    var sensorSerial = data[2]; // TODO: Will use later
+    var battery = data[3];
+    var dataLength = data[4];
+    var checksum = data[5 + dataLength];
+    var calculatedChecksum = 0xFF;
+    for (var i=0; i<(dataLength+5); i++) {
+      calculatedChecksum = calculatedChecksum ^ data[i];
+    }
+
+    if (calculatedChecksum != checksum) {
+      console.log('Invalid data received');
+      return;
+    }
+
+    var dataRead = 0;
+    var sensorData = [];
+
+    while (dataRead < dataLength) {
+      // read next 4 bytes
+      var rawBytes = [data[dataRead+5], data[dataRead+6],
+      data[dataRead+7], data[dataRead+8]];
+
+      var view = new DataView(new ArrayBuffer(4));
+
+      rawBytes.forEach(function (b, i) {
+          view.setUint8(3-i, b);
+      });
+
+      sensorData.push(view.getFloat32(0));
+      dataRead += 4;
+    }
+
+    var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    callback(dataArray);
+  }
+
+  decodeDataFromBLE9909Sensor(buffer, callback) { //YINMIK BLE-9909 type sensors
+    /* Each sensor data record has following structure
+      serial    number            data    significance                                    
+      0         1                 data                                    
+                2                 Calibration data                                    
+      1         fixed at 2                                        
+      2         0                 BLE-None,    Product name code                                
+                12                BLE-9100,                                    
+                BLE-9100                                        
+      3         DO(mg/L)Value high 8 bits                                        
+      4         DO(mg/L)lower 8 bits of value                                        
+      5         DO(%)Value high 8 bits                                        
+      6         DO(%)lower 8 bits of value                                        
+      7                                            
+      8                                            
+      9                                            
+      10                                            
+      11                                            
+      12                                            
+      13        8-bit high temperature value                                        
+      14        Temperature value lower 8 bits                                        
+      15        Battery voltage value high 8 bits                                        
+      16        Battery voltage value lower 8 bits                                        
+      17        flag bit        0b 0000 0000    7    6    5    4    3    2    1    0
+                    hold reading    Backlight status            
+      18                                            
+      19                                            
+      20                                            
+      21                                            
+      22                                            
+      23    Check Digit    Please refer to the CheckSum form    
+    */
+    // ### DECODING ###
+    let tmp = 0;
+    let hibit = 0;
+    let lobit = 0;
+    let hibit1 = 0;
+    let lobit1 = 0;
+    let message = new Uint8Array(buffer);
+    
+    for (let i = message.length-1 ; i > 0; i--) {
+      tmp=message[i];
+      hibit1=(tmp&0x55)<<1;
+      lobit1=(tmp&0xAA)>>1;
+      tmp=message[i-1];    
+      hibit=(tmp&0x55)<<1;
+      lobit=(tmp&0xAA)>>1;
+      
+      message[i]=~(hibit1|lobit);
+      message[i-1]=~(hibit|lobit1);
+
+    }
+
+    let hold_reading = message[17] >> 4;
+
+    let backlight = (message[17] & 0x0F) >> 3
+
+    let ec = ((message[5] << 8) + message[6]);
+
+    let tds = ((message[7] << 8) + message[8]);
+
+    let salt_tds = ((message[9] << 8) + message[10]);
+
+    let salt_sg = ((message[11] << 8) + message[12])/100;
+
+    let ph = ((message[3] << 8) + message[4])/100;
+
+    let temp = ((message[13] << 8) + message[14])/10;
+
+    let batt = parseInt(((message[15] << 8) + message[16])/32);
+
+    var sensorData = [];
+
+    sensorData.push(ph);
+    sensorData.push(ec);
+    sensorData.push(tds);
+    sensorData.push(salt_sg);
+    sensorData.push(salt_tds);
+    sensorData.push(temp);
+
+    var dataArray = [device.id, batt, BLE_TYPE, 24]
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    callback(dataArray);
+  }
+
+  decodeDataFromBLE9100Sensor(buffer, callback) { //YINMIK BLE-9100 DO type sensors
+    /* Each sensor data record has following structure
+      serial    number            data    significance                                    
+      0         1                 data                                    
+                2                 Calibration data                                    
+      1         fixed at 2                                        
+      2         0                 BLE-None,    Product name code                                
+                12                BLE-9100,                                    
+                BLE-9100                                        
+      3         DO(mg/L)Value high 8 bits                                        
+      4         DO(mg/L)lower 8 bits of value                                        
+      5         DO(%)Value high 8 bits                                        
+      6         DO(%)lower 8 bits of value                                        
+      7                                            
+      8                                            
+      9                                            
+      10                                            
+      11                                            
+      12                                            
+      13        8-bit high temperature value                                        
+      14        Temperature value lower 8 bits                                        
+      15        Battery voltage value high 8 bits                                        
+      16        Battery voltage value lower 8 bits                                        
+      17        flag bit        0b 0000 0000    7    6    5    4    3    2    1    0
+                    hold reading    Backlight status            
+      18                                            
+      19                                            
+      20                                            
+      21                                            
+      22                                            
+      23    Check Digit    Please refer to the CheckSum form    
+    */
+
+    // ### DECODING ###
+    let tmp = 0;
+    let hibit = 0;
+    let lobit = 0;
+    let hibit1 = 0;
+    let lobit1 = 0;
+    let message = new Uint8Array(buffer);
+    
+    for (let i = message.length-1 ; i > 0; i--) {
+      tmp=message[i];
+      hibit1=(tmp&0x55)<<1;
+      lobit1=(tmp&0xAA)>>1;
+      tmp=message[i-1];    
+      hibit=(tmp&0x55)<<1;
+      lobit=(tmp&0xAA)>>1;
+      
+      message[i]=~(hibit1|lobit);
+      message[i-1]=~(hibit|lobit1);
+    }
+    
+    let do_mg = ((message[3] << 8) + message[4])/100;
+    //console.log('DO (mg/L) = ' + do_mg);
+    let do_percent = ((message[5] << 8) + message[6])/10;
+    //console.log('DO (%) = ' + do_percent);
+    let temp = ((message[13] << 8) + message[14])/10;
+    //console.log('Temp (*C) = ' + (((temp/10.0) * (9.0/5.0)) + 32.0));
+    let batt = parseInt(((message[15] << 8) + message[16])/32);
+    //console.log('Battery (%) = ' + batt);
+
+    var sensorData = [];
+
+    sensorData.push(do_mg);
+    sensorData.push(do_percent);
+    sensorData.push(temp);
+
+    var dataArray = [device.id, batt, BLE_TYPE, 12]
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    callback(dataArray);
   }
 
   onDataCallback(data) {
@@ -283,8 +534,8 @@ export class DeviceManager {
           // TODO >>> Clean up. Just a demo for writing data to device.
           try {
             const encodedData = Uint8Array.of(1);
-            await this.writeBleData(device.deviceId, encodedData);
-            console.log("Write BLE success to device", device.deviceId);
+            //await this.writeBleData(device.deviceId, encodedData);
+            //console.log("Write BLE success to device", device.deviceId);
           } catch (error) {
             console.error("Write BLE error", error);
           }
