@@ -18,7 +18,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         unitOfMeasure: unitInfo.unit || "",
         minValue: unitInfo.min || "0",
         maxValue: unitInfo.max || "0",
-        formatFloatingPoint: unitInfo.formatFloatingPoint || "1",
+        formatFloatingPoint: (unitInfo.formatFloatingPoint ??= "1"),
       });
     }
   }, [sensorInfo]);
@@ -31,7 +31,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       unitOfMeasure: unitInfo.unit || "",
       minValue: unitInfo.min || "0",
       maxValue: unitInfo.max || "0",
-      formatFloatingPoint: unitInfo.formatFloatingPoint || "1",
+      formatFloatingPoint: (unitInfo.formatFloatingPoint ??= "1"),
     });
     f7.popover.close();
   };
@@ -76,7 +76,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
 
     const parsedMinValue = Number(formField.minValue || "0");
     const parsedMaxValue = Number(formField.maxValue || "0");
-    const parsedFormatFloatingPoint = Number(formField.formatFloatingPoint || "1");
+    const parsedFormatFloatingPoint = Number((formField.formatFloatingPoint ??= "1"));
     const newSensorUnitInfo = {
       id: formField.unitId,
       name: formField.displayedNamed,

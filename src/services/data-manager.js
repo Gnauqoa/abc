@@ -247,7 +247,7 @@ export class DataManager {
       this.collectingDataInterval = (1 / EMIT_DATA_MANUAL_FREQUENCY) * 1000;
       // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${EMIT_DATA_MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
     } else {
-      this.collectingDataInterval = (1 / frequency) * 1000;
+      this.collectingDataInterval = (1 / frequency).toFixed(0) * 1000;
       this.samplingMode = SAMPLING_AUTO;
       // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`);
     }
@@ -607,7 +607,8 @@ export class DataManager {
       if (sensorInfo === null) return;
 
       for (let i = 0; i < dataLength; i++) {
-        const formatFloatingPoint = sensorInfo.data?.[i]?.formatFloatingPoint || 1;
+        let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
+        formatFloatingPoint = formatFloatingPoint ??= 1;
         sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
 
