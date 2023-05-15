@@ -25,31 +25,24 @@ const SensorContainer = ({ deviceManager }) => {
 
   useEffect(() => {
     let intervalId = setInterval(() => {
-      const buffer = DataManagerIST.getBuffer();
       const activeSensorsIds = DataManagerIST.getActiveSensorIds();
-      const batteryStatus = DataManagerIST.getBatteryStatus();
       const sensors = [];
 
       for (const sensorId of activeSensorsIds) {
         const parsedSensorId = parseInt(sensorId);
-        const sensorIcon = SensorServices.getSensorIcon(parsedSensorId);
         const sensorInfo = SensorServices.getSensorInfo(parsedSensorId);
+        if (!sensorInfo) continue;
 
+        const batteryStatus = DataManagerIST.getBatteryStatus();
         const uartConnections = DataManagerIST.getUartConnections();
-
-        if (!sensorIcon || !sensorInfo) continue;
-        const { icon, label, unit } = sensorIcon;
         const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
 
         const sensor = {
           sensorId: parsedSensorId,
-          sensorDatas: buffer[parsedSensorId],
           sensorBattery: batteryStatus[parsedSensorId],
-          sensorIcon: {
-            icon: icon,
-            label: label,
-            unit: unit,
-          },
+          sensorSubInfos: sensorInfo.data,
+          subSensorIcon: sensorInfo.icon,
+          subSensorLabel: sensorInfo.label,
           type: type,
         };
         sensors.push(sensor);
@@ -103,7 +96,17 @@ const SensorContainer = ({ deviceManager }) => {
       {sensorsInfo.length !== 0 ? (
         sensorsInfo.map((sensorInfo) => {
           const dataIndex = sensorsDataIndex[sensorInfo.sensorId] || 0;
-          const sensorData = sensorInfo.sensorDatas?.[dataIndex];
+
+          const sensorDatas = DataManagerIST.getDataBuffer(sensorInfo.sensorId);
+          const sensorData = sensorDatas?.[dataIndex];
+
+          const sensorSubInfo = sensorInfo.sensorSubInfos[dataIndex];
+          const displayInfo = {
+            icon: sensorInfo.subSensorIcon,
+            label: sensorInfo.subSensorLabel,
+            unit: sensorSubInfo.unit,
+          };
+
           return (
             <div
               key={sensorInfo.sensorId}
@@ -113,11 +116,11 @@ const SensorContainer = ({ deviceManager }) => {
             >
               <SensorStatus
                 sensorId={sensorInfo.sensorId}
-                sensorData={sensorData}
                 sensorBattery={sensorInfo.sensorBattery}
-                sensorIcon={sensorInfo.sensorIcon}
-                onDisconnect={onDisconnectHandler}
                 type={sensorInfo.type}
+                sensorData={sensorData}
+                displayInfo={displayInfo}
+                onDisconnect={onDisconnectHandler}
                 status={WIDGET_SENSOR_ACTIVE}
               ></SensorStatus>
             </div>

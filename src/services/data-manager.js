@@ -712,6 +712,10 @@ export class DataManager {
     return this.buffer;
   }
 
+  getDataBuffer(sensorId) {
+    return this.buffer[sensorId];
+  }
+
   getBatteryStatus() {
     const batteryStatusDict = {};
     this.sensorsQueue.forEach((element) => {
@@ -824,7 +828,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (11 - 10) + 10).toFixed(0);
+      const sensorId = (Math.random() * (3 - 2) + 2).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 
