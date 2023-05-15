@@ -7,6 +7,7 @@ import {
   SAMPLING_MANUAL_NAME,
   TIMER_NO_STOP,
   FREQUENCY_UNIT,
+  INVERSE_FREQUENCY_UNIT,
 } from "../../../js/constants";
 import dialog from "../dialog/dialog";
 
@@ -18,19 +19,17 @@ const SamplingSetting = ({
   handleGetManualSample,
 }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
+  const displayedFrequency = isManualMode
+    ? SAMPLING_MANUAL_NAME
+    : frequency >= 1
+    ? `Định kỳ: ${frequency} ${FREQUENCY_UNIT}`
+    : `Định kỳ: ${parseInt(1 / frequency)} ${INVERSE_FREQUENCY_UNIT}`;
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
       const { frequency, time } = samplingSettings;
       handleSetTimerInMs(isNaN(Number(time)) || time <= 0 ? TIMER_NO_STOP : time * 1000);
-
-      if (frequency === SAMPLING_MANUAL_NAME) {
-        handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
-      } else {
-        const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
-        const frequencyNumber = Number(frequencySplit[0]);
-        handleFrequencySelect(frequencyNumber);
-      }
+      onSelectFrequency(frequency);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
@@ -46,9 +45,8 @@ const SamplingSetting = ({
     if (frequency === SAMPLING_MANUAL_NAME) {
       handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
     } else {
-      const frequencySplit = String(frequency).replace(FREQUENCY_UNIT, "").split(" ");
-      const frequencyNumber = Number(frequencySplit[0]);
-      handleFrequencySelect(frequencyNumber);
+      const parsedFrequency = Number(frequency);
+      handleFrequencySelect(parsedFrequency);
     }
     f7.popover.close();
   };
@@ -70,21 +68,21 @@ const SamplingSetting = ({
         raised
         popoverOpen=".popover-frequency"
       >
-        {isManualMode ? SAMPLING_MANUAL_NAME : `Định kỳ: ${frequency} ${FREQUENCY_UNIT}`}
+        {displayedFrequency}
       </Button>
       <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
         <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-            const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f} ${FREQUENCY_UNIT}`;
+            const displayedFrequency =
+              f === SAMPLING_MANUAL_FREQUENCY
+                ? SAMPLING_MANUAL_NAME
+                : f >= 1
+                ? `${f} ${FREQUENCY_UNIT}`
+                : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
+
             return (
-              <Button
-                key={frequency}
-                textColor="black"
-                onClick={() => {
-                  onSelectFrequency(frequency);
-                }}
-              >
-                <span style={{ textTransform: "none" }}>{frequency}</span>
+              <Button key={displayedFrequency} textColor="black" onClick={() => onSelectFrequency(f)}>
+                <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
               </Button>
             );
           })}

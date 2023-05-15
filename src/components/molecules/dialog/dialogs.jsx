@@ -3,7 +3,12 @@ import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
 
 import DataManagerIST from "../../../services/data-manager";
-import { FREQUENCIES, SAMPLING_MANUAL_NAME, SAMPLING_MANUAL_FREQUENCY } from "../../../js/constants";
+import {
+  FREQUENCIES,
+  SAMPLING_MANUAL_NAME,
+  SAMPLING_MANUAL_FREQUENCY,
+  INVERSE_FREQUENCY_UNIT,
+} from "../../../js/constants";
 
 import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../../../js/constants";
 import * as core from "../../../utils/core";
@@ -166,11 +171,13 @@ export default class extends Component {
                     popoverOpen=".popover-frequency-advanced"
                     style={{ textTransform: "none" }}
                   >
-                    {this.state.samplingFrequency === SAMPLING_MANUAL_FREQUENCY
-                      ? SAMPLING_MANUAL_NAME
-                      : this.state.samplingFrequency < 1000
-                      ? `${this.state.samplingFrequency} ${FREQUENCY_UNIT}`
-                      : `${this.state.samplingFrequency / 1000} k${FREQUENCY_UNIT}`}
+                    <span id="input-sampling-frequency-data" frequencyValue={this.state.samplingFrequency}>
+                      {this.state.samplingFrequency === SAMPLING_MANUAL_FREQUENCY
+                        ? SAMPLING_MANUAL_NAME
+                        : this.state.samplingFrequency >= 1
+                        ? `${this.state.samplingFrequency} ${FREQUENCY_UNIT}`
+                        : `${parseInt(1 / this.state.samplingFrequency)} ${INVERSE_FREQUENCY_UNIT}`}
+                    </span>
                   </Button>
                 </div>
 
@@ -199,7 +206,12 @@ export default class extends Component {
           >
             <List className="test">
               {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-                const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f} ${FREQUENCY_UNIT}`;
+                const displayedFrequency =
+                  f === SAMPLING_MANUAL_FREQUENCY
+                    ? SAMPLING_MANUAL_NAME
+                    : f >= 1
+                    ? `${f} ${FREQUENCY_UNIT}`
+                    : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
                 return (
                   <Button
                     key={f}
@@ -212,7 +224,7 @@ export default class extends Component {
                       f7.popover.close();
                     }}
                   >
-                    <span style={{ textTransform: "none" }}>{frequency}</span>
+                    <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
                   </Button>
                 );
               })}

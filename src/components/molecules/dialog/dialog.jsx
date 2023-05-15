@@ -354,7 +354,7 @@ export const samplingSettings = (title, handleGetSampleSettings) => {
     const time = $(`#${dialogId} #input-sampling-time`).val().trim();
     const samplingSettings = {
       time: time === "" ? 0 : time,
-      frequency: $(`#${dialogId} #input-sampling-frequency`).text(),
+      frequency: $(`#${dialogId} #input-sampling-frequency-data`).attr("frequencyValue"),
     };
 
     handleGetSampleSettings && handleGetSampleSettings(samplingSettings);
