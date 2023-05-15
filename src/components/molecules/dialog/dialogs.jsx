@@ -199,12 +199,7 @@ export default class extends Component {
           >
             <List className="test">
               {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-                const frequency =
-                  f === SAMPLING_MANUAL_FREQUENCY
-                    ? SAMPLING_MANUAL_NAME
-                    : f < 1000
-                    ? `${f} ${FREQUENCY_UNIT}`
-                    : `${f / 1000} kHz`;
+                const frequency = f === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL_NAME : `${f} ${FREQUENCY_UNIT}`;
                 return (
                   <Button
                     key={f}

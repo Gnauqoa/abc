@@ -5,9 +5,8 @@ import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_Y
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
-import * as core from "../utils/core";
 
-const CHECKING_CONNECTION_INTERVAL = 1000;
+const CHECKING_CONNECTION_INTERVAL = 500;
 const webBle = new WebBle();
 
 export class DeviceManager {
@@ -53,13 +52,15 @@ export class DeviceManager {
               device?.name?.includes(DEVICE_YINMIK_PREFIX) ||
               device?.advertising?.kCBAdvDataLocalName?.includes(DEVICE_YINMIK_PREFIX)
             ) {
-              const deviceIndex = this.devices.findIndex((d) => d.deviceId === device.id || d.isConnected === false);
-              if (deviceIndex < 0) {
+              const existingDevice = this.devices.find((d) => d.deviceId === device.id);
+              if (existingDevice) {
+                existingDevice.isConnected = false;
+              } else {
                 let deviceName = device.name || device.id;
                 if (deviceName === "ESP32" && device?.advertising?.kCBAdvDataLocalName) {
                   deviceName = device.advertising.kCBAdvDataLocalName;
                 }
-                const newFoundDevice = {
+                const newDevice = {
                   deviceId: device.id,
                   code: deviceName,
                   rssi: device.rssi,
@@ -67,8 +68,8 @@ export class DeviceManager {
                   isConnected: false,
                 };
 
-                const sensor = SensorServices.getSensorByCode(newFoundDevice.code);
-                sensor !== null && this.devices.push({ ...sensor, ...newFoundDevice });
+                const sensor = SensorServices.getSensorByCode(newDevice.code);
+                sensor !== null && this.devices.push({ ...sensor, ...newDevice });
               }
               callback([...this.devices]);
             }
@@ -126,8 +127,8 @@ export class DeviceManager {
             successCallback([...this.devices]);
           },
           () => {
-            const newDevices = this.devices.filter((d) => d.deviceId !== deviceId);
-            this.devices = newDevices;
+            const device = this.devices.find((d) => d.deviceId === deviceId);
+            device.isConnected = false;
             errorCallback();
           }
         );
@@ -170,26 +171,6 @@ export class DeviceManager {
     }
   }
 
-  async sendData(deviceId, data) {
-    try {
-      const encoder = new TextEncoder();
-      const encodedAll = encoder.encode(`${data}\r`);
-      if (encodedAll.length > LIMIT_BYTE_BLE) {
-        const chunkSize = Math.round(data.length / Math.ceil(encodedAll.length / LIMIT_BYTE_BLE));
-        const chunks = data.match(new RegExp(".{1," + chunkSize + "}", "g"));
-        for (const item of chunks) {
-          await sendBleData(deviceId, encoder.encode(item));
-        }
-        await sendBleData(deviceId, encoder.encode("\r"));
-      } else {
-        await sendBleData(deviceId, encoder.encode(`${data}\r`));
-      }
-    } catch (err) {
-      console.error("sendData error", err);
-      throw new Error("sendData error");
-    }
-  }
-
   // ============================== Utils functions =============================
   handleStopScan(callback) {
     try {
@@ -214,7 +195,7 @@ export class DeviceManager {
           //const data = new TextDecoder("utf-8").decode(new Uint8Array(buffer));
           let data = new Uint8Array(buffer);
 
-          if (data[0] != 0xAA) {
+          if (data[0] != 0xaa) {
             // Invalid data, ignore
             return;
           }
@@ -224,13 +205,13 @@ export class DeviceManager {
           var battery = data[3];
           var dataLength = data[4];
           var checksum = data[5 + dataLength];
-          var calculatedChecksum = 0xFF;
-          for (var i=0; i<(dataLength+5); i++) {
+          var calculatedChecksum = 0xff;
+          for (var i = 0; i < dataLength + 5; i++) {
             calculatedChecksum = calculatedChecksum ^ data[i];
           }
 
           if (calculatedChecksum != checksum) {
-            console.log('Invalid data received');
+            console.log("Invalid data received");
             return;
           }
 
@@ -239,20 +220,19 @@ export class DeviceManager {
 
           while (dataRead < dataLength) {
             // read next 4 bytes
-            var rawBytes = [data[dataRead+5], data[dataRead+6],
-            data[dataRead+7], data[dataRead+8]];
+            var rawBytes = [data[dataRead + 5], data[dataRead + 6], data[dataRead + 7], data[dataRead + 8]];
 
             var view = new DataView(new ArrayBuffer(4));
 
             rawBytes.forEach(function (b, i) {
-                view.setUint8(3-i, b);
+              view.setUint8(3 - i, b);
             });
 
             sensorData.push(view.getFloat32(0));
             dataRead += 4;
           }
 
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength]
+          var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
@@ -274,7 +254,12 @@ export class DeviceManager {
     DataManagerIST.callbackReadSensor(data);
   }
 
-  sendBleData(deviceId, data) {
+  writeBleData(deviceId, data) {
+    if (f7.device.electron) {
+      return webBle.writeData(deviceId, data);
+    }
+
+    // For mobile
     return new Promise((resolve, reject) => {
       ble.write(
         deviceId,
@@ -285,7 +270,6 @@ export class DeviceManager {
           resolve(res);
         },
         (err) => {
-          console.error(`sendDataToDevice ${deviceId} error`, err);
           reject(err);
         }
       );
@@ -293,30 +277,27 @@ export class DeviceManager {
   }
 
   startCheckingConnection() {
-    setInterval(() => {
+    setInterval(async () => {
       for (const device of this.devices) {
-        if (device.isConnected) continue;
+        if (device.isConnected) {
+          // TODO >>> Clean up. Just a demo for writing data to device.
+          try {
+            const encodedData = Uint8Array.of(1);
+            await this.writeBleData(device.deviceId, encodedData);
+            console.log("Write BLE success to device", device.deviceId);
+          } catch (error) {
+            console.error("Write BLE error", error);
+          }
+          // <<< End TODO
+
+          continue;
+        }
+
         const buffer = DataManagerIST.getBuffer();
         if (Object.keys(buffer).includes(String(device.id))) {
           DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
         }
       }
-      // if (f7.device.android || f7.device.ios) {
-      //   for (const device of this.devices) {
-      //     ble.isConnected(
-      //       device.deviceId,
-      //       () => {},
-      //       () => {
-      //         const buffer = DataManagerIST.getBuffer();
-      //         if (Object.keys(buffer).includes(String(device.id))) {
-      //           DataManagerIST.callbackSensorDisconnected([device.id, BLE_TYPE]);
-      //           const currentDevice = this.devices.find((d) => d.deviceId === device.deviceId);
-      //           currentDevice.isConnected = false;
-      //         }
-      //       }
-      //     );
-      //   }
-      // }
     }, CHECKING_CONNECTION_INTERVAL);
   }
 }

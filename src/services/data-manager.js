@@ -93,7 +93,7 @@ export class DataManager {
     this.timerSubscriber = {};
 
     this.uartConnections = new Set();
-    this.batteryStatus = {};
+    this.sensorsQueue = [];
   }
 
   init() {
@@ -612,7 +612,18 @@ export class DataManager {
       }
 
       this.buffer[sensorId] = sensorsData;
-      this.batteryStatus[sensorId] = parseInt(battery);
+
+      // Add the sensor to sensorsQueue if not exist, otherwise update battery
+      const activeSensorsIds = this.getActiveSensorIds();
+      if (!activeSensorsIds.includes(sensorId)) {
+        this.sensorsQueue.push({
+          sensorId: sensorId,
+          batteryStatus: parseInt(battery),
+        });
+      } else {
+        const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
+        if (index !== -1) this.sensorsQueue[index].batteryStatus = parseInt(battery);
+      }
 
       if (source !== BLE_TYPE) {
         this.uartConnections.add(sensorId);
@@ -639,7 +650,10 @@ export class DataManager {
       }
 
       delete this.buffer[sensorId];
-      delete this.batteryStatus[sensorId];
+      const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
+      if (index !== -1) {
+        this.sensorsQueue.splice(index, 1);
+      }
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -699,7 +713,20 @@ export class DataManager {
   }
 
   getBatteryStatus() {
-    return this.batteryStatus;
+    const batteryStatusDict = {};
+    this.sensorsQueue.forEach((element) => {
+      const { sensorId, batteryStatus } = element;
+      batteryStatusDict[sensorId] = batteryStatus;
+    });
+    return batteryStatusDict;
+  }
+
+  getActiveSensorIds() {
+    const activesSensorIds = [];
+    this.sensorsQueue.forEach((element) => {
+      activesSensorIds.push(element.sensorId);
+    });
+    return activesSensorIds;
   }
 
   removeWirelessSensor(sensorId) {
@@ -797,7 +824,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (11 - 1) + 1).toFixed(0);
+      const sensorId = (Math.random() * (11 - 10) + 10).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 

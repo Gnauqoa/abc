@@ -123,8 +123,11 @@
           color: #3398f0;
         }
       }
+
       .button {
         text-transform: none;
+        width: 180px;
+        height: 44px;
       }
     }
   }
@@ -234,7 +237,7 @@
   }
 
   .activity-footer {
-    height: 36px;
+    height: 40px;
     padding-top: 5px;
     padding-left: 10px;
     padding-right: 10px;
@@ -249,8 +252,8 @@
           height: 32px;
 
           img {
-            width: 28px;
-            height: 28px;
+            width: 25px;
+            height: 25px;
           }
         }
 
@@ -281,7 +284,8 @@
         width: 26px;
       }
       .order {
-        font-size: 20px;
+        font-size: 16px;
+        max-width: 190px;
       }
     }
   }

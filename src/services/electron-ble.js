@@ -1,4 +1,4 @@
-import { BLE_SERVICE_ID, BLE_TX_ID, BLE_RX_ID, BLE_TYPE, DEVICE_PREFIX } from "../js/constants";
+import { BLE_SERVICE_ID, BLE_TX_ID, BLE_RX_ID, BLE_TYPE } from "../js/constants";
 import SensorServices from "./sensor-service";
 import * as core from "../utils/core";
 
@@ -88,6 +88,26 @@ export class WebBle {
       device.isConnected = false;
       callback([...this.devices]);
     }
+  };
+
+  writeData = (deviceId, data) => {
+    return new Promise((resolve, reject) => {
+      const server = this.servers[deviceId];
+      if (server) {
+        server
+          .getPrimaryService(BLE_SERVICE_ID)
+          .then((service) => service.getCharacteristic(BLE_RX_ID))
+          .then((characteristic) => {
+            return characteristic.writeValue(data);
+          })
+          .then(() => resolve())
+          .catch((err) => {
+            reject(err);
+          });
+      } else {
+        reject("BLE server not found");
+      }
+    });
   };
 
   receiveDataCallback(device, callback) {

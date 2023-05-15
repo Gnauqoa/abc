@@ -165,8 +165,8 @@ const sensorIcons = {
   },
   5: {
     icon: tempHumiditySensorIcon,
-    label: "Nhiệt độ & độ ẩm",
-    unit: "%",
+    label: "Nhiệt độ Độ ẩm",
+    unit: "°C",
   },
   6: {
     icon: salinitySensorIcon,

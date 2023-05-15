@@ -51,7 +51,6 @@ const SensorStatus = ({ sensorId, sensorData, sensorBattery, sensorIcon, onDisco
                   iconIos={"material:highlight_off"}
                   iconMd={"material:highlight_off"}
                   iconAurora={"material:highlight_off"}
-                  iconSize={30}
                 ></Button>
               )}
             </div>
