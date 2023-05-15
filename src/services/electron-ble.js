@@ -372,7 +372,7 @@ export class WebBle {
           }
           
         });
-      }, 500);
+      }, 1001);
     })
     .catch((err) => {
       console.log("receiveDataCallback error", err.message);
