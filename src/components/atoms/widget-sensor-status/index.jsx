@@ -11,7 +11,7 @@ import bleIcon from "../../../img/sensor-info/connections/ble.png";
 import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
 
-const SensorStatus = ({ sensorId, sensorData, sensorBattery, sensorIcon, onDisconnect, type, status }) => {
+const SensorStatus = ({ sensorId, sensorData, sensorBattery, displayInfo, onDisconnect, type, status }) => {
   let batteryIcon = batteryIcon25;
   if (sensorBattery > 75) {
     batteryIcon = batteryIcon100;
@@ -37,10 +37,10 @@ const SensorStatus = ({ sensorId, sensorData, sensorBattery, sensorIcon, onDisco
         <div className="__active">
           <div className="__icon">
             <div className="__sensor-icon">
-              <img src={sensorIcon?.icon || ""} alt={sensorIcon?.label} />
+              <img src={displayInfo?.icon || ""} alt={displayInfo?.label} />
             </div>
             <div className="__sensor-name">
-              <span>{sensorIcon?.label}</span>
+              <span>{displayInfo?.label}</span>
             </div>
           </div>
           <div className="__sensor-info">
@@ -58,7 +58,7 @@ const SensorStatus = ({ sensorId, sensorData, sensorBattery, sensorIcon, onDisco
               <span>{sensorData}</span>
             </div>
             <div className="__sensor-unit">
-              <span>{sensorIcon?.unit}</span>
+              <span>{displayInfo?.unit}</span>
             </div>
             <div className="__signal-battery">
               <div className="battery">
