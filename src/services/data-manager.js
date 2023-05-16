@@ -754,7 +754,7 @@ export class DataManager {
 
   // -------------------------------- SCHEDULERS -------------------------------- //
   runEmitSubscribersScheduler() {
-    this.emitSubscribersIntervalId = setInterval(() => {
+    const emitSubscribersScheduler = () => {
       try {
         const curBuffer = { ...this.buffer };
         const parsedTime = this.getParsedCollectingDataTime();
@@ -778,11 +778,14 @@ export class DataManager {
           this.emitter.emit(this.timerSubscriber.subscriberTimerId);
           this.unsubscribeTimer();
         }
-      } catch (e) {
+      } catch (error) {
         const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
-        log.error(schedulerError);
+        console.error(schedulerError);
       }
-    }, this.collectingDataInterval);
+    };
+
+    emitSubscribersScheduler();
+    this.emitSubscribersIntervalId = setInterval(emitSubscribersScheduler, this.collectingDataInterval);
     // console.log(
     //   `DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`
     // );
