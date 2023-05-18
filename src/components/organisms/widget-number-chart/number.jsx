@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import $ from "jquery";
 import SensorServices from "../../../services/sensor-service";
 import "./number.scss";
-import SensorSelector from "../popup-sensor-selector";
+import SensorSelector from "../../molecules/popup-sensor-selector";
 
 export default ({ value, widget, handleSensorChange }) => {
   const defaultSensorIndex = 0;
