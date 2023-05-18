@@ -3,9 +3,9 @@ import Chart, { PointElement } from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
 import _ from "lodash";
-import ExpandableOptions from "../expandable-options";
+import ExpandableOptions from "../../molecules/expandable-options";
 
-import SensorSelector from "../popup-sensor-selector";
+import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
@@ -31,7 +31,7 @@ import {
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
 import "./index.scss";
-import dialog from "../dialog/dialog";
+import dialog from "../../molecules/dialog/dialog";
 import chartjsUtils from "../../../utils/chartjs-utils";
 
 Chart.register(zoomPlugin);

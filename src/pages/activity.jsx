@@ -16,18 +16,19 @@ import {
   TIMER_NO_STOP,
   DEFAULT_SENSOR_ID,
   DEFAULT_SENSOR_DATA,
+  LAYOUT_TEXT,
 } from "../js/constants";
 
 // Import Atom Components
 import dialog from "../components/molecules/dialog/dialog";
 
 // Import Molecules Components
-import LineChart from "../components/molecules/widget-line-chart";
-import NumberWidget from "../components/molecules/widget-number-chart/number";
-import TableWidget from "../components/molecules/widget-table-chart";
 import SensorContainer from "../components/molecules/widget-sensor-container";
 
 // Import Organisms Components
+import LineChart from "../components/organisms/widget-line-chart";
+import NumberWidget from "../components/organisms/widget-number-chart/number";
+import TableWidget from "../components/organisms/widget-table-chart";
 import ActivityHeader from "../components/organisms/activity-page-header";
 import ActivityFooter from "../components/organisms/activity-page-footer";
 
@@ -36,6 +37,7 @@ import storeService from "../services/store-service";
 import useDeviceManager from "../components/molecules/popup-scan-devices";
 import { useActivityContext } from "../context/ActivityContext";
 import { getPageName } from "../utils/core";
+import TextViewWidget from "../components/organisms/widget-text-view";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -547,7 +549,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER].includes(pages[currentPageIndex].layout) && (
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT].includes(pages[currentPageIndex].layout) && (
             <div className="__card-widget">
               {pages[currentPageIndex].layout === LAYOUT_CHART && (
                 <LineChart
@@ -582,6 +584,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   handleSensorChange={handleSensorChange}
                 />
               )}
+              {pages[currentPageIndex].layout === LAYOUT_TEXT && <TextViewWidget />}
             </div>
           )}
         </div>

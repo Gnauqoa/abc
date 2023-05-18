@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 // import { Button } from "framework7-react";
 import "./index.scss";
-import SensorSelector from "../popup-sensor-selector";
+import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 import StoreService from "../../../services/store-service";
@@ -19,7 +19,7 @@ import {
   SUMMARIZE_OPTION,
 } from "../../../utils/widget-table-utils";
 
-import ExpandableOptions from "../expandable-options";
+import ExpandableOptions from "../../molecules/expandable-options";
 import SummarizedTable from "./summarize";
 import useDebounce from "../../../hooks/useDebounce";
 
