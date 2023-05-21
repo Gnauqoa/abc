@@ -4,6 +4,7 @@ import { Popover, List, Button, ListItem, f7 } from "framework7-react";
 import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
 import usePrompt from "../../../hooks/useModal";
+import PromptPopup from "../../molecules/popup-prompt-dialog";
 
 const PageManagement = () => {
   const { pages, changePageName, currentPageIndex, handleNavigatePage } = useActivityContext();
@@ -12,16 +13,18 @@ const PageManagement = () => {
     newPageName && changePageName(currentPageIndex, newPageName);
   };
 
-  const { prompt, showModal } = usePrompt({
-    title: "Đổi tên trang hiện tại",
-    inputLabel: "Tên trang",
-    defaultValue: pages[currentPageIndex].name,
-    onClosePopup: onCloseChangeNamePopup,
-  });
+  const { prompt, showModal } = usePrompt({ callbackFn: onCloseChangeNamePopup });
 
   const handlePageChangeName = () => {
     f7.popover.close();
-    showModal();
+    showModal((onClose) => (
+      <PromptPopup
+        title="Đổi tên trang hiện tại"
+        inputLabel="Tên trang"
+        defaultValue={pages[currentPageIndex].name}
+        onClosePopup={onClose}
+      />
+    ));
   };
 
   const handleChangePage = (pageIndex) => {

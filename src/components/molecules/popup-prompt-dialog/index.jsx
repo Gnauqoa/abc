@@ -3,9 +3,8 @@ import { Popup, Page, Navbar, Button } from "framework7-react";
 
 import "./index.scss";
 
-const PromptPopup = ({ title, inputLabel, defaultValue, isShow, onClosePopup }) => {
+const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup }) => {
   const [input, setInput] = useState(defaultValue);
-  const promptPopupRef = React.useRef(null);
 
   const onChangeInput = (e) => {
     setInput(e.target.value.trimStart());
@@ -13,7 +12,7 @@ const PromptPopup = ({ title, inputLabel, defaultValue, isShow, onClosePopup }) 
 
   const onClose = (newInput) => {
     onClosePopup(newInput);
-    setInput(defaultValue);
+    // setInput(defaultValue);
   };
 
   useEffect(() => {
@@ -21,27 +20,25 @@ const PromptPopup = ({ title, inputLabel, defaultValue, isShow, onClosePopup }) 
   }, [defaultValue]);
 
   return (
-    <Popup ref={promptPopupRef} className="use-prompt-dialog-popup" opened={isShow} onPopupClose={() => onClose(input)}>
-      <Page className="use-prompt-dialog">
-        <Navbar className="use-prompt-dialog-header" title={title}></Navbar>
-        <div className="use-prompt-dialog-content">
-          <div className="items">
-            <div className="item">
-              <div className="text">{inputLabel}: </div>
-              <input type="text" className="input" value={input} onChange={onChangeInput} />
-            </div>
-          </div>
-          <div className="buttons">
-            <Button className="cancel-button" onClick={() => onClose(defaultValue)}>
-              Bỏ qua
-            </Button>
-            <Button className="ok-button" onClick={() => onClose(input)}>
-              OK
-            </Button>
+    <Page className="use-prompt-dialog">
+      <Navbar className="use-prompt-dialog-header" title={title}></Navbar>
+      <div className="use-prompt-dialog-content">
+        <div className="items">
+          <div className="item">
+            <div className="text">{inputLabel}: </div>
+            <input type="text" className="input" value={input} onChange={onChangeInput} />
           </div>
         </div>
-      </Page>
-    </Popup>
+        <div className="buttons">
+          <Button className="cancel-button" onClick={() => onClose(defaultValue)}>
+            Bỏ qua
+          </Button>
+          <Button className="ok-button" onClick={() => onClose(input)}>
+            OK
+          </Button>
+        </div>
+      </div>
+    </Page>
   );
 };
 

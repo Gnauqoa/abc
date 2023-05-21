@@ -33,6 +33,8 @@ import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 import "./index.scss";
 import dialog from "../../molecules/dialog/dialog";
 import chartjsUtils from "../../../utils/chartjs-utils";
+import usePrompt from "../../../hooks/useModal";
+import PromptPopup from "../../molecules/popup-prompt-dialog";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -252,7 +254,7 @@ const onClickNoteElement = ({ element }) => {
   return true;
 };
 
-const addNoteHandler = (chartInstance, sensorInstance) => {
+const addNote = (chartInstance, sensorInstance, newContent) => {
   const isValidPointElement = selectedPointElement && selectedPointElement.element;
   const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
   if (!isValidPointElement && !isValidNoteElement) return;
@@ -272,13 +274,11 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
     } else if (newNoteContent) {
       const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
       const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointElement.element.y);
-
       const newNote = {
         id: noteId,
         datasetIndex: selectedPointElement.datasetIndex,
         sensorId: sensorInstance.id,
         sensorIndex: sensorInstance.index,
-
         content: newNoteContent,
         backgroundColor: NOTE_BACKGROUND_COLOR,
         xValue: xValueNoteElement,
@@ -286,21 +286,17 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
         xAdjust: -60,
         yAdjust: -60,
       };
-
       console.log(newNote);
-
       const newNoteElement = {
         ...sampleNote,
         ...newNote,
       };
-
       allNotes = { ...allNotes, [noteId]: newNote };
       chartInstance.config.options.plugins.annotation.annotations = {
         ...chartInstance.config.options.plugins.annotation.annotations,
         [noteId]: newNoteElement,
       };
     }
-
     // Clear selected point
     selectedPointElement = null;
     selectedNoteElement = null;
@@ -308,7 +304,7 @@ const addNoteHandler = (chartInstance, sensorInstance) => {
     chartInstance.update();
   };
 
-  dialog.modifyNoteLineChart("Thêm chú giải", handleOpenPopup);
+  handleOpenPopup(newContent);
 };
 
 // ======================================= CHART LEGEND =======================================
@@ -549,6 +545,35 @@ let LineChart = (props, ref) => {
     });
   }, []);
 
+  const addNoteHandler = (chartInstance, sensorInstance) => {
+    const isValidPointElement = selectedPointElement && selectedPointElement.element;
+    const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
+    if (!isValidPointElement && !isValidNoteElement) return;
+
+    let noteId;
+    let prevContent = "";
+
+    if (isValidNoteElement) {
+      noteId = selectedNoteElement.options.id;
+    } else {
+      noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
+    }
+
+    if (Object.keys(allNotes).includes(noteId)) {
+      prevContent = chartInstance.config.options.plugins.annotation.annotations[noteId].content;
+    }
+
+    showModal((onClose) => (
+      <PromptPopup title="Thêm chú giải" inputLabel="Chú giải" defaultValue={prevContent} onClosePopup={onClose} />
+    ));
+  };
+
+  const callbackAddNote = (newContent) => {
+    addNote(chartInstanceRef.current, sensorRef.current, newContent);
+  };
+
+  const { prompt, showModal } = usePrompt({ callbackFn: callbackAddNote });
+
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case SCALE_FIT_OPTION:
@@ -594,6 +619,7 @@ let LineChart = (props, ref) => {
           />
         </div>
       </div>
+      {prompt}
     </div>
   );
 };

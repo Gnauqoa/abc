@@ -1,0 +1,18 @@
+.popover-frequency {
+  border-radius: 15px;
+  width: 140px;
+
+  .list-frequency {
+    .button-frequency.inverse-frequency {
+      background-color: antiquewhite;
+    }
+
+    .button-frequency:first-child {
+      border-radius: 15px 15px 0px 0px;
+    }
+
+    .button-frequency:last-child {
+      border-radius: 0px 0px 15px 15px;
+    }
+  }
+}

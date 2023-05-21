@@ -11,6 +11,8 @@ import {
 } from "../../../js/constants";
 import dialog from "../dialog/dialog";
 
+import "./index.scss";
+
 const SamplingSetting = ({
   isRunning,
   frequency,
@@ -70,7 +72,7 @@ const SamplingSetting = ({
       >
         {displayedFrequency}
       </Button>
-      <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
+      <Popover className="popover-frequency">
         <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
             const displayedFrequency =
@@ -81,7 +83,14 @@ const SamplingSetting = ({
                 : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
 
             return (
-              <Button key={displayedFrequency} textColor="black" onClick={() => onSelectFrequency(f)}>
+              <Button
+                className={`button-frequency ${
+                  f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
+                }`}
+                key={displayedFrequency}
+                textColor="black"
+                onClick={() => onSelectFrequency(f)}
+              >
                 <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
               </Button>
             );
