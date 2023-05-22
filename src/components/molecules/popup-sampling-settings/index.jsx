@@ -19,7 +19,7 @@ const SamplingSetting = ({
   frequency,
   handleFrequencySelect,
   timerStopCollecting,
-  handleSetTimerInMs,
+  handleSetTimer,
   handleGetManualSample,
 }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
@@ -33,7 +33,7 @@ const SamplingSetting = ({
     try {
       const { frequency: newFrequency, timer: newTimer } = samplingSettings;
       if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
-      if (newTimer !== timerStopCollecting) handleSetTimerInMs(newTimer);
+      if (newTimer !== timerStopCollecting) handleSetTimer(newTimer);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }

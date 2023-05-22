@@ -22,7 +22,7 @@ const ActivityFooter = ({
           frequency={frequency}
           handleFrequencySelect={handleFrequencySelect}
           timerStopCollecting={timerStopCollecting}
-          handleSetTimerInMs={setTimerStopCollecting}
+          handleSetTimer={setTimerStopCollecting}
           handleGetManualSample={handleGetManualSample}
         />
       </div>

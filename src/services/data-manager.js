@@ -28,7 +28,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    // this.dummySensorData();
   }
 
   initializeVariables() {
@@ -158,7 +158,7 @@ export class DataManager {
   subscribeTimer(emitFunction, stopTime) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
-
+      const timer = stopTime * 1000;
       if (!hasEmitFunction) {
         // console.log("DATA_MANAGER-subscribeTimer-INVALID-emitFunction");
         return false;
@@ -169,10 +169,10 @@ export class DataManager {
 
       this.timerSubscriber = {
         subscriberTimerId: subscriberTimerId,
-        stopTime: stopTime,
+        stopTime: timer,
         subscription: subscription,
       };
-      // console.log(`DATA_MANAGER-subscribeTimer-subscriberTimerId_${subscriberTimerId}-stopTime_${stopTime}`);
+      // console.log(`DATA_MANAGER-subscribeTimer-subscriberTimerId_${subscriberTimerId}-stopTime_${timer}`);
 
       return subscriberTimerId;
     } catch (error) {

@@ -1,10 +1,10 @@
 @media (min-width: 630px) and (min-height: 630px) {
   .sampling-settings-popup.popup:not(.popup-tablet-fullscreen) {
     width: 400px;
-    height: 330px;
+    height: 300px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 165px);
+    top: calc(50% - 150px);
     margin-top: 0px;
     margin-left: 0px;
     border-radius: 25px;
@@ -112,8 +112,7 @@
   }
 }
 
-.popover-frequency-advanced,
-.popover-timer-option {
+.popover-frequency-advanced {
   width: 160px;
   border-radius: 10px;
 }
