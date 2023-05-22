@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 
 import { Popup } from "framework7-react";
 
-const usePrompt = ({ callbackFn }) => {
+const usePrompt = ({ className, callbackFn }) => {
   const [isShow, setIsShow] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   const promptPopupRef = React.useRef(null);
@@ -25,7 +25,7 @@ const usePrompt = ({ callbackFn }) => {
 
   const prompt = useMemo(() => {
     return (
-      <Popup ref={promptPopupRef} className="use-prompt-dialog-popup" opened={isShow} onPopupClose={handleAfterLeave}>
+      <Popup ref={promptPopupRef} className={className} opened={isShow} onPopupClose={handleAfterLeave}>
         {modalContent}
       </Popup>
     );

@@ -13,7 +13,7 @@ const PageManagement = () => {
     newPageName && changePageName(currentPageIndex, newPageName);
   };
 
-  const { prompt, showModal } = usePrompt({ callbackFn: onCloseChangeNamePopup });
+  const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: onCloseChangeNamePopup });
 
   const handlePageChangeName = () => {
     f7.popover.close();

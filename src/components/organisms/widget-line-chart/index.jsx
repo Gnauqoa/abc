@@ -551,7 +551,7 @@ let LineChart = (props, ref) => {
     if (!isValidPointElement && !isValidNoteElement) return;
 
     let noteId;
-    let prevContent = "";
+    let prevContent = [""];
 
     if (isValidNoteElement) {
       noteId = selectedNoteElement.options.id;
@@ -563,6 +563,8 @@ let LineChart = (props, ref) => {
       prevContent = chartInstance.config.options.plugins.annotation.annotations[noteId].content;
     }
 
+    prevContent = prevContent.join(" ");
+
     showModal((onClose) => (
       <PromptPopup title="Thêm chú giải" inputLabel="Chú giải" defaultValue={prevContent} onClosePopup={onClose} />
     ));
@@ -572,7 +574,7 @@ let LineChart = (props, ref) => {
     addNote(chartInstanceRef.current, sensorRef.current, newContent);
   };
 
-  const { prompt, showModal } = usePrompt({ callbackFn: callbackAddNote });
+  const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddNote });
 
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {

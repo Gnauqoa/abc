@@ -41,7 +41,10 @@ const SamplingSetting = ({
     f7.popover.close();
   };
 
-  const { prompt, showModal } = usePrompt({ callbackFn: handleGetSampleSettings });
+  const { prompt, showModal } = usePrompt({
+    className: "sampling-settings-popup",
+    callbackFn: handleGetSampleSettings,
+  });
   const handleOpenSamplingSettings = () => {
     if (!isRunning) {
       showModal((onClose) => (

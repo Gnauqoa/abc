@@ -11,9 +11,13 @@ import {
   TIMER_NO_STOP,
 } from "../../../js/constants";
 
+const TIMER_MODE_OFF = "off";
+const TIMER_MODE_ON = "on";
+
 const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) => {
   const [frequency, setFrequency] = useState(defaultFrequency);
   const [timer, setTimer] = useState(defaultTimer);
+  const [timerMode, setTimerMode] = useState(defaultTimer === TIMER_NO_STOP ? TIMER_MODE_OFF : TIMER_MODE_ON);
 
   const onChangeTimer = (e) => {
     setTimer(e.target.value.trimStart());
@@ -21,6 +25,10 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
 
   const onChangeFrequency = (frequency) => {
     setFrequency(frequency);
+  };
+
+  const onChangeTimerMode = (mode) => {
+    setTimerMode(mode);
   };
 
   const onSubmit = () => {
@@ -37,7 +45,7 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
       return;
     }
 
-    onClosePopup({ timer: parsedTimer <= 0 ? TIMER_NO_STOP : parsedTimer * 1000, frequency: frequency });
+    onClosePopup({ timer: timerMode === TIMER_MODE_OFF ? TIMER_NO_STOP : parsedTimer * 1000, frequency: frequency });
   };
 
   const onClose = () => {
@@ -49,9 +57,9 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
   }, [defaultFrequency]);
 
   return (
-    <Page className="use-prompt-dialog">
-      <Navbar className="use-prompt-dialog-header" title="Tùy chọn lấy mẫu"></Navbar>
-      <div className="use-prompt-dialog-content">
+    <Page className="sampling-settings">
+      <Navbar className="sampling-settings-header" title="Tùy chọn lấy mẫu"></Navbar>
+      <div className="sampling-settings-content">
         <div className="items">
           <div className="item">
             <div className="text">Chu kỳ: </div>
@@ -67,14 +75,25 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
           </div>
 
           <div className="item">
-            <div className="text">Thời gian (giây): </div>
-            <input
-              className="input-sampling-time"
-              type="text"
-              placeholder={timer === TIMER_NO_STOP ? "--" : timer / 1000}
-              onChange={onChangeTimer}
-            />
+            <div className="text">Chế độ hẹn giờ: </div>
+            <Button className="select-frequency-button" raised popoverOpen=".popover-timer-option">
+              <span id="input-sampling-timer-option">
+                {timerMode === TIMER_MODE_OFF ? "Tắt hẹn giờ" : "Cài hẹn giờ"}
+              </span>
+            </Button>
           </div>
+
+          {timerMode === TIMER_MODE_ON && (
+            <div className="item">
+              <div className="text">Thời gian (giây): </div>
+              <input
+                className="input-sampling-time"
+                type="text"
+                placeholder={timer === TIMER_NO_STOP ? "--" : timer / 1000}
+                onChange={onChangeTimer}
+              />
+            </div>
+          )}
         </div>
 
         <div className="buttons">
@@ -106,6 +125,26 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
                 }}
               >
                 <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
+              </Button>
+            );
+          })}
+        </List>
+      </Popover>
+
+      <Popover className="popover-timer-option">
+        <List>
+          {[TIMER_MODE_OFF, TIMER_MODE_ON].map((mode) => {
+            const displayedMode = mode === TIMER_MODE_OFF ? "Tắt hẹn giờ" : "Cài hẹn giờ";
+            return (
+              <Button
+                key={mode}
+                textColor="black"
+                onClick={() => {
+                  onChangeTimerMode(mode);
+                  f7.popover.close();
+                }}
+              >
+                <span style={{ textTransform: "none" }}>{displayedMode}</span>
               </Button>
             );
           })}
