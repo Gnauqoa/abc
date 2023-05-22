@@ -115,6 +115,24 @@
 .popover-frequency-advanced {
   width: 160px;
   border-radius: 10px;
+
+  .list-frequency {
+    .button-frequency {
+      border-radius: 0px;
+    }
+
+    .button-frequency.inverse-frequency {
+      background-color: antiquewhite;
+    }
+
+    .button-frequency:first-child {
+      border-radius: 15px 15px 0px 0px;
+    }
+
+    .button-frequency:last-child {
+      border-radius: 0px 0px 15px 15px;
+    }
+  }
 }
 
 @media only screen and (max-height: 600px) {

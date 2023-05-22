@@ -89,7 +89,7 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
       </div>
 
       <Popover className="popover-frequency-advanced">
-        <List className="test">
+        <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
             const displayedFrequency =
               f === SAMPLING_MANUAL_FREQUENCY
@@ -99,6 +99,9 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
                 : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
             return (
               <Button
+                className={`button-frequency ${
+                  f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
+                }`}
                 key={f}
                 textColor="black"
                 onClick={() => {
