@@ -1,5 +1,5 @@
 import React, { useContext, useState, useRef } from "react";
-import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER } from "../js/constants";
+import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER, TIMER_NO_STOP } from "../js/constants";
 
 import DataManagerIST from "../services/data-manager";
 
@@ -18,6 +18,8 @@ export const ActivityContext = React.createContext({
   setPages: () => {},
   frequency: null,
   setFrequency: () => {},
+  timerStopCollecting: null,
+  setTimerStopCollecting: () => {},
   isRunning: false,
   setIsRunning: () => {},
   currentPageIndex: 0,
@@ -35,9 +37,10 @@ export const ActivityContext = React.createContext({
 export const ActivityContextProvider = ({ children }) => {
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
+  const [timerStopCollecting, setTimerStopCollecting] = useState(TIMER_NO_STOP);
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex].lastDataRunId);
+  const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex]?.lastDataRunId);
   let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
 
   // ======================= Pages functions =======================
@@ -107,6 +110,8 @@ export const ActivityContextProvider = ({ children }) => {
         setPages,
         frequency,
         setFrequency,
+        timerStopCollecting,
+        setTimerStopCollecting,
         isRunning,
         setIsRunning,
         currentPageIndex,

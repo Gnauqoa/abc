@@ -76,32 +76,42 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     }
   };
 
-  const convertCalibrationValues = (calibrationValues, calibratingType) => {
-    const defaultReturn = { data1: 1, data2: 0 };
-    const [data1, data2] = calibrationValues;
-    const data1Float = Number(data1);
-    const data2Float = Number(data2);
+  const convertCalibrationValues = (calibrationValues, calibrationValuesRead, calibratingType) => {
+    const calibrationValue = calibrationValues[calibratingType - 1];
+    const calibrationValueRead = calibrationValuesRead[calibratingType - 1];
+    const calibrationValueParsed = Number(calibrationValue);
+    const calibrationValueReadParsed = Number(calibrationValueRead);
 
-    if (Number.isNaN(data1Float)) {
+    if (Number.isNaN(calibrationValueParsed) || calibrationValue === "") {
       f7.dialog.alert(`Giá trị chuẩn ${calibratingType === CALIBRATING_1_POINT ? "điểm 1" : "điểm 2"} phải là số`);
-      return defaultReturn;
+      return false;
     }
 
-    if (Number.isNaN(data2Float)) {
-      f7.dialog.alert(`Giá trị đọc được ${calibratingType === CALIBRATING_2_POINTS ? "điểm 1" : "điểm 2"} phải là số`);
-      return defaultReturn;
+    if (Number.isNaN(calibrationValueReadParsed) || calibrationValueRead === "") {
+      f7.dialog.alert(`Giá trị đọc được ${calibratingType === CALIBRATING_1_POINT ? "điểm 1" : "điểm 2"} phải là số`);
+      return false;
     }
-    return { data1: data1Float, data2: data2Float };
+    return { calibrationValue: calibrationValueParsed, calibrationValueRead: calibrationValueReadParsed };
   };
 
   const onSubmitHandler = (event) => {
     event.preventDefault();
 
-    const { data1: v1, data2: v2 } = convertCalibrationValues(formField.calibrationValues, CALIBRATING_1_POINT);
-    const { data1: r1, data2: r2 } =
+    const onePointResult = convertCalibrationValues(
+      formField.calibrationValues,
+      formField.calibrationValuesRead,
+      CALIBRATING_1_POINT
+    );
+    if (!onePointResult) return;
+
+    const twoPointsResult =
       formField.calibratingType === CALIBRATING_2_POINTS
-        ? convertCalibrationValues(formField.calibrationValuesRead, CALIBRATING_2_POINTS)
-        : { data1: 1, data2: 0 };
+        ? convertCalibrationValues(formField.calibrationValues, formField.calibrationValuesRead, CALIBRATING_2_POINTS)
+        : { calibrationValue: 1, calibrationValueRead: 0 };
+    if (!twoPointsResult) return;
+
+    const { calibrationValue: v1, calibrationValueRead: v2 } = onePointResult;
+    const { calibrationValue: r1, calibrationValueRead: r2 } = twoPointsResult;
 
     const k = ((v1 - v2) / (r1 - r2)).toFixed(2);
     const offset = (v1 - k * r1).toFixed(2);

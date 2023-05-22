@@ -9,13 +9,17 @@ import {
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
 } from "../../../js/constants";
-import dialog from "../dialog/dialog";
+
+import "./index.scss";
+import usePrompt from "../../../hooks/useModal";
+import SamplingSettingPopup from "./sampling-settings";
 
 const SamplingSetting = ({
   isRunning,
   frequency,
   handleFrequencySelect,
-  handleSetTimerInMs,
+  timerStopCollecting,
+  handleSetTimer,
   handleGetManualSample,
 }) => {
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
@@ -27,28 +31,26 @@ const SamplingSetting = ({
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
-      const { frequency, time } = samplingSettings;
-      handleSetTimerInMs(isNaN(Number(time)) || time <= 0 ? TIMER_NO_STOP : time * 1000);
-      onSelectFrequency(frequency);
+      const { frequency: newFrequency, timer: newTimer } = samplingSettings;
+      if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
+      if (newTimer !== timerStopCollecting) handleSetTimer(newTimer);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
+
+    f7.popover.close();
   };
 
+  const { prompt, showModal } = usePrompt({
+    className: "sampling-settings-popup",
+    callbackFn: handleGetSampleSettings,
+  });
   const handleOpenSamplingSettings = () => {
     if (!isRunning) {
-      dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
+      showModal((onClose) => (
+        <SamplingSettingPopup defaultFrequency={frequency} defaultTimer={timerStopCollecting} onClosePopup={onClose} />
+      ));
     }
-  };
-
-  const onSelectFrequency = (frequency) => {
-    if (frequency === SAMPLING_MANUAL_NAME) {
-      handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
-    } else {
-      const parsedFrequency = Number(frequency);
-      handleFrequencySelect(parsedFrequency);
-    }
-    f7.popover.close();
   };
 
   return (
@@ -70,7 +72,7 @@ const SamplingSetting = ({
       >
         {displayedFrequency}
       </Button>
-      <Popover className="popover-frequency" style={{ borderRadius: "10px", width: "120px" }}>
+      <Popover className="popover-frequency">
         <List className="list-frequency">
           {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
             const displayedFrequency =
@@ -81,7 +83,14 @@ const SamplingSetting = ({
                 : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
 
             return (
-              <Button key={displayedFrequency} textColor="black" onClick={() => onSelectFrequency(f)}>
+              <Button
+                className={`button-frequency ${
+                  f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
+                }`}
+                key={displayedFrequency}
+                textColor="black"
+                onClick={() => handleFrequencySelect(f)}
+              >
                 <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
               </Button>
             );
@@ -106,6 +115,7 @@ const SamplingSetting = ({
           onClick={handleGetManualSample}
         ></Button>
       )}
+      {prompt}
     </div>
   );
 };

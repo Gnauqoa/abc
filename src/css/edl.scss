@@ -25,7 +25,7 @@
   height: calc(100% - 80px - 60px);
   margin: auto;
   display: flex;
-  gap: 1%;
+  gap: 6px;
 
   .__card-sensors {
     width: 15%;
@@ -34,13 +34,31 @@
     flex-direction: column;
     gap: 4%;
 
-    overflow-y: auto;
+    overflow-y: scroll;
     overflow-x: hidden;
-    padding-right: 1px;
+    padding-right: 6px;
   }
 
   .__card-sensors::-webkit-scrollbar {
-    display: none;
+    // display: none;
+    width: 8px; /* Adjust the width as needed */
+    background-color: white; /* Set the background color to white */
+    border-radius: 4px; /* Add border-radius for a rounded thumb */
+  }
+
+  /* Target the scrollbar thumb */
+  .__card-sensors::-webkit-scrollbar-thumb {
+    background-color: gray; /* Set the color of the scrollbar thumb */
+    border-radius: 4px; /* Add border-radius for a rounded thumb */
+  }
+
+  /* Optionally, you can add hover and active styles for the thumb */
+  .__card-sensors::-webkit-scrollbar-thumb:hover {
+    background-color: darkgray; /* Set the color on hover */
+  }
+
+  .__card-sensors::-webkit-scrollbar-thumb:active {
+    background-color: lightgray; /* Set the color on active */
   }
 
   .__card-widget {
@@ -222,11 +240,15 @@
   .activity-layout {
     width: 98%;
     height: calc(100% - 80px - 36px);
-    gap: 1%;
+    gap: 4px;
     margin: 1%;
 
     .__card-sensors {
       width: 10%;
+      padding-right: 4px;
+    }
+    .__card-sensors::-webkit-scrollbar {
+      width: 6px; /* Adjust the width as needed */
     }
     .__card-left {
       width: 38%;

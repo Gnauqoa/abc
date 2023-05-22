@@ -1,18 +1,18 @@
 @media (min-width: 630px) and (min-height: 630px) {
-  .use-prompt-dialog-popup.popup:not(.popup-tablet-fullscreen) {
+  .sampling-settings-popup.popup:not(.popup-tablet-fullscreen) {
     width: 400px;
-    height: 250px;
+    height: 300px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 125px);
+    top: calc(50% - 150px);
     margin-top: 0px;
     margin-left: 0px;
     border-radius: 25px;
   }
 }
 
-.use-prompt-dialog {
-  .use-prompt-dialog-header {
+.sampling-settings {
+  .sampling-settings-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -25,7 +25,7 @@
     }
   }
 
-  .use-prompt-dialog-content {
+  .sampling-settings-content {
     width: 100%;
     height: 100%;
     display: flex;
@@ -42,43 +42,34 @@
       justify-content: center;
       padding: 0 20px 0 20px;
       margin-top: 20px;
+      gap: 10px;
 
       .item {
         height: 50px;
         display: flex;
-        justify-content: center;
-        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+
+        .input-sampling-time,
+        .select-frequency-button {
+          padding: 0px;
+          width: 60%;
+          height: 45px;
+          color: #000000;
+          background-color: rgba(0, 134, 255, 0.3);
+          border: 1px solid #000000;
+          border-radius: 10px;
+          text-align: center;
+          cursor: pointer;
+          text-transform: none;
+        }
 
         .text {
+          width: 60%;
           color: #0086ff;
           font-size: 18px;
           font-weight: 500;
           align-self: center;
-        }
-
-        .input {
-          &::placeholder {
-            color: #cbd1dc;
-          }
-          &:focus {
-            outline: none;
-            border-color: #275efe;
-          }
-
-          padding: 8px 16px;
-          padding-right: 40px;
-          font-size: 14px;
-          border: 1px solid #cdd9ed;
-          background: #fff;
-          transition: border 0.3s ease;
-          white-space: nowrap;
-          display: block;
-          position: relative;
-          -webkit-box-flex: 1;
-          flex: 1 1 auto;
-          margin-top: 0;
-          margin-bottom: 0;
-          border-radius: 10px;
         }
       }
     }
@@ -121,13 +112,18 @@
   }
 }
 
+.popover-frequency-advanced {
+  width: 160px;
+  border-radius: 10px;
+}
+
 @media only screen and (max-height: 600px) {
   .use-prompt-dialog-popup.popup:not(.popup-tablet-fullscreen) {
     width: 400px;
-    height: 250px;
+    height: 300px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 125px);
+    top: calc(50% - 150px);
     border-radius: 25px;
   }
 
@@ -140,9 +136,10 @@
     }
   }
 
-  .use-prompt-dialog-content {
+  .sampling-settings-content {
     .items {
-      padding-top: 20px !important;
+      margin-top: 0px !important;
+      gap: 5px !important;
 
       .item {
         height: 100%;
@@ -154,19 +151,9 @@
           align-self: center;
         }
 
-        .input {
-          &::placeholder {
-            color: #cbd1dc;
-          }
-          &:focus {
-            outline: none;
-            border-color: #275efe;
-          }
-
-          padding: 8px 8px;
-          padding-right: 8px;
-          font-size: 14px;
-          width: 180px;
+        .input-sampling-time,
+        .select-frequency-button {
+          height: 40px !important;
         }
       }
     }

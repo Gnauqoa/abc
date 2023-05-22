@@ -332,68 +332,6 @@ export const notiErrorInstruction = (content, buttonsMapping) => {
   });
 };
 
-export const samplingSettings = (title, handleGetSampleSettings) => {
-  let dialogId = "dialog-sample-setting";
-  const open = () => {
-    $(`#${dialogId}`).css({ display: "block" });
-    $(`#${dialogId} .title`).html(title);
-    $(`#${dialogId}`).addClass("dialog-in");
-  };
-  const close = () => {
-    $(`#${dialogId}`).css({ display: "none" });
-    $(`#${dialogId} .title`).html("");
-    $(`#${dialogId}`).removeClass("dialog-in");
-  };
-
-  open();
-
-  $(`#${dialogId} .ok-button`).off("click");
-  $(`#${dialogId} .cancel-button`).off("click");
-
-  $(`#${dialogId} .ok-button`).on("click", () => {
-    const time = $(`#${dialogId} #input-sampling-time`).val().trim();
-    const samplingSettings = {
-      time: time === "" ? 0 : time,
-      frequency: $(`#${dialogId} #input-sampling-frequency-data`).attr("frequencyValue"),
-    };
-
-    handleGetSampleSettings && handleGetSampleSettings(samplingSettings);
-    close();
-  });
-
-  $(`#${dialogId} .cancel-button`).on("click", () => {
-    close();
-  });
-};
-
-export const modifyNoteLineChart = (title, handleUpdateNote) => {
-  let dialogId = "dialog-modify-note-line-chart";
-  const open = () => {
-    $(`#${dialogId}`).css({ display: "block" });
-    $(`#${dialogId} .title`).html(title);
-    $(`#${dialogId}`).addClass("dialog-in");
-  };
-  const close = () => {
-    $(`#${dialogId}`).css({ display: "none" });
-    $(`#${dialogId} .title`).html("");
-    $(`#${dialogId}`).removeClass("dialog-in");
-  };
-
-  open();
-
-  $(`#${dialogId} .ok-button`).off("click");
-  $(`#${dialogId} .cancel-button`).off("click");
-
-  $(`#${dialogId} .ok-button`).on("click", () => {
-    const note = $(`#${dialogId} .input`).val()?.trim();
-    handleUpdateNote(note);
-    close();
-  });
-  $(`#${dialogId} .cancel-button`).on("click", () => {
-    close();
-  });
-};
-
 export default {
   alert,
   confirm,
@@ -406,6 +344,4 @@ export default {
   askUpgradeFirmware,
   changeFwDeviceName,
   notiErrorInstruction,
-  samplingSettings,
-  modifyNoteLineChart,
 };

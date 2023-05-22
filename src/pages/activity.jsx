@@ -80,6 +80,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     pages,
     setPages,
     frequency,
+    timerStopCollecting,
     setFrequency,
     isRunning,
     setIsRunning,
@@ -94,7 +95,6 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   // Belong to Activity
   const [name, setName] = useState(activity.name);
-  const [timerStopTime, setTimerStopTime] = useState(TIMER_NO_STOP);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
   const [previousActivity, setPreviousActivity] = useState({});
 
@@ -136,7 +136,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     return () => {
       subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
-  }, [pages[currentPageIndex].widgets]);
+  }, [pages[currentPageIndex]?.widgets]);
 
   // =========================================================================================
   // =========================== Functions associate with Activity ===========================
@@ -200,10 +200,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     setSamplingMode(frequency === SAMPLING_MANUAL_FREQUENCY ? SAMPLING_MANUAL : SAMPLING_AUTO);
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
     result && setFrequency(frequency);
-  }
-
-  function handleSetTimerInMs(timerNumber) {
-    setTimerStopTime(timerNumber);
   }
 
   const saveActivity = () => {
@@ -324,7 +320,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
       const dataRunId = DataManagerIST.startCollectingData();
-      timerStopTime !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopTime);
+      timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
     } else {
@@ -492,7 +488,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         />
         <div className="activity-layout">
           <SensorContainer deviceManager={deviceManager} />
-          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout) && (
+          {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex]?.layout) && (
             <>
               <div className="__card-widget __card-left">
                 {pages[currentPageIndex].layout === LAYOUT_TABLE_CHART && (
@@ -549,7 +545,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT].includes(pages[currentPageIndex].layout) && (
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT].includes(pages[currentPageIndex]?.layout) && (
             <div className="__card-widget">
               {pages[currentPageIndex].layout === LAYOUT_CHART && (
                 <LineChart
@@ -589,12 +585,9 @@ export default ({ f7route, f7router, filePath, content }) => {
           )}
         </div>
         <ActivityFooter
-          isRunning={isRunning}
-          frequency={frequency}
           handlePageNext={handlePageNext}
           handlePagePrev={handlePagePrev}
           handleFrequencySelect={handleFrequencySelect}
-          handleSetTimerInMs={handleSetTimerInMs}
           handleGetManualSample={handleGetManualSample}
           handleSampleClick={handleSampleClick}
         />
