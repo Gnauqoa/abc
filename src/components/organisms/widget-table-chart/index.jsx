@@ -199,7 +199,7 @@ const TableWidget = (
     }
 
     // TODO: comment this out to not display when not isRunning
-    // isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
+    isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
   }, [datas, firstColumnOption]);
 
   // ========================== Utils functions ==========================

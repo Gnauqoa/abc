@@ -190,6 +190,7 @@ export const INVERSE_FREQUENCY_UNIT = "giây/mẫu";
 export const FREQUENCIES = [0.033, 0.1, 0.2, 1, 2, 5, 10, 50];
 export const SAMPLING_MANUAL_NAME = "Thủ công";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
+export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
 export const EMIT_DATA_MANUAL_FREQUENCY = 1;
 
 // SAMPLING MODE

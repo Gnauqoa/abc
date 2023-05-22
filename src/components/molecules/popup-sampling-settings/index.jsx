@@ -9,14 +9,16 @@ import {
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
 } from "../../../js/constants";
-import dialog from "../dialog/dialog";
 
 import "./index.scss";
+import usePrompt from "../../../hooks/useModal";
+import SamplingSettingPopup from "./sampling-settings";
 
 const SamplingSetting = ({
   isRunning,
   frequency,
   handleFrequencySelect,
+  timerStopCollecting,
   handleSetTimerInMs,
   handleGetManualSample,
 }) => {
@@ -29,28 +31,23 @@ const SamplingSetting = ({
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
-      const { frequency, time } = samplingSettings;
-      handleSetTimerInMs(isNaN(Number(time)) || time <= 0 ? TIMER_NO_STOP : time * 1000);
-      onSelectFrequency(frequency);
+      const { frequency: newFrequency, timer: newTimer } = samplingSettings;
+      if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
+      if (newTimer !== timerStopCollecting) handleSetTimerInMs(newTimer);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
+
+    f7.popover.close();
   };
 
+  const { prompt, showModal } = usePrompt({ callbackFn: handleGetSampleSettings });
   const handleOpenSamplingSettings = () => {
     if (!isRunning) {
-      dialog.samplingSettings("Tùy chọn lấy mẫu", handleGetSampleSettings);
+      showModal((onClose) => (
+        <SamplingSettingPopup defaultFrequency={frequency} defaultTimer={timerStopCollecting} onClosePopup={onClose} />
+      ));
     }
-  };
-
-  const onSelectFrequency = (frequency) => {
-    if (frequency === SAMPLING_MANUAL_NAME) {
-      handleFrequencySelect(SAMPLING_MANUAL_FREQUENCY);
-    } else {
-      const parsedFrequency = Number(frequency);
-      handleFrequencySelect(parsedFrequency);
-    }
-    f7.popover.close();
   };
 
   return (
@@ -89,7 +86,7 @@ const SamplingSetting = ({
                 }`}
                 key={displayedFrequency}
                 textColor="black"
-                onClick={() => onSelectFrequency(f)}
+                onClick={() => handleFrequencySelect(f)}
               >
                 <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
               </Button>
@@ -115,6 +112,7 @@ const SamplingSetting = ({
           onClick={handleGetManualSample}
         ></Button>
       )}
+      {prompt}
     </div>
   );
 };

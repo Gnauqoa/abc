@@ -4,17 +4,16 @@ import Timer from "../../atoms/timer";
 import RoundButton from "../../atoms/round-button";
 import SamplingSetting from "../../molecules/popup-sampling-settings";
 import ActivityPageNav from "../../molecules/activity-page-nav";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 const ActivityFooter = ({
-  isRunning,
-  frequency,
   handlePageNext,
   handlePagePrev,
   handleFrequencySelect,
-  handleSetTimerInMs,
   handleGetManualSample,
   handleSampleClick,
 }) => {
+  const { isRunning, frequency, timerStopCollecting, setTimerStopCollecting } = useActivityContext();
   return (
     <div className="activity-footer display-flex justify-content-space-between">
       <div className="__toolbar-left">
@@ -22,7 +21,8 @@ const ActivityFooter = ({
           isRunning={isRunning}
           frequency={frequency}
           handleFrequencySelect={handleFrequencySelect}
-          handleSetTimerInMs={handleSetTimerInMs}
+          timerStopCollecting={timerStopCollecting}
+          handleSetTimerInMs={setTimerStopCollecting}
           handleGetManualSample={handleGetManualSample}
         />
       </div>

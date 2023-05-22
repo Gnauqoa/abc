@@ -9,6 +9,7 @@ import {
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
   BLE_TYPE,
+  SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
 
 const TIME_STAMP_ID = 0;
@@ -27,7 +28,7 @@ export class DataManager {
 
     // calls two scheduler functions
     this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   initializeVariables() {
@@ -84,6 +85,7 @@ export class DataManager {
      * @type {number}
      */
     this.collectingDataInterval = 1000;
+    this.selectedInterval = 1000;
 
     this.samplingMode = SAMPLING_AUTO;
     this.sensorIds = SensorServices.getSensors().map((sensor) => sensor.id);
@@ -247,9 +249,21 @@ export class DataManager {
       this.collectingDataInterval = (1 / EMIT_DATA_MANUAL_FREQUENCY) * 1000;
       // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${EMIT_DATA_MANUAL_FREQUENCY}Hz-INTERVAL_${this.collectingDataInterval}-SAMPLING_MODE.`);
     } else {
-      this.collectingDataInterval = (1 / frequency).toFixed(0) * 1000;
+      // For the frequency greater than 1, we set collectingDataInterval = selectedInterval.
+      // However, when the frequency < 1, the timer will be stop until the next sampling interval
+      // For this reason, we set collectingDataInterval = 1000ms for the timer to count the sampling interval
+      // and the selectedInterval used to tracking when we sampled the data
+      if (frequency >= 1) {
+        this.selectedInterval = Number(((1 / frequency) * 1000).toFixed(0));
+        this.collectingDataInterval = this.selectedInterval;
+      } else {
+        this.selectedInterval = Number((1 / frequency).toFixed(0) * 1000);
+        this.collectingDataInterval = SAMPLING_INTERVAL_LESS_1HZ;
+      }
       this.samplingMode = SAMPLING_AUTO;
-      // console.log(`DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`);
+      console.log(
+        `DATA_MANAGER-setCollectingDataFrequency-FREQUENCY_${frequency}Hz-INTERVAL_${this.collectingDataInterval}-AUTO_SAMPLING_MODE`
+      );
     }
 
     // Clear and create new job according to new frequency
@@ -277,6 +291,7 @@ export class DataManager {
     this.timerCollectingTime = 0;
     this.isCollectingData = true;
     const dataRunId = this.createDataRun(null);
+    this.emitSubscribersScheduler();
     return dataRunId;
   }
 
@@ -674,13 +689,15 @@ export class DataManager {
     const curBuffer = { ...this.buffer };
     const parsedTime = this.getParsedCollectingDataTime();
 
-    sensorIds.forEach((sensorId, i) => {
-      const sensorValue = sensorValues[i].values;
+    if (Array.isArray(sensorIds)) {
+      sensorIds.forEach((sensorId, i) => {
+        const sensorValue = sensorValues[i].values;
 
-      if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
-        curBuffer[sensorId] = sensorValue;
-      }
-    });
+        if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+          curBuffer[sensorId] = sensorValue;
+        }
+      });
+    }
 
     this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
     return { ...this.buffer };
@@ -753,39 +770,39 @@ export class DataManager {
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //
-  runEmitSubscribersScheduler() {
-    const emitSubscribersScheduler = () => {
-      try {
-        const curBuffer = { ...this.buffer };
-        const parsedTime = this.getParsedCollectingDataTime();
+  emitSubscribersScheduler = () => {
+    try {
+      const curBuffer = { ...this.buffer };
+      const parsedTime = this.getParsedCollectingDataTime();
 
-        // Emit all subscribers
-        this.emitSubscribers(parsedTime, curBuffer);
+      // Emit all subscribers
+      this.emitSubscribers(parsedTime, curBuffer);
 
-        // Append data to data run and increment collecting data time
-        if (this.isCollectingData) {
-          if (this.samplingMode === SAMPLING_AUTO) {
-            this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
-          }
-
-          // Update total time collecting data
-          this.collectingDataTime += this.collectingDataInterval;
+      // Append data to data run and increment collecting data time
+      if (this.isCollectingData) {
+        // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
+        if (this.samplingMode === SAMPLING_AUTO && this.collectingDataTime % this.selectedInterval === 0) {
+          this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
         }
 
-        // Increment timer collecting time and stop if it reaches the stop time
-        this.timerCollectingTime += this.collectingDataInterval;
-        if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
-          this.emitter.emit(this.timerSubscriber.subscriberTimerId);
-          this.unsubscribeTimer();
-        }
-      } catch (error) {
-        const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
-        console.error(schedulerError);
+        // Update total time collecting data
+        this.collectingDataTime += this.collectingDataInterval;
       }
-    };
 
-    emitSubscribersScheduler();
-    this.emitSubscribersIntervalId = setInterval(emitSubscribersScheduler, this.collectingDataInterval);
+      // Increment timer collecting time and stop if it reaches the stop time
+      this.timerCollectingTime += this.collectingDataInterval;
+      if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
+        this.emitter.emit(this.timerSubscriber.subscriberTimerId);
+        this.unsubscribeTimer();
+      }
+    } catch (error) {
+      const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
+      console.error(schedulerError);
+    }
+  };
+
+  runEmitSubscribersScheduler() {
+    this.emitSubscribersIntervalId = setInterval(this.emitSubscribersScheduler, this.collectingDataInterval);
     // console.log(
     //   `DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`
     // );
@@ -832,7 +849,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (3 - 2) + 2).toFixed(0);
+      const sensorId = (Math.random() * (7 - 2) + 2).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
       const sensorSerialId = 0;
 
