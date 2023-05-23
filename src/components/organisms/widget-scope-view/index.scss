@@ -4,18 +4,12 @@
   display: flex;
   flex-direction: column;
 
-  .oscilloscope {
-    width: 100%;
-    height: 88%;
-    border: 1px solid;
-    border-radius: 5px;
-  }
-
   .scope-view-options {
     height: 10%;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 10px;
 
     .options {
       background-color: #ffbb02;
@@ -29,7 +23,7 @@
       position: inherit;
       text-align: center;
       font-size: 18px;
-      font-weight: var(--f7-button-font-weight);
+      font-family: var(--f7-font-family);
     }
 
     .options option {
