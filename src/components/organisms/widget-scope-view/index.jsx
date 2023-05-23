@@ -254,10 +254,10 @@ const ScopeViewWidget = () => {
           }}
           disabled={isRunning}
         >
-          <option value="sineWave" label="Sine Wave">
+          <option value="sineWave" label="Miền thời gian">
             sineWave
           </option>
-          <option value="frequencyBars" label="Frequency Bars">
+          <option value="frequencyBars" label="Miền tần số">
             Frequency bars
           </option>
           <option value="off">Off</option>
