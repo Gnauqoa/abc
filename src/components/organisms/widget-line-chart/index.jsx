@@ -361,9 +361,7 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
 
   const stepSize = suggestedMaxX / 10;
 
-  chartInstance.data = createChartJsDatas({
-    chartDatas: data,
-  });
+  chartInstance.data = createChartJsDatas({ chartDatas: data });
   chartInstance.options.animation = false;
   chartInstance.options.scales = {
     y: {

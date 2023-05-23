@@ -110,7 +110,7 @@ export const createChartDataAndParseXAxis = ({ chartDatas }) => {
  *
  * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
  */
-export const createChartJsDatas = ({ chartDatas = [] }) => {
+export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) => {
   let chartDataParam = {
     labels: [],
     datasets: [
@@ -140,7 +140,7 @@ export const createChartJsDatas = ({ chartDatas = [] }) => {
       });
     });
 
-    chartDataParam.datasets.push({
+    const dataset = {
       label: s.name,
       data: dataList,
       pointStyle: "circle",
@@ -148,7 +148,12 @@ export const createChartJsDatas = ({ chartDatas = [] }) => {
       pointHoverRadius: 10,
       borderColor: chartUtils.namedColor(index),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
-    });
+    };
+
+    if (tension) dataset.tension = tension;
+    if (pointRadius) dataset.pointRadius = pointRadius;
+
+    chartDataParam.datasets.push(dataset);
   });
 
   return chartDataParam;

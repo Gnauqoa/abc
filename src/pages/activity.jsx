@@ -17,6 +17,7 @@ import {
   DEFAULT_SENSOR_ID,
   DEFAULT_SENSOR_DATA,
   LAYOUT_TEXT,
+  LAYOUT_SCOPE,
 } from "../js/constants";
 
 // Import Atom Components
@@ -38,6 +39,7 @@ import useDeviceManager from "../components/molecules/popup-scan-devices";
 import { useActivityContext } from "../context/ActivityContext";
 import { getPageName } from "../utils/core";
 import TextViewWidget from "../components/organisms/widget-text-view";
+import ScopeViewWidget from "../components/organisms/widget-scope-view";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -545,7 +547,9 @@ export default ({ f7route, f7router, filePath, content }) => {
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT].includes(pages[currentPageIndex]?.layout) && (
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT, LAYOUT_SCOPE].includes(
+            pages[currentPageIndex]?.layout
+          ) && (
             <div className="__card-widget">
               {pages[currentPageIndex].layout === LAYOUT_CHART && (
                 <LineChart
@@ -581,6 +585,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TEXT && <TextViewWidget />}
+              {pages[currentPageIndex].layout === LAYOUT_SCOPE && <ScopeViewWidget />}
             </div>
           )}
         </div>
