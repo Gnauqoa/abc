@@ -14,7 +14,7 @@ const DEFAULT_MIN_AMPLITUDE = 0.3;
 
 let drawVisual;
 
-const updateChart = ({ chartInstance, data, maxX, maxY }) => {
+const updateChart = ({ chartInstance, data, maxX, maxY, label }) => {
   chartInstance.data = createChartJsDatas({
     chartDatas: data,
     pointRadius: 1,
@@ -29,13 +29,13 @@ const updateChart = ({ chartInstance, data, maxX, maxY }) => {
       title: {
         color: "orange",
         display: true,
-        text: "decibels",
+        text: label,
       },
     },
     x: {
       type: "linear",
-      suggestedMin: 0,
-      suggestedMax: Number(maxX).toFixed(0),
+      min: 0,
+      max: Math.round(maxX),
       ticks: {},
       title: {
         color: "orange",
@@ -45,7 +45,6 @@ const updateChart = ({ chartInstance, data, maxX, maxY }) => {
       },
     },
   };
-  chartInstance.options.scales.x.ticks.stepSize = 1;
   chartInstance.update();
 };
 
@@ -141,14 +140,14 @@ const ScopeViewWidget = () => {
 
           analyser.getFloatTimeDomainData(dataArray);
 
-          let x = 0;
+          let time = 0;
           const normalizedArray = [];
 
           for (let i = 0; i < bufferLength; i++) {
             const y = dataArray[i];
             if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
-            normalizedArray.push({ x: x, y: y });
-            x += timePerSample * 1000;
+            normalizedArray.push({ x: time, y: y });
+            time += timePerSample * 1000;
           }
 
           const chartData = [
@@ -164,35 +163,59 @@ const ScopeViewWidget = () => {
             data: chartDatas,
             maxX: timePerSample * BUFFER_TIME_DOMAIN_LENGTH * 1000,
             maxY: maxAmplitude,
+            label: "amplitude",
           });
         };
 
         drawSineWave();
       } else if (visualSetting == "frequencyBars") {
-        // analyser.fftSize = 256;
-        // const bufferLengthAlt = analyser.frequencyBinCount;
-        // // See comment above for Float32Array()
-        // const dataArrayAlt = new Uint8Array(bufferLengthAlt);
-        // // const dataArrayAlt = new Float32Array(bufferLengthAlt);
-        // canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-        // const drawAlt = function () {
-        //   drawVisual = requestAnimationFrame(drawAlt);
-        //   analyser.getByteFrequencyData(dataArrayAlt);
-        //   // analyser.getFloatFrequencyData(dataArrayAlt); // Use getFloatFrequencyData
-        //   // console.log("dataArrayAlt: ", dataArrayAlt);
-        //   canvasCtx.fillStyle = "rgb(255, 255, 255)";
-        //   canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-        //   const barWidth = (WIDTH / bufferLengthAlt) * 2.5;
-        //   let barHeight;
-        //   let x = 0;
-        //   for (let i = 0; i < bufferLengthAlt; i++) {
-        //     barHeight = dataArrayAlt[i];
-        //     canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
-        //     canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
-        //     x += barWidth + 1;
-        //   }
-        // };
-        // drawAlt();
+        analyser.fftSize = 256;
+        const fftSize = analyser.fftSize;
+        let previousTimeStamp, currentTimeStamp;
+        const bufferLengthAlt = analyser.frequencyBinCount;
+        const dataArrayAlt = new Float32Array(bufferLengthAlt);
+        let maxX = 0;
+
+        const drawFrequencyWave = function () {
+          currentTimeStamp = Date.now();
+          const diffTimeStamp = currentTimeStamp - previousTimeStamp;
+
+          if (isRunning) drawVisual = requestAnimationFrame(drawFrequencyWave);
+
+          if (diffTimeStamp < GET_SAMPLES_INTERVAL) return;
+          previousTimeStamp = currentTimeStamp;
+
+          analyser.getFloatFrequencyData(dataArrayAlt);
+
+          let frequency = 0;
+          const normalizedArray = [];
+
+          for (let i = 0; i < bufferLengthAlt; i++) {
+            let y = dataArrayAlt[i];
+            if (y < MIN_DECIBELS) y = MIN_DECIBELS;
+            if (y !== MIN_DECIBELS && i > maxX) maxX = i;
+
+            normalizedArray.push({ x: frequency, y: y });
+            frequency = i * (samplingRate / fftSize);
+          }
+
+          const chartData = [
+            {
+              name: "Giao động chu kỳ theo tần số",
+              data: normalizedArray,
+            },
+          ];
+
+          const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+          updateChart({
+            chartInstance: chartInstanceRef.current,
+            data: chartDatas,
+            maxX: maxX * (samplingRate / fftSize),
+            maxY: MAX_DECIBELS,
+            label: "decibels",
+          });
+        };
+        drawFrequencyWave();
       }
     }
   };
@@ -226,8 +249,10 @@ const ScopeViewWidget = () => {
           name="visual"
           defaultValue={visualSetting}
           onChange={({ target: { value } }) => {
+            cancelAnimationFrame(drawVisual);
             setVisualSetting(value);
           }}
+          disabled={isRunning}
         >
           <option value="sineWave" label="Sine Wave">
             sineWave
