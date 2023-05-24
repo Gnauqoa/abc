@@ -197,6 +197,25 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           legend: {
             display: false, //This will do the task
           },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: "xy",
+            },
+            limits: {
+              x: { min: 0 },
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true,
+              },
+
+              mode: "xy",
+            },
+          },
         },
       },
     });
