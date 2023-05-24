@@ -141,7 +141,7 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) =>
     });
 
     const dataset = {
-      label: s.name,
+      // label: s.name,
       data: dataList,
       pointStyle: "circle",
       pointRadius: 5,

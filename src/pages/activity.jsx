@@ -585,7 +585,13 @@ export default ({ f7route, f7router, filePath, content }) => {
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TEXT && <TextViewWidget />}
-              {pages[currentPageIndex].layout === LAYOUT_SCOPE && <ScopeViewWidget />}
+              {pages[currentPageIndex].layout === LAYOUT_SCOPE && (
+                <ScopeViewWidget
+                  key={`${currentPageIndex}_scope`}
+                  widget={pages[currentPageIndex].widgets[0]}
+                  handleSensorChange={handleSensorChange}
+                />
+              )}
             </div>
           )}
         </div>
