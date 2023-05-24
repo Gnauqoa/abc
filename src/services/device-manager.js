@@ -532,13 +532,15 @@ export class DeviceManager {
       for (const device of this.devices) {
         if (device.isConnected) {
           // TODO >>> Clean up. Just a demo for writing data to device.
+          /*
           try {
             const encodedData = Uint8Array.of(1);
-            //await this.writeBleData(device.deviceId, encodedData);
-            //console.log("Write BLE success to device", device.deviceId);
+            await this.writeBleData(device.deviceId, encodedData);
+            console.log("Write BLE success to device", device.deviceId);
           } catch (error) {
             console.error("Write BLE error", error);
           }
+          */
           // <<< End TODO
 
           continue;
