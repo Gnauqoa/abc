@@ -18,7 +18,14 @@ import clsx from "clsx";
 import DataManagerIST from "../../../services/data-manager";
 import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../../../js/constants";
 
-export default function SensorSelector({ disabled, selectedSensor, hideDisplayUnit, onChange = () => {}, style }) {
+export default function SensorSelector({
+  disabled,
+  selectedSensor,
+  hideDisplayUnit,
+  onChange = () => {},
+  style,
+  whitelist,
+}) {
   const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
@@ -64,11 +71,16 @@ export default function SensorSelector({ disabled, selectedSensor, hideDisplayUn
 
   const handleOpenPopup = () => {
     const sensorList = SensorServices.getSensors();
-    const activeSensors = DataManagerIST.getListActiveSensor();
+
+    let activeSensors;
+    if (!whitelist) activeSensors = DataManagerIST.getListActiveSensor();
+    else activeSensors = whitelist;
+
     const sensorListForDisplay = sensorList.map((sensor) => {
       const sensorStatus = activeSensors.includes(sensor.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
       return { ...sensor, sensorStatus };
     });
+
     const sortedSensors = sortSensorList(sensorListForDisplay);
     setSensorListForDisplay(sortedSensors);
     sensorPopup.current.f7Popup().open();
