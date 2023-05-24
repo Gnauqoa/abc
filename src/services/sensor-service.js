@@ -140,6 +140,18 @@ export const defaultSensors = [
     data: [{ id: "inno-011-volt", name: "Điện áp", unit: "V", min: -20, max: 20, formatFloatingPoint: 1 }],
   },
   {
+    id: 12,
+    code: "inno-012",
+    name: "Microphone",
+    label: "Microphone",
+    icon: voltageSensorIcon,
+    data: [
+      { id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
+      { id: "inno-012-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
+      { id: "inno-012-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
+    ],
+  },
+  {
     id: 65,
     code: "BLE-9909",
     name: "Cảm biến chất lượng nước",
@@ -187,6 +199,7 @@ export class SensorServices {
   initializeVariables() {
     this.sensors = _.cloneDeep(defaultSensors);
     this.customSensors = [];
+    this.definedSoundSensorsId = [];
   }
 
   getSensors() {
@@ -267,6 +280,16 @@ export class SensorServices {
   getSensorByCode(code) {
     const sensorInfo = this.sensors.filter((sensor) => code.includes(sensor.code));
     return sensorInfo.length > 0 ? sensorInfo[0] : null;
+  }
+
+  getActiveSoundSensors() {
+    const soundSensors = this.sensors.filter((sensor) => {
+      if (this.definedSoundSensorsId.includes(sensor.code)) return true;
+      else if (sensor.code === "inno-012")
+        return navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined;
+      else return false;
+    });
+    return soundSensors;
   }
 }
 

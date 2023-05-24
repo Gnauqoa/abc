@@ -5,20 +5,34 @@ import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createChartDataAndParseXAxis, createChartJsDatas } from "../../../utils/widget-line-utils";
 import { abs } from "mathjs";
+import SensorSelector from "../../molecules/popup-sensor-selector";
+import SensorServiceIST from "../../../services/sensor-service";
+import MicrophoneServiceIST from "../../../services/microphone-service";
 
 const MIN_DECIBELS = -90;
 const MAX_DECIBELS = -10;
-const GET_SAMPLES_INTERVAL = 100;
-const BUFFER_TIME_DOMAIN_LENGTH = 1024;
+const GET_SAMPLES_INTERVAL = 200;
+const BUFFER_TIME_DOMAIN = 1024;
+const BUFFER_FREQUENCY_DOMAIN = 1024;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
 
 let drawVisual;
 
-const updateChart = ({ chartInstance, data, maxX, maxY, label }) => {
+const SINE_WAVE = 0;
+const FREQUENCY_WAVE = 1;
+const DECIBEL = 2;
+
+const visualSettings = {
+  "12-0": DECIBEL,
+  "12-1": SINE_WAVE,
+  "12-2": FREQUENCY_WAVE,
+};
+
+const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension }) => {
   chartInstance.data = createChartJsDatas({
     chartDatas: data,
     pointRadius: 1,
-    tension: 0.6,
+    tension: tension,
   });
 
   chartInstance.options.animation = false;
@@ -29,7 +43,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, label }) => {
       title: {
         color: "orange",
         display: true,
-        text: label,
+        text: labelY,
       },
     },
     x: {
@@ -40,7 +54,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, label }) => {
       title: {
         color: "orange",
         display: true,
-        text: "ms",
+        text: labelX,
         align: "end",
       },
     },
@@ -48,85 +62,32 @@ const updateChart = ({ chartInstance, data, maxX, maxY, label }) => {
   chartInstance.update();
 };
 
-const ScopeViewWidget = () => {
+const ScopeViewWidget = ({ widget, handleSensorChange }) => {
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
-  const [visualSetting, setVisualSetting] = useState("sineWave");
+
+  const defaultSensorIndex = 0;
+  const sensor = widget.sensors[defaultSensorIndex];
+  const sensorInfo = `${sensor.id}-${sensor.index}`;
+
+  const soundSensors = SensorServiceIST.getActiveSoundSensors();
+  const soundSensorsId = soundSensors.map((sensor) => sensor.id?.toString());
 
   const { isRunning } = useActivityContext();
 
+  // console.log(MicrophoneServiceIST.getCurrentDecibel());
+
   const initWebAudio = () => {
-    // Older browsers might not implement mediaDevices at all, so we set an empty object first
-    if (navigator.mediaDevices === undefined) {
-      navigator.mediaDevices = {};
-    }
-
-    // Some browsers partially implement mediaDevices. We can't assign an object
-    // with getUserMedia as it would overwrite existing properties.
-    // Add the getUserMedia property if it's missing.
-    if (navigator.mediaDevices.getUserMedia === undefined) {
-      navigator.mediaDevices.getUserMedia = function (constraints) {
-        // First get ahold of the legacy getUserMedia, if present
-        const getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-        // Some browsers just don't implement it - return a rejected promise with an error
-        // to keep a consistent interface
-        if (!getUserMedia) {
-          return Promise.reject(new Error("getUserMedia is not implemented in this browser"));
-        }
-
-        // Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
-        return new Promise(function (resolve, reject) {
-          getUserMedia.call(navigator, constraints, resolve, reject);
-        });
-      };
-    }
-
-    // Set up forked web audio context, for multiple browsers
-    // window. is needed otherwise Safari explodes
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const samplingRate = audioCtx.sampleRate;
-    let source;
-
-    // Set up the different audio nodes we will use for the app
-    const analyser = audioCtx.createAnalyser();
-    analyser.minDecibels = MIN_DECIBELS;
-    analyser.maxDecibels = MAX_DECIBELS;
-    analyser.smoothingTimeConstant = 0.9;
-
-    const visualSelect = document.getElementById("visual");
-
-    // Event listeners to change visualize and voice settings
-    visualSelect.onchange = function () {
-      window.cancelAnimationFrame(drawVisual);
-      visualize();
-    };
-
-    // Main block for doing the audio recording
-    if (navigator.mediaDevices.getUserMedia) {
-      const constraints = { audio: true };
-      navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(function (stream) {
-          source = audioCtx.createMediaStreamSource(stream);
-          source.connect(analyser);
-          visualize();
-        })
-        .catch(function (err) {
-          console.log("The following gUM error occured: " + err);
-        });
-    } else {
-      console.log("getUserMedia not supported on your browser!");
-    }
+    const samplingRate = MicrophoneServiceIST.getSamplingRate();
 
     function visualize() {
-      if (visualSetting === "sineWave") {
+      if (visualSettings[sensorInfo] === SINE_WAVE) {
         let previousTimeStamp, currentTimeStamp;
         const timePerSample = 1 / samplingRate;
         let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
 
-        analyser.fftSize = BUFFER_TIME_DOMAIN_LENGTH;
-        const bufferLength = analyser.fftSize;
+        MicrophoneServiceIST.setFFTSize(BUFFER_TIME_DOMAIN);
+        const bufferLength = BUFFER_TIME_DOMAIN;
         const dataArray = new Float32Array(bufferLength);
 
         const drawSineWave = function () {
@@ -134,11 +95,10 @@ const ScopeViewWidget = () => {
           const diffTimeStamp = currentTimeStamp - previousTimeStamp;
 
           if (isRunning) drawVisual = requestAnimationFrame(drawSineWave);
-
           if (diffTimeStamp < GET_SAMPLES_INTERVAL) return;
           previousTimeStamp = currentTimeStamp;
 
-          analyser.getFloatTimeDomainData(dataArray);
+          MicrophoneServiceIST.getFloatTimeDomainData(dataArray);
 
           let time = 0;
           const normalizedArray = [];
@@ -152,7 +112,7 @@ const ScopeViewWidget = () => {
 
           const chartData = [
             {
-              name: "Giao động chu kỳ theo thời gian",
+              name: "Dao động chu kỳ theo thời gian",
               data: normalizedArray,
             },
           ];
@@ -161,31 +121,34 @@ const ScopeViewWidget = () => {
           updateChart({
             chartInstance: chartInstanceRef.current,
             data: chartDatas,
-            maxX: timePerSample * BUFFER_TIME_DOMAIN_LENGTH * 1000,
+            maxX: timePerSample * BUFFER_TIME_DOMAIN * 1000,
             maxY: maxAmplitude,
-            label: "amplitude",
+            labelY: "amplitude",
+            labelX: "ms",
+            tension: 0.6,
           });
         };
 
         drawSineWave();
-      } else if (visualSetting == "frequencyBars") {
-        analyser.fftSize = 256;
-        const fftSize = analyser.fftSize;
-        let previousTimeStamp, currentTimeStamp;
-        const bufferLengthAlt = analyser.frequencyBinCount;
-        const dataArrayAlt = new Float32Array(bufferLengthAlt);
+      } else if (visualSettings[sensorInfo] === FREQUENCY_WAVE) {
         let maxX = 0;
+        let previousTimeStamp, currentTimeStamp;
+
+        MicrophoneServiceIST.setFFTSize(BUFFER_FREQUENCY_DOMAIN);
+        const fftSize = BUFFER_FREQUENCY_DOMAIN;
+
+        const bufferLengthAlt = MicrophoneServiceIST.getFrequencyBinCount();
+        const dataArrayAlt = new Float32Array(bufferLengthAlt);
 
         const drawFrequencyWave = function () {
           currentTimeStamp = Date.now();
           const diffTimeStamp = currentTimeStamp - previousTimeStamp;
 
           if (isRunning) drawVisual = requestAnimationFrame(drawFrequencyWave);
-
           if (diffTimeStamp < GET_SAMPLES_INTERVAL) return;
           previousTimeStamp = currentTimeStamp;
 
-          analyser.getFloatFrequencyData(dataArrayAlt);
+          MicrophoneServiceIST.getFloatFrequencyData(dataArrayAlt);
 
           let frequency = 0;
           const normalizedArray = [];
@@ -201,7 +164,7 @@ const ScopeViewWidget = () => {
 
           const chartData = [
             {
-              name: "Giao động chu kỳ theo tần số",
+              name: "Dao động chu kỳ theo tần số",
               data: normalizedArray,
             },
           ];
@@ -212,12 +175,16 @@ const ScopeViewWidget = () => {
             data: chartDatas,
             maxX: maxX * (samplingRate / fftSize),
             maxY: MAX_DECIBELS,
-            label: "decibels",
+            labelY: "decibels",
+            labelX: "frequency",
+            tension: 0.2,
           });
         };
         drawFrequencyWave();
       }
     }
+
+    MicrophoneServiceIST.startRecordWebAudio(visualize);
   };
 
   useEffect(() => {
@@ -226,6 +193,30 @@ const ScopeViewWidget = () => {
       options: {
         animation: false,
         maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false, //This will do the task
+          },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: "xy",
+            },
+            limits: {
+              x: { min: 0 },
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true,
+              },
+
+              mode: "xy",
+            },
+          },
+        },
       },
     });
     updateChart({ chartInstance: chartInstanceRef.current, data: [] });
@@ -243,25 +234,12 @@ const ScopeViewWidget = () => {
       </div>
 
       <div className="scope-view-options ">
-        <select
-          id="visual"
-          className="options"
-          name="visual"
-          defaultValue={visualSetting}
-          onChange={({ target: { value } }) => {
-            cancelAnimationFrame(drawVisual);
-            setVisualSetting(value);
-          }}
+        <SensorSelector
           disabled={isRunning}
-        >
-          <option value="sineWave" label="Sine Wave">
-            sineWave
-          </option>
-          <option value="frequencyBars" label="Frequency Bars">
-            Frequency bars
-          </option>
-          <option value="off">Off</option>
-        </select>
+          selectedSensor={sensor}
+          onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
+          whitelist={soundSensorsId}
+        ></SensorSelector>
       </div>
     </div>
   );

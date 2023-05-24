@@ -5,7 +5,6 @@ import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
   SAMPLING_MANUAL_NAME,
-  TIMER_NO_STOP,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
 } from "../../../js/constants";
@@ -89,7 +88,7 @@ const SamplingSetting = ({
                 }`}
                 key={displayedFrequency}
                 textColor="black"
-                onClick={() => handleFrequencySelect(f)}
+                onClick={() => handleGetSampleSettings({ frequency: f, timer: timerStopCollecting })}
               >
                 <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
               </Button>
