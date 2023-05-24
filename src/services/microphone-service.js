@@ -1,25 +1,35 @@
+import { USB_TYPE } from "../js/constants";
+import DataManagerIST from "./data-manager";
+
 const MIN_DECIBELS = -90;
 const MAX_DECIBELS = -10;
 const GET_SAMPLES_INTERVAL = 200;
-const BUFFER_TIME_DOMAIN = 1024;
-const BUFFER_FREQUENCY_DOMAIN = 1024;
-const DEFAULT_MIN_AMPLITUDE = 0.3;
+const BUFFER_LENGTH = 1024;
 
 export class MicrophoneServices {
   constructor() {
     this.initializeVariables();
-    // this.startGetDecibel();
   }
 
   /**
-   * Returns the instance of the DataManager class.
-   * @returns {MicrophoneServices} - The instance of the DataManager class.
+   * Returns the instance of the MicrophoneServices class.
+   * @returns {MicrophoneServices} - The instance of the MicrophoneServices class.
    */
   static getInstance() {
     if (!MicrophoneServices.instance) {
       MicrophoneServices.instance = new MicrophoneServices();
     }
     return MicrophoneServices.instance;
+  }
+
+  init() {
+    this.startRecordWebAudio();
+    this.startGetDecibel();
+  }
+
+  stop() {
+    this.stopRecordWebAudio();
+    this.stopGetDecibel();
   }
 
   initializeVariables() {
@@ -58,15 +68,31 @@ export class MicrophoneServices {
     this.analyser.maxDecibels = MAX_DECIBELS;
     this.analyser.smoothingTimeConstant = 0.9;
 
-    this.decibelBufferLength;
-    this.decibelDataArray;
+    this.timeDataArray;
+    this.frequencyDataArray;
+    this.timerGetDataId;
+
+    this.isConnectToMicrophone = false;
   }
 
-  startRecordWebAudio(callback) {
+  startRecordWebAudio() {
     // Main block for doing the audio recording
     const audioCtx = this.audioCtx;
     const analyser = this.analyser;
     let source;
+
+    analyser.fftSize = BUFFER_LENGTH;
+    const bufferLengthFrequency = analyser.frequencyBinCount;
+    const bufferLengthTime = BUFFER_LENGTH;
+
+    this.timeDataArray = new Float32Array(bufferLengthTime);
+    this.frequencyDataArray = new Float32Array(bufferLengthFrequency);
+
+    const callbackReadMicrophone = () => {
+      this.analyser.getFloatTimeDomainData(this.timeDataArray);
+      this.analyser.getFloatFrequencyData(this.frequencyDataArray);
+      this.timerGetDataId = setTimeout(callbackReadMicrophone, GET_SAMPLES_INTERVAL);
+    };
 
     if (navigator.mediaDevices.getUserMedia) {
       const constraints = { audio: true };
@@ -75,7 +101,7 @@ export class MicrophoneServices {
         .then(function (stream) {
           source = audioCtx.createMediaStreamSource(stream);
           source.connect(analyser);
-          callback();
+          callbackReadMicrophone();
         })
         .catch(function (err) {
           console.log("The following gUM error occured: " + err);
@@ -85,8 +111,16 @@ export class MicrophoneServices {
     }
   }
 
-  setFFTSize(fftSize) {
-    this.analyser.fftSize = fftSize;
+  stopRecordWebAudio() {
+    clearTimeout(this.timerGetDataId);
+  }
+
+  stopGetDecibel() {
+    clearInterval(this.getDecibelIntervalId);
+  }
+
+  getFFTSize() {
+    return this.analyser.fftSize;
   }
 
   getFrequencyBinCount() {
@@ -97,50 +131,58 @@ export class MicrophoneServices {
     return this.samplingRate;
   }
 
-  getFloatTimeDomainData(dataArray) {
-    this.analyser.getFloatTimeDomainData(dataArray);
+  getFloatTimeDomainData() {
+    return this.timeDataArray;
   }
 
-  getFloatFrequencyData(dataArray) {
-    this.analyser.getFloatFrequencyData(dataArray);
+  getFloatFrequencyData() {
+    return this.frequencyDataArray;
   }
 
-  //   getCurrentDecibel() {
-  //     try {
-  //       const bufferLengthAlt = this.getFrequencyBinCount();
-  //       const dataArrayAlt = new Float32Array(bufferLengthAlt);
-  //       this.getFloatFrequencyData(dataArrayAlt);
+  calculateStartIndex() {
+    const desiredStartFrequency = 0; // Specify your desired start frequency in Hz
+    const binWidth = this.samplingRate / this.getFFTSize(); // Calculate the width of each frequency bin
 
-  //       // Calculate the average amplitude of the frequency data
-  //       let sum = 0;
-  //       let count = 0;
-  //       for (let i = 0; i < bufferLengthAlt; i++) {
-  //         if (dataArrayAlt[i] <= MIN_DECIBELS) continue;
-  //         sum += dataArrayAlt[i];
-  //         count += 1;
-  //       }
-  //       const averageAmplitude = sum / count;
-  //       console.log("sum: ", sum, averageAmplitude);
+    // Calculate the index corresponding to the desired start frequency
+    const startIndex = Math.floor(desiredStartFrequency / binWidth);
 
-  //       // Convert the average amplitude to decibels
-  //       const minDecibels = this.analyser.minDecibels;
-  //       const maxDecibels = this.analyser.maxDecibels;
-  //       const range = maxDecibels - minDecibels;
-  //       const normalizedAmplitude = averageAmplitude / 255; // Normalize the amplitude to [0, 1]
-  //       const decibelValue = normalizedAmplitude * range + minDecibels;
+    return startIndex;
+  }
 
-  //       return decibelValue;
-  //     } catch (error) {
-  //       console.log("getCurrentDecibel: ", error);
-  //     }
-  //   }
+  getCurrentDecibel() {
+    try {
+      const dataArray = this.getFloatFrequencyData();
+      const startIndex = this.calculateStartIndex(); // Calculate the start index based on desired frequency range
+      const endIndex = dataArray.length; // Use the full buffer length
 
-  //   startGetDecibel() {
-  //     this.getDecibelIntervalId = setInterval(() => {
-  //       const decibelValue = this.getCurrentDecibel();
-  //       console.log("decibelValue: ", decibelValue);
-  //     }, 1000);
-  //   }
+      // Calculate the sum and count of amplitudes within the desired frequency range
+      let sum = 0;
+      let count = 0;
+      for (let i = startIndex; i < endIndex; i++) {
+        if (dataArray[i] <= MIN_DECIBELS) continue;
+        sum += Math.pow(10, dataArray[i] / 10); // Convert the amplitude to linear scale
+        count++;
+      }
+
+      // Calculate the average amplitude within the desired frequency range
+      const averageAmplitude = sum / count;
+
+      // Convert the average amplitude to decibels
+      const decibelValue = 10 * Math.log10(averageAmplitude);
+
+      return decibelValue;
+    } catch (error) {
+      console.log("getCurrentDecibel: ", error);
+    }
+  }
+
+  startGetDecibel() {
+    this.getDecibelIntervalId = setInterval(() => {
+      const decibelValue = this.getCurrentDecibel();
+      var dataArray = ["12", 100, USB_TYPE, 1, [decibelValue]];
+      DataManagerIST.callbackReadSensor(dataArray);
+    }, 1000);
+  }
 }
 
 export default MicrophoneServices.getInstance();

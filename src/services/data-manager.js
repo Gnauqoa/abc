@@ -27,7 +27,7 @@ export class DataManager {
     this.initializeVariables();
 
     // calls two scheduler functions
-    this.runEmitSubscribersScheduler();
+    // this.runEmitSubscribersScheduler();
     this.dummySensorData();
   }
 
@@ -803,9 +803,7 @@ export class DataManager {
 
   runEmitSubscribersScheduler() {
     this.emitSubscribersIntervalId = setInterval(this.emitSubscribersScheduler, this.collectingDataInterval);
-    // console.log(
-    //   `DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`
-    // );
+    // console.log(`DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`);
   }
 
   stopEmitSubscribersScheduler() {

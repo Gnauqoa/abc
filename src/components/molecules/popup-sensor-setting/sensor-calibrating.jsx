@@ -107,13 +107,15 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     const twoPointsResult =
       formField.calibratingType === CALIBRATING_2_POINTS
         ? convertCalibrationValues(formField.calibrationValues, formField.calibrationValuesRead, CALIBRATING_2_POINTS)
-        : { calibrationValue: 1, calibrationValueRead: 0 };
+        : { calibrationValue: 0, calibrationValueRead: 0 };
     if (!twoPointsResult) return;
 
-    const { calibrationValue: v1, calibrationValueRead: v2 } = onePointResult;
-    const { calibrationValue: r1, calibrationValueRead: r2 } = twoPointsResult;
+    const { calibrationValue: v1, calibrationValueRead: r1 } = onePointResult;
+    const { calibrationValue: v2, calibrationValueRead: r2 } = twoPointsResult;
 
-    const k = ((v1 - v2) / (r1 - r2)).toFixed(2);
+    const numerator = v1 - v2;
+    const denominator = r1 - r2 !== 0 ? r1 - r2 : 1;
+    const k = (numerator / denominator).toFixed(2);
     const offset = (v1 - k * r1).toFixed(2);
 
     onSaveHandler({ k: k, offset: offset });

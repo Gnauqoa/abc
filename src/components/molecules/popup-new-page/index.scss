@@ -1,0 +1,30 @@
+.new-page-popup {
+  width: 600px;
+  height: 400px;
+  left: calc(50% - 300px);
+  top: calc(50% - 200px);
+  border-radius: 20px;
+}
+
+.new-page-popup.popup {
+  border-radius: 40px;
+}
+
+@media only screen and (max-height: 800px) {
+  .new-page-popup.popup {
+    border-radius: 10px;
+  }
+  .new-page-popup {
+    width: 600px;
+    height: 340px;
+    left: calc(50% - 300px);
+    top: calc(50% - 170px);
+
+    .bg-color-regal-blue .page-content .block .row {
+      padding-bottom: 5px !important;
+      .col img {
+        height: 80px !important;
+      }
+    }
+  }
+}

@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page } from "framework7-react";
 import _ from "lodash";
-import DataManagerIST from "../services/data-manager";
-import SensorServices, { defaultSensors } from "../services/sensor-service";
+
 import {
   LAYOUT_CHART,
   LAYOUT_TABLE,
@@ -40,6 +39,10 @@ import { useActivityContext } from "../context/ActivityContext";
 import { getPageName } from "../utils/core";
 import TextViewWidget from "../components/organisms/widget-text-view";
 import ScopeViewWidget from "../components/organisms/widget-scope-view";
+
+import DataManagerIST from "../services/data-manager";
+import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
+import MicrophoneServicesIST from "../services/microphone-service";
 
 const recentFilesService = new storeService("recent-files");
 
@@ -108,9 +111,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   const deviceManager = useDeviceManager();
 
   useEffect(() => {
-    DataManagerIST.init();
+    onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
-    SensorServices.importSensors(activity.sensors, activity.customSensors);
+    SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) setPreviousActivity(_.cloneDeep(activity));
 
     // Init states
@@ -143,6 +146,16 @@ export default ({ f7route, f7router, filePath, content }) => {
   // =========================================================================================
   // =========================== Functions associate with Activity ===========================
   // =========================================================================================
+  const onBackHandler = () => {
+    MicrophoneServicesIST.stop();
+    DataManagerIST.stopEmitSubscribersScheduler();
+  };
+
+  const onInitHandler = () => {
+    DataManagerIST.init();
+    MicrophoneServicesIST.init();
+  };
+
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
 
@@ -187,6 +200,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           setPreviousActivity(_.cloneDeep(updatedActivityWithName));
         },
         () => {
+          onBackHandler();
           f7router.navigate("/");
         },
         name
@@ -215,7 +229,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
     });
     // Get modify sensors and custom sensors
-    const { sensors, customSensors } = SensorServices.exportSensors();
+    const { sensors, customSensors } = SensorServicesIST.exportSensors();
     const updatedActivity = {
       ...activity,
       name,

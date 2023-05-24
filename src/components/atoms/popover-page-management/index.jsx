@@ -21,7 +21,7 @@ const PageManagement = () => {
       <PromptPopup
         title="Đổi tên trang hiện tại"
         inputLabel="Tên trang"
-        defaultValue={pages[currentPageIndex].name}
+        defaultValue={pages[currentPageIndex]?.name}
         onClosePopup={onClose}
       />
     ));
