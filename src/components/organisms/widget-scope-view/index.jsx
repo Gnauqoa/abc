@@ -249,7 +249,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           disabled={isRunning}
           selectedSensor={sensor}
           onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
-          whitelist={soundSensorsId}
+          definedSensors={soundSensorsId}
         ></SensorSelector>
       </div>
     </div>

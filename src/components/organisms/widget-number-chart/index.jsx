@@ -1,12 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import $ from "jquery";
 import SensorServices from "../../../services/sensor-service";
-import "./number.scss";
+import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
+import { useActivityContext } from "../../../context/ActivityContext";
 
-export default ({ value, widget, handleSensorChange }) => {
+const NumberWidget = ({ value, widget, handleSensorChange }) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
+  const [currentValue, setCurrentData] = useState(value);
+  const { isRunning } = useActivityContext();
+
   useEffect(() => {
     function handleResize() {
       $(".__value").css("font-size", $(".number-widget").width() / 7 + "px");
@@ -17,10 +21,16 @@ export default ({ value, widget, handleSensorChange }) => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (isRunning) setCurrentData(value);
+  }, [value]);
+
   return (
     <div className="number-widget">
       <div className="__value">
-        {value} <span className="__unit">{value.length && SensorServices.getUnit(sensor.id, sensor.index)}</span>
+        {currentValue}
+        <span className="__unit">{currentValue.length && SensorServices.getUnit(sensor.id, sensor.index)}</span>
       </div>
       <div className="sensor-select-container">
         <SensorSelector
@@ -31,3 +41,5 @@ export default ({ value, widget, handleSensorChange }) => {
     </div>
   );
 };
+
+export default NumberWidget;

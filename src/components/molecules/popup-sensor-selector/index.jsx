@@ -24,7 +24,7 @@ export default function SensorSelector({
   hideDisplayUnit,
   onChange = () => {},
   style,
-  whitelist,
+  definedSensors,
 }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
@@ -70,11 +70,13 @@ export default function SensorSelector({
   };
 
   const handleOpenPopup = () => {
-    const sensorList = SensorServices.getSensors();
+    let sensorList;
+    if (!definedSensors) sensorList = SensorServices.getSensors();
+    else sensorList = SensorServices.getDefinedSensors(definedSensors);
 
     let activeSensors;
-    if (!whitelist) activeSensors = DataManagerIST.getListActiveSensor();
-    else activeSensors = whitelist;
+    if (!definedSensors) activeSensors = DataManagerIST.getListActiveSensor();
+    else activeSensors = definedSensors;
 
     const sensorListForDisplay = sensorList.map((sensor) => {
       const sensorStatus = activeSensors.includes(sensor.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;

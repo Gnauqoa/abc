@@ -1,9 +1,9 @@
 @media (min-width: 630px) and (min-height: 630px) {
   .new-page-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 600px;
+    width: 800px;
     height: 600px;
 
-    left: calc(50% - 300px);
+    left: calc(50% - 400px);
     top: calc(50% - 300px);
 
     margin-top: 0px;
@@ -11,7 +11,7 @@
   }
 }
 
-@media only screen and (max-height: 800px) {
+@media only screen and (max-height: 600px) {
   .new-page-popup.popup:not(.popup-tablet-fullscreen) {
     width: 460px;
     height: 340px;
