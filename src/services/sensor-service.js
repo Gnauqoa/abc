@@ -144,7 +144,7 @@ export const defaultSensors = [
     code: "inno-012",
     name: "Microphone",
     label: "Microphone",
-    icon: voltageSensorIcon,
+    icon: soundSensorIcon,
     data: [{ id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
   },
   {
@@ -207,10 +207,16 @@ export class SensorServices {
     this.sensors = _.cloneDeep(defaultSensors);
     this.customSensors = [];
     this.definedSoundSensorsId = [];
+    this.excludeSensorsId = [13];
   }
 
   getSensors() {
-    return this.sensors;
+    return this.sensors.filter((s) => !this.excludeSensorsId.includes(s.id));
+  }
+
+  getDefinedSensors(definedSensors) {
+    if (!definedSensors) return this.getSensors();
+    return this.sensors.filter((s) => definedSensors.includes(s.id.toString()));
   }
 
   getCustomSensors() {

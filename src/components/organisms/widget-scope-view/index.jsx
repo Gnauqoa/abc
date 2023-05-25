@@ -130,6 +130,8 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
             let y = dataArrayAlt[i];
             if (y < MIN_DECIBELS) y = MIN_DECIBELS;
 
+            y -= MIN_DECIBELS;
+
             if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
 
             normalizedArray.push({ x: frequency, y: y });
@@ -249,7 +251,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           disabled={isRunning}
           selectedSensor={sensor}
           onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
-          whitelist={soundSensorsId}
+          definedSensors={soundSensorsId}
         ></SensorSelector>
       </div>
     </div>

@@ -173,7 +173,7 @@ export class MicrophoneServices {
       // Convert the average amplitude to decibels
       const decibelValue = 10 * Math.log10(averageAmplitude);
 
-      return decibelValue;
+      return decibelValue - MIN_DECIBELS;
     } catch (error) {
       console.log("getCurrentDecibel: ", error);
     }
@@ -182,7 +182,7 @@ export class MicrophoneServices {
   startGetDecibel() {
     this.getDecibelIntervalId = setInterval(() => {
       const decibelValue = this.getCurrentDecibel();
-      var dataArray = ["12", 100, USB_TYPE, 1, [decibelValue]];
+      const dataArray = ["12", 100, USB_TYPE, 1, [decibelValue]];
       DataManagerIST.callbackReadSensor(dataArray);
     }, 1000);
   }

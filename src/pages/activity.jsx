@@ -27,7 +27,7 @@ import SensorContainer from "../components/molecules/widget-sensor-container";
 
 // Import Organisms Components
 import LineChart from "../components/organisms/widget-line-chart";
-import NumberWidget from "../components/organisms/widget-number-chart/number";
+import NumberWidget from "../components/organisms/widget-number-chart";
 import TableWidget from "../components/organisms/widget-table-chart";
 import ActivityHeader from "../components/organisms/activity-page-header";
 import ActivityFooter from "../components/organisms/activity-page-footer";
