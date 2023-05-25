@@ -145,10 +145,17 @@ export const defaultSensors = [
     name: "Microphone",
     label: "Microphone",
     icon: voltageSensorIcon,
+    data: [{ id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
+  },
+  {
+    id: 13,
+    code: "inno-013",
+    name: "Microphone",
+    label: "Microphone",
+    icon: voltageSensorIcon,
     data: [
-      { id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
-      { id: "inno-012-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
-      { id: "inno-012-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
+      { id: "inno-013-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
+      { id: "inno-013-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
     ],
   },
   {
@@ -285,7 +292,7 @@ export class SensorServices {
   getActiveSoundSensors() {
     const soundSensors = this.sensors.filter((sensor) => {
       if (this.definedSoundSensorsId.includes(sensor.code)) return true;
-      else if (sensor.code === "inno-012")
+      else if (sensor.code === "inno-013")
         return navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined;
       else return false;
     });

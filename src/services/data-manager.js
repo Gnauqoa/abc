@@ -27,7 +27,7 @@ export class DataManager {
     this.initializeVariables();
 
     // calls two scheduler functions
-    this.runEmitSubscribersScheduler();
+    // this.runEmitSubscribersScheduler();
     this.dummySensorData();
   }
 
@@ -432,6 +432,26 @@ export class DataManager {
     return dataRunInfos;
   }
 
+  addSoundDataDataRun(sensorId, sensorData, dataRunId) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+
+    const dataRunData = dataRun.data;
+    dataRunData[sensorId] = [sensorData];
+  }
+
+  getSoundDataDataRun(sensorId, dataRunId) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+    return dataRun.data[sensorId];
+  }
+
   /**
    * Import and store data runs of an activity in the data manager.
    * @param {Array<Object>} dataRuns - The data runs of the activity.
@@ -803,9 +823,7 @@ export class DataManager {
 
   runEmitSubscribersScheduler() {
     this.emitSubscribersIntervalId = setInterval(this.emitSubscribersScheduler, this.collectingDataInterval);
-    // console.log(
-    //   `DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`
-    // );
+    // console.log(`DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`);
   }
 
   stopEmitSubscribersScheduler() {

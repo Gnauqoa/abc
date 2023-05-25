@@ -40,29 +40,29 @@
   }
 
   .__card-sensors::-webkit-scrollbar {
-    // display: none;
-    width: 8px; /* Adjust the width as needed */
-    background-color: white; /* Set the background color to white */
-    border-radius: 4px; /* Add border-radius for a rounded thumb */
+    display: none;
+    // width: 8px; /* Adjust the width as needed */
+    // background-color: white; /* Set the background color to white */
+    // border-radius: 4px; /* Add border-radius for a rounded thumb */
   }
 
-  /* Target the scrollbar thumb */
-  .__card-sensors::-webkit-scrollbar-thumb {
-    background-color: gray; /* Set the color of the scrollbar thumb */
-    border-radius: 4px; /* Add border-radius for a rounded thumb */
-  }
+  // /* Target the scrollbar thumb */
+  // .__card-sensors::-webkit-scrollbar-thumb {
+  //   background-color: gray; /* Set the color of the scrollbar thumb */
+  //   border-radius: 4px; /* Add border-radius for a rounded thumb */
+  // }
 
-  /* Optionally, you can add hover and active styles for the thumb */
-  .__card-sensors::-webkit-scrollbar-thumb:hover {
-    background-color: darkgray; /* Set the color on hover */
-  }
+  // /* Optionally, you can add hover and active styles for the thumb */
+  // .__card-sensors::-webkit-scrollbar-thumb:hover {
+  //   background-color: darkgray; /* Set the color on hover */
+  // }
 
-  .__card-sensors::-webkit-scrollbar-thumb:active {
-    background-color: lightgray; /* Set the color on active */
-  }
+  // .__card-sensors::-webkit-scrollbar-thumb:active {
+  //   background-color: lightgray; /* Set the color on active */
+  // }
 
   .__card-widget {
-    border-radius: 15px;
+    border-radius: 10px;
     width: 85%;
     background-color: #ffffff;
   }
@@ -189,31 +189,8 @@
   }
 }
 
-.new-page-popup {
-  width: 500px;
-  height: 340px;
-  left: calc(50% - 250px);
-  top: calc(50% - 170px);
-  border-radius: 20px;
-}
-
-// Mobile device
-@media only screen and (max-height: 400px) {
-  .new-page-popup {
-    .responsive {
-      height: 100px;
-    }
-  }
-}
-
 // Mobile device
 @media only screen and (max-height: 600px) {
-  .new-page-popup {
-    .responsive {
-      height: 120px;
-    }
-  }
-
   .data-run-management-popup {
     width: 340px;
     height: 260px;

@@ -3,11 +3,12 @@ import Chart from "chart.js/auto";
 
 import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createChartDataAndParseXAxis, createChartJsDatas } from "../../../utils/widget-line-utils";
+import { createChartDataAndParseXAxis, createChartJsDatas, getMaxMinAxises } from "../../../utils/widget-line-utils";
 import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST from "../../../services/sensor-service";
 import MicrophoneServiceIST from "../../../services/microphone-service";
+import DataManagerIST from "../../../services/data-manager";
 
 const MIN_DECIBELS = -90;
 const MAX_DECIBELS = -10;
@@ -15,8 +16,9 @@ const GET_SAMPLES_INTERVAL = 200;
 const BUFFER_TIME_DOMAIN = 1024;
 const BUFFER_FREQUENCY_DOMAIN = 1024;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
+const MAX_FREQUENCY = 6000;
 
-let drawVisual;
+let drawChartTimerId;
 
 const SINE_WAVE = 0;
 const FREQUENCY_WAVE = 1;
@@ -24,8 +26,8 @@ const DECIBEL = 2;
 
 const visualSettings = {
   "12-0": DECIBEL,
-  "12-1": SINE_WAVE,
-  "12-2": FREQUENCY_WAVE,
+  "13-0": SINE_WAVE,
+  "13-1": FREQUENCY_WAVE,
 };
 
 const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension }) => {
@@ -63,6 +65,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension 
 };
 
 const ScopeViewWidget = ({ widget, handleSensorChange }) => {
+  const { currentDataRunId } = useActivityContext();
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
 
@@ -75,35 +78,20 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
 
   const { isRunning } = useActivityContext();
 
-  // console.log(MicrophoneServiceIST.getCurrentDecibel());
-
   const initWebAudio = () => {
     const samplingRate = MicrophoneServiceIST.getSamplingRate();
+    const fftSize = MicrophoneServiceIST.getFFTSize();
+    const timePerSample = MicrophoneServiceIST.getTimePerSample();
+    let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
 
     function visualize() {
       if (visualSettings[sensorInfo] === SINE_WAVE) {
-        let previousTimeStamp, currentTimeStamp;
-        const timePerSample = 1 / samplingRate;
-        let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
-
-        MicrophoneServiceIST.setFFTSize(BUFFER_TIME_DOMAIN);
-        const bufferLength = BUFFER_TIME_DOMAIN;
-        const dataArray = new Float32Array(bufferLength);
-
         const drawSineWave = function () {
-          currentTimeStamp = Date.now();
-          const diffTimeStamp = currentTimeStamp - previousTimeStamp;
-
-          if (isRunning) drawVisual = requestAnimationFrame(drawSineWave);
-          if (diffTimeStamp < GET_SAMPLES_INTERVAL) return;
-          previousTimeStamp = currentTimeStamp;
-
-          MicrophoneServiceIST.getFloatTimeDomainData(dataArray);
-
           let time = 0;
           const normalizedArray = [];
+          const dataArray = MicrophoneServiceIST.getFloatTimeDomainData();
 
-          for (let i = 0; i < bufferLength; i++) {
+          for (let i = 0; i < dataArray.length; i++) {
             const y = dataArray[i];
             if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
             normalizedArray.push({ x: time, y: y });
@@ -127,36 +115,22 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
             labelX: "ms",
             tension: 0.6,
           });
+
+          if (isRunning) drawChartTimerId = setTimeout(drawSineWave, GET_SAMPLES_INTERVAL);
         };
 
         drawSineWave();
       } else if (visualSettings[sensorInfo] === FREQUENCY_WAVE) {
-        let maxX = 0;
-        let previousTimeStamp, currentTimeStamp;
-
-        MicrophoneServiceIST.setFFTSize(BUFFER_FREQUENCY_DOMAIN);
-        const fftSize = BUFFER_FREQUENCY_DOMAIN;
-
-        const bufferLengthAlt = MicrophoneServiceIST.getFrequencyBinCount();
-        const dataArrayAlt = new Float32Array(bufferLengthAlt);
-
         const drawFrequencyWave = function () {
-          currentTimeStamp = Date.now();
-          const diffTimeStamp = currentTimeStamp - previousTimeStamp;
-
-          if (isRunning) drawVisual = requestAnimationFrame(drawFrequencyWave);
-          if (diffTimeStamp < GET_SAMPLES_INTERVAL) return;
-          previousTimeStamp = currentTimeStamp;
-
-          MicrophoneServiceIST.getFloatFrequencyData(dataArrayAlt);
-
           let frequency = 0;
           const normalizedArray = [];
+          const dataArrayAlt = MicrophoneServiceIST.getFloatFrequencyData();
 
-          for (let i = 0; i < bufferLengthAlt; i++) {
+          for (let i = 0; i < dataArrayAlt.length; i++) {
             let y = dataArrayAlt[i];
             if (y < MIN_DECIBELS) y = MIN_DECIBELS;
-            if (y !== MIN_DECIBELS && i > maxX) maxX = i;
+
+            if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
 
             normalizedArray.push({ x: frequency, y: y });
             frequency = i * (samplingRate / fftSize);
@@ -173,58 +147,95 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           updateChart({
             chartInstance: chartInstanceRef.current,
             data: chartDatas,
-            maxX: maxX * (samplingRate / fftSize),
+            maxX: MAX_FREQUENCY,
             maxY: MAX_DECIBELS,
             labelY: "decibels",
             labelX: "frequency",
             tension: 0.2,
           });
+
+          if (isRunning) drawChartTimerId = setTimeout(drawFrequencyWave, GET_SAMPLES_INTERVAL);
         };
         drawFrequencyWave();
       }
     }
 
-    MicrophoneServiceIST.startRecordWebAudio(visualize);
+    visualize();
   };
 
   useEffect(() => {
-    chartInstanceRef.current = new Chart(canvasRef.current, {
-      type: "line",
-      options: {
-        animation: false,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false, //This will do the task
-          },
-          zoom: {
-            pan: {
-              enabled: true,
-              mode: "xy",
-            },
-            limits: {
-              x: { min: 0 },
+    try {
+      chartInstanceRef.current = new Chart(canvasRef.current, {
+        type: "line",
+        options: {
+          animation: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false, //This will do the task
             },
             zoom: {
-              wheel: {
+              pan: {
                 enabled: true,
+                mode: "xy",
               },
-              pinch: {
-                enabled: true,
+              limits: {
+                x: { min: 0 },
               },
+              zoom: {
+                wheel: {
+                  enabled: true,
+                },
+                pinch: {
+                  enabled: true,
+                },
 
-              mode: "xy",
+                mode: "xy",
+              },
             },
           },
         },
-      },
-    });
-    updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+      });
+
+      const data = DataManagerIST.getSoundDataDataRun(sensorInfo, currentDataRunId);
+      if (Array.isArray(data) && data.length === 1) {
+        const chartData = [
+          {
+            name: "Dao động chu kỳ theo tần số",
+            data: data[0],
+          },
+        ];
+
+        const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+        const { maxX, maxY, minY } = getMaxMinAxises({ chartDatas: chartDatas });
+        const yValue = Math.max(Math.abs(maxY), Math.abs(minY));
+        updateChart({
+          chartInstance: chartInstanceRef.current,
+          data: chartDatas,
+          maxX: maxX,
+          maxY: yValue,
+          labelY: visualSettings[sensorInfo] === SINE_WAVE ? "amplitude" : "decibels",
+          labelX: visualSettings[sensorInfo] === SINE_WAVE ? "ms" : "frequency",
+          tension: visualSettings[sensorInfo] === SINE_WAVE ? 0.6 : 0.2,
+        });
+      } else {
+        updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+      }
+    } catch (error) {
+      console.log("useEffect: ", error);
+    }
   }, []);
 
   useEffect(() => {
     if (isRunning) initWebAudio();
-    else cancelAnimationFrame(drawVisual);
+    else {
+      const curDatasets = chartInstanceRef.current.data?.datasets;
+      if (Array.isArray(curDatasets) && curDatasets.length === 1) {
+        const data = curDatasets[0].data;
+        DataManagerIST.addSoundDataDataRun(sensorInfo, data, currentDataRunId);
+      }
+      clearTimeout(drawChartTimerId);
+    }
   }, [isRunning]);
 
   return (

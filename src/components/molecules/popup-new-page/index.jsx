@@ -14,6 +14,8 @@ import {
   LAYOUT_SCOPE,
 } from "../../../js/constants";
 
+import "./index.scss";
+
 import chartImg from "../../../img/layout/chart.png";
 import numberChartImg from "../../../img/layout/number-chart.png";
 import numberTableImg from "../../../img/layout/number-table.png";

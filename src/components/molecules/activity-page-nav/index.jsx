@@ -16,7 +16,7 @@ const ActivityPageNav = ({ onNextPage, onPrevPage }) => {
         <img src={prevImg} />
       </Link>
       <Button className="order" popoverOpen=".popover-page-management">
-        {pages[currentPageIndex].name}
+        {pages[currentPageIndex]?.name}
       </Button>
 
       <Link onClick={onNextPage} className={`next ${nextStatus ? "disabled" : ""}`} href="#">
