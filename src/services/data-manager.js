@@ -432,6 +432,26 @@ export class DataManager {
     return dataRunInfos;
   }
 
+  addSoundDataDataRun(sensorId, sensorData, dataRunId) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+
+    const dataRunData = dataRun.data;
+    dataRunData[sensorId] = [sensorData];
+  }
+
+  getSoundDataDataRun(sensorId, dataRunId) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+    return dataRun.data[sensorId];
+  }
+
   /**
    * Import and store data runs of an activity in the data manager.
    * @param {Array<Object>} dataRuns - The data runs of the activity.

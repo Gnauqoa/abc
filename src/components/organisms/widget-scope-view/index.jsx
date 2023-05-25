@@ -3,11 +3,12 @@ import Chart from "chart.js/auto";
 
 import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createChartDataAndParseXAxis, createChartJsDatas } from "../../../utils/widget-line-utils";
+import { createChartDataAndParseXAxis, createChartJsDatas, getMaxMinAxises } from "../../../utils/widget-line-utils";
 import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST from "../../../services/sensor-service";
 import MicrophoneServiceIST from "../../../services/microphone-service";
+import DataManagerIST from "../../../services/data-manager";
 
 const MIN_DECIBELS = -90;
 const MAX_DECIBELS = -10;
@@ -64,6 +65,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension 
 };
 
 const ScopeViewWidget = ({ widget, handleSensorChange }) => {
+  const { currentDataRunId } = useActivityContext();
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
 
@@ -76,12 +78,10 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
 
   const { isRunning } = useActivityContext();
 
-  // console.log(MicrophoneServiceIST.getCurrentDecibel());
-
   const initWebAudio = () => {
     const samplingRate = MicrophoneServiceIST.getSamplingRate();
     const fftSize = MicrophoneServiceIST.getFFTSize();
-    const timePerSample = 1 / samplingRate;
+    const timePerSample = MicrophoneServiceIST.getTimePerSample();
     let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
 
     function visualize() {
@@ -164,43 +164,78 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
   };
 
   useEffect(() => {
-    chartInstanceRef.current = new Chart(canvasRef.current, {
-      type: "line",
-      options: {
-        animation: false,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false, //This will do the task
-          },
-          zoom: {
-            pan: {
-              enabled: true,
-              mode: "xy",
-            },
-            limits: {
-              x: { min: 0 },
+    try {
+      chartInstanceRef.current = new Chart(canvasRef.current, {
+        type: "line",
+        options: {
+          animation: false,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false, //This will do the task
             },
             zoom: {
-              wheel: {
+              pan: {
                 enabled: true,
+                mode: "xy",
               },
-              pinch: {
-                enabled: true,
+              limits: {
+                x: { min: 0 },
               },
+              zoom: {
+                wheel: {
+                  enabled: true,
+                },
+                pinch: {
+                  enabled: true,
+                },
 
-              mode: "xy",
+                mode: "xy",
+              },
             },
           },
         },
-      },
-    });
-    updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+      });
+
+      const data = DataManagerIST.getSoundDataDataRun(sensorInfo, currentDataRunId);
+      if (Array.isArray(data) && data.length === 1) {
+        const chartData = [
+          {
+            name: "Dao động chu kỳ theo tần số",
+            data: data[0],
+          },
+        ];
+
+        const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+        const { maxX, maxY, minY } = getMaxMinAxises({ chartDatas: chartDatas });
+        const yValue = Math.max(Math.abs(maxY), Math.abs(minY));
+        updateChart({
+          chartInstance: chartInstanceRef.current,
+          data: chartDatas,
+          maxX: maxX,
+          maxY: yValue,
+          labelY: visualSettings[sensorInfo] === SINE_WAVE ? "amplitude" : "decibels",
+          labelX: visualSettings[sensorInfo] === SINE_WAVE ? "ms" : "frequency",
+          tension: visualSettings[sensorInfo] === SINE_WAVE ? 0.6 : 0.2,
+        });
+      } else {
+        updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+      }
+    } catch (error) {
+      console.log("useEffect: ", error);
+    }
   }, []);
 
   useEffect(() => {
     if (isRunning) initWebAudio();
-    else clearTimeout(drawChartTimerId);
+    else {
+      const curDatasets = chartInstanceRef.current.data?.datasets;
+      if (Array.isArray(curDatasets) && curDatasets.length === 1) {
+        const data = curDatasets[0].data;
+        DataManagerIST.addSoundDataDataRun(sensorInfo, data, currentDataRunId);
+      }
+      clearTimeout(drawChartTimerId);
+    }
   }, [isRunning]);
 
   return (

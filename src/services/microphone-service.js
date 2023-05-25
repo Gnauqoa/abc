@@ -131,6 +131,10 @@ export class MicrophoneServices {
     return this.samplingRate;
   }
 
+  getTimePerSample() {
+    return 1 / this.samplingRate;
+  }
+
   getFloatTimeDomainData() {
     return this.timeDataArray;
   }
@@ -145,7 +149,6 @@ export class MicrophoneServices {
 
     // Calculate the index corresponding to the desired start frequency
     const startIndex = Math.floor(desiredStartFrequency / binWidth);
-
     return startIndex;
   }
 
