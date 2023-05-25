@@ -130,6 +130,8 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
             let y = dataArrayAlt[i];
             if (y < MIN_DECIBELS) y = MIN_DECIBELS;
 
+            y -= MIN_DECIBELS;
+
             if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
 
             normalizedArray.push({ x: frequency, y: y });

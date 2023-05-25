@@ -31,7 +31,7 @@ export default function SensorSelector({
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
 
   useEffect(() => {
-    const sensorList = SensorServices.getSensors();
+    const sensorList = getSensorList();
     if (Object.keys(selectedSensor).length != 0) {
       const sensorId = parseInt(selectedSensor.id),
         sensorIndex = parseInt(selectedSensor.index),
@@ -47,7 +47,7 @@ export default function SensorSelector({
 
   const changeHandler = (value) => {
     const selectedValueString = value;
-    const sensorList = SensorServices.getSensors();
+    const sensorList = getSensorList();
     if (selectedValueString) {
       const arr = selectedValueString.split("|");
       if (arr.length > 1) {
@@ -69,10 +69,13 @@ export default function SensorSelector({
     }
   };
 
+  const getSensorList = () => {
+    if (!definedSensors) return SensorServices.getSensors();
+    else return SensorServices.getDefinedSensors(definedSensors);
+  };
+
   const handleOpenPopup = () => {
-    let sensorList;
-    if (!definedSensors) sensorList = SensorServices.getSensors();
-    else sensorList = SensorServices.getDefinedSensors(definedSensors);
+    const sensorList = getSensorList();
 
     let activeSensors;
     if (!definedSensors) activeSensors = DataManagerIST.getListActiveSensor();
