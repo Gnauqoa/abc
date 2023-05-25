@@ -173,7 +173,7 @@ export class MicrophoneServices {
       // Convert the average amplitude to decibels
       const decibelValue = 10 * Math.log10(averageAmplitude);
 
-      return decibelValue;
+      return decibelValue - MIN_DECIBELS;
     } catch (error) {
       console.log("getCurrentDecibel: ", error);
     }
