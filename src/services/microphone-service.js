@@ -2,9 +2,10 @@ import { USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
 
 const MIN_DECIBELS = -90;
-const MAX_DECIBELS = -10;
+const MAX_DECIBELS = 0;
+const SCALE_DECIBELS = 150;
 const GET_SAMPLES_INTERVAL = 200;
-const BUFFER_LENGTH = 1024;
+const BUFFER_LENGTH = 2048;
 
 export class MicrophoneServices {
   constructor() {
@@ -162,8 +163,8 @@ export class MicrophoneServices {
       let sum = 0;
       let count = 0;
       for (let i = startIndex; i < endIndex; i++) {
-        if (dataArray[i] <= MIN_DECIBELS) continue;
-        sum += Math.pow(10, dataArray[i] / 10); // Convert the amplitude to linear scale
+        // if (dataArray[i] <= MIN_DECIBELS) continue;
+        sum += Math.pow(10, dataArray[i] / 20); // Convert the amplitude to linear scale
         count++;
       }
 
@@ -171,9 +172,9 @@ export class MicrophoneServices {
       const averageAmplitude = sum / count;
 
       // Convert the average amplitude to decibels
-      const decibelValue = 10 * Math.log10(averageAmplitude);
+      const decibelValue = 20 * Math.log10(averageAmplitude);
 
-      return decibelValue - MIN_DECIBELS;
+      return decibelValue + SCALE_DECIBELS;
     } catch (error) {
       console.log("getCurrentDecibel: ", error);
     }

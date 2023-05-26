@@ -10,13 +10,14 @@ import SensorServiceIST from "../../../services/sensor-service";
 import MicrophoneServiceIST from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
 
-const MIN_DECIBELS = -90;
-const MAX_DECIBELS = -10;
+const MAX_DECIBELS = 140;
+const MIN_DECIBELS = 0;
 const GET_SAMPLES_INTERVAL = 200;
 const BUFFER_TIME_DOMAIN = 1024;
-const BUFFER_FREQUENCY_DOMAIN = 1024;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
 const MAX_FREQUENCY = 6000;
+const REF_VALUE = 1.0; // Reference value for SPL calculation
+const REF_DB = 150.0; // Reference level in dB
 
 let drawChartTimerId;
 
@@ -30,7 +31,7 @@ const visualSettings = {
   "13-1": FREQUENCY_WAVE,
 };
 
-const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension }) => {
+const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, tension }) => {
   chartInstance.data = createChartJsDatas({
     chartDatas: data,
     pointRadius: 1,
@@ -40,7 +41,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, labelX, labelY, tension 
   chartInstance.options.animation = false;
   chartInstance.options.scales = {
     y: {
-      suggestedMin: maxY * -1,
+      suggestedMin: minY,
       suggestedMax: maxY,
       title: {
         color: "orange",
@@ -91,7 +92,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           const normalizedArray = [];
           const dataArray = MicrophoneServiceIST.getFloatTimeDomainData();
 
-          for (let i = 0; i < dataArray.length; i++) {
+          for (let i = 0; i < BUFFER_TIME_DOMAIN; i++) {
             const y = dataArray[i];
             if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
             normalizedArray.push({ x: time, y: y });
@@ -111,6 +112,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
             data: chartDatas,
             maxX: timePerSample * BUFFER_TIME_DOMAIN * 1000,
             maxY: maxAmplitude,
+            minY: maxAmplitude * -1,
             labelY: "amplitude",
             labelX: "ms",
             tension: 0.6,
@@ -127,14 +129,13 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
           const dataArrayAlt = MicrophoneServiceIST.getFloatFrequencyData();
 
           for (let i = 0; i < dataArrayAlt.length; i++) {
-            let y = dataArrayAlt[i];
-            if (y < MIN_DECIBELS) y = MIN_DECIBELS;
-
-            y -= MIN_DECIBELS;
+            const amplitude = Math.pow(10, dataArrayAlt[i] / 20);
+            const spl = 20 * Math.log10(amplitude / REF_VALUE);
+            const positivedB = spl + REF_DB;
 
             if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
 
-            normalizedArray.push({ x: frequency, y: y });
+            normalizedArray.push({ x: frequency, y: positivedB });
             frequency = i * (samplingRate / fftSize);
           }
 
@@ -151,6 +152,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
             data: chartDatas,
             maxX: MAX_FREQUENCY,
             maxY: MAX_DECIBELS,
+            minY: MIN_DECIBELS,
             labelY: "decibels",
             labelX: "frequency",
             tension: 0.2,
