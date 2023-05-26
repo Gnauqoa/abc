@@ -55,8 +55,10 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     if (type === BLE_TYPE) {
       const bleDevices = DeviceManagerIST.getBleDevices();
       const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
-      const value = [k, offset];
-      DeviceManagerIST.writeBleData(bleDevice.deviceId, value);
+      let textEncoder = new TextEncoder();
+      // calib command: ***1,k,offset###
+      let uint8Array = textEncoder.encode("***1," + k + "," + offset + "###");
+      DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
     }
     onClosePopup();
   };
