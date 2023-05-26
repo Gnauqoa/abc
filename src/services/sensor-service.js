@@ -145,6 +145,7 @@ export const defaultSensors = [
     name: "Microphone",
     label: "Microphone",
     icon: soundSensorIcon,
+    isBuiltin: true,
     data: [{ id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
   },
   {
