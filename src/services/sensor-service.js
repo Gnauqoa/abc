@@ -161,7 +161,7 @@ export const defaultSensors = [
   },
   {
     id: 65,
-    code: "BLE-9909",
+    code: "BLE-C600",
     name: "Cảm biến chất lượng nước",
     label: "Chất lượng nước",
     icon: waterQualitySensorIcon,
