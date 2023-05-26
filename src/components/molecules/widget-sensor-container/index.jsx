@@ -45,7 +45,8 @@ const SensorContainer = ({ deviceManager }) => {
           subSensorLabel: sensorInfo.label,
           type: type,
         };
-        sensors.push(sensor);
+
+        if (!sensorInfo.isBuiltin) sensors.push(sensor);
       }
 
       setSensorsInfo(sensors);
