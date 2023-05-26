@@ -119,7 +119,7 @@ export class WebBle {
       return;
     }
 
-    if (device.code.includes("BLE-9909")) {
+    if (device.code.includes("BLE-C600")) {
       this.ble9909SensorReceiveDataCallback(device, callback);
     } else if (device.code.includes("BLE-9100")) {
       this.ble9100SensorReceiveDataCallback(device, callback);
@@ -191,7 +191,7 @@ export class WebBle {
               dataArray.push(d);
             });
 
-            //console.log(dataArray);
+            console.log(dataArray);
 
             callback(dataArray);
           });
