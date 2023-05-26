@@ -118,7 +118,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     const k = (numerator / denominator).toFixed(2);
     const offset = (v1 - k * r1).toFixed(2);
 
-    onSaveHandler({ k: k, offset: offset });
+    onSaveHandler({ k: k, offset: offset, sensorId: sensorInfo.id });
   };
 
   return (

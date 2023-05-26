@@ -1,12 +1,16 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Page, Navbar, Button, f7, Popup, NavLeft, NavTitle } from "framework7-react";
 
-import SensorServices from "../../../services/sensor-service";
 import _ from "lodash";
 
 import SensorSettingTab from "./sensor-setting";
 import SensorCalibratingTab from "./sensor-calibrating";
 import "./index.scss";
+
+import SensorServicesIST from "../../../services/sensor-service";
+import DeviceManagerIST from "../../../services/device-manager";
+import DataManagerIST from "../../../services/data-manager";
+import { BLE_TYPE, USB_TYPE } from "../../../js/constants";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -28,20 +32,32 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   }, [sensorId]);
 
   const getSensors = () => {
-    const sensorInfo = SensorServices.getSensorInfo(sensorId);
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
     sensorInfo !== null && setSensorInfo(sensorInfo);
   };
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
-    SensorServices.updateSensorSetting(sensorId, newSensorUnitInfo);
+    SensorServicesIST.updateSensorSetting(sensorId, newSensorUnitInfo);
     onSaveSetting(sensorId, newSensorUnitInfo);
     getSensors();
     onClosePopup();
   };
 
   const onSaveSensorCalibratingHandler = (calculatedValues) => {
-    const { k, offset } = calculatedValues;
-    console.log("y = ax + b => ", `y = ${k}x + ${offset}`);
+    const { k, offset, sensorId } = calculatedValues;
+
+    const parsedSensorId = parseInt(sensorId);
+    const uartConnections = DataManagerIST.getUartConnections();
+    const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
+
+    console.log(`${parsedSensorId}-${type}: y = ax + b => `, `y = ${k}x + ${offset}`);
+
+    if (type === BLE_TYPE) {
+      const bleDevices = DeviceManagerIST.getBleDevices();
+      const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
+      const value = [k, offset];
+      DeviceManagerIST.writeBleData(bleDevice.deviceId, value);
+    }
     onClosePopup();
   };
 
