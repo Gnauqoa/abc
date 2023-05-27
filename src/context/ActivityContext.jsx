@@ -40,7 +40,7 @@ export const ActivityContextProvider = ({ children }) => {
   const [timerStopCollecting, setTimerStopCollecting] = useState(TIMER_NO_STOP);
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [currentDataRunId, setCurrentDataRunId] = useState(pages[currentPageIndex]?.lastDataRunId);
+  const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
   let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
 
   // ======================= Pages functions =======================
@@ -102,6 +102,15 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentDataRunId(newDataRunId);
   };
 
+  const initContext = () => {
+    setPages(defaultPages);
+    setFrequency(1);
+    setTimerStopCollecting(TIMER_NO_STOP);
+    setIsRunning(false);
+    setCurrentPageIndex(0);
+    setCurrentDataRunId(defaultPages[0].lastDataRunId);
+  };
+
   // ======================= Datarun functions =======================
   return (
     <ActivityContext.Provider
@@ -124,6 +133,7 @@ export const ActivityContextProvider = ({ children }) => {
         handleNewPage,
         changePageName,
         handleDeleteDataRun,
+        initContext,
       }}
     >
       {children}

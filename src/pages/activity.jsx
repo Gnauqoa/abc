@@ -96,6 +96,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleNavigatePage,
     handleDeletePage,
     handleNewPage,
+    initContext,
   } = useActivityContext();
 
   // Belong to Activity
@@ -124,11 +125,14 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   useEffect(() => {
     let subscriberId = null;
+    const widgets = pages[currentPageIndex]?.widgets;
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
+
+    if (!widgets) return;
 
     const subscribedSensorIds = [
       ...new Set(
-        pages[currentPageIndex].widgets.flatMap((widget) =>
+        widgets.flatMap((widget) =>
           widget.sensors
             .map((sensor) => (sensor.id !== DEFAULT_SENSOR_ID ? parseInt(sensor.id) : false))
             .filter(Boolean)
@@ -152,6 +156,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   };
 
   const onInitHandler = () => {
+    initContext();
     DataManagerIST.init();
     MicrophoneServicesIST.init();
   };
