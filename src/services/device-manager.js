@@ -184,6 +184,8 @@ export class DeviceManager {
           console.error("handleStopScan", err);
           callback();
         });
+      } else if (f7.device.electron) {
+        webBle.cancelScanning();
       }
     } catch (error) {
       console.error("ble.stopScan", error);

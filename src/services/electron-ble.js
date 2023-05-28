@@ -13,19 +13,28 @@ export class WebBle {
     this.scanCallback = null;
     try {
       window._cdvElectronIpc.onScanBleResults((event, devices) => {
-        devices.forEach((d) => this.handleScannedDevice(d));
-        this.scanCallback([...this.devices]);
+        this.scanCallback(this.getAvailableDevices(devices));
       });
     } catch (error) {
       console.log(error);
     }
   }
 
+  getAvailableDevices(scannedDevices) {
+    scannedDevices.forEach((d) => this.handleScannedDevice(d));
+    return this.devices.filter((localDevice) => {
+      return (
+        localDevice.isConnected === true ||
+        scannedDevices.some((scannedDevice) => {
+          return scannedDevice.deviceId === localDevice.deviceId;
+        })
+      );
+    });
+  }
+
   handleScannedDevice(device) {
     const existingDevice = this.devices.find((d) => d.deviceId === device.deviceId);
-    if (existingDevice) {
-      existingDevice.isConnected = false;
-    } else {
+    if (!existingDevice) {
       const newDevice = {
         deviceId: device.deviceId,
         code: device.deviceName,
@@ -60,6 +69,19 @@ export class WebBle {
     window._cdvElectronIpc.selectBleDevice("");
     await core.sleep(200);
   };
+
+  removeUnavailableDevices(scannedDevices) {
+    const devideIdsToBeRemoved = this.devices
+      .filter((d) => !d.isConnected)
+      .filter((d) => {
+        return scannedDevices.every((scannedDevice) => {
+          return scannedDevice.deviceId !== d.deviceId;
+        });
+      })
+      .map((d) => d.deviceId);
+
+    this.devices = this.devices.filter((d) => !devideIdsToBeRemoved.includes(d.deviceId));
+  }
 
   connect = async (deviceId, successCallback, errorCallback, dataCallback) => {
     try {
