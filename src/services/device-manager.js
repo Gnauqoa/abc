@@ -205,7 +205,7 @@ export class DeviceManager {
           "FF01",
           "FF02",
           (buffer) => {
-            this.decodeDataFromBLE9909Sensor(buffer, callback);
+            this.decodeDataFromBLE9909Sensor(currentDevice, buffer, callback);
           },
           (err) => {
             console.error(`BLE-9909 startNotification error`, err);
@@ -213,10 +213,10 @@ export class DeviceManager {
           }
         );
 
-        let intervalId = setInterval(function () {
+        let intervalId = setInterval(() => {
           ble.isConnected(
             deviceId,
-            function () {
+            () => {
               ble.read(
                 deviceId,
                 "FF01",
@@ -225,14 +225,14 @@ export class DeviceManager {
                 //'2A25', // battery characteristics
                 (buffer) => {
                   console.log("Got BLE-9909 data");
-                  this.decodeDataFromBLE9909Sensor(buffer, callback);
+                  this.decodeDataFromBLE9909Sensor(currentDevice, buffer, callback);
                 },
                 (err) => {
                   console.error("Read BLE-9909 sensor data error", JSON.stringify(err));
                 }
               );
             },
-            function () {
+            () => {
               console.log("Sensor already disconnected. Stop reading");
               clearInterval(intervalId);
             }
@@ -244,30 +244,30 @@ export class DeviceManager {
           "0000ff01-0000-1000-8000-00805f9b34fb",
           "0000ff02-0000-1000-8000-00805f9b34fb",
           (buffer) => {
-            this.decodeDataFromBLE9100Sensor(buffer, callback);
+            this.decodeDataFromBLE9100Sensor(currentDevice, buffer, callback);
           },
           (err) => {
             console.error("BLE-9100 startNotification error", err);
           }
         );
 
-        let intervalId = setInterval(function () {
+        let intervalId = setInterval(() => {
           ble.isConnected(
             deviceId,
-            function () {
+            () => {
               ble.read(
                 deviceId,
                 "FF01",
                 "FF02",
                 (buffer) => {
-                  this.decodeDataFromBLE9100Sensor(buffer, callback);
+                  this.decodeDataFromBLE9100Sensor(currentDevice, buffer, callback);
                 },
                 (err) => {
                   console.error("Read BLE-9100 sensor data error", JSON.stringify(err));
                 }
               );
             },
-            function () {
+            () => {
               console.log("Sensor already disconnected. Stop reading");
               clearInterval(intervalId);
             }
@@ -279,7 +279,7 @@ export class DeviceManager {
           BLE_SERVICE_ID,
           BLE_TX_ID,
           (buffer) => {
-            this.decodeDataFromInnoLabSensor(buffer, callback);
+            this.decodeDataFromInnoLabSensor(currentDevice, buffer, callback);
           },
           (err) => {
             console.error(`receiveBleNotification error`, err);
@@ -291,7 +291,7 @@ export class DeviceManager {
     }
   }
 
-  decodeDataFromInnoLabSensor(buffer, callback) {
+  decodeDataFromInnoLabSensor(device, buffer, callback) {
     let data = new Uint8Array(buffer);
 
     if (data[0] != 0xaa) {
@@ -331,7 +331,7 @@ export class DeviceManager {
       dataRead += 4;
     }
 
-    var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
+    var dataArray = [sensorId, battery, BLE_TYPE, device.deviceId, dataLength];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -339,7 +339,7 @@ export class DeviceManager {
     callback(dataArray);
   }
 
-  decodeDataFromBLE9909Sensor(buffer, callback) {
+  decodeDataFromBLE9909Sensor(device, buffer, callback) {
     //YINMIK BLE-9909 type sensors
     /* Each sensor data record has following structure
       serial    number            data    significance
@@ -419,7 +419,7 @@ export class DeviceManager {
     sensorData.push(salt_tds);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, BLE_TYPE, 24];
+    var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 24];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -427,7 +427,7 @@ export class DeviceManager {
     callback(dataArray);
   }
 
-  decodeDataFromBLE9100Sensor(buffer, callback) {
+  decodeDataFromBLE9100Sensor(device, buffer, callback) {
     //YINMIK BLE-9100 DO type sensors
     /* Each sensor data record has following structure
       serial    number            data    significance
@@ -496,7 +496,7 @@ export class DeviceManager {
     sensorData.push(do_percent);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, BLE_TYPE, 12];
+    var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 12];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -533,6 +533,15 @@ export class DeviceManager {
       });
     } catch (error) {
       console.error(`WriteBleData device ${deviceId} error`, err);
+    }
+  }
+
+  async writeUsbData(port, data) {
+    try {
+      await window._cdvElectronIpc.writeDeviceData(port, data);
+      console.log(`writeUsbData port ${port} success`, data);
+    } catch (error) {
+      console.error(`writeUsbData port ${port} error`, err);
     }
   }
 
