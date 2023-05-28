@@ -183,7 +183,7 @@ export class MicrophoneServices {
   startGetDecibel() {
     this.getDecibelIntervalId = setInterval(() => {
       const decibelValue = this.getCurrentDecibel();
-      const dataArray = ["12", 100, USB_TYPE, 1, [decibelValue]];
+      const dataArray = ["12", 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
       DataManagerIST.callbackReadSensor(dataArray);
     }, 1000);
   }

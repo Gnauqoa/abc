@@ -347,7 +347,7 @@ async function listSerialPorts() {
                 dataRead += 4;
               }
 
-              var dataArray = [sensorId, battery, USB_TYPE, dataLength]
+              var dataArray = [sensorId, battery, USB_TYPE, port.path, dataLength]
               sensorData.forEach(function (d, i) {
                 dataArray.push(d);
               });

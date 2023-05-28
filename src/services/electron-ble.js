@@ -208,7 +208,7 @@ export class WebBle {
               dataRead += 4;
             }
 
-            var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
+            var dataArray = [sensorId, battery, BLE_TYPE, device.deviceId, dataLength];
             sensorData.forEach(function (d, i) {
               dataArray.push(d);
             });
@@ -287,7 +287,7 @@ export class WebBle {
             dataRead += 4;
           }
 
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
+          var dataArray = [sensorId, battery, BLE_TYPE, device.deviceId, dataLength];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
@@ -390,7 +390,7 @@ export class WebBle {
           sensorData.push(salt_tds);
           sensorData.push(temp);
 
-          var dataArray = [device.id, batt, BLE_TYPE, 24];
+          var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 24];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
@@ -491,7 +491,7 @@ export class WebBle {
           sensorData.push(do_percent);
           sensorData.push(temp);
 
-          var dataArray = [device.id, batt, BLE_TYPE, 12];
+          var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 12];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });

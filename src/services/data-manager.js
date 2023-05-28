@@ -9,11 +9,12 @@ import {
   SAMPLING_AUTO,
   SAMPLING_MANUAL,
   BLE_TYPE,
+  USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 4;
+const NUM_NON_DATA_SENSORS_CALLBACK = 5;
 
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
@@ -636,7 +637,8 @@ export class DataManager {
       const sensorId = parseInt(data[0]);
       const battery = data[1];
       const source = data[2];
-      const dataLength = data[3];
+      const deviceId = data[3];
+      const dataLength = data[4];
       const sensorsData = [];
       const sensorInfo = SensorServices.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
@@ -654,6 +656,7 @@ export class DataManager {
       if (!activeSensorsIds.includes(sensorId)) {
         this.sensorsQueue.push({
           sensorId: sensorId,
+          deviceId: deviceId,
           batteryStatus: parseInt(battery),
         });
       } else {
@@ -869,10 +872,9 @@ export class DataManager {
     setInterval(() => {
       const sensorId = (Math.random() * (3 - 2) + 2).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
-      const sensorSerialId = 0;
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
-      const dummyData = [sensorId, battery, sensorSerialId, sensorInfo.data.length];
+      const dummyData = [sensorId, battery, USB_TYPE, "DUMMY", sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];
         const data = (Math.random() * (dataInfo.max - dataInfo.min) + dataInfo.min).toFixed(2);
