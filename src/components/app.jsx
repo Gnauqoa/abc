@@ -71,7 +71,7 @@ const MyApp = () => {
 
     // Call F7 APIs here
     if (f7.device.electron) {
-      window._cdvElectronIpc.onDeviceData((event, value) => {
+      window._cdvElectronIpc.onDeviceDataReceived((event, value) => {
         dataManager.callbackReadSensor(value);
       });
       window._cdvElectronIpc.onDeviceDisconnected((event, value) => {

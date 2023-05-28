@@ -25,8 +25,9 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
     return ipcRenderer.invoke("cdv-plugin-exec", serviceName, action, args).then(success, error);
   },
 
-  onDeviceData: (callback) => ipcRenderer.on("device-data", callback),
+  onDeviceDataReceived: (callback) => ipcRenderer.on("device-data", callback),
   onDeviceDisconnected: (callback) => ipcRenderer.on("device-disconnected", callback),
+  writeDeviceData: (port, data) => ipcRenderer.send("write-data", port, data),
 
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
 

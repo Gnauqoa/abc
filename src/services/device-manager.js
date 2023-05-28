@@ -536,6 +536,15 @@ export class DeviceManager {
     }
   }
 
+  async writeUsbData(port, data) {
+    try {
+      await window._cdvElectronIpc.writeDeviceData(port, data);
+      console.log(`writeUsbData port ${port} success`, data);
+    } catch (error) {
+      console.error(`writeUsbData port ${port} error`, err);
+    }
+  }
+
   startCheckingConnection() {
     setInterval(async () => {
       for (const device of this.devices) {

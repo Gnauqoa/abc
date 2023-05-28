@@ -59,6 +59,11 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       // calib command: ***1,k,offset###
       let uint8Array = textEncoder.encode("***1," + k + "," + offset + "###");
       DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
+    } else if (type === USB_TYPE) {
+      const usbDevices = DataManagerIST.getUsbDevices();
+      const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
+
+      DeviceManagerIST.writeUsbData(usbDevice.deviceId, "***1," + k + "," + offset + "###");
     }
     onClosePopup();
   };

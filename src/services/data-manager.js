@@ -888,6 +888,10 @@ export class DataManager {
   dataRunsSize() {
     return Object.keys(this.dataRuns).length;
   }
+
+  getUsbDevices() {
+    return this.sensorsQueue;
+  }
 }
 
 export default DataManager.getInstance();

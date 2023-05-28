@@ -261,6 +261,17 @@ ipcMain.handle("setFullscreen", (_, isFullscreen) => {
 
 let portsList = {};
 
+ipcMain.on("write-data", (event, port, data) => {
+  return new Promise((resolve, reject) => {
+    portsList[port]?.port.write(data, (err) => {
+      if (err) {
+        reject(err.message);
+      }
+      resolve();
+    });
+  });
+});
+
 async function listSerialPorts() {
   await SerialPort.list().then((ports, err) => {
     if (err) {
