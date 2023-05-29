@@ -1,5 +1,6 @@
 import { USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
+import { BUILTIN_DECIBELS_SENSOR_ID } from "./sensor-service";
 
 const MIN_DECIBELS = -90;
 const MAX_DECIBELS = 0;
@@ -183,7 +184,7 @@ export class MicrophoneServices {
   startGetDecibel() {
     this.getDecibelIntervalId = setInterval(() => {
       const decibelValue = this.getCurrentDecibel();
-      const dataArray = ["12", 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
+      const dataArray = [BUILTIN_DECIBELS_SENSOR_ID, 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
       DataManagerIST.callbackReadSensor(dataArray);
     }, 1000);
   }
