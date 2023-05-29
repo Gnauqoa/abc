@@ -108,14 +108,6 @@ export const defaultSensors = [
     data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14, formatFloatingPoint: 1 }],
   },
   {
-    id: 8,
-    code: "inno-008",
-    name: "Cảm biến cường độ âm thanh",
-    label: "Âm thanh",
-    icon: soundSensorIcon,
-    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150, formatFloatingPoint: 1 }],
-  },
-  {
     id: 9,
     code: "inno-009",
     name: "Cảm biến áp suất khí",
@@ -125,6 +117,14 @@ export const defaultSensors = [
   },
   {
     id: 10,
+    code: "inno-008",
+    name: "Cảm biến cường độ âm thanh",
+    label: "Âm thanh",
+    icon: soundSensorIcon,
+    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150, formatFloatingPoint: 1 }],
+  },
+  {
+    id: 11,
     code: "inno-010",
     name: "Cảm biến dòng điện",
     label: "Dòng điện",
@@ -132,7 +132,7 @@ export const defaultSensors = [
     data: [{ id: "inno-010-amp", name: "Dòng điện", unit: "mA", min: -2500, max: 2500, formatFloatingPoint: 1 }],
   },
   {
-    id: 11,
+    id: 12,
     code: "inno-011",
     name: "Cảm biến điện áp",
     label: "Điện áp",
