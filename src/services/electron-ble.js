@@ -141,86 +141,13 @@ export class WebBle {
       return;
     }
 
-    if (device.code.includes("BLE-C600")) {
+    if (device.code.includes("BLE-9909") || device.code.includes("BLE-C600")) {
       this.ble9909SensorReceiveDataCallback(device, callback);
     } else if (device.code.includes("BLE-9100")) {
+      console.log('DO sensor');
       this.ble9100SensorReceiveDataCallback(device, callback);
     } else {
-      //this.innoLabSensorReceiveDataCallback(device, callback);
-      this.servers[device.deviceId]
-        .getPrimaryService(BLE_SERVICE_ID)
-        .then((service) => service.getCharacteristic(BLE_TX_ID))
-        .then((characteristic) => characteristic.startNotifications())
-        .then((characteristic) => {
-          characteristic.removeEventListener("characteristicvaluechanged", () => {});
-          //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
-          characteristic.addEventListener("characteristicvaluechanged", (event) => {
-            /* Each sensor data record has following structure
-            0xAA - start byte
-            Sensor ID - 1 byte
-            Sensor Serial ID - 1 byte
-            Data length - 1 byte
-            Sensor data [0..len] - 4 byte per data
-            Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
-            0xBB - stop byte (already cut off by serial delimiter parser)
-          */
-            let data = event.target.value;
-
-            if (data.getUint8(0) != 0xaa) {
-              // Invalid data, ignore
-              return;
-            }
-
-            var sensorId = data.getUint8(1);
-            var sensorSerial = data.getUint8(2); // TODO: Will use later
-            var battery = data.getUint8(3);
-            var dataLength = data.getUint8(4);
-            var checksum = data.getUint8(5 + dataLength);
-            var calculatedChecksum = 0xff;
-            for (var i = 0; i < dataLength + 5; i++) {
-              calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
-            }
-
-            if (calculatedChecksum != checksum) {
-              console.log("Invalid data received");
-              return;
-            }
-
-            var dataRead = 0;
-            var sensorData = [];
-
-            while (dataRead < dataLength) {
-              // read next 4 bytes
-              var rawBytes = [
-                data.getUint8(dataRead + 5),
-                data.getUint8(dataRead + 6),
-                data.getUint8(dataRead + 7),
-                data.getUint8(dataRead + 8),
-              ];
-
-              var view = new DataView(new ArrayBuffer(4));
-
-              rawBytes.forEach(function (b, i) {
-                view.setUint8(3 - i, b);
-              });
-
-              sensorData.push(view.getFloat32(0));
-              dataRead += 4;
-            }
-
-            var dataArray = [sensorId, battery, BLE_TYPE, device.deviceId, dataLength];
-            sensorData.forEach(function (d, i) {
-              dataArray.push(d);
-            });
-
-            console.log(dataArray);
-
-            callback(dataArray);
-          });
-        })
-        .catch((err) => {
-          console.log("receiveDataCallback error", err.message);
-        });
+      this.innoLabSensorReceiveDataCallback(device, callback);
     }
   }
 
@@ -232,7 +159,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           0xAA - start byte
@@ -308,7 +234,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           serial    number            data    significance
@@ -421,7 +346,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           serial    number            data    significance
@@ -498,6 +422,16 @@ export class WebBle {
 
           callback(dataArray);
         });
+
+        let intervalId = setInterval(function () {
+          characteristic.readValue().catch((error) => {
+            console.error(error);
+            if (error.message.includes("GATT Server is disconnected")) {
+              console.log("Sensor just disconnected");
+              clearInterval(intervalId);
+            }
+          });
+        }, 1001);
       });
   }
 }

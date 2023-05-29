@@ -198,8 +198,7 @@ export class DeviceManager {
       return;
     }
     try {
-      console.log(currentDevice.code);
-      if (currentDevice.code.includes("BLE-9909")) {
+      if (currentDevice.code.includes("BLE-9909") || currentDevice.code.includes("BLE-C600")) {
         ble.startNotification(
           deviceId,
           "FF01",
@@ -221,10 +220,7 @@ export class DeviceManager {
                 deviceId,
                 "FF01",
                 "FF02",
-                //'180A', //battery service
-                //'2A25', // battery characteristics
                 (buffer) => {
-                  console.log("Got BLE-9909 data");
                   this.decodeDataFromBLE9909Sensor(currentDevice, buffer, callback);
                 },
                 (err) => {
@@ -241,8 +237,8 @@ export class DeviceManager {
       } else if (currentDevice.code.includes("BLE-9100")) {
         ble.startNotification(
           deviceId,
-          "0000ff01-0000-1000-8000-00805f9b34fb",
-          "0000ff02-0000-1000-8000-00805f9b34fb",
+          "FF01",
+          "FF02",
           (buffer) => {
             this.decodeDataFromBLE9100Sensor(currentDevice, buffer, callback);
           },
