@@ -64,8 +64,10 @@ export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_
 export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
 export const LABEL_NOTE_BORDER = "#C12553";
 
-export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.black, 0.9);
+export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
 export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
+
+export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
 
 export const STATISTIC_NOTE_TYPE = 0;
 export const LABEL_NOTE_TYPE = 1;
@@ -105,7 +107,7 @@ export const SAMPLE_STATISTIC_NOTE = {
     right: 12,
     bottom: 20,
   },
-  content: ["    Note    "],
+  content: [""],
   callout: {
     display: true,
     borderColor: "black",
@@ -113,6 +115,20 @@ export const SAMPLE_STATISTIC_NOTE = {
   xValue: 0,
   yValue: 0,
   display: true,
+};
+
+export const SAMPLE_LINEAR_ANNOTATION = {
+  type: "line",
+  borderColor: "rgb(100, 149, 237)",
+  borderDash: [6, 6],
+  borderDashOffset: 0,
+  borderWidth: 3,
+  xScaleID: "x",
+  yScaleID: "y",
+  // xMax: 8,
+  // xMin: 5,
+  // yMax: 110,
+  // yMin: 110,
 };
 
 // ======================================= CHART UTILS =======================================

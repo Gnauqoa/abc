@@ -39,6 +39,10 @@ import {
   POINT_RADIUS,
   getDataStatistic,
   STATISTIC_NOTE_BACKGROUND,
+  LABEL_NOTE_TYPE,
+  STATISTIC_NOTE_TYPE,
+  SAMPLE_LINEAR_ANNOTATION,
+  LINEAR_REGRESSION_BACKGROUND,
 } from "../../../utils/widget-line-utils";
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
@@ -58,6 +62,7 @@ let selectedPointElement = null;
 let selectedNoteElement = null;
 let allNotes = {};
 let statisticNotes = {};
+let linearRegAnnotations = {};
 const hiddenDataRunIds = new Set();
 
 const dragger = {
@@ -154,6 +159,27 @@ const getAllCurrentStatisticNotes = ({ pageId }) => {
   return noteElements;
 };
 
+const getAllCurrentLinearRegAnnotations = ({ pageId }) => {
+  const linearRegAnnos = Object.values(linearRegAnnotations).filter((note) => {
+    return pageId === undefined || note.pageId === pageId;
+  });
+
+  const noteElements = {};
+  linearRegAnnos.forEach((note) => {
+    const newNoteElement = {
+      ...SAMPLE_LINEAR_ANNOTATION,
+      label: note.label,
+      xMax: note.xMax,
+      xMin: note.xMin,
+      yMax: note.yMax,
+      yMin: note.yMin,
+    };
+
+    noteElements[note.id] = newNoteElement;
+  });
+  return noteElements;
+};
+
 const onClickChartHandler = (event, elements, chart) => {
   if (event.type === "click") {
     const isPointElement = elements[0]?.element instanceof PointElement;
@@ -210,11 +236,14 @@ const onLeaveNoteElement = ({ chart, element }) => {
   let label = chart.config.options.plugins.annotation.annotations[noteElementId];
 
   // Check whether the note is statistic note or label note
+  let noteType;
   let currentNote;
   if (Object.keys(allNotes).includes(noteElementId)) {
     currentNote = allNotes[noteElementId];
+    noteType = LABEL_NOTE_TYPE;
   } else if (Object.keys(statisticNotes).includes(noteElementId)) {
     currentNote = statisticNotes[noteElementId];
+    noteType = STATISTIC_NOTE_TYPE;
   }
 
   if (label) {
@@ -231,13 +260,24 @@ const onLeaveNoteElement = ({ chart, element }) => {
       backgroundColor: currentNote.backgroundColor,
     };
 
-    allNotes = {
-      ...allNotes,
-      [noteElementId]: {
-        ...currentNote,
-        ...newAdjustPos,
-      },
-    };
+    // Update note position
+    if (noteType === STATISTIC_NOTE_TYPE) {
+      statisticNotes = {
+        ...statisticNotes,
+        [noteElementId]: {
+          ...currentNote,
+          ...newAdjustPos,
+        },
+      };
+    } else if (noteType === LABEL_NOTE_TYPE) {
+      allNotes = {
+        ...allNotes,
+        [noteElementId]: {
+          ...currentNote,
+          ...newAdjustPos,
+        },
+      };
+    }
   }
 
   chart.config.options.plugins.zoom.pan.enabled = true;
@@ -336,6 +376,7 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
 
     const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
     const { slope: m, intercept: b } = linearRegression;
+    const linearRegFunction = `y = ${m}x + ${b}`;
     const content = ["Linear fit", "  y = mx + b"];
     content.push(`  m = ${m}`);
     content.push(`  b = ${b}`);
@@ -345,32 +386,70 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     content.push(`Mean = ${mean}`);
     content.push(`Std = ${std}`);
 
+    const lastDataIndex = dataRunData.length - 1;
+    const startPointYValue = m * 0 + b;
+    const endPointYValue = m * lastDataIndex + b;
+
+    // Add statistics notes annotations
     const statisticNoteId = `statistic-note_${dataRunId}`;
     const statisticNote = {
       id: statisticNoteId,
       dataRunId: dataRunId,
-      content: content,
       pageId: pageId,
+      content: content,
       backgroundColor: STATISTIC_NOTE_BACKGROUND,
-      xValue: 0,
-      yValue: 0,
-      xAdjust: 1,
-      yAdjust: 1,
+      xValue: lastDataIndex,
+      yValue: dataRunData[lastDataIndex],
+      xAdjust: -60,
+      yAdjust: -60,
     };
-
     statisticNotes = { ...statisticNotes, [statisticNoteId]: statisticNote };
-
     const newStatisticNote = {
       ...SAMPLE_STATISTIC_NOTE,
       ...statisticNote,
     };
 
+    // Add linear regression annotations
+    const linearRegNoteId = `linear-regression-annotation_${dataRunId}`;
+    const linearRegNote = {
+      id: linearRegNoteId,
+      dataRunId: dataRunId,
+      pageId: pageId,
+      xMax: lastDataIndex,
+      xMin: 0,
+      yMax: endPointYValue,
+      yMin: startPointYValue,
+      label: {
+        display: true,
+        backgroundColor: LINEAR_REGRESSION_BACKGROUND,
+        content: linearRegFunction,
+      },
+    };
+    linearRegAnnotations = { ...linearRegAnnotations, [linearRegNoteId]: linearRegNote };
+    const newLinearReg = {
+      ...SAMPLE_LINEAR_ANNOTATION,
+      ...linearRegNote,
+    };
+
+    // Update chart annotations
     chartInstance.config.options.plugins.annotation.annotations = {
       ...chartInstance.config.options.plugins.annotation.annotations,
       [statisticNoteId]: newStatisticNote,
+      [linearRegNoteId]: newLinearReg,
     };
-    chartInstance.update();
+  } else {
+    // Remove statistics notes annotations
+    const statisticNoteId = `statistic-note_${dataRunId}`;
+    delete statisticNotes[statisticNoteId];
+    delete chartInstance.config.options.plugins.annotation.annotations[statisticNoteId];
+
+    // Remove linear regression annotations
+    const linearRegNoteId = `linear-regression-annotation_${dataRunId}`;
+    delete linearRegAnnotations[linearRegNoteId];
+    delete chartInstance.config.options.plugins.annotation.annotations[linearRegNoteId];
   }
+
+  chartInstance.update();
 };
 
 // ======================================= CHART LEGEND =======================================
@@ -468,10 +547,12 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
   // update chart notes
   const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId });
   const statisticNoteAnnotations = getAllCurrentStatisticNotes({ pageId: pageId });
+  const linearRegAnnotations = getAllCurrentLinearRegAnnotations({ pageId: pageId });
 
   chartInstance.config.options.plugins.annotation.annotations = {
     ...labelNoteAnnotations,
     ...statisticNoteAnnotations,
+    ...linearRegAnnotations,
   };
 
   chartInstance.update();
@@ -493,7 +574,7 @@ let LineChart = (props, ref) => {
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-  const [isShowStatistic, setIsShowStatistic] = useState(false);
+  const [isShowStatistic, setIsShowStatistic] = useState(Object.keys(statisticNotes).length > 0);
   const [isSelectRegion, setIsSelectRegion] = useState(false);
   const expandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
