@@ -429,13 +429,17 @@ export default ({ f7route, f7router, filePath, content }) => {
       return {
         name: dataRunPreview.name,
         data: data,
+        dataRunId: dataRunPreview.id,
       };
     });
 
-    if (
-      !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]) ||
-      !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex])
-    ) {
+    const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+    const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+
+    // Call this function to clear hiddenDataRunIds in the LineChart
+    if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
+
+    if (isModifyData || isModifyDataRunIds) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: chartDatas,
         xUnit: "ms",

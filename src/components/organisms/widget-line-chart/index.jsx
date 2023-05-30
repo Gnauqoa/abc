@@ -30,12 +30,14 @@ import {
   STATISTIC_OPTION,
   SELECTION_OPTION,
   OPTIONS_WITH_SELECTED,
+  NOTE_BACKGROUND_COLOR,
+  NOTE_BACKGROUND_COLOR_ACTIVE,
+  NOTE_BORDER_COLOR,
+  SAMPLE_NOTE,
 } from "../../../utils/widget-line-utils";
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
 import "./index.scss";
-import dialog from "../../molecules/dialog/dialog";
-import chartjsUtils from "../../../utils/chartjs-utils";
 import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
 
@@ -48,32 +50,7 @@ let lastNoteEvent;
 let selectedPointElement = null;
 let selectedNoteElement = null;
 let allNotes = {};
-
-const NOTE_BACKGROUND_COLOR = chartjsUtils.transparentize(chartjsUtils.CHART_COLORS.red, 0.5);
-const NOTE_BACKGROUND_COLOR_ACTIVE = chartjsUtils.CHART_COLORS.red;
-const NOTE_BORDER_COLOR = "#C12553";
-
-let sampleNote = {
-  type: "label",
-  backgroundColor: NOTE_BACKGROUND_COLOR,
-  borderRadius: 6,
-  borderWidth: 1,
-  borderColor: NOTE_BORDER_COLOR,
-  padding: {
-    top: 20,
-    left: 12,
-    right: 12,
-    bottom: 20,
-  },
-  content: ["    Note    "],
-  callout: {
-    display: true,
-    borderColor: "black",
-  },
-  xValue: 0,
-  yValue: 0,
-  display: true,
-};
+const hiddenDataRunIds = new Set();
 
 const dragger = {
   id: "annotation-dragger",
@@ -134,7 +111,7 @@ const getAllCurrentNotes = ({ sensorId, sensorIndex, datasetIndex }) => {
   const noteElements = {};
   currentChartNotes.forEach((note) => {
     const newNoteElement = {
-      ...sampleNote,
+      ...SAMPLE_NOTE,
       content: note.content,
       backgroundColor: note.backgroundColor,
       xValue: note.xValue,
@@ -289,9 +266,8 @@ const addNote = (chartInstance, sensorInstance, newContent) => {
         xAdjust: -60,
         yAdjust: -60,
       };
-      console.log(newNote);
       const newNoteElement = {
-        ...sampleNote,
+        ...SAMPLE_NOTE,
         ...newNote,
       };
       allNotes = { ...allNotes, [noteId]: newNote };
@@ -318,15 +294,19 @@ const onClickLegendHandler = (event, legendItem, legend) => {
   const noteElements = getAllCurrentNotes({ datasetIndex: datasetIndex });
   const ci = legend.chart;
 
+  const dataRunId = ci.data.datasets[datasetIndex]?.dataRunId;
+
   let isShowNote = false;
   if (ci.isDatasetVisible(datasetIndex)) {
     ci.hide(datasetIndex);
     legendItem.hidden = true;
     isShowNote = false;
+    hiddenDataRunIds.add(dataRunId);
   } else {
     ci.show(datasetIndex);
     legendItem.hidden = false;
     isShowNote = true;
+    hiddenDataRunIds.delete(dataRunId);
   }
 
   Object.keys(noteElements).forEach((nodeId) => {
@@ -364,7 +344,7 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
 
   const stepSize = suggestedMaxX / 10;
 
-  chartInstance.data = createChartJsDatas({ chartDatas: data });
+  chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
   chartInstance.options.animation = false;
   chartInstance.options.scales = {
     y: {
@@ -397,11 +377,21 @@ const updateChart = ({ chartInstance, data, axisRef, sensor }) => {
   if (stepSize) {
     chartInstance.options.scales.x.ticks.stepSize = stepSize;
   }
+
+  // update chart notes
   const noteAnnotations = getAllCurrentNotes({ sensorId: sensor?.id, sensorIndex: sensor?.index });
   chartInstance.config.options.plugins.annotation.annotations = {
     ...noteAnnotations,
   };
+
   chartInstance.update();
+
+  for (let index = 0; index < chartInstance.data.datasets.length; index++) {
+    const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
+    if (hiddenDataRunIds.has(dataRunId)) {
+      chartInstance.hide(index);
+    }
+  }
 };
 
 // ============================================= MAIN COMPONENT =============================================
@@ -456,6 +446,17 @@ let LineChart = (props, ref) => {
       const xValue = roundAndGetSignificantDigitString({ n: data.x });
       xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
       yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
+    },
+
+    // This function is used to clear hiddenDataRunIds
+    // in the LineChart for the deleted dataRunIds
+    modifyDataRunIds: ({ dataRunIds }) => {
+      for (const dataRunId of hiddenDataRunIds) {
+        if (!dataRunIds.includes(dataRunId)) {
+          hiddenDataRunIds.delete(dataRunId);
+        }
+      }
+      console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataRunIds: ", hiddenDataRunIds);
     },
 
     setChartData: ({ xUnit, yUnit, chartDatas = [], curSensor: sensor }) => {

@@ -57,6 +57,32 @@ export const expandableOptions = [
   },
 ];
 
+export const NOTE_BACKGROUND_COLOR = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
+export const NOTE_BACKGROUND_COLOR_ACTIVE = chartUtils.CHART_COLORS.red;
+export const NOTE_BORDER_COLOR = "#C12553";
+
+export const SAMPLE_NOTE = {
+  type: "label",
+  backgroundColor: NOTE_BACKGROUND_COLOR,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: NOTE_BORDER_COLOR,
+  padding: {
+    top: 20,
+    left: 12,
+    right: 12,
+    bottom: 20,
+  },
+  content: ["    Note    "],
+  callout: {
+    display: true,
+    borderColor: "black",
+  },
+  xValue: 0,
+  yValue: 0,
+  display: true,
+};
+
 // ======================================= CHART UTILS =======================================
 const roundXValue = (value) => {
   return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);
@@ -113,7 +139,7 @@ export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) =>
 export const createChartDataAndParseXAxis = ({ chartDatas }) => {
   const result = chartDatas.map((chartData) => {
     return {
-      name: chartData.name,
+      ...chartData,
       data: chartData.data.map((item) => {
         return {
           x: roundXValue(parseFloat(item.x)),
@@ -130,7 +156,7 @@ export const createChartDataAndParseXAxis = ({ chartDatas }) => {
  *
  * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
  */
-export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) => {
+export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hiddenDataRunIds }) => {
   let chartDataParam = {
     labels: [],
     datasets: [
@@ -145,7 +171,10 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) =>
   chartDatas.forEach((s, index) => {
     const dataList = [];
     let firstPoint = null;
+    // const isDataRunHidden = hiddenDataRunIds.has(s.dataRunId);
+    // console.log(`widget-line-utils_createChartJsDatas_isDataRun_${s.dataRunId}_hidden_${isDataRunHidden}`);
 
+    // if (!isDataRunHidden) {
     s.data.forEach((d, dataIndex) => {
       if (dataIndex == 0) {
         const firstData = s.data[0];
@@ -159,10 +188,12 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) =>
         y: d.y,
       });
     });
+    // }
 
     const dataset = {
       label: s.name,
       data: dataList,
+      dataRunId: s.dataRunId,
       pointStyle: "circle",
       pointRadius: 5,
       pointHoverRadius: 10,
