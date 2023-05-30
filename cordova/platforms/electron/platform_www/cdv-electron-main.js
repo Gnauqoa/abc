@@ -261,6 +261,17 @@ ipcMain.handle("setFullscreen", (_, isFullscreen) => {
 
 let portsList = {};
 
+ipcMain.on("write-data", (event, port, data) => {
+  return new Promise((resolve, reject) => {
+    portsList[port]?.port.write(data, (err) => {
+      if (err) {
+        reject(err.message);
+      }
+      resolve();
+    });
+  });
+});
+
 async function listSerialPorts() {
   await SerialPort.list().then((ports, err) => {
     if (err) {
@@ -347,7 +358,7 @@ async function listSerialPorts() {
                 dataRead += 4;
               }
 
-              var dataArray = [sensorId, battery, USB_TYPE, dataLength]
+              var dataArray = [sensorId, battery, USB_TYPE, port.path, dataLength]
               sensorData.forEach(function (d, i) {
                 dataArray.push(d);
               });

@@ -61,19 +61,15 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     }
   };
 
-  const formFieldHandler = (e) => {
-    const name = e.target.name;
-    const value = e.target.value;
-
-    const nameSplit = name.split("_");
-    if (nameSplit.length === 1) {
-      setFormField((values) => ({ ...values, [name]: value }));
-    } else if (nameSplit.length === 2) {
-      const [calibrationValues, index] = nameSplit;
-      const newValues = formField[calibrationValues];
-      newValues[index] = value;
-      setFormField((values) => ({ ...values, [calibrationValues]: [...newValues] }));
+  const formFieldHandler = ({ value, type, index }) => {
+    const newValues = formField[type];
+    if (newValues === undefined) {
+      console.log("sensor-calibrating.jsx: formFieldHandler: newValues is undefined");
+      return;
     }
+
+    newValues[index] = value;
+    setFormField((values) => ({ ...values, [type]: [...newValues] }));
   };
 
   const convertCalibrationValues = (calibrationValues, calibrationValuesRead, calibratingType) => {
@@ -168,12 +164,13 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                 className="display-setting-input label-color-black"
                 outline
                 size={5}
-                name={`calibrationValues_${calibrateType}`}
                 label="Giá trị chuẩn:"
                 type="text"
                 validateOnBlur
                 value={formField.calibrationValues?.[calibrateType]}
-                onChange={formFieldHandler}
+                onChange={(e) =>
+                  formFieldHandler({ value: e.target.value, type: "calibrationValues", index: calibrateType })
+                }
               ></ListInput>
 
               <div className="display-setting-input-button label-color-black input-color-blue">
@@ -181,7 +178,16 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                   <div className="item-inner">
                     <div className="item-title item-label">Giá trị đọc được</div>
                     <div className="item-input-wrap">
-                      <span className="input-with-value">{formField.calibrationValuesRead?.[calibrateType]}</span>
+                      <input
+                        value={formField.calibrationValuesRead?.[calibrateType]}
+                        onChange={(e) =>
+                          formFieldHandler({
+                            value: e.target.value,
+                            type: "calibrationValuesRead",
+                            index: calibrateType,
+                          })
+                        }
+                      />
                     </div>
                     <div className="sampling-button">
                       <Button

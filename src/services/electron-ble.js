@@ -13,19 +13,28 @@ export class WebBle {
     this.scanCallback = null;
     try {
       window._cdvElectronIpc.onScanBleResults((event, devices) => {
-        devices.forEach((d) => this.handleScannedDevice(d));
-        this.scanCallback([...this.devices]);
+        this.scanCallback(this.getAvailableDevices(devices));
       });
     } catch (error) {
       console.log(error);
     }
   }
 
+  getAvailableDevices(scannedDevices) {
+    scannedDevices.forEach((d) => this.handleScannedDevice(d));
+    return this.devices.filter((localDevice) => {
+      return (
+        localDevice.isConnected === true ||
+        scannedDevices.some((scannedDevice) => {
+          return scannedDevice.deviceId === localDevice.deviceId;
+        })
+      );
+    });
+  }
+
   handleScannedDevice(device) {
     const existingDevice = this.devices.find((d) => d.deviceId === device.deviceId);
-    if (existingDevice) {
-      existingDevice.isConnected = false;
-    } else {
+    if (!existingDevice) {
       const newDevice = {
         deviceId: device.deviceId,
         code: device.deviceName,
@@ -60,6 +69,19 @@ export class WebBle {
     window._cdvElectronIpc.selectBleDevice("");
     await core.sleep(200);
   };
+
+  removeUnavailableDevices(scannedDevices) {
+    const devideIdsToBeRemoved = this.devices
+      .filter((d) => !d.isConnected)
+      .filter((d) => {
+        return scannedDevices.every((scannedDevice) => {
+          return scannedDevice.deviceId !== d.deviceId;
+        });
+      })
+      .map((d) => d.deviceId);
+
+    this.devices = this.devices.filter((d) => !devideIdsToBeRemoved.includes(d.deviceId));
+  }
 
   connect = async (deviceId, successCallback, errorCallback, dataCallback) => {
     try {
@@ -119,86 +141,13 @@ export class WebBle {
       return;
     }
 
-    if (device.code.includes("BLE-9909")) {
+    if (device.code.includes("BLE-9909") || device.code.includes("BLE-C600")) {
       this.ble9909SensorReceiveDataCallback(device, callback);
     } else if (device.code.includes("BLE-9100")) {
+      console.log('DO sensor');
       this.ble9100SensorReceiveDataCallback(device, callback);
     } else {
-      //this.innoLabSensorReceiveDataCallback(device, callback);
-      this.servers[device.deviceId]
-        .getPrimaryService(BLE_SERVICE_ID)
-        .then((service) => service.getCharacteristic(BLE_TX_ID))
-        .then((characteristic) => characteristic.startNotifications())
-        .then((characteristic) => {
-          characteristic.removeEventListener("characteristicvaluechanged", () => {});
-          //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
-          characteristic.addEventListener("characteristicvaluechanged", (event) => {
-            /* Each sensor data record has following structure
-            0xAA - start byte
-            Sensor ID - 1 byte
-            Sensor Serial ID - 1 byte
-            Data length - 1 byte
-            Sensor data [0..len] - 4 byte per data
-            Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
-            0xBB - stop byte (already cut off by serial delimiter parser)
-          */
-            let data = event.target.value;
-
-            if (data.getUint8(0) != 0xaa) {
-              // Invalid data, ignore
-              return;
-            }
-
-            var sensorId = data.getUint8(1);
-            var sensorSerial = data.getUint8(2); // TODO: Will use later
-            var battery = data.getUint8(3);
-            var dataLength = data.getUint8(4);
-            var checksum = data.getUint8(5 + dataLength);
-            var calculatedChecksum = 0xff;
-            for (var i = 0; i < dataLength + 5; i++) {
-              calculatedChecksum = calculatedChecksum ^ data.getUint8(i);
-            }
-
-            if (calculatedChecksum != checksum) {
-              console.log("Invalid data received");
-              return;
-            }
-
-            var dataRead = 0;
-            var sensorData = [];
-
-            while (dataRead < dataLength) {
-              // read next 4 bytes
-              var rawBytes = [
-                data.getUint8(dataRead + 5),
-                data.getUint8(dataRead + 6),
-                data.getUint8(dataRead + 7),
-                data.getUint8(dataRead + 8),
-              ];
-
-              var view = new DataView(new ArrayBuffer(4));
-
-              rawBytes.forEach(function (b, i) {
-                view.setUint8(3 - i, b);
-              });
-
-              sensorData.push(view.getFloat32(0));
-              dataRead += 4;
-            }
-
-            var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
-            sensorData.forEach(function (d, i) {
-              dataArray.push(d);
-            });
-
-            //console.log(dataArray);
-
-            callback(dataArray);
-          });
-        })
-        .catch((err) => {
-          console.log("receiveDataCallback error", err.message);
-        });
+      this.innoLabSensorReceiveDataCallback(device, callback);
     }
   }
 
@@ -210,7 +159,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           0xAA - start byte
@@ -265,7 +213,7 @@ export class WebBle {
             dataRead += 4;
           }
 
-          var dataArray = [sensorId, battery, BLE_TYPE, dataLength];
+          var dataArray = [sensorId, battery, BLE_TYPE, device.deviceId, dataLength];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
@@ -286,7 +234,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           serial    number            data    significance
@@ -368,7 +315,7 @@ export class WebBle {
           sensorData.push(salt_tds);
           sensorData.push(temp);
 
-          var dataArray = [device.id, batt, BLE_TYPE, 24];
+          var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 24];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
@@ -399,7 +346,6 @@ export class WebBle {
       .then((characteristic) => characteristic.startNotifications())
       .then((characteristic) => {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
-        //characteristic.addEventListener("characteristicvaluechanged", handleSensorDataChanged);
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           /* Each sensor data record has following structure
           serial    number            data    significance
@@ -469,13 +415,23 @@ export class WebBle {
           sensorData.push(do_percent);
           sensorData.push(temp);
 
-          var dataArray = [device.id, batt, BLE_TYPE, 12];
+          var dataArray = [device.id, batt, BLE_TYPE, device.deviceId, 12];
           sensorData.forEach(function (d, i) {
             dataArray.push(d);
           });
 
           callback(dataArray);
         });
+
+        let intervalId = setInterval(function () {
+          characteristic.readValue().catch((error) => {
+            console.error(error);
+            if (error.message.includes("GATT Server is disconnected")) {
+              console.log("Sensor just disconnected");
+              clearInterval(intervalId);
+            }
+          });
+        }, 1001);
       });
   }
 }

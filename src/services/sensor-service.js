@@ -108,14 +108,6 @@ export const defaultSensors = [
     data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14, formatFloatingPoint: 1 }],
   },
   {
-    id: 8,
-    code: "inno-008",
-    name: "Cảm biến cường độ âm thanh",
-    label: "Âm thanh",
-    icon: soundSensorIcon,
-    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150, formatFloatingPoint: 1 }],
-  },
-  {
     id: 9,
     code: "inno-009",
     name: "Cảm biến áp suất khí",
@@ -126,38 +118,26 @@ export const defaultSensors = [
   {
     id: 10,
     code: "inno-010",
+    name: "Cảm biến cường độ âm thanh",
+    label: "Âm thanh",
+    icon: soundSensorIcon,
+    data: [{ id: "inno-010-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 140, formatFloatingPoint: 1 }],
+  },
+  {
+    id: 11,
+    code: "inno-010",
     name: "Cảm biến dòng điện",
     label: "Dòng điện",
     icon: amperageSensorIcon,
     data: [{ id: "inno-010-amp", name: "Dòng điện", unit: "mA", min: -2500, max: 2500, formatFloatingPoint: 1 }],
   },
   {
-    id: 11,
+    id: 12,
     code: "inno-011",
     name: "Cảm biến điện áp",
     label: "Điện áp",
     icon: voltageSensorIcon,
     data: [{ id: "inno-011-volt", name: "Điện áp", unit: "V", min: -20, max: 20, formatFloatingPoint: 1 }],
-  },
-  {
-    id: 12,
-    code: "inno-012",
-    name: "Microphone",
-    label: "Microphone",
-    icon: soundSensorIcon,
-    isBuiltin: true,
-    data: [{ id: "inno-012-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
-  },
-  {
-    id: 13,
-    code: "inno-013",
-    name: "Microphone",
-    label: "Microphone",
-    icon: voltageSensorIcon,
-    data: [
-      { id: "inno-013-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
-      { id: "inno-013-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
-    ],
   },
   {
     id: 65,
@@ -176,6 +156,21 @@ export const defaultSensors = [
   },
   {
     id: 66,
+    code: "BLE-C600",
+    name: "Cảm biến chất lượng nước",
+    label: "Chất lượng nước",
+    icon: waterQualitySensorIcon,
+    data: [
+      { id: "BLE-C600-PH", name: "PH", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
+      { id: "BLE-C600-EC", name: "EC", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
+      { id: "BLE-C600-TDS", name: "TDS", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
+      { id: "BLE-C600-SALT%", name: "SALT %", unit: "%", min: 0, max: 25, formatFloatingPoint: 2 },
+      { id: "BLE-C600-SALTPPM", name: "SALT ppm", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
+      { id: "BLE-C600-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },
+    ],
+  },
+  {
+    id: 67,
     code: "BLE-9100",
     name: "Cảm biến Oxi hòa tan trong nước",
     label: "DO",
@@ -183,10 +178,34 @@ export const defaultSensors = [
     data: [
       { id: "BLE-9100-MG", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 30, formatFloatingPoint: 2 },
       { id: "BLE-9100-%", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 300, formatFloatingPoint: 1 },
-      { id: "BLE-9100-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 100, formatFloatingPoint: 1 },
+      { id: "BLE-9100-TEMP", name: "Nhiệt độ nước", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },
+    ],
+  },
+  {
+    id: 68,
+    code: "inno-068",
+    name: "Microphone",
+    label: "Microphone",
+    icon: soundSensorIcon,
+    isBuiltin: true,
+    data: [{ id: "inno-068-db", name: "Mức decibels", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
+  },
+  {
+    id: 69,
+    code: "inno-069",
+    name: "Microphone",
+    label: "Microphone",
+    icon: soundSensorIcon,
+    data: [
+      { id: "inno-069-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
+      { id: "inno-069-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
     ],
   },
 ];
+
+export const BUILTIN_DECIBELS_SENSOR_ID = 68;
+export const BUILTIN_MICROPHONE_ID = 69;
+export const BUILTIN_MICROPHONE_CODE = "inno-069";
 
 export class SensorServices {
   constructor() {
@@ -208,7 +227,7 @@ export class SensorServices {
     this.sensors = _.cloneDeep(defaultSensors);
     this.customSensors = [];
     this.definedSoundSensorsId = [];
-    this.excludeSensorsId = [13];
+    this.excludeSensorsId = [BUILTIN_MICROPHONE_ID];
   }
 
   getSensors() {
@@ -299,7 +318,7 @@ export class SensorServices {
   getActiveSoundSensors() {
     const soundSensors = this.sensors.filter((sensor) => {
       if (this.definedSoundSensorsId.includes(sensor.code)) return true;
-      else if (sensor.code === "inno-013")
+      else if (sensor.code === BUILTIN_MICROPHONE_CODE)
         return navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined;
       else return false;
     });

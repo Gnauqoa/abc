@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 
 import "./index.scss";
@@ -6,7 +6,7 @@ import { useActivityContext } from "../../../context/ActivityContext";
 import { createChartDataAndParseXAxis, createChartJsDatas, getMaxMinAxises } from "../../../utils/widget-line-utils";
 import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
-import SensorServiceIST from "../../../services/sensor-service";
+import SensorServiceIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID } from "../../../services/sensor-service";
 import MicrophoneServiceIST from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
 
@@ -26,9 +26,9 @@ const FREQUENCY_WAVE = 1;
 const DECIBEL = 2;
 
 const visualSettings = {
-  "12-0": DECIBEL,
-  "13-0": SINE_WAVE,
-  "13-1": FREQUENCY_WAVE,
+  [`${BUILTIN_DECIBELS_SENSOR_ID}-0`]: DECIBEL,
+  [`${BUILTIN_MICROPHONE_ID}-0`]: SINE_WAVE,
+  [`${BUILTIN_MICROPHONE_ID}-1`]: FREQUENCY_WAVE,
 };
 
 const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, tension }) => {
