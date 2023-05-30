@@ -27,6 +27,9 @@ import {
   X_MIN_VALUE,
   Y_MIN_VALUE,
   prepareContentNote,
+  STATISTIC_OPTION,
+  SELECTION_OPTION,
+  OPTIONS_WITH_SELECTED,
 } from "../../../utils/widget-line-utils";
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
@@ -407,6 +410,16 @@ let LineChart = (props, ref) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
+
+  const [isShowStatistic, setIsShowStatistic] = useState(false);
+  const [isSelectRegion, setIsSelectRegion] = useState(false);
+  const expandOptions = expandableOptions.map((option) => {
+    if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
+
+    if (option.id === STATISTIC_OPTION) return { ...option, selected: isShowStatistic };
+    else if (option.id === SELECTION_OPTION) return { ...option, selected: isSelectRegion };
+  });
+
   const chartEl = useRef();
   const chartInstanceRef = useRef();
   const sensorRef = useRef({});
@@ -543,6 +556,7 @@ let LineChart = (props, ref) => {
     });
   }, []);
 
+  //========================= ADD NOTE FUNCTIONS =========================
   const addNoteHandler = (chartInstance, sensorInstance) => {
     const isValidPointElement = selectedPointElement && selectedPointElement.element;
     const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
@@ -551,29 +565,33 @@ let LineChart = (props, ref) => {
     let noteId;
     let prevContent = [""];
 
-    if (isValidNoteElement) {
-      noteId = selectedNoteElement.options.id;
-    } else {
+    if (isValidNoteElement) noteId = selectedNoteElement.options.id;
+    else
       noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
-    }
 
     if (Object.keys(allNotes).includes(noteId)) {
       prevContent = chartInstance.config.options.plugins.annotation.annotations[noteId].content;
+      prevContent = prevContent.join(" ");
     }
-
-    prevContent = prevContent.join(" ");
 
     showModal((onClose) => (
       <PromptPopup title="Thêm chú giải" inputLabel="Chú giải" defaultValue={prevContent} onClosePopup={onClose} />
     ));
   };
 
-  const callbackAddNote = (newContent) => {
-    addNote(chartInstanceRef.current, sensorRef.current, newContent);
-  };
-
+  const callbackAddNote = (newContent) => addNote(chartInstanceRef.current, sensorRef.current, newContent);
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddNote });
 
+  //========================= STATISTIC OPTION FUNCTIONS =========================
+  const statisticHandler = (chartInstance) => {
+    setIsShowStatistic(!isShowStatistic);
+  };
+
+  const selectRegionHandler = (chartInstance) => {
+    setIsSelectRegion(!isSelectRegion);
+  };
+
+  //========================= OPTIONS FUNCTIONS =========================
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case SCALE_FIT_OPTION:
@@ -585,6 +603,12 @@ let LineChart = (props, ref) => {
       case INTERPOLATE_OPTION:
         interpolateHandler(chartInstanceRef.current);
         break;
+      case STATISTIC_OPTION:
+        statisticHandler(chartInstanceRef.current);
+        break;
+      case SELECTION_OPTION:
+        selectRegionHandler(chartInstanceRef.current);
+        break;
       default:
         break;
     }
@@ -592,32 +616,31 @@ let LineChart = (props, ref) => {
 
   return (
     <div className="line-chart-wapper">
-      <div className="sensor-selector-wrapper">
-        <div className="sensor-select-vertical-mount-container">
-          <SensorSelector
-            selectedSensor={selectedSensor}
-            onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
-          ></SensorSelector>
+      <div className="line-chart">
+        <div className="sensor-selector-wrapper">
+          <div className="sensor-select-vertical-mount-container">
+            <SensorSelector
+              selectedSensor={selectedSensor}
+              onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
+            ></SensorSelector>
+          </div>
+        </div>
+
+        <div className="canvas-container">
+          <div className="current-value-sec" ref={valueContainerElRef}>
+            <div className="value-container">
+              x=<span ref={xElRef}></span>
+            </div>
+            <div className="value-container">
+              y=<span ref={yElRef}></span>
+            </div>
+          </div>
+          <canvas ref={chartEl} />
         </div>
       </div>
 
-      <div className="canvas-container">
-        <div className="current-value-sec" ref={valueContainerElRef}>
-          <div className="value-container">
-            x=<span ref={xElRef}></span>
-          </div>
-          <div className="value-container">
-            y=<span ref={yElRef}></span>
-          </div>
-        </div>
-        <canvas ref={chartEl} />
-        <div className="expandable-options">
-          <ExpandableOptions
-            expandIcon={lineChartIcon}
-            options={expandableOptions}
-            onChooseOption={onChooseOptionHandler}
-          />
-        </div>
+      <div className="expandable-options">
+        <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
       </div>
       {prompt}
     </div>

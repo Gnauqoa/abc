@@ -4,7 +4,10 @@ import chartUtils from "./chartjs-utils";
 import interpolateIcon from "../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../img/expandable-options/auto-scale.png";
 import noteIcon from "../img/expandable-options/note.png";
-import noteSelectedIcon from "../img/expandable-options/note-selected.png";
+import statisticIcon from "../img/expandable-options/line-statistic.png";
+import selectedStatisticIcon from "../img/expandable-options/line-statistic-selected.png";
+import selectionIcon from "../img/expandable-options/line-selection.png";
+import selectedSelectionIcon from "../img/expandable-options/line-selection-selected.png";
 
 export const X_FORMAT_FLOATING = 3;
 export const X_DEFAULT_UNIT = "s";
@@ -12,6 +15,10 @@ export const X_DEFAULT_UNIT = "s";
 export const SCALE_FIT_OPTION = 0;
 export const NOTE_OPTION = 1;
 export const INTERPOLATE_OPTION = 2;
+export const STATISTIC_OPTION = 3;
+export const SELECTION_OPTION = 4;
+
+export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION];
 
 export const X_UPPER_LOWER_MARGIN = 2;
 export const Y_UPPER_LOWER_MARGIN_SCALE = 0.1;
@@ -28,12 +35,25 @@ export const expandableOptions = [
   {
     id: NOTE_OPTION,
     icon: noteIcon,
-    // selectedIcon: noteSelectedIcon,
-    // selected: true,
   },
   {
     id: INTERPOLATE_OPTION,
     icon: interpolateIcon,
+    size: "70%",
+  },
+  {
+    id: STATISTIC_OPTION,
+    icon: statisticIcon,
+    selectedIcon: selectedStatisticIcon,
+    selected: false,
+    size: "70%",
+  },
+  {
+    id: SELECTION_OPTION,
+    icon: selectionIcon,
+    selectedIcon: selectedSelectionIcon,
+    selected: false,
+    size: "70%",
   },
 ];
 
