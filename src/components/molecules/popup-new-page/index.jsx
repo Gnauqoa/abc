@@ -74,7 +74,8 @@ const NewPagePopup = ({ handleNewPage }) => {
                 </Link>
               </Col>
               <Col>
-                <Link id={LAYOUT_BAR} view=".view-main" onClick={conSelectHandler}>
+                {/* <Link id={LAYOUT_BAR} view=".view-main" onClick={conSelectHandler}> */}
+                <Link id={LAYOUT_BAR} view=".view-main">
                   <img src={barChartImg} className="responsive" />
                 </Link>
               </Col>

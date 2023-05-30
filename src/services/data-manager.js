@@ -562,7 +562,8 @@ export class DataManager {
       // Create Row Names with all sensor that had been recorded
       const sensors = SensorServices.getAllSensors();
       for (const sensorId of dataRunInfo.recordedSensors) {
-        const sensorInfo = sensors[sensorId];
+        const sensorInfo = sensors.find((sensor) => sensor.id === parseInt(sensorId));
+        if (!sensorInfo) continue;
         const subSensorIds = Object.keys(sensorInfo.data);
         dataRunInfo.invertedSensorsInfo[sensorId] = {
           name: sensorInfo.name,
@@ -870,7 +871,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (3 - 2) + 2).toFixed(0);
+      const sensorId = (Math.random() * (5 - 2) + 2).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
