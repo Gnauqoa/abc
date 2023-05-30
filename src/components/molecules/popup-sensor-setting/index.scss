@@ -227,13 +227,15 @@
             align-items: center;
             border-radius: 10px;
 
-            .input-with-value {
+            input {
               color: #0086ff;
               font-size: 16px;
               font-family: var(--f7-font-family);
-              // font-weight: 500;
               font-size: 16px;
               margin-left: 10px;
+              margin-right: 10px;
+              width: 100%;
+              border: none;
             }
           }
           .sampling-button {
@@ -364,9 +366,9 @@
                 }
               }
 
-              .input-with-value {
-                font-size: 12px;
-              }
+              // .input-with-value {
+              //   font-size: 12px;
+              // }
 
               .popover-choose-sensor-unit {
                 width: 260px;
@@ -384,7 +386,8 @@
               min-height: 0px;
               margin-left: 0px;
 
-              .input-with-value {
+              input {
+                width: 100%;
                 font-size: 12px;
               }
             }
@@ -393,11 +396,6 @@
               font-size: 10px;
             }
 
-            .item-input-wrap {
-              .input-with-value {
-                font-size: 12px;
-              }
-            }
             .sampling-button {
               font-size: 10px;
             }
