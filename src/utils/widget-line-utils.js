@@ -1,6 +1,6 @@
 import $ from "jquery";
 import chartUtils from "./chartjs-utils";
-
+import { min, max, std, mean, round } from "mathjs";
 import interpolateIcon from "../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../img/expandable-options/auto-scale.png";
 import noteIcon from "../img/expandable-options/note.png";
@@ -26,6 +26,9 @@ export const X_MIN_VALUE = 0;
 export const Y_MIN_VALUE = 5;
 
 export const INTERPOLATE_VALUE = 0.4;
+export const POINT_STYLE = "circle";
+export const POINT_RADIUS = 5;
+export const POINT_HOVER_RADIUS = 10;
 
 export const expandableOptions = [
   {
@@ -57,16 +60,45 @@ export const expandableOptions = [
   },
 ];
 
-export const NOTE_BACKGROUND_COLOR = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
-export const NOTE_BACKGROUND_COLOR_ACTIVE = chartUtils.CHART_COLORS.red;
-export const NOTE_BORDER_COLOR = "#C12553";
+export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
+export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
+export const LABEL_NOTE_BORDER = "#C12553";
 
-export const SAMPLE_NOTE = {
+export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.black, 0.9);
+export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
+
+export const STATISTIC_NOTE_TYPE = 0;
+export const LABEL_NOTE_TYPE = 1;
+
+export const SAMPLE_LABEL_NOTE = {
   type: "label",
-  backgroundColor: NOTE_BACKGROUND_COLOR,
+  backgroundColor: LABEL_NOTE_BACKGROUND,
   borderRadius: 6,
   borderWidth: 1,
-  borderColor: NOTE_BORDER_COLOR,
+  borderColor: LABEL_NOTE_BORDER,
+  padding: {
+    top: 20,
+    left: 12,
+    right: 12,
+    bottom: 20,
+  },
+  content: ["    Note    "],
+  callout: {
+    display: true,
+    borderColor: "black",
+  },
+  xValue: 0,
+  yValue: 0,
+  display: true,
+};
+
+export const SAMPLE_STATISTIC_NOTE = {
+  type: "label",
+  backgroundColor: STATISTIC_NOTE_BACKGROUND,
+  textAlign: "left",
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: STATISTIC_NOTE_BORDER,
   padding: {
     top: 20,
     left: 12,
@@ -194,9 +226,9 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
       label: s.name,
       data: dataList,
       dataRunId: s.dataRunId,
-      pointStyle: "circle",
-      pointRadius: 5,
-      pointHoverRadius: 10,
+      // pointStyle: "circle",
+      // pointRadius: 5,
+      // pointHoverRadius: 10,
       borderColor: chartUtils.namedColor(index),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
     };
@@ -398,4 +430,43 @@ export const clearAllSelectedPoints = (chart) => {
     dataset.pointBackgroundColor = newPointBackgroundColor;
     dataset.pointBorderColor = newPointBorderColor;
   });
+};
+
+const calculateLinearRegression = ({ data }) => {
+  const n = data.length;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    const x = i;
+    const y = data[i];
+
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  return { slope: round(slope, 2), intercept: round(intercept, 2) };
+};
+
+export const getDataStatistic = (dataRunData) => {
+  const maxValue = round(max(...dataRunData), 2);
+  const minValue = round(min(...dataRunData), 2);
+  const meanValue = round(mean(...dataRunData), 2);
+  const stdValue = round(std(...dataRunData), 2);
+
+  const { slope, intercept } = calculateLinearRegression({ data: dataRunData });
+  return {
+    min: minValue,
+    max: maxValue,
+    mean: meanValue,
+    std: stdValue,
+    linearRegression: { slope, intercept },
+  };
 };

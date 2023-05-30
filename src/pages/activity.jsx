@@ -545,6 +545,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(pages[currentPageIndex].layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
+                    pageId={`${currentPageIndex}_chart`}
                     data={getDataForChart(pages[currentPageIndex].widgets[1].sensors)}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
@@ -577,6 +578,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {pages[currentPageIndex].layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}
+                  pageId={`${currentPageIndex}_chart`}
                   data={getDataForChart(pages[currentPageIndex].widgets[0].sensors)}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
