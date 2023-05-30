@@ -117,11 +117,11 @@ export const defaultSensors = [
   },
   {
     id: 10,
-    code: "inno-008",
+    code: "inno-010",
     name: "Cảm biến cường độ âm thanh",
     label: "Âm thanh",
     icon: soundSensorIcon,
-    data: [{ id: "inno-008-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 150, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-010-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 140, formatFloatingPoint: 1 }],
   },
   {
     id: 11,
