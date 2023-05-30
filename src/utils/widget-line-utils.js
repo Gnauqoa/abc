@@ -60,17 +60,21 @@ export const expandableOptions = [
   },
 ];
 
+export const PREFIX_LABEL_NOTE = "label-note";
 export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
 export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
 export const LABEL_NOTE_BORDER = "#C12553";
 
+export const PREFIX_STATISTIC_NOTE = "statistic-note";
 export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
 export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
 
+export const PREFIX_LINEAR_REGRESSION = "linear-regression-annotation";
 export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
 
 export const STATISTIC_NOTE_TYPE = 0;
 export const LABEL_NOTE_TYPE = 1;
+export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
 
 export const SAMPLE_LABEL_NOTE = {
   type: "label",

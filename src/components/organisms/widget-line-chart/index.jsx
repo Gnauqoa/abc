@@ -43,6 +43,10 @@ import {
   STATISTIC_NOTE_TYPE,
   SAMPLE_LINEAR_ANNOTATION,
   LINEAR_REGRESSION_BACKGROUND,
+  PREFIX_LINEAR_REGRESSION,
+  PREFIX_STATISTIC_NOTE,
+  PREFIX_LABEL_NOTE,
+  ALLOW_ENTER_LEAVE_ANNOTATIONS,
 } from "../../../utils/widget-line-utils";
 import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
 
@@ -225,6 +229,10 @@ const onClickChartHandler = (event, elements, chart) => {
   }
 };
 const onEnterNoteElement = ({ chart, element }) => {
+  const noteElementId = element?.options?.id;
+  const prefix = noteElementId?.split("_")?.[0];
+  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
+
   noteElement = element;
   chart.config.options.plugins.zoom.pan.enabled = false;
   chart.update();
@@ -233,6 +241,9 @@ const onEnterNoteElement = ({ chart, element }) => {
 
 const onLeaveNoteElement = ({ chart, element }) => {
   const noteElementId = element?.options?.id;
+  const prefix = noteElementId?.split("_")?.[0];
+  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
+
   let label = chart.config.options.plugins.annotation.annotations[noteElementId];
 
   // Check whether the note is statistic note or label note
@@ -322,7 +333,7 @@ const addNote = ({ chartInstance, pageId, newContent }) => {
   if (isValidNoteElement) {
     noteId = selectedNoteElement.options.id;
   } else {
-    noteId = `label-note_${pageId}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
+    noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
   }
 
   const handleOpenPopup = (noteContent) => {
@@ -391,7 +402,7 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     const endPointYValue = m * lastDataIndex + b;
 
     // Add statistics notes annotations
-    const statisticNoteId = `statistic-note_${dataRunId}`;
+    const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${dataRunId}`;
     const statisticNote = {
       id: statisticNoteId,
       dataRunId: dataRunId,
@@ -410,7 +421,7 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     };
 
     // Add linear regression annotations
-    const linearRegNoteId = `linear-regression-annotation_${dataRunId}`;
+    const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${dataRunId}`;
     const linearRegNote = {
       id: linearRegNoteId,
       dataRunId: dataRunId,
@@ -439,14 +450,16 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     };
   } else {
     // Remove statistics notes annotations
-    const statisticNoteId = `statistic-note_${dataRunId}`;
-    delete statisticNotes[statisticNoteId];
-    delete chartInstance.config.options.plugins.annotation.annotations[statisticNoteId];
+    for (const statisticNoteId in statisticNotes) {
+      delete statisticNotes[statisticNoteId];
+      delete chartInstance.config.options.plugins.annotation.annotations[statisticNoteId];
+    }
 
     // Remove linear regression annotations
-    const linearRegNoteId = `linear-regression-annotation_${dataRunId}`;
-    delete linearRegAnnotations[linearRegNoteId];
-    delete chartInstance.config.options.plugins.annotation.annotations[linearRegNoteId];
+    for (const linearRegNoteId in linearRegAnnotations) {
+      delete linearRegAnnotations[linearRegNoteId];
+      delete chartInstance.config.options.plugins.annotation.annotations[linearRegNoteId];
+    }
   }
 
   chartInstance.update();
