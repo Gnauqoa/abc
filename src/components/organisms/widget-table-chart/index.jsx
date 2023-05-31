@@ -1,5 +1,4 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
-// import { Button } from "framework7-react";
 import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
@@ -17,7 +16,7 @@ import {
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
   SUMMARIZE_OPTION,
-} from "../../../utils/widget-table-utils";
+} from "../../../utils/widget-table-chart/commons";
 
 import ExpandableOptions from "../../molecules/expandable-options";
 import SummarizedTable from "./summarize";

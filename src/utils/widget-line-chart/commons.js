@@ -1,5 +1,5 @@
 import $ from "jquery";
-import chartUtils from "../chartjs-utils";
+import chartUtils from "./chartjs-utils";
 import { min, max, std, mean, round } from "mathjs";
 import interpolateIcon from "../../img/expandable-options/interpolate.png";
 import autoScaleIcon from "../../img/expandable-options/auto-scale.png";
