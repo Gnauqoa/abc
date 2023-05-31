@@ -376,14 +376,15 @@ const addNote = ({ chartInstance, pageId, newContent }) => {
 };
 
 // ======================================= STATISTIC OPTION =======================================
-const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, pageId }) => {
+const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId }) => {
   if (!isShowStatistic) {
+    const dataRunId = DataManagerIST.getCurrentDataRunId();
     const dataRunData = DataManagerIST.getDataRunData({
       dataRunId: dataRunId,
       sensorId: sensor.id,
       sensorIndex: sensor.index,
     });
-    if (!dataRunData) return;
+    if (!dataRunData) return false;
 
     const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
     const { slope: m, intercept: b } = linearRegression;
@@ -402,7 +403,7 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     const endPointYValue = m * lastDataIndex + b;
 
     // Add statistics notes annotations
-    const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${dataRunId}`;
+    const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
     const statisticNote = {
       id: statisticNoteId,
       dataRunId: dataRunId,
@@ -421,7 +422,7 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
     };
 
     // Add linear regression annotations
-    const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${dataRunId}`;
+    const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
     const linearRegNote = {
       id: linearRegNoteId,
       dataRunId: dataRunId,
@@ -451,18 +452,21 @@ const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, dataRunId, p
   } else {
     // Remove statistics notes annotations
     for (const statisticNoteId in statisticNotes) {
+      if (statisticNotes[statisticNoteId].pageId !== pageId) continue;
       delete statisticNotes[statisticNoteId];
       delete chartInstance.config.options.plugins.annotation.annotations[statisticNoteId];
     }
 
     // Remove linear regression annotations
     for (const linearRegNoteId in linearRegAnnotations) {
+      if (linearRegAnnotations[linearRegNoteId].pageId !== pageId) continue;
       delete linearRegAnnotations[linearRegNoteId];
       delete chartInstance.config.options.plugins.annotation.annotations[linearRegNoteId];
     }
   }
 
   chartInstance.update();
+  return true;
 };
 
 // ======================================= CHART LEGEND =======================================
@@ -580,14 +584,13 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
-  const { currentDataRunId } = useActivityContext();
-
   const { widget, handleSensorChange, pageId } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-  const [isShowStatistic, setIsShowStatistic] = useState(Object.keys(statisticNotes).length > 0);
+  const isSelectStatistic = Object.keys(statisticNotes).some((key) => statisticNotes[key].pageId === pageId);
+  const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
   const [isSelectRegion, setIsSelectRegion] = useState(false);
   const expandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
@@ -780,13 +783,18 @@ let LineChart = (props, ref) => {
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
   const statisticHandler = (chartInstance) => {
-    if (!currentDataRunId || _.isEqual(sensor, DEFAULT_SENSOR_DATA)) return;
+    if (_.isEqual(sensor, DEFAULT_SENSOR_DATA)) return;
     // TODO: on/off point style
     // chartInstance.config.options.elements.point.pointStyle = false;
     // chartInstance.update();
 
-    addStatisticNote({ chartInstance, isShowStatistic, sensor, dataRunId: currentDataRunId, pageId });
-    setIsShowStatistic(!isShowStatistic);
+    const result = addStatisticNote({
+      chartInstance,
+      isShowStatistic,
+      sensor,
+      pageId,
+    });
+    result && setIsShowStatistic(!isShowStatistic);
   };
 
   const selectRegionHandler = (chartInstance) => {

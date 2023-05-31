@@ -439,7 +439,11 @@ export default ({ f7route, f7router, filePath, content }) => {
     // Call this function to clear hiddenDataRunIds in the LineChart
     if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
 
-    if (isModifyData || isModifyDataRunIds) {
+    // If we create new page and do not run any experiment, we will not have currentDataRunId
+    // So when we navigate to next page and come back, currentDataRunId will be null, and it
+    // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
+    // is null, we still render the chart
+    if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: chartDatas,
         xUnit: "ms",
