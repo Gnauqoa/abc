@@ -33,28 +33,23 @@ import {
   LABEL_NOTE_BACKGROUND,
   LABEL_NOTE_BACKGROUND_ACTIVE,
   SAMPLE_LABEL_NOTE,
-  SAMPLE_STATISTIC_NOTE,
   POINT_STYLE,
   POINT_HOVER_RADIUS,
   POINT_RADIUS,
-  getDataStatistic,
-  STATISTIC_NOTE_BACKGROUND,
   LABEL_NOTE_TYPE,
   STATISTIC_NOTE_TYPE,
-  SAMPLE_LINEAR_ANNOTATION,
-  LINEAR_REGRESSION_BACKGROUND,
-  PREFIX_LINEAR_REGRESSION,
   PREFIX_STATISTIC_NOTE,
   PREFIX_LABEL_NOTE,
   ALLOW_ENTER_LEAVE_ANNOTATIONS,
-} from "../../../utils/widget-line-utils";
-import { DEFAULT_SENSOR_DATA } from "../../../js/constants";
+  ALLOW_CLICK_ANNOTATIONS,
+} from "../../../utils/widget-line-chart/commons";
+import { DEFAULT_SENSOR_DATA, LINE_CHART_STATISTIC_NOTE_TABLE } from "../../../js/constants";
 
 import "./index.scss";
 import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
-import { useActivityContext } from "../../../context/ActivityContext";
-import DataManagerIST from "../../../services/data-manager";
+import StoreService from "../../../services/store-service";
+import { addStatisticNote, getAllCurrentStatisticNotes } from "../../../utils/widget-line-chart/statistic-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -65,9 +60,9 @@ let lastNoteEvent;
 let selectedPointElement = null;
 let selectedNoteElement = null;
 let allNotes = {};
-let statisticNotes = {};
-let linearRegAnnotations = {};
 const hiddenDataRunIds = new Set();
+
+const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
 const dragger = {
   id: "annotation-dragger",
@@ -141,49 +136,6 @@ const getAllCurrentLabelNotes = ({ pageId, datasetIndex }) => {
   return noteElements;
 };
 
-const getAllCurrentStatisticNotes = ({ pageId }) => {
-  const statNotes = Object.values(statisticNotes).filter((note) => {
-    return pageId === undefined || note.pageId === pageId;
-  });
-
-  const noteElements = {};
-  statNotes.forEach((note) => {
-    const newNoteElement = {
-      ...SAMPLE_STATISTIC_NOTE,
-      content: note.content,
-      backgroundColor: note.backgroundColor,
-      xValue: note.xValue,
-      yValue: note.yValue,
-      xAdjust: note.xAdjust,
-      yAdjust: note.yAdjust,
-    };
-
-    noteElements[note.id] = newNoteElement;
-  });
-  return noteElements;
-};
-
-const getAllCurrentLinearRegAnnotations = ({ pageId }) => {
-  const linearRegAnnos = Object.values(linearRegAnnotations).filter((note) => {
-    return pageId === undefined || note.pageId === pageId;
-  });
-
-  const noteElements = {};
-  linearRegAnnos.forEach((note) => {
-    const newNoteElement = {
-      ...SAMPLE_LINEAR_ANNOTATION,
-      label: note.label,
-      xMax: note.xMax,
-      xMin: note.xMin,
-      yMax: note.yMax,
-      yMin: note.yMin,
-    };
-
-    noteElements[note.id] = newNoteElement;
-  });
-  return noteElements;
-};
-
 const onClickChartHandler = (event, elements, chart) => {
   if (event.type === "click") {
     const isPointElement = elements[0]?.element instanceof PointElement;
@@ -249,11 +201,14 @@ const onLeaveNoteElement = ({ chart, element }) => {
   // Check whether the note is statistic note or label note
   let noteType;
   let currentNote;
-  if (Object.keys(allNotes).includes(noteElementId)) {
+  if (prefix === PREFIX_LABEL_NOTE) {
     currentNote = allNotes[noteElementId];
     noteType = LABEL_NOTE_TYPE;
-  } else if (Object.keys(statisticNotes).includes(noteElementId)) {
-    currentNote = statisticNotes[noteElementId];
+  } else if (prefix === PREFIX_STATISTIC_NOTE) {
+    const statisticNote = statisticNotesStorage.find(noteElementId);
+    if (!statisticNote) return;
+
+    currentNote = statisticNote.summary;
     noteType = STATISTIC_NOTE_TYPE;
   }
 
@@ -272,14 +227,13 @@ const onLeaveNoteElement = ({ chart, element }) => {
     };
 
     // Update note position
+    const updatedStatisticNote = {
+      ...currentNote,
+      ...newAdjustPos,
+    };
+
     if (noteType === STATISTIC_NOTE_TYPE) {
-      statisticNotes = {
-        ...statisticNotes,
-        [noteElementId]: {
-          ...currentNote,
-          ...newAdjustPos,
-        },
-      };
+      statisticNotesStorage.merge({ id: noteElementId, summary: updatedStatisticNote });
     } else if (noteType === LABEL_NOTE_TYPE) {
       allNotes = {
         ...allNotes,
@@ -301,9 +255,10 @@ const onLeaveNoteElement = ({ chart, element }) => {
 
 const onClickNoteElement = ({ element }) => {
   const elementNoteId = element?.options?.id;
+  const prefixElementNoteId = elementNoteId?.split("_")?.[0];
 
   // Only allows to select label note
-  if (Object.keys(statisticNotes).includes(elementNoteId)) return;
+  if (!ALLOW_CLICK_ANNOTATIONS.includes(prefixElementNoteId)) return;
 
   if (selectedNoteElement === element) {
     element.options.backgroundColor = LABEL_NOTE_BACKGROUND;
@@ -373,100 +328,6 @@ const addNote = ({ chartInstance, pageId, newContent }) => {
   };
 
   handleOpenPopup(newContent);
-};
-
-// ======================================= STATISTIC OPTION =======================================
-const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId }) => {
-  if (!isShowStatistic) {
-    const dataRunId = DataManagerIST.getCurrentDataRunId();
-    const dataRunData = DataManagerIST.getDataRunData({
-      dataRunId: dataRunId,
-      sensorId: sensor.id,
-      sensorIndex: sensor.index,
-    });
-    if (!dataRunData) return false;
-
-    const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
-    const { slope: m, intercept: b } = linearRegression;
-    const linearRegFunction = `y = ${m}x + ${b}`;
-    const content = ["Linear fit", "  y = mx + b"];
-    content.push(`  m = ${m}`);
-    content.push(`  b = ${b}`);
-    content.push("");
-    content.push(`Max = ${max}`);
-    content.push(`Min = ${min}`);
-    content.push(`Mean = ${mean}`);
-    content.push(`Std = ${std}`);
-
-    const lastDataIndex = dataRunData.length - 1;
-    const startPointYValue = m * 0 + b;
-    const endPointYValue = m * lastDataIndex + b;
-
-    // Add statistics notes annotations
-    const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
-    const statisticNote = {
-      id: statisticNoteId,
-      dataRunId: dataRunId,
-      pageId: pageId,
-      content: content,
-      backgroundColor: STATISTIC_NOTE_BACKGROUND,
-      xValue: lastDataIndex,
-      yValue: dataRunData[lastDataIndex],
-      xAdjust: -60,
-      yAdjust: -60,
-    };
-    statisticNotes = { ...statisticNotes, [statisticNoteId]: statisticNote };
-    const newStatisticNote = {
-      ...SAMPLE_STATISTIC_NOTE,
-      ...statisticNote,
-    };
-
-    // Add linear regression annotations
-    const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
-    const linearRegNote = {
-      id: linearRegNoteId,
-      dataRunId: dataRunId,
-      pageId: pageId,
-      xMax: lastDataIndex,
-      xMin: 0,
-      yMax: endPointYValue,
-      yMin: startPointYValue,
-      label: {
-        display: true,
-        backgroundColor: LINEAR_REGRESSION_BACKGROUND,
-        content: linearRegFunction,
-      },
-    };
-    linearRegAnnotations = { ...linearRegAnnotations, [linearRegNoteId]: linearRegNote };
-    const newLinearReg = {
-      ...SAMPLE_LINEAR_ANNOTATION,
-      ...linearRegNote,
-    };
-
-    // Update chart annotations
-    chartInstance.config.options.plugins.annotation.annotations = {
-      ...chartInstance.config.options.plugins.annotation.annotations,
-      [statisticNoteId]: newStatisticNote,
-      [linearRegNoteId]: newLinearReg,
-    };
-  } else {
-    // Remove statistics notes annotations
-    for (const statisticNoteId in statisticNotes) {
-      if (statisticNotes[statisticNoteId].pageId !== pageId) continue;
-      delete statisticNotes[statisticNoteId];
-      delete chartInstance.config.options.plugins.annotation.annotations[statisticNoteId];
-    }
-
-    // Remove linear regression annotations
-    for (const linearRegNoteId in linearRegAnnotations) {
-      if (linearRegAnnotations[linearRegNoteId].pageId !== pageId) continue;
-      delete linearRegAnnotations[linearRegNoteId];
-      delete chartInstance.config.options.plugins.annotation.annotations[linearRegNoteId];
-    }
-  }
-
-  chartInstance.update();
-  return true;
 };
 
 // ======================================= CHART LEGEND =======================================
@@ -563,13 +424,12 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
 
   // update chart notes
   const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId });
-  const statisticNoteAnnotations = getAllCurrentStatisticNotes({ pageId: pageId });
-  const linearRegAnnotations = getAllCurrentLinearRegAnnotations({ pageId: pageId });
+  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId });
 
   chartInstance.config.options.plugins.annotation.annotations = {
     ...labelNoteAnnotations,
-    ...statisticNoteAnnotations,
-    ...linearRegAnnotations,
+    ...summaryNotes,
+    ...linearRegNotes,
   };
 
   chartInstance.update();
@@ -589,7 +449,7 @@ let LineChart = (props, ref) => {
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-  const isSelectStatistic = Object.keys(statisticNotes).some((key) => statisticNotes[key].pageId === pageId);
+  const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
   const [isSelectRegion, setIsSelectRegion] = useState(false);
   const expandOptions = expandableOptions.map((option) => {

@@ -1,13 +1,13 @@
 import $ from "jquery";
-import chartUtils from "./chartjs-utils";
+import chartUtils from "../chartjs-utils";
 import { min, max, std, mean, round } from "mathjs";
-import interpolateIcon from "../img/expandable-options/interpolate.png";
-import autoScaleIcon from "../img/expandable-options/auto-scale.png";
-import noteIcon from "../img/expandable-options/note.png";
-import statisticIcon from "../img/expandable-options/line-statistic.png";
-import selectedStatisticIcon from "../img/expandable-options/line-statistic-selected.png";
-import selectionIcon from "../img/expandable-options/line-selection.png";
-import selectedSelectionIcon from "../img/expandable-options/line-selection-selected.png";
+import interpolateIcon from "../../img/expandable-options/interpolate.png";
+import autoScaleIcon from "../../img/expandable-options/auto-scale.png";
+import noteIcon from "../../img/expandable-options/note.png";
+import statisticIcon from "../../img/expandable-options/line-statistic.png";
+import selectedStatisticIcon from "../../img/expandable-options/line-statistic-selected.png";
+import selectionIcon from "../../img/expandable-options/line-selection.png";
+import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
 
 export const X_FORMAT_FLOATING = 3;
 export const X_DEFAULT_UNIT = "s";
@@ -75,6 +75,7 @@ export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
 export const STATISTIC_NOTE_TYPE = 0;
 export const LABEL_NOTE_TYPE = 1;
 export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
+export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
 
 export const SAMPLE_LABEL_NOTE = {
   type: "label",

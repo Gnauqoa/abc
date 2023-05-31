@@ -3,7 +3,11 @@ import Chart from "chart.js/auto";
 
 import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createChartDataAndParseXAxis, createChartJsDatas, getMaxMinAxises } from "../../../utils/widget-line-utils";
+import {
+  createChartDataAndParseXAxis,
+  createChartJsDatas,
+  getMaxMinAxises,
+} from "../../../utils/widget-line-chart/commons";
 import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID } from "../../../services/sensor-service";

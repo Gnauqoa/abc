@@ -217,6 +217,7 @@ export const USB_TYPE = "usb";
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
+export const LINE_CHART_STATISTIC_NOTE_TABLE = "line-chart-statistic-notes";
 
 // ANDROID SAVE EXPORT PROJECTS VARIABLES
 export const PROJECT_FOLDER = "InnoLabProject";
