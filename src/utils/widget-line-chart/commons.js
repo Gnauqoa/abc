@@ -136,6 +136,8 @@ export const SAMPLE_LINEAR_ANNOTATION = {
   // yMin: 110,
 };
 
+export const hiddenDataRunIds = new Set();
+
 // ======================================= CHART UTILS =======================================
 const roundXValue = (value) => {
   return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);

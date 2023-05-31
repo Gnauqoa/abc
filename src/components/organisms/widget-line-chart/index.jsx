@@ -42,14 +42,27 @@ import {
   PREFIX_LABEL_NOTE,
   ALLOW_ENTER_LEAVE_ANNOTATIONS,
   ALLOW_CLICK_ANNOTATIONS,
+  hiddenDataRunIds,
 } from "../../../utils/widget-line-chart/commons";
-import { DEFAULT_SENSOR_DATA, LINE_CHART_STATISTIC_NOTE_TABLE } from "../../../js/constants";
+import {
+  DEFAULT_SENSOR_DATA,
+  LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_STATISTIC_NOTE_TABLE,
+} from "../../../js/constants";
 
 import "./index.scss";
 import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
 import StoreService from "../../../services/store-service";
 import { addStatisticNote, getAllCurrentStatisticNotes } from "../../../utils/widget-line-chart/statistic-plugin";
+import { addLabelNote, getAllCurrentLabelNotes } from "../../../utils/widget-line-chart/label-plugin";
+import {
+  onClickChartHandler,
+  onClickNoteElement,
+  onEnterNoteElement,
+  onLeaveNoteElement,
+} from "../../../utils/widget-line-chart/annotation-plugin";
+import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -57,12 +70,12 @@ Chart.register(annotationPlugin);
 // ===================================== START DRAG-DROP UTILS =====================================
 let noteElement;
 let lastNoteEvent;
+let isDragging = false;
 let selectedPointElement = null;
 let selectedNoteElement = null;
-let allNotes = {};
-const hiddenDataRunIds = new Set();
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
+const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 
 const dragger = {
   id: "annotation-dragger",
@@ -108,259 +121,13 @@ const handleElementDragging = function (event) {
   noteElement.centerY += moveY;
 
   lastNoteEvent = event;
+  if (moveX !== 0 || moveY !== 0) {
+    isDragging = true;
+  }
   return true;
-};
-
-const getAllCurrentLabelNotes = ({ pageId, datasetIndex }) => {
-  const labelNotes = Object.values(allNotes).filter((note) => {
-    return (
-      (pageId === undefined || note.pageId === pageId) &&
-      (datasetIndex === undefined || note.datasetIndex === datasetIndex)
-    );
-  });
-
-  const noteElements = {};
-  labelNotes.forEach((note) => {
-    const newNoteElement = {
-      ...SAMPLE_LABEL_NOTE,
-      content: note.content,
-      backgroundColor: note.backgroundColor,
-      xValue: note.xValue,
-      yValue: note.yValue,
-      xAdjust: note.xAdjust,
-      yAdjust: note.yAdjust,
-    };
-
-    noteElements[note.id] = newNoteElement;
-  });
-  return noteElements;
-};
-
-const onClickChartHandler = (event, elements, chart) => {
-  if (event.type === "click") {
-    const isPointElement = elements[0]?.element instanceof PointElement;
-
-    // Handle click point
-    if (isPointElement || selectedPointElement !== null) {
-      if (isPointElement) {
-        clearAllSelectedPoints(chart);
-
-        const selectedPoint = elements[0];
-        const datasetIndex = selectedPoint.datasetIndex;
-        const dataPointIndex = selectedPoint.index;
-        const currentDataset = chart.data.datasets[datasetIndex];
-
-        const newPointBackgroundColor = Array.from(
-          { length: currentDataset.data.length },
-          () => currentDataset.backgroundColor
-        );
-        const newPointBorderColor = Array.from(
-          { length: currentDataset.data.length },
-          () => currentDataset.borderColor
-        );
-
-        selectedPointElement = selectedPoint;
-        selectedNoteElement = null;
-
-        newPointBackgroundColor[dataPointIndex] = "red";
-
-        currentDataset.pointBackgroundColor = newPointBackgroundColor;
-        currentDataset.pointBorderColor = newPointBorderColor;
-
-        chart.update();
-      } else if (selectedPointElement !== null) {
-        selectedPointElement = null;
-        selectedNoteElement = null;
-
-        clearAllSelectedPoints(chart);
-        chart.update();
-      }
-    }
-
-    return true;
-  }
-};
-const onEnterNoteElement = ({ chart, element }) => {
-  const noteElementId = element?.options?.id;
-  const prefix = noteElementId?.split("_")?.[0];
-  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
-
-  noteElement = element;
-  chart.config.options.plugins.zoom.pan.enabled = false;
-  chart.update();
-  return true;
-};
-
-const onLeaveNoteElement = ({ chart, element }) => {
-  const noteElementId = element?.options?.id;
-  const prefix = noteElementId?.split("_")?.[0];
-  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
-
-  let label = chart.config.options.plugins.annotation.annotations[noteElementId];
-
-  // Check whether the note is statistic note or label note
-  let noteType;
-  let currentNote;
-  if (prefix === PREFIX_LABEL_NOTE) {
-    currentNote = allNotes[noteElementId];
-    noteType = LABEL_NOTE_TYPE;
-  } else if (prefix === PREFIX_STATISTIC_NOTE) {
-    const statisticNote = statisticNotesStorage.find(noteElementId);
-    if (!statisticNote) return;
-
-    currentNote = statisticNote.summary;
-    noteType = STATISTIC_NOTE_TYPE;
-  }
-
-  if (label) {
-    const oldXPixel = chart.scales.x.getPixelForValue(currentNote.xValue);
-    const oldYPixel = chart.scales.y.getPixelForValue(currentNote.yValue);
-    const newAdjustPos = {
-      xAdjust: element.centerX - oldXPixel,
-      yAdjust: element.centerY - oldYPixel,
-    };
-
-    chart.config.options.plugins.annotation.annotations[noteElementId] = {
-      ...label,
-      ...newAdjustPos,
-      backgroundColor: currentNote.backgroundColor,
-    };
-
-    // Update note position
-    const updatedStatisticNote = {
-      ...currentNote,
-      ...newAdjustPos,
-    };
-
-    if (noteType === STATISTIC_NOTE_TYPE) {
-      statisticNotesStorage.merge({ id: noteElementId, summary: updatedStatisticNote });
-    } else if (noteType === LABEL_NOTE_TYPE) {
-      allNotes = {
-        ...allNotes,
-        [noteElementId]: {
-          ...currentNote,
-          ...newAdjustPos,
-        },
-      };
-    }
-  }
-
-  chart.config.options.plugins.zoom.pan.enabled = true;
-  chart.update();
-
-  noteElement = undefined;
-  lastNoteEvent = undefined;
-  return true;
-};
-
-const onClickNoteElement = ({ element }) => {
-  const elementNoteId = element?.options?.id;
-  const prefixElementNoteId = elementNoteId?.split("_")?.[0];
-
-  // Only allows to select label note
-  if (!ALLOW_CLICK_ANNOTATIONS.includes(prefixElementNoteId)) return;
-
-  if (selectedNoteElement === element) {
-    element.options.backgroundColor = LABEL_NOTE_BACKGROUND;
-    allNotes[elementNoteId].backgroundColor = LABEL_NOTE_BACKGROUND;
-    selectedNoteElement = null;
-  } else {
-    if (selectedNoteElement !== null) {
-      const prevNoteElementId = selectedNoteElement.options.id;
-      selectedNoteElement.backgroundColor = LABEL_NOTE_BACKGROUND;
-      allNotes[prevNoteElementId].backgroundColor = LABEL_NOTE_BACKGROUND;
-    }
-
-    element.options.backgroundColor = LABEL_NOTE_BACKGROUND_ACTIVE;
-    allNotes[elementNoteId].backgroundColor = LABEL_NOTE_BACKGROUND_ACTIVE;
-    selectedNoteElement = element;
-  }
-
-  return true;
-};
-
-const addNote = ({ chartInstance, pageId, newContent }) => {
-  const isValidPointElement = selectedPointElement && selectedPointElement.element;
-  const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
-  if (!isValidPointElement && !isValidNoteElement) return;
-
-  let noteId;
-  if (isValidNoteElement) {
-    noteId = selectedNoteElement.options.id;
-  } else {
-    noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
-  }
-
-  const handleOpenPopup = (noteContent) => {
-    const newNoteContent = !noteContent ? null : prepareContentNote(noteContent);
-    if (Object.keys(allNotes).includes(noteId)) {
-      chartInstance.config.options.plugins.annotation.annotations[noteId].content = newNoteContent;
-      allNotes[noteId] = { ...allNotes[noteId], content: newNoteContent };
-    } else if (newNoteContent) {
-      const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
-      const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointElement.element.y);
-      const newNote = {
-        id: noteId,
-        datasetIndex: selectedPointElement.datasetIndex,
-        pageId: pageId,
-        content: newNoteContent,
-        backgroundColor: LABEL_NOTE_BACKGROUND,
-        xValue: xValueNoteElement,
-        yValue: yValueNoteElement,
-        xAdjust: -60,
-        yAdjust: -60,
-      };
-      const newNoteElement = {
-        ...SAMPLE_LABEL_NOTE,
-        ...newNote,
-      };
-      allNotes = { ...allNotes, [noteId]: newNote };
-      chartInstance.config.options.plugins.annotation.annotations = {
-        ...chartInstance.config.options.plugins.annotation.annotations,
-        [noteId]: newNoteElement,
-      };
-    }
-    // Clear selected point
-    selectedPointElement = null;
-    selectedNoteElement = null;
-    clearAllSelectedPoints(chartInstance);
-    chartInstance.update();
-  };
-
-  handleOpenPopup(newContent);
-};
-
-// ======================================= CHART LEGEND =======================================
-const onClickLegendHandler = (event, legendItem, legend) => {
-  if (event.type !== "click") return;
-
-  const datasetIndex = legendItem.datasetIndex;
-  const noteElements = getAllCurrentLabelNotes({ datasetIndex: datasetIndex });
-  const ci = legend.chart;
-
-  const dataRunId = ci.data.datasets[datasetIndex]?.dataRunId;
-
-  let isShowNote = false;
-  if (ci.isDatasetVisible(datasetIndex)) {
-    ci.hide(datasetIndex);
-    legendItem.hidden = true;
-    isShowNote = false;
-    hiddenDataRunIds.add(dataRunId);
-  } else {
-    ci.show(datasetIndex);
-    legendItem.hidden = false;
-    isShowNote = true;
-    hiddenDataRunIds.delete(dataRunId);
-  }
-
-  Object.keys(noteElements).forEach((nodeId) => {
-    ci.config.options.plugins.annotation.annotations[nodeId].display = isShowNote;
-  });
-  ci.update();
 };
 
 // ======================================= CHART FUNCTIONS =======================================
-
 /**
  * data: [{
  * name:string,
@@ -423,8 +190,8 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
   }
 
   // update chart notes
-  const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId });
-  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId });
+  const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
+  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
 
   chartInstance.config.options.plugins.annotation.annotations = {
     ...labelNoteAnnotations,
@@ -541,7 +308,20 @@ let LineChart = (props, ref) => {
             pointHoverRadius: POINT_HOVER_RADIUS,
           },
         },
-        onClick: onClickChartHandler,
+        onClick: (event, elements, chart) => {
+          const { status, newPointEl } = onClickChartHandler(
+            event,
+            elements,
+            chart,
+            selectedPointElement,
+            selectedNoteElement
+          );
+          if (status) {
+            selectedPointElement = newPointEl;
+            selectedNoteElement = null;
+          }
+          return true;
+        },
         animation: false,
         maintainAspectRatio: false,
         events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
@@ -589,15 +369,38 @@ let LineChart = (props, ref) => {
           },
 
           annotation: {
-            enter: onEnterNoteElement,
-            leave: onLeaveNoteElement,
-            click: onClickNoteElement,
+            enter: ({ chart, element }) => {
+              const { status, element: newElement } = onEnterNoteElement({ chart, element });
+              if (status) noteElement = newElement;
+              return true;
+            },
+            leave: ({ chart, element }) => {
+              const { status } = onLeaveNoteElement({ chart, element });
+              if (status) {
+                noteElement = undefined;
+                lastNoteEvent = undefined;
+                isDragging = false;
+              }
+              return true;
+            },
+            click: ({ element }) => {
+              if (isDragging) {
+                isDragging = false;
+                return false;
+              }
+
+              const { status, element: newElement } = onClickNoteElement({ element, selectedNoteElement });
+              if (status) selectedNoteElement = newElement;
+              return true;
+            },
             annotations: {},
           },
 
           legend: {
             display: true,
-            onClick: onClickLegendHandler,
+            onClick: (event, legendItem, legend) => {
+              onClickLegendHandler(event, legendItem, legend);
+            },
           },
         },
       },
@@ -615,7 +418,7 @@ let LineChart = (props, ref) => {
   }, []);
 
   //========================= ADD NOTE FUNCTIONS =========================
-  const addNoteHandler = (chartInstance, sensorInstance) => {
+  const addNoteHandler = (sensorInstance) => {
     const isValidPointElement = selectedPointElement && selectedPointElement.element;
     const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
     if (!isValidPointElement && !isValidNoteElement) return;
@@ -627,8 +430,10 @@ let LineChart = (props, ref) => {
     else
       noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
 
-    if (Object.keys(allNotes).includes(noteId)) {
-      prevContent = chartInstance.config.options.plugins.annotation.annotations[noteId].content;
+    const labelNote = labelNotesStorage.find(noteId);
+    if (labelNote) {
+      const note = labelNote.label;
+      prevContent = note.content;
       prevContent = prevContent.join(" ");
     }
 
@@ -637,9 +442,22 @@ let LineChart = (props, ref) => {
     ));
   };
 
-  const callbackAddNote = (newContent) =>
-    addNote({ chartInstance: chartInstanceRef.current, pageId: pageId, newContent: newContent });
-  const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddNote });
+  const callbackAddLabelNote = (newContent) => {
+    const result = addLabelNote({
+      chartInstance: chartInstanceRef.current,
+      pageId: pageId,
+      newContent: newContent,
+      selectedPointElement,
+      selectedNoteElement,
+    });
+
+    if (result) {
+      // Clear selected point
+      selectedPointElement = null;
+      selectedNoteElement = null;
+    }
+  };
+  const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
   const statisticHandler = (chartInstance) => {
@@ -668,7 +486,7 @@ let LineChart = (props, ref) => {
         scaleToFixHandler(chartInstanceRef.current, axisRef);
         break;
       case NOTE_OPTION:
-        addNoteHandler(chartInstanceRef.current, sensorRef.current);
+        addNoteHandler(sensorRef.current);
         break;
       case INTERPOLATE_OPTION:
         interpolateHandler(chartInstanceRef.current);

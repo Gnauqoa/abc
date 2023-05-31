@@ -15,7 +15,6 @@ const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
 // ======================================= STATISTIC OPTION =======================================
 export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId }) => {
-  console.log("isShowStatistic: ", isShowStatistic);
   if (!isShowStatistic) {
     const dataRunId = DataManagerIST.getCurrentDataRunId();
     const dataRunData = DataManagerIST.getDataRunData({
@@ -63,8 +62,6 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
     const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
     const linearRegNote = {
       id: linearRegNoteId,
-      dataRunId: dataRunId,
-      pageId: pageId,
       xMax: lastDataIndex,
       xMin: 0,
       yMax: endPointYValue,
@@ -82,9 +79,10 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
 
     statisticNotesStorage.save({
       id: statisticNoteId,
+      pageId: pageId,
+      dataRunId: dataRunId,
       summary: statisticNote,
       linearReg: linearRegNote,
-      pageId: pageId,
     });
 
     // Update chart annotations
@@ -106,13 +104,19 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
   return true;
 };
 
-export const getAllCurrentStatisticNotes = ({ pageId }) => {
-  const allStatNotes = statisticNotesStorage.query({ pageId: pageId });
+export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, hiddenDataRunIds }) => {
+  const condition = {};
+  if (pageId) condition.pageId = pageId;
+  if (dataRunId) condition.dataRunId = dataRunId;
+
+  const allStatNotes = statisticNotesStorage.query(condition);
 
   const summaryNotes = {};
   const linearRegNotes = {};
 
   allStatNotes.forEach((statNote) => {
+    if (hiddenDataRunIds && hiddenDataRunIds.has(statNote.dataRunId)) return;
+
     const summaryNote = statNote.summary;
     const linearRegNote = statNote.linearReg;
 
