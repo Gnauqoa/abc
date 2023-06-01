@@ -1,31 +1,61 @@
 import $ from "jquery";
 import chartUtils from "./chartjs-utils";
 import { min, max, std, mean, round } from "mathjs";
-import interpolateIcon from "../../img/expandable-options/interpolate.png";
-import autoScaleIcon from "../../img/expandable-options/auto-scale.png";
-import noteIcon from "../../img/expandable-options/note.png";
+import interpolateIcon from "../../img/expandable-options/line-interpolate.png";
+import autoScaleIcon from "../../img/expandable-options/line-auto-scale.png";
+import noteIcon from "../../img/expandable-options/line-note.png";
 import statisticIcon from "../../img/expandable-options/line-statistic.png";
 import selectedStatisticIcon from "../../img/expandable-options/line-statistic-selected.png";
 import selectionIcon from "../../img/expandable-options/line-selection.png";
 import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
+import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
+import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
 
-export const X_FORMAT_FLOATING = 3;
-export const X_DEFAULT_UNIT = "s";
-
+// ============== DECLARE CONSTANTS ==============
+// OPTIONS
 export const SCALE_FIT_OPTION = 0;
 export const NOTE_OPTION = 1;
 export const INTERPOLATE_OPTION = 2;
 export const STATISTIC_OPTION = 3;
 export const SELECTION_OPTION = 4;
+export const SHOW_OFF_DATA_POINT_MARKER = 5;
 
-export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION];
+export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 
+export const X_FORMAT_FLOATING = 3;
+export const X_DEFAULT_UNIT = "s";
+
+// SCALE FEATURES
 export const X_UPPER_LOWER_MARGIN = 2;
 export const Y_UPPER_LOWER_MARGIN_SCALE = 0.1;
 export const X_MIN_VALUE = 0;
 export const Y_MIN_VALUE = 5;
 
+// INTERPOLATE FEATURES
 export const INTERPOLATE_VALUE = 0.4;
+
+// LABEL NOTE FEATURES
+export const PREFIX_LABEL_NOTE = "label-note";
+export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
+export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
+export const LABEL_NOTE_BORDER = "#C12553";
+
+// STATISTIC NOTE FEATURES
+export const PREFIX_STATISTIC_NOTE = "statistic-note";
+export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
+export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
+
+export const PREFIX_LINEAR_REGRESSION = "linear-regression-annotation";
+export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
+
+export const STATISTIC_NOTE_TYPE = 0;
+export const LABEL_NOTE_TYPE = 1;
+
+// ELEMENTS INTERACTIONS
+export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
+export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
+
+// DATA POINTS
 export const POINT_STYLE = "circle";
 export const POINT_RADIUS = 5;
 export const POINT_HOVER_RADIUS = 10;
@@ -45,9 +75,9 @@ export const expandableOptions = [
     size: "70%",
   },
   {
-    id: STATISTIC_OPTION,
-    icon: statisticIcon,
-    selectedIcon: selectedStatisticIcon,
+    id: SHOW_OFF_DATA_POINT_MARKER,
+    icon: showOffDataPointIcon,
+    selectedIcon: selectedShowOffDataPointIcon,
     selected: false,
     size: "70%",
   },
@@ -58,24 +88,14 @@ export const expandableOptions = [
     selected: false,
     size: "70%",
   },
+  {
+    id: STATISTIC_OPTION,
+    icon: statisticIcon,
+    selectedIcon: selectedStatisticIcon,
+    selected: false,
+    size: "70%",
+  },
 ];
-
-export const PREFIX_LABEL_NOTE = "label-note";
-export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
-export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
-export const LABEL_NOTE_BORDER = "#C12553";
-
-export const PREFIX_STATISTIC_NOTE = "statistic-note";
-export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
-export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
-
-export const PREFIX_LINEAR_REGRESSION = "linear-regression-annotation";
-export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
-
-export const STATISTIC_NOTE_TYPE = 0;
-export const LABEL_NOTE_TYPE = 1;
-export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
-export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
 
 export const SAMPLE_LABEL_NOTE = {
   type: "label",

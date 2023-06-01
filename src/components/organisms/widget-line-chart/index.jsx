@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
-import Chart, { PointElement } from "chart.js/auto";
+import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
 import _ from "lodash";
@@ -18,7 +18,6 @@ import {
   getChartJsPlugin,
   scaleToFixHandler,
   interpolateHandler,
-  clearAllSelectedPoints,
   expandableOptions,
   SCALE_FIT_OPTION,
   NOTE_OPTION,
@@ -26,23 +25,14 @@ import {
   X_DEFAULT_UNIT,
   X_MIN_VALUE,
   Y_MIN_VALUE,
-  prepareContentNote,
   STATISTIC_OPTION,
   SELECTION_OPTION,
   OPTIONS_WITH_SELECTED,
-  LABEL_NOTE_BACKGROUND,
-  LABEL_NOTE_BACKGROUND_ACTIVE,
-  SAMPLE_LABEL_NOTE,
   POINT_STYLE,
   POINT_HOVER_RADIUS,
   POINT_RADIUS,
-  LABEL_NOTE_TYPE,
-  STATISTIC_NOTE_TYPE,
-  PREFIX_STATISTIC_NOTE,
-  PREFIX_LABEL_NOTE,
-  ALLOW_ENTER_LEAVE_ANNOTATIONS,
-  ALLOW_CLICK_ANNOTATIONS,
   hiddenDataRunIds,
+  SHOW_OFF_DATA_POINT_MARKER,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -63,6 +53,7 @@ import {
   onLeaveNoteElement,
 } from "../../../utils/widget-line-chart/annotation-plugin";
 import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
+import { onSelectRegion } from "../../../utils/widget-line-chart/selection-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -219,11 +210,13 @@ let LineChart = (props, ref) => {
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
   const [isSelectRegion, setIsSelectRegion] = useState(false);
+  const [isOffDataPoint, setIsOffDataPoint] = useState(false);
   const expandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
 
     if (option.id === STATISTIC_OPTION) return { ...option, selected: isShowStatistic };
     else if (option.id === SELECTION_OPTION) return { ...option, selected: isSelectRegion };
+    else if (option.id === SHOW_OFF_DATA_POINT_MARKER) return { ...option, selected: isOffDataPoint };
   });
 
   const chartEl = useRef();
@@ -462,10 +455,6 @@ let LineChart = (props, ref) => {
   //========================= STATISTIC OPTION FUNCTIONS =========================
   const statisticHandler = (chartInstance) => {
     if (_.isEqual(sensor, DEFAULT_SENSOR_DATA)) return;
-    // TODO: on/off point style
-    // chartInstance.config.options.elements.point.pointStyle = false;
-    // chartInstance.update();
-
     const result = addStatisticNote({
       chartInstance,
       isShowStatistic,
@@ -475,8 +464,21 @@ let LineChart = (props, ref) => {
     result && setIsShowStatistic(!isShowStatistic);
   };
 
+  //========================= SELECTION REGION FUNCTIONS =========================
   const selectRegionHandler = (chartInstance) => {
+    onSelectRegion({ chartInstance, isSelectRegion });
     setIsSelectRegion(!isSelectRegion);
+  };
+
+  //========================= SHOW OFF DATA POINT FUNCTIONS =========================
+  const showOffDataPointHandler = (chartInstance) => {
+    if (isOffDataPoint) {
+      chartInstance.config.options.elements.point.pointStyle = POINT_STYLE;
+    } else {
+      chartInstance.config.options.elements.point.pointStyle = false;
+    }
+    chartInstance.update();
+    setIsOffDataPoint(!isOffDataPoint);
   };
 
   //========================= OPTIONS FUNCTIONS =========================
@@ -496,6 +498,9 @@ let LineChart = (props, ref) => {
         break;
       case SELECTION_OPTION:
         selectRegionHandler(chartInstanceRef.current);
+        break;
+      case SHOW_OFF_DATA_POINT_MARKER:
+        showOffDataPointHandler(chartInstanceRef.current);
         break;
       default:
         break;
