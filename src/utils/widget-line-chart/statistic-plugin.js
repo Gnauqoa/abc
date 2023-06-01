@@ -36,9 +36,16 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
     content.push(`Mean = ${mean}`);
     content.push(`Std = ${std}`);
 
-    const lastDataIndex = dataRunData.length - 1;
-    const startPointYValue = m * 0 + b;
-    const endPointYValue = m * lastDataIndex + b;
+    const dataset = chartInstance.config.data.datasets.find((dataset) => dataset.dataRunId === dataRunId);
+    if (!dataset || !dataset.data) return false;
+
+    const datasetData = dataset.data;
+    const lastDataIndex = datasetData.length - 1;
+
+    const x1 = 0;
+    const x2 = datasetData[lastDataIndex].x;
+    const y1 = m * 0 + b;
+    const y2 = m * lastDataIndex + b;
 
     // Add statistics notes annotations
     const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
@@ -48,8 +55,8 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
       pageId: pageId,
       content: content,
       backgroundColor: STATISTIC_NOTE_BACKGROUND,
-      xValue: lastDataIndex,
-      yValue: dataRunData[lastDataIndex],
+      xValue: datasetData[lastDataIndex].x,
+      yValue: datasetData[lastDataIndex].y,
       xAdjust: -60,
       yAdjust: -60,
     };
@@ -62,10 +69,10 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
     const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
     const linearRegNote = {
       id: linearRegNoteId,
-      xMax: lastDataIndex,
-      xMin: 0,
-      yMax: endPointYValue,
-      yMin: startPointYValue,
+      xMax: x2,
+      xMin: x1,
+      yMax: y2,
+      yMin: y1,
       label: {
         display: true,
         backgroundColor: LINEAR_REGRESSION_BACKGROUND,
