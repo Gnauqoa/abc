@@ -1,24 +1,64 @@
 import $ from "jquery";
 import chartUtils from "./chartjs-utils";
+import { min, max, std, mean, round } from "mathjs";
+import interpolateIcon from "../../img/expandable-options/line-interpolate.png";
+import autoScaleIcon from "../../img/expandable-options/line-auto-scale.png";
+import noteIcon from "../../img/expandable-options/line-note.png";
+import statisticIcon from "../../img/expandable-options/line-statistic.png";
+import selectedStatisticIcon from "../../img/expandable-options/line-statistic-selected.png";
+import selectionIcon from "../../img/expandable-options/line-selection.png";
+import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
+import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
+import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
 
-import interpolateIcon from "../img/expandable-options/interpolate.png";
-import autoScaleIcon from "../img/expandable-options/auto-scale.png";
-import noteIcon from "../img/expandable-options/note.png";
-import noteSelectedIcon from "../img/expandable-options/note-selected.png";
+// ============== DECLARE CONSTANTS ==============
+// OPTIONS
+export const SCALE_FIT_OPTION = 0;
+export const NOTE_OPTION = 1;
+export const INTERPOLATE_OPTION = 2;
+export const STATISTIC_OPTION = 3;
+export const SELECTION_OPTION = 4;
+export const SHOW_OFF_DATA_POINT_MARKER = 5;
+
+export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 
 export const X_FORMAT_FLOATING = 3;
 export const X_DEFAULT_UNIT = "s";
 
-export const SCALE_FIT_OPTION = 0;
-export const NOTE_OPTION = 1;
-export const INTERPOLATE_OPTION = 2;
-
+// SCALE FEATURES
 export const X_UPPER_LOWER_MARGIN = 2;
 export const Y_UPPER_LOWER_MARGIN_SCALE = 0.1;
 export const X_MIN_VALUE = 0;
 export const Y_MIN_VALUE = 5;
 
+// INTERPOLATE FEATURES
 export const INTERPOLATE_VALUE = 0.4;
+
+// LABEL NOTE FEATURES
+export const PREFIX_LABEL_NOTE = "label-note";
+export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.5);
+export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
+export const LABEL_NOTE_BORDER = "#C12553";
+
+// STATISTIC NOTE FEATURES
+export const PREFIX_STATISTIC_NOTE = "statistic-note";
+export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
+export const STATISTIC_NOTE_BORDER = chartUtils.CHART_COLORS.black;
+
+export const PREFIX_LINEAR_REGRESSION = "linear-regression-annotation";
+export const LINEAR_REGRESSION_BACKGROUND = "rgb(100, 149, 237)";
+
+export const STATISTIC_NOTE_TYPE = 0;
+export const LABEL_NOTE_TYPE = 1;
+
+// ELEMENTS INTERACTIONS
+export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
+export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
+
+// DATA POINTS
+export const POINT_STYLE = "circle";
+export const POINT_RADIUS = 5;
+export const POINT_HOVER_RADIUS = 10;
 
 export const expandableOptions = [
   {
@@ -28,14 +68,95 @@ export const expandableOptions = [
   {
     id: NOTE_OPTION,
     icon: noteIcon,
-    // selectedIcon: noteSelectedIcon,
-    // selected: true,
   },
   {
     id: INTERPOLATE_OPTION,
     icon: interpolateIcon,
+    size: "70%",
+  },
+  {
+    id: SHOW_OFF_DATA_POINT_MARKER,
+    icon: showOffDataPointIcon,
+    selectedIcon: selectedShowOffDataPointIcon,
+    selected: false,
+    size: "70%",
+  },
+  {
+    id: SELECTION_OPTION,
+    icon: selectionIcon,
+    selectedIcon: selectedSelectionIcon,
+    selected: false,
+    size: "70%",
+  },
+  {
+    id: STATISTIC_OPTION,
+    icon: statisticIcon,
+    selectedIcon: selectedStatisticIcon,
+    selected: false,
+    size: "70%",
   },
 ];
+
+export const SAMPLE_LABEL_NOTE = {
+  type: "label",
+  backgroundColor: LABEL_NOTE_BACKGROUND,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: LABEL_NOTE_BORDER,
+  padding: {
+    top: 20,
+    left: 12,
+    right: 12,
+    bottom: 20,
+  },
+  content: ["    Note    "],
+  callout: {
+    display: true,
+    borderColor: "black",
+  },
+  xValue: 0,
+  yValue: 0,
+  display: true,
+};
+
+export const SAMPLE_STATISTIC_NOTE = {
+  type: "label",
+  backgroundColor: STATISTIC_NOTE_BACKGROUND,
+  textAlign: "left",
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: STATISTIC_NOTE_BORDER,
+  padding: {
+    top: 20,
+    left: 12,
+    right: 12,
+    bottom: 20,
+  },
+  content: [""],
+  callout: {
+    display: true,
+    borderColor: "black",
+  },
+  xValue: 0,
+  yValue: 0,
+  display: true,
+};
+
+export const SAMPLE_LINEAR_ANNOTATION = {
+  type: "line",
+  borderColor: "rgb(100, 149, 237)",
+  borderDash: [6, 6],
+  borderDashOffset: 0,
+  borderWidth: 3,
+  xScaleID: "x",
+  yScaleID: "y",
+  // xMax: 8,
+  // xMin: 5,
+  // yMax: 110,
+  // yMin: 110,
+};
+
+export const hiddenDataRunIds = new Set();
 
 // ======================================= CHART UTILS =======================================
 const roundXValue = (value) => {
@@ -93,7 +214,7 @@ export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) =>
 export const createChartDataAndParseXAxis = ({ chartDatas }) => {
   const result = chartDatas.map((chartData) => {
     return {
-      name: chartData.name,
+      ...chartData,
       data: chartData.data.map((item) => {
         return {
           x: roundXValue(parseFloat(item.x)),
@@ -110,7 +231,7 @@ export const createChartDataAndParseXAxis = ({ chartDatas }) => {
  *
  * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
  */
-export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) => {
+export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hiddenDataRunIds }) => {
   let chartDataParam = {
     labels: [],
     datasets: [
@@ -125,7 +246,10 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) =>
   chartDatas.forEach((s, index) => {
     const dataList = [];
     let firstPoint = null;
+    // const isDataRunHidden = hiddenDataRunIds.has(s.dataRunId);
+    // console.log(`widget-line-utils_createChartJsDatas_isDataRun_${s.dataRunId}_hidden_${isDataRunHidden}`);
 
+    // if (!isDataRunHidden) {
     s.data.forEach((d, dataIndex) => {
       if (dataIndex == 0) {
         const firstData = s.data[0];
@@ -139,13 +263,15 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension }) =>
         y: d.y,
       });
     });
+    // }
 
     const dataset = {
       label: s.name,
       data: dataList,
-      pointStyle: "circle",
-      pointRadius: 5,
-      pointHoverRadius: 10,
+      dataRunId: s.dataRunId,
+      // pointStyle: "circle",
+      // pointRadius: 5,
+      // pointHoverRadius: 10,
       borderColor: chartUtils.namedColor(index),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
     };
@@ -347,4 +473,43 @@ export const clearAllSelectedPoints = (chart) => {
     dataset.pointBackgroundColor = newPointBackgroundColor;
     dataset.pointBorderColor = newPointBorderColor;
   });
+};
+
+const calculateLinearRegression = ({ data }) => {
+  const n = data.length;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    const x = i;
+    const y = data[i];
+
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  return { slope: round(slope, 2), intercept: round(intercept, 2) };
+};
+
+export const getDataStatistic = (dataRunData) => {
+  const maxValue = round(max(...dataRunData), 2);
+  const minValue = round(min(...dataRunData), 2);
+  const meanValue = round(mean(...dataRunData), 2);
+  const stdValue = round(std(...dataRunData), 2);
+
+  const { slope, intercept } = calculateLinearRegression({ data: dataRunData });
+  return {
+    min: minValue,
+    max: maxValue,
+    mean: meanValue,
+    std: stdValue,
+    linearRegression: { slope, intercept },
+  };
 };

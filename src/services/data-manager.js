@@ -29,7 +29,7 @@ export class DataManager {
 
     // calls two scheduler functions
     // this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   initializeVariables() {
@@ -516,6 +516,41 @@ export class DataManager {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Retrieves data from a data run.
+   * @param {Object} options - Options object.
+   * @param {string} options.dataRunId - The ID of the data run.
+   * @param {number} [options.sensorId] - The ID of the sensor.
+   * @param {number} [options.sensorIndex] - The index of the sensor value.
+   * @returns {boolean|{time: time, values: [value1, value2, ...]}[]|number[]} - The retrieved data or false if not found.
+   */
+  getDataRunData({ dataRunId, sensorId, sensorIndex }) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun || !dataRun.data) {
+      // console.log(`DATA_MANAGER-getDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+
+    if (sensorId !== undefined) {
+      const dataRunWithSensorId = dataRun.data[parseInt(sensorId)];
+      if (!dataRunWithSensorId || !Array.isArray(dataRunWithSensorId)) return false;
+
+      if (sensorIndex !== undefined) {
+        const dataRunWithSensorIndex = [];
+        for (const dataPoint of dataRunWithSensorId) {
+          const sensorValue = dataPoint.values?.[parseInt(sensorIndex)];
+          sensorValue && dataRunWithSensorIndex.push(parseFloat(sensorValue));
+        }
+
+        return dataRunWithSensorIndex;
+      } else {
+        return dataRunWithSensorId;
+      }
+    } else {
+      return (dataRun.data ??= []);
+    }
   }
 
   addCustomSensor(sensorId) {

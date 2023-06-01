@@ -26,6 +26,7 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
       <div className={`container options ${expanded ? "expanded" : ""}`}>
         {Array.isArray(options) &&
           options.map((option) => {
+            const iconSize = option.size ? option.size : ICON_SIZE;
             return (
               <div
                 key={option.id}
@@ -36,7 +37,7 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
                 <img
                   src={option.selected ? option.selectedIcon : option.icon}
                   alt={`expand-icon-${option.id}`}
-                  style={{ width: ICON_SIZE }}
+                  style={{ width: iconSize }}
                 />
               </div>
             );

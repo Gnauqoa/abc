@@ -1,9 +1,9 @@
-import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../js/constants";
+import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
 
-import addColumnIcon from "../img/expandable-options/add-column.png";
-import deleteColumnIcon from "../img/expandable-options/delete-column.png";
-import summarizeTableIcon from "../img/expandable-options/summarize-table.png";
-import summarizeTableSelectedIcon from "../img/expandable-options/summarize-table-selected.png";
+import addColumnIcon from "../../img/expandable-options/add-column.png";
+import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
+import summarizeTableIcon from "../../img/expandable-options/summarize-table.png";
+import summarizeTableSelectedIcon from "../../img/expandable-options/summarize-table-selected.png";
 
 export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";

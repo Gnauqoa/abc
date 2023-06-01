@@ -429,13 +429,21 @@ export default ({ f7route, f7router, filePath, content }) => {
       return {
         name: dataRunPreview.name,
         data: data,
+        dataRunId: dataRunPreview.id,
       };
     });
 
-    if (
-      !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]) ||
-      !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex])
-    ) {
+    const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+    const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+
+    // Call this function to clear hiddenDataRunIds in the LineChart
+    if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
+
+    // If we create new page and do not run any experiment, we will not have currentDataRunId
+    // So when we navigate to next page and come back, currentDataRunId will be null, and it
+    // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
+    // is null, we still render the chart
+    if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: chartDatas,
         xUnit: "ms",
@@ -541,6 +549,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                 {[LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART].includes(pages[currentPageIndex].layout) && (
                   <LineChart
                     key={`${currentPageIndex}_chart`}
+                    pageId={`${currentPageIndex}_chart`}
                     data={getDataForChart(pages[currentPageIndex].widgets[1].sensors)}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
@@ -573,6 +582,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               {pages[currentPageIndex].layout === LAYOUT_CHART && (
                 <LineChart
                   key={`${currentPageIndex}_chart`}
+                  pageId={`${currentPageIndex}_chart`}
                   data={getDataForChart(pages[currentPageIndex].widgets[0].sensors)}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
