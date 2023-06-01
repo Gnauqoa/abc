@@ -131,72 +131,77 @@ const handleElementDragging = function (event) {
  */
 // TODO: check axisRef does not change for first time change sensor value
 const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
-  const pageStep = 5;
-  const firstPageStep = 10;
+  try {
+    const pageStep = 5;
+    const firstPageStep = 10;
 
-  let suggestedMaxX = calculateSuggestMaxX({
-    chartDatas: data,
-    pageStep,
-    firstPageStep,
-  });
+    let suggestedMaxX = calculateSuggestMaxX({
+      chartDatas: data,
+      pageStep,
+      firstPageStep,
+    });
 
-  if (!suggestedMaxX) {
-    suggestedMaxX = pageStep;
-  }
-
-  const stepSize = suggestedMaxX / 10;
-
-  chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
-  chartInstance.options.animation = false;
-  chartInstance.options.scales = {
-    y: {
-      min: axisRef.current.yMin,
-      suggestedMax: axisRef.current.yMax,
-      title: {
-        color: "orange",
-        display: false,
-        text: axisRef.current.yUnit,
-      },
-    },
-    x: {
-      type: "linear",
-      suggestedMin: 0,
-      suggestedMax: suggestedMaxX,
-      ticks: {
-        // forces step size to be 50 units
-        //stepSize: ((1 / maxHz) * 1000).toFixed(0),
-        //stepSize: stepSize
-      },
-      title: {
-        color: "orange",
-        display: true,
-        text: `(${X_DEFAULT_UNIT})`,
-        align: "end",
-      },
-    },
-  };
-
-  if (stepSize) {
-    chartInstance.options.scales.x.ticks.stepSize = stepSize;
-  }
-
-  // update chart notes
-  const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
-  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
-
-  chartInstance.config.options.plugins.annotation.annotations = {
-    ...labelNoteAnnotations,
-    ...summaryNotes,
-    ...linearRegNotes,
-  };
-
-  chartInstance.update();
-
-  for (let index = 0; index < chartInstance.data.datasets.length; index++) {
-    const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
-    if (hiddenDataRunIds.has(dataRunId)) {
-      chartInstance.hide(index);
+    if (!suggestedMaxX) {
+      suggestedMaxX = pageStep;
     }
+
+    const stepSize = suggestedMaxX / 10;
+
+    chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+    chartInstance.options.animation = false;
+    chartInstance.options.scales = {
+      y: {
+        min: axisRef.current.yMin,
+        suggestedMax: axisRef.current.yMax,
+        title: {
+          color: "orange",
+          display: false,
+          text: axisRef.current.yUnit,
+        },
+      },
+      x: {
+        type: "linear",
+        suggestedMin: 0,
+        suggestedMax: suggestedMaxX,
+        ticks: {
+          // forces step size to be 50 units
+          //stepSize: ((1 / maxHz) * 1000).toFixed(0),
+          //stepSize: stepSize
+        },
+        title: {
+          color: "orange",
+          display: true,
+          text: `(${X_DEFAULT_UNIT})`,
+          align: "end",
+        },
+      },
+    };
+
+    if (stepSize) {
+      chartInstance.options.scales.x.ticks.stepSize = stepSize;
+    }
+
+    if (data?.length > 0) {
+      // update chart notes
+      const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
+      const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
+
+      chartInstance.config.options.plugins.annotation.annotations = {
+        ...labelNoteAnnotations,
+        ...summaryNotes,
+        ...linearRegNotes,
+      };
+    }
+    chartInstance.update();
+
+    for (let index = 0; index < chartInstance.data.datasets.length; index++) {
+      const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
+      if (hiddenDataRunIds.has(dataRunId)) {
+        chartInstance.hide(index);
+      }
+    }
+  } catch (error) {
+    console.error("updateChart: ", error);
   }
 };
 
