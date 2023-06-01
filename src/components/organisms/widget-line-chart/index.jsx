@@ -265,12 +265,40 @@ let LineChart = (props, ref) => {
     // This function is used to clear hiddenDataRunIds
     // in the LineChart for the deleted dataRunIds
     modifyDataRunIds: ({ dataRunIds }) => {
-      for (const dataRunId of hiddenDataRunIds) {
-        if (!dataRunIds.includes(dataRunId)) {
-          hiddenDataRunIds.delete(dataRunId);
+      try {
+        for (const dataRunId of hiddenDataRunIds) {
+          if (!dataRunIds.includes(dataRunId)) {
+            hiddenDataRunIds.delete(dataRunId);
+          }
         }
+
+        // Delete all the label + statistic notes of the deleted dataRunIds
+        console.log("New Data Run Ids: ", dataRunIds);
+        const allLabelNotes = labelNotesStorage.all();
+        const allStatisticNotes = statisticNotesStorage.all();
+
+        for (const labelNote of allLabelNotes) {
+          if (!dataRunIds.includes(labelNote.dataRunId)) {
+            labelNotesStorage.delete(labelNote.id);
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelNote.id];
+          }
+        }
+
+        for (const statisticNote of allStatisticNotes) {
+          if (!dataRunIds.includes(statisticNote.dataRunId)) {
+            const summaryNoteId = statisticNote.summary.id;
+            const linearRegNoteId = statisticNote.linearReg.id;
+
+            statisticNotesStorage.delete(statisticNote.id);
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[summaryNoteId];
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[linearRegNoteId];
+          }
+        }
+
+        console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataRunIds: ", hiddenDataRunIds);
+      } catch (error) {
+        console.error("LineChart_modifyDataRunIds: ", error);
       }
-      console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataRunIds: ", hiddenDataRunIds);
     },
 
     setChartData: ({ xUnit, yUnit, chartDatas = [], curSensor: sensor }) => {
