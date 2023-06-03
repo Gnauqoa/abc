@@ -495,45 +495,6 @@ export const clearAllSelectedPoints = (chart) => {
   });
 };
 
-const calculateLinearRegression = ({ data }) => {
-  const n = data.length;
-  let sumX = 0;
-  let sumY = 0;
-  let sumXY = 0;
-  let sumX2 = 0;
-
-  for (let i = 0; i < n; i++) {
-    const x = i;
-    const y = data[i];
-
-    sumX += x;
-    sumY += y;
-    sumXY += x * y;
-    sumX2 += x * x;
-  }
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-
-  return { slope: round(slope, 2), intercept: round(intercept, 2) };
-};
-
-export const getDataStatistic = (dataRunData) => {
-  const maxValue = round(max(...dataRunData), 2);
-  const minValue = round(min(...dataRunData), 2);
-  const meanValue = round(mean(...dataRunData), 2);
-  const stdValue = round(std(...dataRunData), 2);
-
-  const { slope, intercept } = calculateLinearRegression({ data: dataRunData });
-  return {
-    min: minValue,
-    max: maxValue,
-    mean: meanValue,
-    std: stdValue,
-    linearRegression: { slope, intercept },
-  };
-};
-
 // ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
 export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
   const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);

@@ -4,16 +4,90 @@ import {
   SAMPLE_STATISTIC_NOTE,
   LINEAR_REGRESSION_BACKGROUND,
   STATISTIC_NOTE_BACKGROUND,
-  getDataStatistic,
   SAMPLE_LINEAR_ANNOTATION,
 } from "./commons";
 import DataManagerIST from "../../services/data-manager";
-import { LINE_CHART_RANGE_SELECTION_TABLE, LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
+import { LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
 import StoreService from "../../services/store-service";
 import { getRangeSelections } from "./selection-plugin";
+import { max, mean, min, round, std } from "mathjs";
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
+// ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
+const calculateLinearRegression = ({ dataRunData }) => {
+  const n = dataRunData.length;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumX2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    const x = i;
+    const y = dataRunData[i];
+
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
+  return { slope: round(slope, 2), intercept: round(intercept, 2) };
+};
+
+const getDataStatistic = ({ dataset, boxRange }) => {
+  let datasetData = dataset.data;
+  if (boxRange) {
+    datasetData = datasetData.filter((data) => {
+      const dataX = parseFloat(data.x);
+      const dataY = parseFloat(data.y);
+
+      const boxRangeX1 = parseFloat(boxRange.x1);
+      const boxRangeX2 = parseFloat(boxRange.x2);
+      const boxRangeY1 = parseFloat(boxRange.y1);
+      const boxRangeY2 = parseFloat(boxRange.y2);
+
+      return (dataX - boxRangeX1) * (dataX - boxRangeX2) <= 0 && (dataY - boxRangeY1) * (dataY - boxRangeY2) <= 0;
+    });
+  }
+
+  const dataRunData = datasetData.map((data) => parseFloat(data.y));
+  if (dataRunData.length === 0) return false;
+
+  console.log("dataRunData: ", dataRunData);
+
+  const maxValue = round(max(dataRunData), 2);
+  const minValue = round(min(dataRunData), 2);
+  const meanValue = round(mean(dataRunData), 2);
+  const stdValue = round(std(dataRunData), 2);
+  const { slope, intercept } = calculateLinearRegression({ dataRunData: dataRunData });
+
+  const lastDataIndex = datasetData.length - 1;
+  const middleDataIndex = parseInt(datasetData.length / 2);
+
+  const x1 = parseFloat(datasetData[0].x);
+  const x2 = parseFloat(datasetData[lastDataIndex].x);
+  const y1 = slope * 0 + intercept;
+  const y2 = slope * lastDataIndex + intercept;
+
+  const startPoint = { x: x1, y: y1 };
+  const midPoint = { x: parseFloat(datasetData[middleDataIndex].x), y: parseFloat(datasetData[middleDataIndex].y) };
+  const endPoint = { x: x2, y: y2 };
+
+  return {
+    min: minValue,
+    max: maxValue,
+    mean: meanValue,
+    std: stdValue,
+    linearRegression: { slope, intercept },
+    startPoint,
+    midPoint,
+    endPoint,
+  };
+};
 // ======================================= STATISTIC OPTION =======================================
 export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId, hiddenDataRunIds }) => {
   if (!isShowStatistic) {
@@ -31,19 +105,24 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
         y2: yMax,
       };
     }
+
     // Get all the current DataRun
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     for (const dataRunPreview of dataRunPreviews) {
       const dataRunId = dataRunPreview.id;
       // const dataRunId = DataManagerIST.getCurrentDataRunId();
-      const dataRunData = DataManagerIST.getDataRunData({
-        dataRunId: dataRunId,
-        sensorId: sensor.id,
-        sensorIndex: sensor.index,
-      });
-      if (!dataRunData) return false;
 
-      const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
+      const dataset = chartInstance.config.data.datasets.find((dataset) => dataset.dataRunId === dataRunId);
+      if (!dataset || !dataset.data) {
+        console.error(`addStatisticNote: Cannot find dataset with dataRunId = ${dataRunId}`);
+        return false;
+      }
+
+      const statisticResult = getDataStatistic({ dataset, boxRange });
+      if (!statisticResult) continue;
+
+      const { min, max, mean, std, linearRegression, startPoint, midPoint, endPoint } = statisticResult;
+
       const { slope: m, intercept: b } = linearRegression;
       const linearRegFunction = `y = ${m}x + ${b}`;
       const content = ["Linear fit", "  y = mx + b"];
@@ -55,20 +134,6 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
       content.push(`Mean = ${mean}`);
       content.push(`Std = ${std}`);
 
-      const dataset = chartInstance.config.data.datasets.find((dataset) => dataset.dataRunId === dataRunId);
-      if (!dataset || !dataset.data) return false;
-
-      const datasetData = dataset.data;
-      const lastDataIndex = datasetData.length - 1;
-      const middleDataIndex = parseInt(dataRunData.length / 2);
-
-      console.log("boxRange: ", boxRange);
-
-      const x1 = 0;
-      const x2 = datasetData[lastDataIndex].x;
-      const y1 = m * 0 + b;
-      const y2 = m * lastDataIndex + b;
-
       // Add statistics notes annotations
       const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
       const statisticNote = {
@@ -77,8 +142,8 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
         pageId: pageId,
         content: content,
         backgroundColor: STATISTIC_NOTE_BACKGROUND,
-        xValue: datasetData[middleDataIndex].x,
-        yValue: datasetData[middleDataIndex].y,
+        xValue: midPoint.x,
+        yValue: midPoint.y,
         xAdjust: -60,
         yAdjust: -60,
       };
@@ -91,10 +156,10 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
       const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
       const linearRegNote = {
         id: linearRegNoteId,
-        xMax: x2,
-        xMin: x1,
-        yMax: y2,
-        yMin: y1,
+        xMax: endPoint.x,
+        xMin: startPoint.x,
+        yMax: endPoint.y,
+        yMin: startPoint.y,
         label: {
           display: true,
           backgroundColor: LINEAR_REGRESSION_BACKGROUND,

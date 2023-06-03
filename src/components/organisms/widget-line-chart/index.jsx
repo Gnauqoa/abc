@@ -277,19 +277,22 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
     let newChartAnnotations;
 
     // Update the chart selection
-    const { rangeSelections } = getRangeSelections({ pageId: pageId });
-    newChartAnnotations = { ...rangeSelections };
-
     if (data?.length > 0) {
       // update chart notes
       const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
+      const { rangeSelections } = getRangeSelections({ pageId: pageId });
       newChartAnnotations = {
-        ...newChartAnnotations,
         ...labelNoteAnnotations,
         ...summaryNotes,
         ...linearRegNotes,
+        ...rangeSelections,
       };
+    } else {
+      // const { rangeSelections } = getRangeSelections({ pageId: pageId });
+      // newChartAnnotations = {
+      //   ...rangeSelections,
+      // };
     }
 
     chartInstance.config.options.plugins.annotation.annotations = newChartAnnotations;
