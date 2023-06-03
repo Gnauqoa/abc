@@ -37,6 +37,7 @@ import {
 import {
   DEFAULT_SENSOR_DATA,
   LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
 } from "../../../js/constants";
 
@@ -53,7 +54,12 @@ import {
   onLeaveNoteElement,
 } from "../../../utils/widget-line-chart/annotation-plugin";
 import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
-import { handleAddSelection, onSelectRegion } from "../../../utils/widget-line-chart/selection-plugin";
+import {
+  getRangeSelections,
+  handleAddSelection,
+  handleDeleteSelection,
+  onSelectRegion,
+} from "../../../utils/widget-line-chart/selection-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -70,22 +76,28 @@ let startRangeElement = null;
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-const dragger = {
-  id: "annotation-dragger",
-  beforeEvent(chart, args, options) {
-    if (handleDrag({ event: args.event, chart })) {
-      args.changed = true;
-      return;
-    }
-  },
-};
+// const dragger = {
+//   id: "annotation-dragger",
+//   beforeEvent(chart, args, options) {
+//     if (handleDrag({ event: args.event, chart })) {
+//       args.changed = true;
+//       return;
+//     }
+//   },
+// };
 
-const handleDragRangeSelection = ({ event, chart }) => {
+const handleDragRangeSelection = ({ event, chart, pageId }) => {
   switch (event.type) {
     case "mousemove":
       if (!startRangeElement) return;
-      handleAddSelection({ chartInstance: chart, startRangeElement: startRangeElement, endRangeElement: event });
+      handleAddSelection({
+        chartInstance: chart,
+        startRangeElement: startRangeElement,
+        endRangeElement: event,
+        pageId,
+      });
       break;
     case "mouseup": // do not press the mouse
       startRangeElement = undefined;
@@ -114,9 +126,9 @@ const handleDragLabel = ({ event }) => {
   }
 };
 
-const handleDrag = function ({ event, chart }) {
+const handleDrag = function ({ event, chart, pageId }) {
   if (isRangeSelected) {
-    handleDragRangeSelection({ event, chart });
+    handleDragRangeSelection({ event, chart, pageId });
   } else if (noteElement) {
     handleDragLabel({ event });
   }
@@ -207,17 +219,26 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
       chartInstance.options.scales.x.ticks.stepSize = stepSize;
     }
 
+    // Update Annotations for chart
+    let newChartAnnotations;
+
+    // Update the chart selection
+    const { rangeSelections } = getRangeSelections({ pageId: pageId });
+    newChartAnnotations = { ...rangeSelections };
+
     if (data?.length > 0) {
       // update chart notes
       const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
-
-      chartInstance.config.options.plugins.annotation.annotations = {
+      newChartAnnotations = {
+        ...newChartAnnotations,
         ...labelNoteAnnotations,
         ...summaryNotes,
         ...linearRegNotes,
       };
     }
+
+    chartInstance.config.options.plugins.annotation.annotations = newChartAnnotations;
     chartInstance.update();
 
     for (let index = 0; index < chartInstance.data.datasets.length; index++) {
@@ -239,8 +260,9 @@ let LineChart = (props, ref) => {
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
+  const isSelectRangeSelection = rangeSelectionStorage.query({ pageId: pageId }).length > 0;
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
-  const [isSelectRegion, setIsSelectRegion] = useState(false);
+  const [isSelectRegion, setIsSelectRegion] = useState(isSelectRangeSelection);
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
   const expandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
@@ -299,7 +321,6 @@ let LineChart = (props, ref) => {
         }
 
         // Delete all the label + statistic notes of the deleted dataRunIds
-        console.log("New Data Run Ids: ", dataRunIds);
         const allLabelNotes = labelNotesStorage.all();
         const allStatisticNotes = statisticNotesStorage.all();
 
@@ -348,7 +369,9 @@ let LineChart = (props, ref) => {
   }));
 
   useEffect(() => {
+    // Clear Range Selection
     isRangeSelected = isSelectRegion;
+
     const minUnitValue = SensorServices.getMinUnitValueAllSensors();
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
@@ -457,7 +480,18 @@ let LineChart = (props, ref) => {
           },
         },
       },
-      plugins: [chartJsPlugin, dragger],
+      plugins: [
+        chartJsPlugin,
+        {
+          id: "annotation-dragger",
+          beforeEvent(chart, args, options) {
+            if (handleDrag({ event: args.event, chart, pageId })) {
+              args.changed = true;
+              return;
+            }
+          },
+        },
+      ],
     });
 
     updateChart({
@@ -529,6 +563,9 @@ let LineChart = (props, ref) => {
   const selectRegionHandler = (chartInstance) => {
     onSelectRegion({ chartInstance, isSelectRegion });
     isRangeSelected = !isSelectRegion;
+    if (isSelectRegion) {
+      handleDeleteSelection({ pageId, chartInstance });
+    }
     setIsSelectRegion(!isSelectRegion);
   };
 

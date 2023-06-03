@@ -7,13 +7,19 @@ import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
 import dialog from "../components/molecules/dialog/dialog";
-import { USER_INPUTS_TABLE, LINE_CHART_STATISTIC_NOTE_TABLE, LINE_CHART_LABEL_NOTE_TABLE } from "../js/constants";
+import {
+  USER_INPUTS_TABLE,
+  LINE_CHART_STATISTIC_NOTE_TABLE,
+  LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_RANGE_SELECTION_TABLE,
+} from "../js/constants";
 import ProjectManagementPopup from "../components/molecules/popup-projects-management";
 
 const recentFilesService = new storeService("recent-files");
 const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
 
 export default ({ f7router }) => {
   const files = recentFilesService.all();
@@ -24,6 +30,7 @@ export default ({ f7router }) => {
   userInputsStorage.deleteAll();
   statisticNotesStorage.deleteAll();
   labelNotesStorage.deleteAll();
+  rangeSelectionStorage.deleteAll();
 
   async function handleFileOpen(filePath) {
     if (f7.device.electron) {
