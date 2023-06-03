@@ -53,7 +53,7 @@ import {
   onLeaveNoteElement,
 } from "../../../utils/widget-line-chart/annotation-plugin";
 import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
-import { onSelectRegion } from "../../../utils/widget-line-chart/selection-plugin";
+import { handleAddSelection, onSelectRegion } from "../../../utils/widget-line-chart/selection-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -65,34 +65,60 @@ let isDragging = false;
 let selectedPointElement = null;
 let selectedNoteElement = null;
 
+let isRangeSelected = false;
+let startRangeElement = null;
+
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 
 const dragger = {
   id: "annotation-dragger",
   beforeEvent(chart, args, options) {
-    if (handleDrag(args.event)) {
+    if (handleDrag({ event: args.event, chart })) {
       args.changed = true;
       return;
     }
   },
 };
 
-const handleDrag = function (event) {
-  if (noteElement) {
-    switch (event.type) {
-      case "mousemove":
-        const result = handleElementDragging(event);
-        return result;
-      case "mouseup": // do not press the mouse
-        lastNoteEvent = undefined;
-        break;
-      case "mousedown": // press the mouse
-        lastNoteEvent = event;
-        break;
-      case "mouseout":
-      default:
-    }
+const handleDragRangeSelection = ({ event, chart }) => {
+  switch (event.type) {
+    case "mousemove":
+      if (!startRangeElement) return;
+      handleAddSelection({ chartInstance: chart, startRangeElement: startRangeElement, endRangeElement: event });
+      break;
+    case "mouseup": // do not press the mouse
+      startRangeElement = undefined;
+      break;
+    case "mousedown": // press the mouse
+      startRangeElement = event;
+      break;
+    case "mouseout":
+    default:
+  }
+};
+
+const handleDragLabel = ({ event }) => {
+  switch (event.type) {
+    case "mousemove":
+      const result = handleElementDragging(event);
+      return result;
+    case "mouseup": // do not press the mouse
+      lastNoteEvent = undefined;
+      break;
+    case "mousedown": // press the mouse
+      lastNoteEvent = event;
+      break;
+    case "mouseout":
+    default:
+  }
+};
+
+const handleDrag = function ({ event, chart }) {
+  if (isRangeSelected) {
+    handleDragRangeSelection({ event, chart });
+  } else if (noteElement) {
+    handleDragLabel({ event });
   }
 };
 
@@ -322,11 +348,13 @@ let LineChart = (props, ref) => {
   }));
 
   useEffect(() => {
+    isRangeSelected = isSelectRegion;
     const minUnitValue = SensorServices.getMinUnitValueAllSensors();
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
       options: {
+        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
         elements: {
           point: {
             pointStyle: POINT_STYLE,
@@ -350,7 +378,6 @@ let LineChart = (props, ref) => {
         },
         animation: false,
         maintainAspectRatio: false,
-        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
         plugins: {
           tooltip: {
             usePointStyle: true,
@@ -375,7 +402,7 @@ let LineChart = (props, ref) => {
           zoom: {
             pan: {
               // pan options and/or events
-              enabled: true,
+              enabled: !isSelectRegion,
               mode: "xy",
             },
             limits: {
@@ -384,10 +411,10 @@ let LineChart = (props, ref) => {
             },
             zoom: {
               wheel: {
-                enabled: true,
+                enabled: !isSelectRegion,
               },
               pinch: {
-                enabled: true,
+                enabled: !isSelectRegion,
               },
 
               mode: "xy",
@@ -493,6 +520,7 @@ let LineChart = (props, ref) => {
       isShowStatistic,
       sensor,
       pageId,
+      hiddenDataRunIds,
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
@@ -500,6 +528,7 @@ let LineChart = (props, ref) => {
   //========================= SELECTION REGION FUNCTIONS =========================
   const selectRegionHandler = (chartInstance) => {
     onSelectRegion({ chartInstance, isSelectRegion });
+    isRangeSelected = !isSelectRegion;
     setIsSelectRegion(!isSelectRegion);
   };
 

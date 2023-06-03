@@ -55,6 +55,11 @@ export const LABEL_NOTE_TYPE = 1;
 export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
 export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
 
+// RANGE SELECTION OPTIONS
+export const RANGE_SELECTION_ANNOTATION_ID = "range-selection-annotation";
+export const RANGE_SELECTION_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.8);
+export const RANGE_SELECTION_BORDER = chartUtils.CHART_COLORS.red;
+
 // DATA POINTS
 export const POINT_STYLE = "circle";
 export const POINT_RADIUS = 5;
@@ -154,6 +159,21 @@ export const SAMPLE_LINEAR_ANNOTATION = {
   // xMin: 5,
   // yMax: 110,
   // yMin: 110,
+};
+
+export const SAMPLE_RANGE_SELECTION_ANNOTATION = {
+  type: "box",
+  borderColor: RANGE_SELECTION_BORDER,
+  borderWidth: 2,
+  label: {
+    display: true,
+  },
+  xScaleID: "x",
+  yScaleID: "y",
+  // xMax: "April",
+  // xMin: "February",
+  // yMax: 90,
+  // yMin: 10,
 };
 
 export const hiddenDataRunIds = new Set();
@@ -511,5 +531,20 @@ export const getDataStatistic = (dataRunData) => {
     mean: meanValue,
     std: stdValue,
     linearRegression: { slope, intercept },
+  };
+};
+
+// ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
+export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
+  const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+  const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
+  const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+  const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
+
+  return {
+    startXValue: round(startXValue, 1),
+    endXValue: round(endXValue, 1),
+    startYValue: round(startYValue, 1),
+    endYValue: round(endYValue, 1),
   };
 };

@@ -14,90 +14,99 @@ import StoreService from "../../services/store-service";
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
 // ======================================= STATISTIC OPTION =======================================
-export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId }) => {
+export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId, hiddenDataRunIds }) => {
   if (!isShowStatistic) {
-    const dataRunId = DataManagerIST.getCurrentDataRunId();
-    const dataRunData = DataManagerIST.getDataRunData({
-      dataRunId: dataRunId,
-      sensorId: sensor.id,
-      sensorIndex: sensor.index,
-    });
-    if (!dataRunData) return false;
+    // Get all the current DataRun
+    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+    for (const dataRunPreview of dataRunPreviews) {
+      const dataRunId = dataRunPreview.id;
+      // const dataRunId = DataManagerIST.getCurrentDataRunId();
+      const dataRunData = DataManagerIST.getDataRunData({
+        dataRunId: dataRunId,
+        sensorId: sensor.id,
+        sensorIndex: sensor.index,
+      });
+      if (!dataRunData) return false;
 
-    const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
-    const { slope: m, intercept: b } = linearRegression;
-    const linearRegFunction = `y = ${m}x + ${b}`;
-    const content = ["Linear fit", "  y = mx + b"];
-    content.push(`  m = ${m}`);
-    content.push(`  b = ${b}`);
-    content.push("");
-    content.push(`Max = ${max}`);
-    content.push(`Min = ${min}`);
-    content.push(`Mean = ${mean}`);
-    content.push(`Std = ${std}`);
+      const { min, max, mean, std, linearRegression } = getDataStatistic(dataRunData);
+      const { slope: m, intercept: b } = linearRegression;
+      const linearRegFunction = `y = ${m}x + ${b}`;
+      const content = ["Linear fit", "  y = mx + b"];
+      content.push(`  m = ${m}`);
+      content.push(`  b = ${b}`);
+      content.push("");
+      content.push(`Max = ${max}`);
+      content.push(`Min = ${min}`);
+      content.push(`Mean = ${mean}`);
+      content.push(`Std = ${std}`);
 
-    const dataset = chartInstance.config.data.datasets.find((dataset) => dataset.dataRunId === dataRunId);
-    if (!dataset || !dataset.data) return false;
+      const dataset = chartInstance.config.data.datasets.find((dataset) => dataset.dataRunId === dataRunId);
+      if (!dataset || !dataset.data) return false;
 
-    const datasetData = dataset.data;
-    const lastDataIndex = datasetData.length - 1;
+      const datasetData = dataset.data;
+      const lastDataIndex = datasetData.length - 1;
+      const middleDataIndex = parseInt(dataRunData.length / 2);
 
-    const x1 = 0;
-    const x2 = datasetData[lastDataIndex].x;
-    const y1 = m * 0 + b;
-    const y2 = m * lastDataIndex + b;
+      const x1 = 0;
+      const x2 = datasetData[lastDataIndex].x;
+      const y1 = m * 0 + b;
+      const y2 = m * lastDataIndex + b;
 
-    // Add statistics notes annotations
-    const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
-    const statisticNote = {
-      id: statisticNoteId,
-      dataRunId: dataRunId,
-      pageId: pageId,
-      content: content,
-      backgroundColor: STATISTIC_NOTE_BACKGROUND,
-      xValue: datasetData[lastDataIndex].x,
-      yValue: datasetData[lastDataIndex].y,
-      xAdjust: -60,
-      yAdjust: -60,
-    };
-    const newStatisticNote = {
-      ...SAMPLE_STATISTIC_NOTE,
-      ...statisticNote,
-    };
+      // Add statistics notes annotations
+      const statisticNoteId = `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}`;
+      const statisticNote = {
+        id: statisticNoteId,
+        dataRunId: dataRunId,
+        pageId: pageId,
+        content: content,
+        backgroundColor: STATISTIC_NOTE_BACKGROUND,
+        xValue: datasetData[middleDataIndex].x,
+        yValue: datasetData[middleDataIndex].y,
+        xAdjust: -60,
+        yAdjust: -60,
+      };
+      const newStatisticNote = {
+        ...SAMPLE_STATISTIC_NOTE,
+        ...statisticNote,
+      };
 
-    // Add linear regression annotations
-    const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
-    const linearRegNote = {
-      id: linearRegNoteId,
-      xMax: x2,
-      xMin: x1,
-      yMax: y2,
-      yMin: y1,
-      label: {
-        display: true,
-        backgroundColor: LINEAR_REGRESSION_BACKGROUND,
-        content: linearRegFunction,
-      },
-    };
-    const newLinearReg = {
-      ...SAMPLE_LINEAR_ANNOTATION,
-      ...linearRegNote,
-    };
+      // Add linear regression annotations
+      const linearRegNoteId = `${PREFIX_LINEAR_REGRESSION}_${pageId}_${dataRunId}`;
+      const linearRegNote = {
+        id: linearRegNoteId,
+        xMax: x2,
+        xMin: x1,
+        yMax: y2,
+        yMin: y1,
+        label: {
+          display: true,
+          backgroundColor: LINEAR_REGRESSION_BACKGROUND,
+          content: linearRegFunction,
+        },
+      };
+      const newLinearReg = {
+        ...SAMPLE_LINEAR_ANNOTATION,
+        ...linearRegNote,
+      };
 
-    statisticNotesStorage.save({
-      id: statisticNoteId,
-      pageId: pageId,
-      dataRunId: dataRunId,
-      summary: statisticNote,
-      linearReg: linearRegNote,
-    });
+      statisticNotesStorage.save({
+        id: statisticNoteId,
+        pageId: pageId,
+        dataRunId: dataRunId,
+        summary: statisticNote,
+        linearReg: linearRegNote,
+      });
 
-    // Update chart annotations
-    chartInstance.config.options.plugins.annotation.annotations = {
-      ...chartInstance.config.options.plugins.annotation.annotations,
-      [statisticNoteId]: newStatisticNote,
-      [linearRegNoteId]: newLinearReg,
-    };
+      // If the current dataRun is hidden, skip update it in chart
+      if (hiddenDataRunIds.has(dataRunId)) continue;
+
+      // Update chart annotations
+      chartInstance.config.options.plugins.annotation.annotations = {
+        ...chartInstance.config.options.plugins.annotation.annotations,
+        [statisticNoteId]: newStatisticNote,
+        [linearRegNoteId]: newLinearReg,
+      };
+    }
   } else {
     const currentStatisticNotes = statisticNotesStorage.query({ pageId });
     currentStatisticNotes.forEach((note) => {
