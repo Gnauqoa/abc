@@ -8,14 +8,29 @@ import {
   SAMPLE_LINEAR_ANNOTATION,
 } from "./commons";
 import DataManagerIST from "../../services/data-manager";
-import { LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
+import { LINE_CHART_RANGE_SELECTION_TABLE, LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
 import StoreService from "../../services/store-service";
+import { getRangeSelections } from "./selection-plugin";
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
 // ======================================= STATISTIC OPTION =======================================
 export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageId, hiddenDataRunIds }) => {
   if (!isShowStatistic) {
+    // Get Range Selection and extract bounding box
+    let boxRange;
+    const { rangeSelections } = getRangeSelections({ pageId });
+    const rangeSelectionIds = Object.keys(rangeSelections);
+    if (rangeSelectionIds.length === 1) {
+      const rangeSelection = rangeSelections[rangeSelectionIds[0]];
+      const { xMax, xMin, yMax, yMin } = rangeSelection;
+      boxRange = {
+        x1: xMin,
+        x2: xMax,
+        y1: yMin,
+        y2: yMax,
+      };
+    }
     // Get all the current DataRun
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
     for (const dataRunPreview of dataRunPreviews) {
@@ -46,6 +61,8 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
       const datasetData = dataset.data;
       const lastDataIndex = datasetData.length - 1;
       const middleDataIndex = parseInt(dataRunData.length / 2);
+
+      console.log("boxRange: ", boxRange);
 
       const x1 = 0;
       const x2 = datasetData[lastDataIndex].x;
