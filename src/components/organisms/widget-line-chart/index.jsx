@@ -33,10 +33,16 @@ import {
   POINT_RADIUS,
   hiddenDataRunIds,
   SHOW_OFF_DATA_POINT_MARKER,
+  ALLOW_ENTER_LEAVE_ANNOTATIONS,
+  LABEL_NOTE_TYPE,
+  PREFIX_LABEL_NOTE,
+  PREFIX_STATISTIC_NOTE,
+  STATISTIC_NOTE_TYPE,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
   LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
 } from "../../../js/constants";
 
@@ -46,14 +52,14 @@ import PromptPopup from "../../molecules/popup-prompt-dialog";
 import StoreService from "../../../services/store-service";
 import { addStatisticNote, getAllCurrentStatisticNotes } from "../../../utils/widget-line-chart/statistic-plugin";
 import { addLabelNote, getAllCurrentLabelNotes } from "../../../utils/widget-line-chart/label-plugin";
-import {
-  onClickChartHandler,
-  onClickNoteElement,
-  onEnterNoteElement,
-  onLeaveNoteElement,
-} from "../../../utils/widget-line-chart/annotation-plugin";
+import { onClickChartHandler, onClickNoteElement } from "../../../utils/widget-line-chart/annotation-plugin";
 import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
-import { onSelectRegion } from "../../../utils/widget-line-chart/selection-plugin";
+import {
+  getRangeSelections,
+  handleAddSelection,
+  handleDeleteSelection,
+  onSelectRegion,
+} from "../../../utils/widget-line-chart/selection-plugin";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -65,33 +71,49 @@ let isDragging = false;
 let selectedPointElement = null;
 let selectedNoteElement = null;
 
+let isRangeSelected = false;
+let startRangeElement = null;
+
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-const dragger = {
-  id: "annotation-dragger",
-  beforeEvent(chart, args, options) {
-    if (handleDrag(args.event)) {
-      args.changed = true;
-      return;
-    }
-  },
-};
-
-const handleDrag = function (event) {
-  if (noteElement) {
+const handleDrag = function ({ event, chart, pageId }) {
+  if (isRangeSelected) {
     switch (event.type) {
       case "mousemove":
-        const result = handleElementDragging(event);
-        return result;
+        if (!startRangeElement) return;
+        handleAddSelection({
+          chartInstance: chart,
+          startRangeElement: startRangeElement,
+          endRangeElement: event,
+          pageId,
+        });
+        return true;
       case "mouseup": // do not press the mouse
-        lastNoteEvent = undefined;
+        startRangeElement = undefined;
         break;
       case "mousedown": // press the mouse
-        lastNoteEvent = event;
+        startRangeElement = event;
         break;
       case "mouseout":
       default:
+    }
+  } else if (noteElement) {
+    if (noteElement) {
+      switch (event.type) {
+        case "mousemove":
+          const result = handleElementDragging(event);
+          return result;
+        case "mouseup": // do not press the mouse
+          lastNoteEvent = undefined;
+          break;
+        case "mousedown": // press the mouse
+          lastNoteEvent = event;
+          break;
+        case "mouseout":
+        default:
+      }
     }
   }
 };
@@ -116,6 +138,76 @@ const handleElementDragging = function (event) {
     isDragging = true;
   }
   return true;
+};
+
+export const onEnterNoteElement = ({ chart, element }) => {
+  const noteElementId = element?.options?.id;
+  const prefix = noteElementId?.split("_")?.[0];
+  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
+
+  noteElement = element;
+
+  if (!isRangeSelected) chart.config.options.plugins.zoom.pan.enabled = false;
+  chart.update();
+};
+
+export const onLeaveNoteElement = ({ chart, element }) => {
+  const noteElementId = element?.options?.id;
+  const prefix = noteElementId?.split("_")?.[0];
+  if (!ALLOW_ENTER_LEAVE_ANNOTATIONS.includes(prefix)) return;
+
+  let label = chart.config.options.plugins.annotation.annotations[noteElementId];
+
+  // Check whether the note is statistic note or label note
+  let noteType;
+  let currentNote;
+  if (prefix === PREFIX_LABEL_NOTE) {
+    const labelNote = labelNotesStorage.find(noteElementId);
+    if (!labelNote) return;
+
+    currentNote = labelNote.label;
+    noteType = LABEL_NOTE_TYPE;
+  } else if (prefix === PREFIX_STATISTIC_NOTE) {
+    const statisticNote = statisticNotesStorage.find(noteElementId);
+    if (!statisticNote) return;
+
+    currentNote = statisticNote.summary;
+    noteType = STATISTIC_NOTE_TYPE;
+  }
+
+  if (label) {
+    const oldXPixel = chart.scales.x.getPixelForValue(currentNote.xValue);
+    const oldYPixel = chart.scales.y.getPixelForValue(currentNote.yValue);
+    const newAdjustPos = {
+      xAdjust: element.centerX - oldXPixel,
+      yAdjust: element.centerY - oldYPixel,
+    };
+
+    chart.config.options.plugins.annotation.annotations[noteElementId] = {
+      ...label,
+      ...newAdjustPos,
+      backgroundColor: currentNote.backgroundColor,
+    };
+
+    // Update note position
+    const updatedNote = {
+      ...currentNote,
+      ...newAdjustPos,
+    };
+
+    if (noteType === STATISTIC_NOTE_TYPE) {
+      statisticNotesStorage.merge({ id: noteElementId, summary: updatedNote });
+    } else if (noteType === LABEL_NOTE_TYPE) {
+      labelNotesStorage.merge({ id: noteElementId, label: updatedNote });
+    }
+  }
+
+  noteElement = undefined;
+  lastNoteEvent = undefined;
+  isDragging = false;
+
+  if (!isRangeSelected) chart.config.options.plugins.zoom.pan.enabled = true;
+  chart.update();
 };
 
 // ======================================= CHART FUNCTIONS =======================================
@@ -181,17 +273,29 @@ const updateChart = ({ chartInstance, data, axisRef, pageId }) => {
       chartInstance.options.scales.x.ticks.stepSize = stepSize;
     }
 
+    // Update Annotations for chart
+    let newChartAnnotations;
+
+    // Update the chart selection
     if (data?.length > 0) {
       // update chart notes
       const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
-
-      chartInstance.config.options.plugins.annotation.annotations = {
+      const { rangeSelections } = getRangeSelections({ pageId: pageId });
+      newChartAnnotations = {
         ...labelNoteAnnotations,
         ...summaryNotes,
         ...linearRegNotes,
+        ...rangeSelections,
       };
+    } else {
+      // const { rangeSelections } = getRangeSelections({ pageId: pageId });
+      // newChartAnnotations = {
+      //   ...rangeSelections,
+      // };
     }
+
+    chartInstance.config.options.plugins.annotation.annotations = newChartAnnotations;
     chartInstance.update();
 
     for (let index = 0; index < chartInstance.data.datasets.length; index++) {
@@ -213,8 +317,9 @@ let LineChart = (props, ref) => {
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
+  const isSelectRangeSelection = rangeSelectionStorage.query({ pageId: pageId }).length > 0;
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
-  const [isSelectRegion, setIsSelectRegion] = useState(false);
+  const [isSelectRegion, setIsSelectRegion] = useState(isSelectRangeSelection);
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
   const expandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
@@ -273,7 +378,6 @@ let LineChart = (props, ref) => {
         }
 
         // Delete all the label + statistic notes of the deleted dataRunIds
-        console.log("New Data Run Ids: ", dataRunIds);
         const allLabelNotes = labelNotesStorage.all();
         const allStatisticNotes = statisticNotesStorage.all();
 
@@ -322,11 +426,15 @@ let LineChart = (props, ref) => {
   }));
 
   useEffect(() => {
+    // Clear Range Selection
+    isRangeSelected = isSelectRegion;
+
     const minUnitValue = SensorServices.getMinUnitValueAllSensors();
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
       options: {
+        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
         elements: {
           point: {
             pointStyle: POINT_STYLE,
@@ -350,7 +458,6 @@ let LineChart = (props, ref) => {
         },
         animation: false,
         maintainAspectRatio: false,
-        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
         plugins: {
           tooltip: {
             usePointStyle: true,
@@ -375,7 +482,7 @@ let LineChart = (props, ref) => {
           zoom: {
             pan: {
               // pan options and/or events
-              enabled: true,
+              enabled: !isSelectRegion,
               mode: "xy",
             },
             limits: {
@@ -384,10 +491,10 @@ let LineChart = (props, ref) => {
             },
             zoom: {
               wheel: {
-                enabled: true,
+                enabled: !isSelectRegion,
               },
               pinch: {
-                enabled: true,
+                enabled: !isSelectRegion,
               },
 
               mode: "xy",
@@ -395,20 +502,8 @@ let LineChart = (props, ref) => {
           },
 
           annotation: {
-            enter: ({ chart, element }) => {
-              const { status, element: newElement } = onEnterNoteElement({ chart, element });
-              if (status) noteElement = newElement;
-              return true;
-            },
-            leave: ({ chart, element }) => {
-              const { status } = onLeaveNoteElement({ chart, element });
-              if (status) {
-                noteElement = undefined;
-                lastNoteEvent = undefined;
-                isDragging = false;
-              }
-              return true;
-            },
+            enter: ({ chart, element }) => onEnterNoteElement({ chart, element }),
+            leave: ({ chart, element }) => onLeaveNoteElement({ chart, element }),
             click: ({ element }) => {
               if (isDragging) {
                 isDragging = false;
@@ -424,13 +519,22 @@ let LineChart = (props, ref) => {
 
           legend: {
             display: true,
-            onClick: (event, legendItem, legend) => {
-              onClickLegendHandler(event, legendItem, legend);
-            },
+            onClick: (event, legendItem, legend) => onClickLegendHandler(event, legendItem, legend),
           },
         },
       },
-      plugins: [chartJsPlugin, dragger],
+      plugins: [
+        chartJsPlugin,
+        {
+          id: "annotation-dragger",
+          beforeEvent(chart, args, options) {
+            if (handleDrag({ event: args.event, chart, pageId })) {
+              args.changed = true;
+              return;
+            }
+          },
+        },
+      ],
     });
 
     updateChart({
@@ -493,6 +597,7 @@ let LineChart = (props, ref) => {
       isShowStatistic,
       sensor,
       pageId,
+      hiddenDataRunIds,
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
@@ -500,7 +605,12 @@ let LineChart = (props, ref) => {
   //========================= SELECTION REGION FUNCTIONS =========================
   const selectRegionHandler = (chartInstance) => {
     onSelectRegion({ chartInstance, isSelectRegion });
-    setIsSelectRegion(!isSelectRegion);
+    isRangeSelected = !isSelectRegion;
+
+    if (!isRangeSelected) {
+      handleDeleteSelection({ pageId, chartInstance });
+    }
+    setIsSelectRegion(isRangeSelected);
   };
 
   //========================= SHOW OFF DATA POINT FUNCTIONS =========================

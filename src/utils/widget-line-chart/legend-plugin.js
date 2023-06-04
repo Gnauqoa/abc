@@ -43,7 +43,7 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
     // if not, add to the chart, otherwise, update the note element
     const noteElement = ci.config.options.plugins.annotation.annotations[nodeId];
     if (noteElement) noteElement.display = isShowNote;
-    else {
+    else if (isShowNote) {
       ci.config.options.plugins.annotation.annotations[nodeId] = summaryNotes[nodeId];
     }
   });
@@ -52,7 +52,7 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
     // if not, add to the chart, otherwise, update the note element
     const noteElement = ci.config.options.plugins.annotation.annotations[nodeId];
     if (noteElement) noteElement.display = isShowNote;
-    else {
+    else if (isShowNote) {
       ci.config.options.plugins.annotation.annotations[nodeId] = linearRegNotes[nodeId];
     }
   });

@@ -70,7 +70,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, te
 };
 
 const ScopeViewWidget = ({ widget, handleSensorChange }) => {
-  const { currentDataRunId } = useActivityContext();
+  const { currentDataRunId, isRunning } = useActivityContext();
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
 
@@ -80,8 +80,6 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
 
   const soundSensors = SensorServiceIST.getActiveSoundSensors();
   const soundSensorsId = soundSensors.map((sensor) => sensor.id?.toString());
-
-  const { isRunning } = useActivityContext();
 
   const initWebAudio = () => {
     const samplingRate = MicrophoneServiceIST.getSamplingRate();

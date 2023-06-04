@@ -55,6 +55,11 @@ export const LABEL_NOTE_TYPE = 1;
 export const ALLOW_ENTER_LEAVE_ANNOTATIONS = [PREFIX_LABEL_NOTE, PREFIX_STATISTIC_NOTE];
 export const ALLOW_CLICK_ANNOTATIONS = [PREFIX_LABEL_NOTE];
 
+// RANGE SELECTION OPTIONS
+export const RANGE_SELECTION_ANNOTATION_ID = "range-selection-annotation";
+export const RANGE_SELECTION_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.red, 0.8);
+export const RANGE_SELECTION_BORDER = chartUtils.CHART_COLORS.red;
+
 // DATA POINTS
 export const POINT_STYLE = "circle";
 export const POINT_RADIUS = 5;
@@ -154,6 +159,21 @@ export const SAMPLE_LINEAR_ANNOTATION = {
   // xMin: 5,
   // yMax: 110,
   // yMin: 110,
+};
+
+export const SAMPLE_RANGE_SELECTION_ANNOTATION = {
+  type: "box",
+  borderColor: RANGE_SELECTION_BORDER,
+  borderWidth: 2,
+  label: {
+    display: true,
+  },
+  xScaleID: "x",
+  yScaleID: "y",
+  // xMax: "April",
+  // xMin: "February",
+  // yMax: 90,
+  // yMin: 10,
 };
 
 export const hiddenDataRunIds = new Set();
@@ -475,41 +495,17 @@ export const clearAllSelectedPoints = (chart) => {
   });
 };
 
-const calculateLinearRegression = ({ data }) => {
-  const n = data.length;
-  let sumX = 0;
-  let sumY = 0;
-  let sumXY = 0;
-  let sumX2 = 0;
+// ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
+export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
+  const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+  const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
+  const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+  const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
 
-  for (let i = 0; i < n; i++) {
-    const x = i;
-    const y = data[i];
-
-    sumX += x;
-    sumY += y;
-    sumXY += x * y;
-    sumX2 += x * x;
-  }
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-
-  return { slope: round(slope, 2), intercept: round(intercept, 2) };
-};
-
-export const getDataStatistic = (dataRunData) => {
-  const maxValue = round(max(...dataRunData), 2);
-  const minValue = round(min(...dataRunData), 2);
-  const meanValue = round(mean(...dataRunData), 2);
-  const stdValue = round(std(...dataRunData), 2);
-
-  const { slope, intercept } = calculateLinearRegression({ data: dataRunData });
   return {
-    min: minValue,
-    max: maxValue,
-    mean: meanValue,
-    std: stdValue,
-    linearRegression: { slope, intercept },
+    startXValue: round(startXValue, 1),
+    endXValue: round(endXValue, 1),
+    startYValue: round(startYValue, 1),
+    endYValue: round(endYValue, 1),
   };
 };
