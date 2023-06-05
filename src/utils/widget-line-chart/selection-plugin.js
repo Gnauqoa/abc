@@ -70,7 +70,7 @@ export const handleAddSelection = ({ chartInstance, startRangeElement, endRangeE
 
       if (isUpdateSelection) addRangeSelection({ chartInstance, boxRange: boxRange, pageId });
     }
-  }, 10);
+  }, 5);
 };
 
 export const handleDeleteSelection = ({ pageId, chartInstance }) => {
