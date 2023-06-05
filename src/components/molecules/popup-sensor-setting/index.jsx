@@ -5,6 +5,8 @@ import _ from "lodash";
 
 import SensorSettingTab from "./sensor-setting";
 import SensorCalibratingTab from "./sensor-calibrating";
+import RemoteLoggingTab from "./remote-logging";
+import OtherSettingsTab from "./other-settings";
 import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
@@ -14,11 +16,15 @@ import { BLE_TYPE, USB_TYPE } from "../../../js/constants";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
+const REMOTE_LOGGING_TAB = 3;
+const OTHER_SETTINGS_TAB = 4;
 
 const defaultTab = 1;
 const settingTabs = {
   [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
+  [REMOTE_LOGGING_TAB]: "Remote logging",
+  [OTHER_SETTINGS_TAB]: "Chức năng khác",
 };
 
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
@@ -68,6 +74,14 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     onClosePopup();
   };
 
+  const onSaveOtherSettingsHandler = () => {
+
+  };
+
+  const onSaveRemoteLoggingHandler = () => {
+
+  };
+
   const onChangeTab = (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
@@ -112,17 +126,32 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           </div>
 
           <div className="__setting-content">
-            {currentTab === SENSOR_SETTING_TAB ? (
+            {currentTab === SENSOR_SETTING_TAB && (
               <SensorSettingTab
                 sensorInfo={sensorInfo}
                 sensorDataIndex={sensorDataIndex}
                 onSaveHandler={onSaveSensorSettingHandler}
               />
-            ) : (
+            )}
+            {currentTab === SENSOR_CALIBRATING_TAB && (
               <SensorCalibratingTab
                 sensorInfo={sensorInfo}
                 sensorDataIndex={sensorDataIndex}
                 onSaveHandler={onSaveSensorCalibratingHandler}
+              />
+            )}
+            {currentTab === REMOTE_LOGGING_TAB && (
+              <RemoteLoggingTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveRemoteLoggingHandler}
+              />
+            )}
+            {currentTab === OTHER_SETTINGS_TAB && (
+              <OtherSettingsTab
+                sensorInfo={sensorInfo}
+                sensorDataIndex={sensorDataIndex}
+                onSaveHandler={onSaveOtherSettingsHandler}
               />
             )}
           </div>
