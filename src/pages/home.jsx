@@ -16,6 +16,16 @@ import {
 import ProjectManagementPopup from "../components/molecules/popup-projects-management";
 
 const recentFilesService = new storeService("recent-files");
+const userInputsStorage = new storeService(USER_INPUTS_TABLE);
+const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
+const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
+
+// Clear all Previous Tables
+userInputsStorage.deleteAll();
+statisticNotesStorage.deleteAll();
+labelNotesStorage.deleteAll();
+rangeSelectionStorage.deleteAll();
 
 export default ({ f7router }) => {
   const files = recentFilesService.all();
