@@ -190,7 +190,8 @@ const TableWidget = (
         : transformedRows
     );
 
-    if (samplingMode === SAMPLING_AUTO || !isRunning) {
+    if (samplingMode === SAMPLING_AUTO || !isRunning ) {
+      if (transformedRows.length === 0) return;
       setSelectedElement({
         ...selectedElement,
         selectedRow: transformedRows.length - 1,
