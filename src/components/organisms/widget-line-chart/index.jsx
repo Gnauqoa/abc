@@ -58,7 +58,6 @@ import {
   getRangeSelections,
   handleAddSelection,
   handleDeleteSelection,
-  onSelectRegion,
 } from "../../../utils/widget-line-chart/selection-plugin";
 
 Chart.register(zoomPlugin);
@@ -316,6 +315,7 @@ let LineChart = (props, ref) => {
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
+  // Check whether the options are selected or not
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
   const isSelectRangeSelection = rangeSelectionStorage.query({ pageId: pageId }).length > 0;
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
@@ -482,7 +482,7 @@ let LineChart = (props, ref) => {
           zoom: {
             pan: {
               // pan options and/or events
-              enabled: !isSelectRegion,
+              enabled: true,
               mode: "xy",
             },
             limits: {
@@ -491,10 +491,10 @@ let LineChart = (props, ref) => {
             },
             zoom: {
               wheel: {
-                enabled: !isSelectRegion,
+                enabled: true,
               },
               pinch: {
-                enabled: !isSelectRegion,
+                enabled: true,
               },
 
               mode: "xy",
@@ -536,6 +536,11 @@ let LineChart = (props, ref) => {
         },
       ],
     });
+
+    // Not need updated chart, as updateChart function will call update
+    chartInstanceRef.current.config.options.plugins.zoom.pan.enabled = !isSelectRangeSelection;
+    chartInstanceRef.current.config.options.plugins.zoom.zoom.pinch.enabled = !isSelectRangeSelection;
+    chartInstanceRef.current.config.options.plugins.zoom.zoom.wheel.enabled = !isSelectRangeSelection;
 
     updateChart({
       chartInstance: chartInstanceRef.current,
@@ -604,11 +609,17 @@ let LineChart = (props, ref) => {
 
   //========================= SELECTION REGION FUNCTIONS =========================
   const selectRegionHandler = (chartInstance) => {
-    onSelectRegion({ chartInstance, isSelectRegion });
     isRangeSelected = !isSelectRegion;
+
+    // isRangeSelected = True => display zoom
+    chartInstance.config.options.plugins.zoom.pan.enabled = !isRangeSelected;
+    chartInstance.config.options.plugins.zoom.zoom.pinch.enabled = !isRangeSelected;
+    chartInstance.config.options.plugins.zoom.zoom.wheel.enabled = !isRangeSelected;
 
     if (!isRangeSelected) {
       handleDeleteSelection({ pageId, chartInstance });
+    } else {
+      chartInstance.update();
     }
     setIsSelectRegion(isRangeSelected);
   };

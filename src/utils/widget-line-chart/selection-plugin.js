@@ -10,19 +10,6 @@ import {
 let timeoutDragSelection;
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-export const onSelectRegion = ({ chartInstance, isSelectRegion }) => {
-  if (!isSelectRegion) {
-    chartInstance.config.options.plugins.zoom.pan.enabled = false;
-    chartInstance.config.options.plugins.zoom.zoom.pinch.enabled = false;
-    chartInstance.config.options.plugins.zoom.zoom.wheel.enabled = false;
-  } else {
-    chartInstance.config.options.plugins.zoom.pan.enabled = true;
-    chartInstance.config.options.plugins.zoom.zoom.pinch.enabled = true;
-    chartInstance.config.options.plugins.zoom.zoom.wheel.enabled = true;
-  }
-  chartInstance.update();
-};
-
 const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
   const selectionId = `${RANGE_SELECTION_ANNOTATION_ID}_${pageId}`;
 
