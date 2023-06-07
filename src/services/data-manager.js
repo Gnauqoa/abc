@@ -12,6 +12,7 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
+import { FIRST_COLUMN_CUSTOM_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -97,6 +98,8 @@ export class DataManager {
 
     this.uartConnections = new Set();
     this.sensorsQueue = [];
+
+    this.customMeasurements = [];
   }
 
   init() {
@@ -927,6 +930,23 @@ export class DataManager {
 
   getUsbDevices() {
     return this.sensorsQueue;
+  }
+
+  // -------------------------------- CUSTOM MEASUREMENTS -------------------------------- //
+  addCustomMeasurement({ measureName, measureUnit }) {
+    const measurementId = uuidv4();
+    const measurement = {
+      id: measurementId,
+      type: FIRST_COLUMN_CUSTOM_OPT,
+      name: measureName,
+      unit: measureUnit,
+    };
+    this.customMeasurements.push(measurement);
+    return measurement;
+  }
+
+  getCustomMeasurements() {
+    return this.customMeasurements;
   }
 }
 

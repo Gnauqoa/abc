@@ -43,11 +43,42 @@
           border-right: 2px solid #000000;
           border-bottom: 2px solid #000000;
 
+          .__header-name-selector {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            margin-left: 45px;
+
+            .custom-select {
+              margin: 1px;
+              height: 36px;
+              width: 80%;
+              position: inherit;
+              text-align: center;
+              font-size: 18px;
+            }
+
+            i {
+              font-size: 30px;
+              color: gray;
+              cursor: pointer;
+            }
+          }
+
+          .__header-name-selector.time {
+            margin-left: 0px;
+            .custom-select {
+              width: 82%;
+            }
+          }
+
           .custom-select,
           .sensor-selector {
             margin: 1px;
             height: 36px;
-            width: 90%;
+            width: 84%;
             position: inherit;
             text-align: center;
             font-size: 18px;
@@ -191,10 +222,27 @@
         padding: 0px;
       }
 
+      .__header-name-selector {
+        .custom-select {
+          font-size: 10px;
+          width: 120px;
+        }
+        i {
+          font-size: 25px;
+        }
+      }
+
+      .__header-name-selector.time {
+        margin-left: 0px;
+        .custom-select {
+          width: 120px;
+        }
+      }
+
       .sensor-selector,
       .custom-select {
         font-size: 10px;
-        width: 80px;
+        width: 120px;
       }
 
       .sensor-selector .button {
@@ -231,6 +279,20 @@
     .wapper__chart .wapper__chart__table {
       .wapper__chart__table__body {
         padding: 0px;
+      }
+
+      .__header-name-selector {
+        .custom-select {
+          font-size: 14px;
+          width: 150px;
+        }
+      }
+
+      .__header-name-selector.time {
+        margin-left: 0px;
+        .custom-select {
+          width: 150px;
+        }
       }
 
       .sensor-selector,

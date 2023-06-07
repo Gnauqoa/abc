@@ -1,6 +1,5 @@
 import React, { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 import "./index.scss";
-import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServices from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 import StoreService from "../../../services/store-service";
@@ -16,26 +15,15 @@ import {
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
   SUMMARIZE_OPTION,
-} from "../../../utils/widget-table-chart/commons";
+} from "../../../utils/widget-table-chart/commons.jsx";
 
 import ExpandableOptions from "../../molecules/expandable-options";
-import SummarizedTable from "./summarize";
+import SummarizedTable from "./TableSummary";
 import useDebounce from "../../../hooks/useDebounce";
+import TableHeader from "./TableHeader";
+import TableContent from "./TableContent";
 
 const userInputsStorage = new StoreService(USER_INPUTS_TABLE);
-
-const FIRST_COLUMN_OPTIONS = [
-  {
-    id: FIRST_COLUMN_DEFAULT_OPT,
-    name: "Thời gian",
-    unit: <span className="header-unit__input">(giây)</span>,
-  },
-  {
-    id: FIRST_COLUMN_CUSTOM_OPT,
-    name: "Người dùng nhập",
-    unit: <input id={FIRST_COLUMN_CUSTOM_OPT} type="text" placeholder="--------" />,
-  },
-];
 
 const TableWidget = (
   {
@@ -114,6 +102,7 @@ const TableWidget = (
         // We set the displayedSelectedRow = the current selected row
         displayedSelectedRow = selectedRow;
       }
+
       setSelectedElement({
         ...selectedElement,
         selectedRow: curSelectedRow,
@@ -168,7 +157,8 @@ const TableWidget = (
       } else {
         // Preventing loosing selection row when move from auto to manual.
         // As the the selected rows is still the last row from auto
-        if (datas[0]?.length === 0) {
+        const isHasData = datas.reduce((acc, data) => acc || data.length > 0, false);
+        if (!isHasData) {
           setSelectedElement({
             ...selectedElement,
             selectedRow: 0,
@@ -190,7 +180,7 @@ const TableWidget = (
         : transformedRows
     );
 
-    if (samplingMode === SAMPLING_AUTO || !isRunning ) {
+    if (samplingMode === SAMPLING_AUTO || !isRunning) {
       if (transformedRows.length === 0) return;
       setSelectedElement({
         ...selectedElement,
@@ -337,103 +327,29 @@ const TableWidget = (
           {/* ========================== TABLE BODY ========================== */}
           <tbody className="wapper__chart__table__body">
             {/* ========================== TABLE HEADER ========================== */}
-            <tr key="header-row" className="__header-column">
-              {/* ========================== FIXED FIRST COLUMN ========================== */}
-              <td key="header-row-fixed-column" className="__header-name">
-                <select
-                  className="custom-select"
-                  disabled={isRunning}
-                  value={firstColumnOption}
-                  onChange={handleFirstColumSelector}
-                >
-                  <option value={"defaultSensorSelectedValue"} disabled>
-                    Chọn thông tin
-                  </option>
-                  {FIRST_COLUMN_OPTIONS.map((option) => {
-                    return (
-                      <option key={option.id} value={option.id}>
-                        {option.name}
-                      </option>
-                    );
-                  })}
-                </select>
-                <div className="__header-unit">
-                  {FIRST_COLUMN_OPTIONS.find((option) => option.id === firstColumnOption)?.unit}
-                </div>
-              </td>
-
-              {/* ========================== DYNAMIC COLUMN ========================== */}
-              {widget.sensors.map((sensor, sensorIndex) => (
-                <td key={`header-row-dynamic-column-${sensorIndex}`} className="__header-name">
-                  <SensorSelector
-                    className="sensor-selector "
-                    disabled={isRunning}
-                    selectedSensor={sensor}
-                    hideDisplayUnit={true}
-                    onChange={(sensor) => handleSensorChange(widget.id, sensorIndex, sensor)}
-                  ></SensorSelector>
-                  <div className="__header-unit">
-                    <span className="header-unit__input">
-                      {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
-                    </span>
-                  </div>
-                </td>
-              ))}
-            </tr>
-
+            <TableHeader
+              isRunning={isRunning}
+              firstColumnOption={firstColumnOption}
+              widget={widget}
+              sensorsUnit={sensorsUnit}
+              handleSensorChange={handleSensorChange}
+              handleFirstColumSelector={handleFirstColumSelector}
+            />
             {/* ========================== TABLE CONTENT ========================== */}
-            {[...rows, emptyRow, emptyRow].map((row, rowIndex) => {
-              const { selectedRow, selectedColumn } = selectedElement;
-
-              let ref;
-              if (!isRunning) ref = null;
-              else if (samplingMode === SAMPLING_AUTO) {
-                ref = rowIndex === numRows + 1 ? lastRowRef : null;
-              } else if (samplingMode === SAMPLING_MANUAL) {
-                ref = rowIndex === selectedRow + 1 ? lastRowRef : null;
-              }
-
-              // Create N number of columns
-              const dynamicColumns = [];
-              for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
-                const style = {};
-                if (rowIndex === selectedRow) style["color"] = "#11b444";
-                if (columnIndex + 1 === selectedColumn) style["background"] = "#F2ECEC";
-
-                dynamicColumns.push(
-                  <td
-                    key={`data-row-${rowIndex}-${columnIndex}`}
-                    id={`${rowIndex}_${columnIndex + 1}`}
-                    onClick={handleChangeSelectedColumn}
-                  >
-                    <span className="span-value " style={style}>
-                      {row[`column${columnIndex + 1}`]}
-                    </span>
-                  </td>
-                );
-              }
-              return (
-                <tr key={`data-row-${rowIndex}`} ref={ref}>
-                  {/* ========================== FIXED FIRST COLUMN ========================== */}
-                  <td key={`fixed-data-row-${rowIndex}`}>
-                    {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
-                      <span className="span-input">{row.column0}</span>
-                    ) : (
-                      <input
-                        id={`${rowIndex}_0`}
-                        type="text"
-                        value={userInputs[rowIndex] || ""}
-                        onChange={userInputHandler}
-                        disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
-                      />
-                    )}
-                  </td>
-
-                  {/* ========================== SECOND COLUMN ========================== */}
-                  {dynamicColumns}
-                </tr>
-              );
-            })}
+            <TableContent
+              isRunning={isRunning}
+              samplingMode={samplingMode}
+              firstColumnOption={firstColumnOption}
+              userInputs={userInputs}
+              rows={rows}
+              numRows={numRows}
+              lastRowRef={lastRowRef}
+              selectedElement={selectedElement}
+              numColumns={numColumns}
+              userInputHandler={userInputHandler}
+              handleChangeSelectedColumn={handleChangeSelectedColumn}
+            />
+            <div></div>
           </tbody>
         </table>
       </div>
