@@ -55,6 +55,11 @@ There is also cordova Electron platform installed. To learn more about it and El
 * [Cordova Electron Platform Guide](https://cordova.apache.org/docs/en/latest/guide/platforms/electron/index.html)
 * [Official Electron Documentation](https://electronjs.org/docs)
 
+App requires serialport and its related npm packages to parse usb serial data so we need to install them in cordova/platforms/electron/www/ to build and run successfully, or we will meet error "Module not found when app starts". Run following commands to install:
+
+`cd cordova/platforms/electron/www/`
+`npm install -s serialport @serialport/list @serialport/parser-readline @serialport/parser-delimiter`
+
 ## Framework7 CLI Options
 
 Framework7 app created with following options:
