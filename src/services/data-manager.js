@@ -12,7 +12,6 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
-import { FIRST_COLUMN_CUSTOM_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -754,9 +753,17 @@ export class DataManager {
     if (Array.isArray(sensorIds)) {
       sensorIds.forEach((sensorId, i) => {
         const sensorValue = sensorValues[i].values;
+        // console.log("sensorValue: ", sensorId, sensorValue);
+        if (sensorValue === {}) return;
 
-        if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+        if (curBuffer.hasOwnProperty(sensorId)) {
           curBuffer[sensorId] = sensorValue;
+        } else {
+          // check if the sensorId is he custom unit of user
+          const customUnitId = this.customMeasurements.map((measurement) => measurement.id);
+          if (customUnitId.includes(sensorId)) {
+            curBuffer[sensorId] = sensorValue;
+          }
         }
       });
     }
@@ -937,7 +944,6 @@ export class DataManager {
     const measurementId = uuidv4();
     const measurement = {
       id: measurementId,
-      type: FIRST_COLUMN_CUSTOM_OPT,
       name: measureName,
       unit: measureUnit,
     };

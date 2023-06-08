@@ -1,6 +1,6 @@
 import React from "react";
 
-import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE } from "../../js/constants";
+import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE, DEFAULT_SENSOR_ID } from "../../js/constants";
 
 import addColumnIcon from "../../img/expandable-options/add-column.png";
 import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
@@ -35,23 +35,35 @@ export const expandableOptions = [
   },
 ];
 
-const FIRST_COLUMN_OPTIONS = [
-  {
-    id: FIRST_COLUMN_DEFAULT_OPT,
-    type: FIRST_COLUMN_DEFAULT_OPT,
-    name: "Thời gian",
-    unit: <span className="header-unit__input">(giây)</span>,
-  },
-  {
-    id: FIRST_COLUMN_CUSTOM_OPT,
-    type: FIRST_COLUMN_CUSTOM_OPT,
-    name: "Người dùng nhập",
-    unit: <span className="header-unit__input">--------</span>,
-  },
-];
+export const TABLE_TIME_COLUMN = {
+  id: FIRST_COLUMN_DEFAULT_OPT,
+  name: "Thời gian",
+  unit: <span className="header-unit__input">(giây)</span>,
+};
+
+export const TABLE_CUSTOM_COLUMN = {
+  id: FIRST_COLUMN_CUSTOM_OPT,
+  name: "Người dùng nhập",
+  unit: <span className="header-unit__input">--------</span>,
+};
 
 export const getFirstColumnOptions = () => {
   const customMeasurements = DataManagerIST.getCustomMeasurements();
-  const result = [...FIRST_COLUMN_OPTIONS, ...customMeasurements];
+  const result = [TABLE_TIME_COLUMN, TABLE_CUSTOM_COLUMN, ...customMeasurements];
   return result;
+};
+
+// This function is used for manual collecting data
+export const createLastRow = ({ firstColumnValue, numColumns, widget }) => {
+  const row = { column0: firstColumnValue };
+  for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
+    let cellValue = "---";
+    if (widget.sensors[columnIndex]?.id === DEFAULT_SENSOR_ID) cellValue = "";
+    row[`column${columnIndex + 1}`] = cellValue;
+  }
+  return row;
+};
+
+export const getMaxDataSize = (datas) => {
+  return datas.reduce((maxSize, data) => Math.max(maxSize, data.length), 0);
 };

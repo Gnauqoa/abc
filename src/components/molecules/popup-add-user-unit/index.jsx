@@ -4,13 +4,14 @@ import React, { useRef, useState } from "react";
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
 
-const AddUserUnitPopup = ({}) => {
+const AddUserUnitPopup = ({ onSubmit }) => {
   const addUserUnitPopupRef = useRef();
   const [measureName, setMeasureName] = useState("");
   const [measureUnit, setMeasureUnit] = useState("");
 
   const onSubmitHandler = () => {
     DataManagerIST.addCustomMeasurement({ measureName, measureUnit });
+    onSubmit();
     f7.popup.close();
   };
 
@@ -26,7 +27,7 @@ const AddUserUnitPopup = ({}) => {
                 type="text"
                 value={measureName}
                 onChange={(e) => {
-                  setMeasureName(e.target.value.trim());
+                  setMeasureName(e.target.value.trimStart());
                 }}
               />
             </div>
@@ -36,7 +37,7 @@ const AddUserUnitPopup = ({}) => {
                 type="text"
                 value={measureUnit}
                 onChange={(e) => {
-                  setMeasureUnit(e.target.value.trim());
+                  setMeasureUnit(e.target.value.trimStart());
                 }}
               />
             </div>

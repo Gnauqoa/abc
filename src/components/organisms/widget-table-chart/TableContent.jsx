@@ -1,13 +1,12 @@
 import React from "react";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../../js/constants";
+import { useTableContext } from "../../../context/TableContext";
 
 const TableContent = ({
+  tableId,
   isRunning,
   samplingMode,
-  firstColumnOption,
-  userInputs,
-  userInputHandler,
   rows,
   numRows,
   lastRowRef,
@@ -16,6 +15,19 @@ const TableContent = ({
   handleChangeSelectedColumn,
 }) => {
   const emptyRow = { column0: "" };
+  const { getUserInputValue, getFirstColumnOption, setUserInputs } = useTableContext();
+  const firstColumnOption = getFirstColumnOption({ tableId: tableId });
+
+  const userInputHandler = (event) => {
+    const inputSelectedRow = event.target.id;
+    const inputValue = event.target.value;
+    const inputRow = inputSelectedRow.split("_")[0];
+    const inputId = `${tableId}_${inputRow}`;
+
+    setUserInputs((prev) => {
+      return { ...prev, [inputId]: inputValue };
+    });
+  };
 
   return (
     <div>
@@ -53,15 +65,15 @@ const TableContent = ({
           <tr key={`data-row-${rowIndex}`} ref={ref}>
             {/* ========================== FIXED FIRST COLUMN ========================== */}
             <td key={`fixed-data-row-${rowIndex}`}>
-              {firstColumnOption === FIRST_COLUMN_DEFAULT_OPT ? (
+              {firstColumnOption.id === FIRST_COLUMN_DEFAULT_OPT ? (
                 <span className="span-input">{row.column0}</span>
               ) : (
                 <input
                   id={`${rowIndex}_0`}
                   type="text"
-                  value={userInputs[rowIndex] || ""}
+                  value={getUserInputValue({ tableId: tableId, inputRow: rowIndex })}
                   onChange={userInputHandler}
-                  disabled={firstColumnOption === FIRST_COLUMN_DEFAULT_OPT}
+                  disabled={firstColumnOption.id === FIRST_COLUMN_DEFAULT_OPT}
                 />
               )}
             </td>
