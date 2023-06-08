@@ -1,23 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Button,
-  Popup,
-  Page,
-  Navbar,
-  NavRight,
-  Block,
-  Link,
-  List,
-  ListItem,
-  AccordionContent,
-  PageContent,
-} from "framework7-react";
+import { Button, Popup, Page, Navbar, NavRight, NavLeft } from "framework7-react";
 import _ from "lodash";
 import SensorServices from "../../../services/sensor-service";
-import clsx from "clsx";
 import DataManagerIST from "../../../services/data-manager";
-import { DEFAULT_SENSOR_ID, SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../../../js/constants";
+import {
+  DEFAULT_SENSOR_ID,
+  SENSOR_SELECTOR_SENSOR_TAB,
+  SENSOR_SELECTOR_USER_TAB,
+  SENSOR_STATUS_OFFLINE,
+  SENSOR_STATUS_ONLINE,
+} from "../../../js/constants";
 
+import "./index.scss";
+import SensorTab from "./SensorTab";
+import UserTab from "./UserTab";
 export default function SensorSelector({
   disabled,
   selectedSensor,
@@ -29,6 +25,7 @@ export default function SensorSelector({
   const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
+  const [tab, setTab] = useState(SENSOR_SELECTOR_SENSOR_TAB);
 
   useEffect(() => {
     const sensorList = getSensorList();
@@ -114,6 +111,10 @@ export default function SensorSelector({
 
   const sensorPopup = useRef(null);
 
+  const handleChangeTab = (sensorTab) => {
+    setTab(sensorTab);
+  };
+
   return (
     <div className="sensor-selector " style={style}>
       <Button disabled={disabled} fill round onClick={handleOpenPopup}>
@@ -126,49 +127,19 @@ export default function SensorSelector({
         onPopupClosed={() => setSensorSelectPopupOpened(false)}
       >
         <Page>
-          <Navbar className="sensor-select-title" title="Chọn thông tin">
-            <NavRight>
-              <Link iconIos="material:close" iconMd="material:close" popupClose />
+          <Navbar className="sensor-select-title">
+            <NavLeft className={`${tab === SENSOR_SELECTOR_SENSOR_TAB ? "selected" : ""}`}>
+              <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_SENSOR_TAB)}>Cảm biến</Button>
+            </NavLeft>
+            <NavRight className={`${tab === SENSOR_SELECTOR_USER_TAB ? "selected" : ""}`}>
+              <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_USER_TAB)}>Người dùng nhập</Button>
             </NavRight>
           </Navbar>
-          <PageContent className="invisible-scrollbar zero-padding">
-            <Block>
-              <List>
-                {sensorListForDisplay.map(({ id, name, data, sensorStatus }) => (
-                  <ListItem
-                    className={clsx("sensor-select-device", {
-                      __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
-                      __default: sensorStatus === SENSOR_STATUS_OFFLINE,
-                    })}
-                    accordionItem
-                    key={id}
-                    title={name}
-                    accordionItemOpened={sensorStatus === SENSOR_STATUS_ONLINE ? true : false}
-                  >
-                    <AccordionContent>
-                      <List>
-                        {data.map((s) => (
-                          <ListItem
-                            link="#"
-                            popupClose
-                            key={id + "|" + s.id}
-                            className={clsx("sensor-select-measurement", {
-                              __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
-                              __default: sensorStatus === SENSOR_STATUS_OFFLINE,
-                            })}
-                            title={`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
-                            onClick={() => {
-                              changeHandler(id + "|" + s.id);
-                            }}
-                          ></ListItem>
-                        ))}
-                      </List>
-                    </AccordionContent>
-                  </ListItem>
-                ))}
-              </List>
-            </Block>
-          </PageContent>
+          {tab === SENSOR_SELECTOR_SENSOR_TAB ? (
+            <SensorTab sensorListForDisplay={sensorListForDisplay} changeHandler={changeHandler}></SensorTab>
+          ) : (
+            <UserTab changeHandler={changeHandler}></UserTab>
+          )}
         </Page>
       </Popup>
     </div>

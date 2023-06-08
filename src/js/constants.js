@@ -204,6 +204,8 @@ export const TIMER_NO_STOP = -1;
 // Sensor
 export const SENSOR_STATUS_ONLINE = "online";
 export const SENSOR_STATUS_OFFLINE = "offline";
+export const SENSOR_SELECTOR_SENSOR_TAB = "sensor";
+export const SENSOR_SELECTOR_USER_TAB = "user";
 
 export const DEFAULT_SENSOR_ID = -1;
 export const DEFAULT_SENSOR_DATA = { id: DEFAULT_SENSOR_ID, index: 0 };
