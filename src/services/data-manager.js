@@ -98,7 +98,8 @@ export class DataManager {
     this.uartConnections = new Set();
     this.sensorsQueue = [];
 
-    this.customMeasurements = [];
+    this.customXAxis = [];
+    this.customXAxisDatas = {};
   }
 
   init() {
@@ -293,6 +294,8 @@ export class DataManager {
     this.collectingDataTime = 0;
     this.timerCollectingTime = 0;
     this.isCollectingData = true;
+    // Clear custom axis datas
+    this.customXAxisDatas = {};
     const dataRunId = this.createDataRun(null);
     this.emitSubscribersScheduler();
     return dataRunId;
@@ -940,19 +943,40 @@ export class DataManager {
   }
 
   // -------------------------------- CUSTOM MEASUREMENTS -------------------------------- //
-  addCustomMeasurement({ measureName, measureUnit }) {
+  addCustomXAxis({ measureName, measureUnit }) {
     const measurementId = uuidv4();
     const measurement = {
       id: measurementId,
       name: measureName,
       unit: measureUnit,
     };
-    this.customMeasurements.push(measurement);
+    this.customXAxis.push(measurement);
     return measurement;
   }
 
-  getCustomMeasurements() {
-    return this.customMeasurements;
+  getCustomXAxis() {
+    return this.customXAxis;
+  }
+
+  addCustomXAxisDatas({ sensorIds, optionId, values }) {
+    const customXAxis = this.customXAxisDatas[optionId] || { sensorIds: sensorIds, data: {} };
+    const customXAxisData = customXAxis.data;
+
+    Object.keys(values).forEach((sensorId) => {
+      const sensorData = {
+        label: values[sensorId].label,
+        values: values[sensorId].values,
+      };
+
+      if (Object.keys(customXAxisData).includes(sensorId)) {
+        customXAxisData[sensorId].push(sensorData);
+      } else {
+        customXAxisData[sensorId] = [sensorData];
+      }
+    });
+
+    this.customXAxisDatas[optionId] = { ...customXAxis, data: customXAxisData };
+    console.log("addCustomXAxisDatas", this.customXAxisDatas);
   }
 }
 

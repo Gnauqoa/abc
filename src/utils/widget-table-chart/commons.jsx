@@ -48,7 +48,7 @@ export const TABLE_CUSTOM_COLUMN = {
 };
 
 export const getFirstColumnOptions = () => {
-  const customMeasurements = DataManagerIST.getCustomMeasurements();
+  const customMeasurements = DataManagerIST.getCustomXAxis();
   const result = [TABLE_TIME_COLUMN, TABLE_CUSTOM_COLUMN, ...customMeasurements];
   return result;
 };

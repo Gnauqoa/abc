@@ -6,7 +6,7 @@ import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
 
 const UserTab = ({ changeHandler }) => {
-  const userUnits = DataManagerIST.getCustomMeasurements();
+  const userUnits = DataManagerIST.getCustomXAxis();
   return (
     <PageContent className="invisible-scrollbar zero-padding">
       <Block>

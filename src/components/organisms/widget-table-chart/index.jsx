@@ -72,45 +72,42 @@ const TableWidget = (
   // ========================== useImperativeHandle and useEffect Functions ==========================
   useImperativeHandle(ref, () => ({
     handleSamplingManual() {
+      // Render all current rows and the new current row of table
+      // If the newRow is undefined, the user is not select sensor
+      // and manually sampling, just put the current buffer to dataRuns
       let transformedRows = convertDataToTableRows(datas);
       const newRow = convertCurrentsValueToTableRow(currentValues);
       if (!newRow) {
-        // if the user is not select sensor and manually
-        // sampling, just put the current buffer to dataRuns
         DataManagerIST.appendManualSample();
         return;
       }
 
-      const { selectedRow } = selectedElement;
-
       setNumRows(transformedRows.length);
+
+      const { selectedRow } = selectedElement;
       let curSelectedRow = selectedRow;
       let displayedSelectedRow = selectedRow;
-      let sensorIds;
-      let sensorValues;
+      const sensorIds = widget.sensors.map((sensor) => parseInt(sensor.id));
+      const sensorValues = currentValues;
 
-      if ([FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id)) {
-        sensorIds = widget.sensors.map((sensor) => parseInt(sensor.id));
-        sensorValues = currentValues;
-      } else {
-        sensorIds = [firstColumnOption.id];
-        sensorValues = [];
-        const customValues = [];
+      // If the current first column is the custom unit, then we need to add the data
+      if (![FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id)) {
+        const optionId = firstColumnOption.id;
+        const values = {};
 
         if (Array.isArray(currentValues)) {
           currentValues.forEach((currentValue, index) => {
-            const sensorInfo = widget.sensors[index];
-            const value = currentValue.values?.[sensorInfo.index];
+            const sensorId = widget.sensors?.[index]?.id;
+            const value = currentValue.values || {};
             const sensorValue = {
-              sensorId: sensorInfo.id,
-              sensorIndex: sensorInfo.index,
-              value: value || "",
+              values: value,
               label: getUserInputValue({ tableId: tableId, inputRow: selectedRow }),
             };
-            customValues.push(sensorValue);
+            values[sensorId] = sensorValue;
           });
         }
-        sensorValues.push({ values: customValues });
+
+        DataManagerIST.addCustomXAxisDatas({ sensorIds, optionId, values });
       }
 
       if (selectedRow === transformedRows.length) {
@@ -127,11 +124,17 @@ const TableWidget = (
         displayedSelectedRow = selectedRow;
       }
 
+      // Set the selected element to the new selected row
       setSelectedElement({
         ...selectedElement,
         selectedRow: curSelectedRow,
       });
 
+      /* Create last row and push to the transformedRows
+        If the displayedSelectedRow < numRows, it means that
+        we are selecting the row in the middle of the table,
+        and we need to create the last row to push to the table
+      */
       const lastRow = createLastRow({
         firstColumnValue: getUserInputValue({ tableId: tableId, inputRow: numRows }),
         numColumns: numColumns,
