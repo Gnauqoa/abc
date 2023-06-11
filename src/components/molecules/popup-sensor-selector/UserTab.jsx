@@ -4,24 +4,30 @@ import React from "react";
 
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
+import { X_AXIS_TIME_UNIT } from "../../../utils/widget-table-chart/commons";
 
-const UserTab = ({ changeHandler }) => {
+const UserTab = ({ changeHandler = () => {} }) => {
   const userUnits = DataManagerIST.getCustomXAxis();
+
+  const handleSelect = ({ option }) => {
+    changeHandler({ option });
+  };
+
   return (
     <PageContent className="invisible-scrollbar zero-padding">
       <Block>
         <List>
-          {userUnits.map((s) => (
+          {[X_AXIS_TIME_UNIT, ...userUnits].map((option) => (
             <ListItem
               link="#"
               popupClose
-              key={s.id}
+              key={option.id}
               className={clsx("sensor-select-user-unit", {
                 __activeDevice: true,
                 __default: false,
               })}
-              title={`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
-              onClick={() => {}}
+              title={`${option.name} ${option.unit === "" ? "" : ` (${option.unit})`}`}
+              onClick={() => handleSelect({ option })}
             ></ListItem>
           ))}
         </List>

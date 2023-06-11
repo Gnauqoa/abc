@@ -13,8 +13,11 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
   const [firstColumnTables, setFirstColumnTables] = useState(getFirstColumnOptions());
   const firstColumnOption = getFirstColumnOption({ tableId: tableId });
 
-  const handleAddUserUnit = () => {
+  const handleAddUserUnit = (option) => {
     setFirstColumnTables(getFirstColumnOptions());
+    setFirstColumnOptions((prev) => {
+      return { ...prev, [tableId]: { ...option } };
+    });
   };
 
   const handleFirstColumSelector = ({ target: { value: optionId } }) => {

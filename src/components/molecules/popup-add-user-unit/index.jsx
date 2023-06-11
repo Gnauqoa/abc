@@ -10,8 +10,8 @@ const AddUserUnitPopup = ({ onSubmit }) => {
   const [measureUnit, setMeasureUnit] = useState("");
 
   const onSubmitHandler = () => {
-    DataManagerIST.addCustomXAxis({ measureName, measureUnit });
-    onSubmit();
+    const option = DataManagerIST.addCustomXAxis({ measureName, measureUnit });
+    onSubmit(option);
     f7.popup.close();
   };
 

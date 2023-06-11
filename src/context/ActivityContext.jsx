@@ -2,12 +2,15 @@ import React, { useContext, useState, useRef } from "react";
 import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER, TIMER_NO_STOP } from "../js/constants";
 
 import DataManagerIST from "../services/data-manager";
+import { X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
+const defaultXAxises = [X_AXIS_TIME_UNIT];
 const defaultPages = [
   {
     layout: LAYOUT_NUMBER,
     widgets: defaultWidgets,
+    xAxises: defaultXAxises,
     lastDataRunId: null,
     name: "1",
   },

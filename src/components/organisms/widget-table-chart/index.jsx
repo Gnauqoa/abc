@@ -90,24 +90,34 @@ const TableWidget = (
       const sensorIds = widget.sensors.map((sensor) => parseInt(sensor.id));
       const sensorValues = currentValues;
 
+      // Parameter for custom user unit
+      const isCustomUnit = ![FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id);
+
       // If the current first column is the custom unit, then we need to add the data
-      if (![FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id)) {
+      if (isCustomUnit) {
+        const sensorInfos = widget.sensors.map((sensor) => `${sensor.id}-${sensor.index}`);
         const optionId = firstColumnOption.id;
         const values = {};
 
         if (Array.isArray(currentValues)) {
           currentValues.forEach((currentValue, index) => {
             const sensorId = widget.sensors?.[index]?.id;
-            const value = currentValue.values || {};
+            const sensorIndex = widget.sensors?.[index]?.index;
+            const sensorInfo = `${sensorId}-${sensorIndex}`;
+            const value = currentValue.values?.[sensorIndex] || "";
             const sensorValue = {
-              values: value,
+              value: value,
               label: getUserInputValue({ tableId: tableId, inputRow: selectedRow }),
             };
-            values[sensorId] = sensorValue;
+            values[sensorInfo] = sensorValue;
           });
         }
 
-        DataManagerIST.addCustomXAxisDatas({ sensorIds, optionId, values });
+        if (selectedRow === transformedRows.length) {
+          DataManagerIST.addCustomXAxisDatas({ sensorInfos: sensorInfos, optionId, values });
+        } else {
+          DataManagerIST.addCustomXAxisDatas({ sensorInfos: sensorInfos, optionId, values, index: selectedRow });
+        }
       }
 
       if (selectedRow === transformedRows.length) {

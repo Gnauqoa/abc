@@ -10,6 +10,8 @@ import selectionIcon from "../../img/expandable-options/line-selection.png";
 import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
 import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
 import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
+import DataManagerIST from "../../services/data-manager";
+import SensorServicesIST from "../../services/sensor-service";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
@@ -215,8 +217,8 @@ export const getMaxMinAxises = ({ chartDatas }) => {
   };
 };
 
-export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) => {
-  const { maxX } = getMaxMinAxises({
+export const calculateSuggestXYAxis = ({ chartDatas, pageStep, firstPageStep }) => {
+  const { maxX, maxY } = getMaxMinAxises({
     chartDatas: chartDatas,
   });
 
@@ -228,7 +230,7 @@ export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) =>
     suggestMaxX = firstPageStep + pageStep * numOfPage;
   }
 
-  return suggestMaxX;
+  return { suggestMaxX, suggestMaxY: maxY };
 };
 
 export const createChartDataAndParseXAxis = ({ chartDatas }) => {
@@ -302,6 +304,36 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
     chartDataParam.datasets.push(dataset);
   });
 
+  return chartDataParam;
+};
+
+export const createChartJsDatasForLabel = ({ chartDatas = [], pointRadius, tension }) => {
+  let chartDataParam = {};
+  chartDataParam.labels = [];
+  chartDataParam.datasets = [];
+
+  chartDatas.forEach((chartData, chartDataIndex) => {
+    const dataList = [];
+
+    chartData.data.forEach((d) => {
+      if (chartDataIndex === 0) chartDataParam.labels.push(d.x);
+      dataList.push(d.y);
+    });
+
+    const dataset = {
+      label: chartData.name,
+      data: dataList,
+      borderColor: chartUtils.namedColor(chartDataIndex),
+      backgroundColor: chartUtils.transparentize(chartUtils.namedColor(chartDataIndex), 0.5),
+    };
+
+    if (tension) dataset.tension = tension;
+    if (pointRadius) dataset.pointRadius = pointRadius;
+
+    chartDataParam.datasets.push(dataset);
+  });
+
+  console.log("chartDataParam: ", chartDataParam);
   return chartDataParam;
 };
 
@@ -508,4 +540,67 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
     startYValue: round(startYValue, 1),
     endYValue: round(endYValue, 1),
   };
+};
+
+export const getChartDatas = ({ sensor, defaultSensorIndex, currentDataRunId }) => {
+  let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+  let currentData = [];
+  const dataRunIds = [];
+
+  /* chartDatas: [
+      {
+        name: dataRunPreview.name,
+        dataRunId: dataRunPreview.id,
+        data: [
+          { x: 1, y: 2 },
+          { x: 2, y: 3 },
+          ...
+        ]
+      }, {
+        ...
+      }
+    ]
+    */
+  const chartDatas = dataRunPreviews.map((dataRunPreview) => {
+    let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
+    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+    if (dataRunPreview.id === currentDataRunId) {
+      currentData = data;
+    }
+
+    dataRunIds.push(dataRunPreview.id);
+
+    return {
+      name: dataRunPreview.name,
+      data: data,
+      dataRunId: dataRunPreview.id,
+    };
+  });
+
+  return {
+    chartDatas: chartDatas,
+    currentData: currentData,
+    dataRunIds: dataRunIds,
+  };
+};
+
+export const getCustomUnitDatas = ({ optionId }) => {
+  const datas = DataManagerIST.getCustomXAxisDatas({ optionId });
+  let isXLabel = false;
+
+  const chartDatas = datas.map((data) => {
+    let sensorName = data.sensorInfo;
+    const [sensorId, sensorIndex] = data.sensorInfo.split("-");
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+    if (sensorInfo) {
+      sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
+    }
+    isXLabel = isXLabel || data.isXLabel;
+    return {
+      name: sensorName,
+      data: data.data,
+      isXLabel: data.isXLabel,
+    };
+  });
+  return { chartDatas, isXLabel };
 };

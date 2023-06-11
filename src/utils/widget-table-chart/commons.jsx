@@ -47,6 +47,12 @@ export const TABLE_CUSTOM_COLUMN = {
   unit: <span className="header-unit__input">--------</span>,
 };
 
+export const X_AXIS_TIME_UNIT = {
+  id: FIRST_COLUMN_DEFAULT_OPT,
+  name: "Thời gian",
+  unit: "s",
+};
+
 export const getFirstColumnOptions = () => {
   const customMeasurements = DataManagerIST.getCustomXAxis();
   const result = [TABLE_TIME_COLUMN, TABLE_CUSTOM_COLUMN, ...customMeasurements];

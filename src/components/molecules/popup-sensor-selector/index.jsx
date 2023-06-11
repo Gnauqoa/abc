@@ -19,6 +19,7 @@ export default function SensorSelector({
   selectedSensor,
   hideDisplayUnit,
   onChange = () => {},
+  onSelectUserInit = () => {},
   style,
   definedSensors,
 }) {
@@ -138,7 +139,7 @@ export default function SensorSelector({
           {tab === SENSOR_SELECTOR_SENSOR_TAB ? (
             <SensorTab sensorListForDisplay={sensorListForDisplay} changeHandler={changeHandler}></SensorTab>
           ) : (
-            <UserTab changeHandler={changeHandler}></UserTab>
+            <UserTab changeHandler={onSelectUserInit}></UserTab>
           )}
         </Page>
       </Popup>
