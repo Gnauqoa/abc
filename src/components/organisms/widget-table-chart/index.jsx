@@ -168,7 +168,8 @@ const TableWidget = (
       } else {
         // Preventing loosing selection row when move from auto to manual.
         // As the the selected rows is still the last row from auto
-        if (datas[0]?.length === 0) {
+        const isHasData = datas.reduce((acc, data) => acc || data.length > 0, false);
+        if (!isHasData) {
           setSelectedElement({
             ...selectedElement,
             selectedRow: 0,
@@ -191,6 +192,7 @@ const TableWidget = (
     );
 
     if (samplingMode === SAMPLING_AUTO || !isRunning) {
+      if (transformedRows.length === 0) return;
       setSelectedElement({
         ...selectedElement,
         selectedRow: transformedRows.length - 1,

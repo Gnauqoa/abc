@@ -109,6 +109,8 @@ export const ActivityContextProvider = ({ children }) => {
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
+    prevChartDataRef.current.data[currentPageIndex] = [];
+    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
   };
 
   // ======================= Datarun functions =======================
