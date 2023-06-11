@@ -44,12 +44,13 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
-  let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [], customXAxisData: [] });
 
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
@@ -67,12 +68,14 @@ export const ActivityContextProvider = ({ children }) => {
 
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
@@ -114,6 +117,7 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   // ======================= Datarun functions =======================

@@ -48,7 +48,7 @@ import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
 import { useTableContext } from "../context/TableContext";
 import { FIRST_COLUMN_DEFAULT_OPT, TABLE_TIME_COLUMN, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
-import { getChartDatas } from "../utils/widget-line-chart/commons";
+import { createChartDataAndParseXAxis, getChartDatas, getCustomXAxisDatas } from "../utils/widget-line-chart/commons";
 
 const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
@@ -82,6 +82,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       ],
       frequency: 1,
       dataRuns: [],
+      customXAxis: [],
+      customXAxisDatas: [],
       sensorSettings: [],
       sensors: defaultSensors,
       customSensors: [],
@@ -137,6 +139,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   useEffect(() => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
+    DataManagerIST.importCustomXAxis(activity.customXAxis);
+    DataManagerIST.importCustomXAxisDatas(activity.customXAxisDatas);
+
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) {
       setPreviousActivity(_.cloneDeep(activity));
@@ -197,6 +202,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   const saveActivity = () => {
     // Collecting data from dataRuns and export
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const customXAxis = DataManagerIST.getCustomXAxis();
+    const customXAxisDatas = DataManagerIST.exportCustomXAxisDatas();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page };
@@ -224,6 +231,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       name,
       pages: updatedPage,
       dataRuns: updatedDataRuns,
+      customXAxis: customXAxis,
+      customXAxisDatas: customXAxisDatas,
       frequency: frequency,
       sensors: sensors,
       customSensors: customSensors,
@@ -475,7 +484,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     return tableDatas;
   }
 
-  function getDataForChart(sensors) {
+  function getDataForChart({ sensors, optionId }) {
     if (!lineChartRef.current[currentPageIndex]) return;
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -494,28 +503,39 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
     }
 
-    const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensor, defaultSensorIndex, currentDataRunId });
+    let isCustomXAxis = false;
+    if (![FIRST_COLUMN_DEFAULT_OPT].includes(optionId)) {
+      isCustomXAxis = true;
+      const { chartDatas } = getCustomXAxisDatas({ optionId: optionId });
+      const isModifyData = !_.isEqual(chartDatas, prevChartDataRef.current.customXAxisData[currentPageIndex]);
 
-    // Check if the current data is = the previous data or not.
-    // The current is retrieved with by the currentDataRunId
-    const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+      if (isModifyData) {
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: chartDatas, isCustomXAxis: isCustomXAxis });
+        prevChartDataRef.current.customXAxisData[currentPageIndex] = chartDatas;
+      }
+    } else {
+      const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensor, defaultSensorIndex, currentDataRunId });
+      const parsedChartDatas = createChartDataAndParseXAxis({ chartDatas });
 
-    // This is used to check if we delete or add new dataRun,
-    // the chart will be updated with the new data run
-    const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+      // Check if the current data is = the previous data or not.
+      // The current is retrieved with by the currentDataRunId
+      const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+      // This is used to check if we delete or add new dataRun,
+      // the chart will be updated with the new data run
+      const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+      // Call this function to clear hiddenDataRunIds in the LineChart
+      if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
 
-    // Call this function to clear hiddenDataRunIds in the LineChart
-    if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
+      // If we create new page and do not run any experiment, we will not have currentDataRunId
+      // So when we navigate to next page and come back, currentDataRunId will be null, and it
+      // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
+      // is null, we still render the chart
+      if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas });
 
-    // If we create new page and do not run any experiment, we will not have currentDataRunId
-    // So when we navigate to next page and come back, currentDataRunId will be null, and it
-    // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
-    // is null, we still render the chart
-    if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
-      lineChartRef.current[currentPageIndex].setChartData({ chartDatas: chartDatas });
-
-      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
-      if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+        if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
+        if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+      }
     }
   }
 
@@ -612,7 +632,10 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <LineChart
                     key={`${currentPageIndex}_chart`}
                     pageId={`${currentPageIndex}_chart`}
-                    data={getDataForChart(pages[currentPageIndex].widgets[1].sensors)}
+                    data={getDataForChart({
+                      sensors: pages[currentPageIndex].widgets[1].sensors,
+                      optionId: pages[currentPageIndex].xAxises[1].id,
+                    })}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
                     xAxis={pages[currentPageIndex].xAxises[1]}
@@ -647,7 +670,10 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <LineChart
                   key={`${currentPageIndex}_chart`}
                   pageId={`${currentPageIndex}_chart`}
-                  data={getDataForChart(pages[currentPageIndex].widgets[0].sensors)}
+                  data={getDataForChart({
+                    sensors: pages[currentPageIndex].widgets[0].sensors,
+                    optionId: pages[currentPageIndex].xAxises[0].id,
+                  })}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
                   xAxis={pages[currentPageIndex].xAxises[0]}

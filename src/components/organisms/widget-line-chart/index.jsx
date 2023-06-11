@@ -38,9 +38,9 @@ import {
   PREFIX_STATISTIC_NOTE,
   STATISTIC_NOTE_TYPE,
   getChartDatas,
-  getCustomUnitDatas,
+  getCustomXAxisDatas,
   calculateSuggestXYAxis,
-  createChartJsDatasForLabel,
+  createChartJsDatasForCustomXAxis,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -62,8 +62,7 @@ import {
   handleAddSelection,
   handleDeleteSelection,
 } from "../../../utils/widget-line-chart/selection-plugin";
-import { FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
-import DataManagerIST from "../../../services/data-manager";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -226,7 +225,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data, axisRef, pageId, isXLabel }) => {
+const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) => {
   try {
     const pageStep = 5;
     const firstPageStep = 10;
@@ -264,7 +263,7 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isXLabel }) => {
         },
       },
     };
-    if (!isXLabel) {
+    if (!isCustomXAxis) {
       scales.x.type = "linear";
       scales.x.suggestedMin = 0;
       scales.x.suggestedMax = suggestMaxX;
@@ -277,8 +276,11 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isXLabel }) => {
       chartInstance.options.plugins.zoom.zoom.mode = "y";
     }
 
-    if (!isXLabel) chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
-    else chartInstance.data = createChartJsDatasForLabel({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+    if (!isCustomXAxis) {
+      chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+    } else {
+      chartInstance.data = createChartJsDatasForCustomXAxis({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+    }
     chartInstance.options.animation = false;
     chartInstance.options.scales = scales;
 
@@ -431,23 +433,23 @@ let LineChart = (props, ref) => {
       }
     },
 
-    setChartData: ({ chartDatas = [] }) => {
-      const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
-      if (![FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(xAxisRef.current.id) || !isHasData) return;
-
+    setChartData: ({ chartDatas = [], isCustomXAxis }) => {
       /**
        * chartData = [
        * { name, data: [{x,y}, ...]}
        * ]
        */
       // axisRef.current.xUnit = xUnit;
-      chartDatas = createChartDataAndParseXAxis({ chartDatas });
+
+      const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
+      if (!isHasData) return;
 
       updateChart({
         chartInstance: chartInstanceRef.current,
         data: chartDatas,
         axisRef,
         pageId,
+        isCustomXAxis,
       });
     },
   }));
@@ -667,8 +669,8 @@ let LineChart = (props, ref) => {
 
   const onSelectUserUnit = ({ option }) => {
     let chartDatas = [];
-    let isXLabel;
-    if ([FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(option.id)) {
+    let isCustomXAxis = false;
+    if ([FIRST_COLUMN_DEFAULT_OPT].includes(option.id)) {
       const defaultSensorIndex = 0;
       const { chartDatas: datas } = getChartDatas({
         sensor,
@@ -678,12 +680,10 @@ let LineChart = (props, ref) => {
 
       chartDatas = createChartDataAndParseXAxis({ chartDatas: datas });
     } else {
-      const { chartDatas: datas, isXLabel: isLabel } = getCustomUnitDatas({ optionId: option.id });
+      const { chartDatas: datas } = getCustomXAxisDatas({ optionId: option.id });
       chartDatas = datas;
-      isXLabel = isLabel;
+      isCustomXAxis = true;
     }
-
-    console.log("chartDatas: ", chartDatas);
 
     axisRef.current.xUnit = option.unit;
     handleXAxisChange({ xAxisId: xAxis.id, option: option });
@@ -692,7 +692,7 @@ let LineChart = (props, ref) => {
       data: chartDatas,
       axisRef,
       pageId,
-      isXLabel,
+      isCustomXAxis,
     });
   };
 
@@ -700,7 +700,7 @@ let LineChart = (props, ref) => {
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case SCALE_FIT_OPTION:
-        scaleToFixHandler(chartInstanceRef.current, axisRef);
+        scaleToFixHandler(chartInstanceRef.current, axisRef, xAxis);
         break;
       case NOTE_OPTION:
         addNoteHandler(sensorRef.current);

@@ -31,7 +31,7 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
     <tr key="header-row" className="__header-column">
       {/* ========================== FIXED FIRST COLUMN ========================== */}
       <td key="header-row-fixed-column" className="__header-name">
-        <div className={`__header-name-selector ${firstColumnOption.id === FIRST_COLUMN_DEFAULT_OPT ? "time" : ""}`}>
+        <div className={`__header-name-selector`}>
           <select
             className="custom-select"
             disabled={isRunning}
@@ -49,14 +49,12 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
               );
             })}
           </select>
-          {firstColumnOption.id !== FIRST_COLUMN_DEFAULT_OPT && (
-            <Button
-              iconIos={`material:edit`}
-              iconMd={`material:edit`}
-              iconAurora={`material:edit`}
-              popupOpen=".add-user-unit-popup"
-            ></Button>
-          )}
+          <Button
+            iconIos={`material:edit`}
+            iconMd={`material:edit`}
+            iconAurora={`material:edit`}
+            popupOpen=".add-user-unit-popup"
+          ></Button>
           <AddUserUnitPopup onSubmit={handleAddUserUnit} />
         </div>
         <div className="__header-unit">
@@ -75,9 +73,7 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
             onChange={(sensor) => handleSensorChange(widget.id, sensorIndex, sensor)}
           ></SensorSelector>
           <div className="__header-unit">
-            <span className="header-unit__input">
-              {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
-            </span>
+            {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
           </div>
         </td>
       ))}

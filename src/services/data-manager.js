@@ -12,7 +12,7 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
-import { FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT } from "../utils/widget-table-chart/commons";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -974,9 +974,7 @@ export class DataManager {
     const result = Object.keys(customXAxisData).map((sensorInfo) => {
       const datas = [];
       const sensorDatas = customXAxisData[sensorInfo];
-      let isXLabel = false;
       for (const data of sensorDatas) {
-        isXLabel = isXLabel || Number.isNaN(Number(data.label));
         datas.push({
           x: data.label,
           y: data.value,
@@ -985,10 +983,34 @@ export class DataManager {
       return {
         sensorInfo: sensorInfo,
         data: datas,
-        isXLabel: isXLabel,
       };
     });
     return result;
+  }
+
+  exportCustomXAxisDatas() {
+    const customXAxisDatas = Object.keys(this.customXAxisDatas).map((optionId) => {
+      const customXAxis = this.customXAxisDatas[optionId];
+      return {
+        optionId: optionId,
+        data: customXAxis.data,
+        sensorInfos: customXAxis.sensorInfos,
+      };
+    });
+    return customXAxisDatas;
+  }
+
+  importCustomXAxisDatas(customXAxisDatas) {
+    for (const customXAxisData of customXAxisDatas) {
+      this.customXAxisDatas[customXAxisData.optionId] = {
+        data: customXAxisData.data,
+        sensorInfos: customXAxisData.sensorInfos,
+      };
+    }
+  }
+
+  importCustomXAxis(customXAxis) {
+    this.customXAxis = customXAxis;
   }
 
   addCustomXAxisDatas({ sensorInfos, optionId, values, index }) {
@@ -1021,10 +1043,7 @@ export class DataManager {
    *
    */
   clearCustomXAxisDatas({ optionId }) {
-    if (
-      [FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_CUSTOM_OPT].includes(optionId) ||
-      !Object.keys(this.customXAxisDatas).includes(optionId)
-    ) {
+    if ([FIRST_COLUMN_DEFAULT_OPT].includes(optionId) || !Object.keys(this.customXAxisDatas).includes(optionId)) {
       return;
     }
     this.customXAxisDatas[optionId] = { sensorIds: [], data: {} };

@@ -10,7 +10,7 @@ import DataManagerIST from "../../services/data-manager";
 
 export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";
-export const FIRST_COLUMN_CUSTOM_OPT = "custom";
+// export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
 export const ADD_COLUMN_OPTION = 0;
 export const DELETE_COLUMN_OPTION = 1;
@@ -38,14 +38,14 @@ export const expandableOptions = [
 export const TABLE_TIME_COLUMN = {
   id: FIRST_COLUMN_DEFAULT_OPT,
   name: "Thời gian",
-  unit: <span className="header-unit__input">(giây)</span>,
+  unit: <span className="header-unit">(giây)</span>,
 };
 
-export const TABLE_CUSTOM_COLUMN = {
-  id: FIRST_COLUMN_CUSTOM_OPT,
-  name: "Người dùng nhập",
-  unit: <span className="header-unit__input">--------</span>,
-};
+// export const TABLE_CUSTOM_COLUMN = {
+//   id: FIRST_COLUMN_CUSTOM_OPT,
+//   name: "Người dùng nhập",
+//   unit: <span className="header-unit__input">--------</span>,
+// };
 
 export const X_AXIS_TIME_UNIT = {
   id: FIRST_COLUMN_DEFAULT_OPT,
@@ -55,7 +55,7 @@ export const X_AXIS_TIME_UNIT = {
 
 export const getFirstColumnOptions = () => {
   const customMeasurements = DataManagerIST.getCustomXAxis();
-  const result = [TABLE_TIME_COLUMN, TABLE_CUSTOM_COLUMN, ...customMeasurements];
+  const result = [TABLE_TIME_COLUMN, ...customMeasurements];
   return result;
 };
 

@@ -10,7 +10,6 @@ import {
   expandableOptions,
   DEFAULT_ROWS,
   FIRST_COLUMN_DEFAULT_OPT,
-  FIRST_COLUMN_CUSTOM_OPT,
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
   SUMMARIZE_OPTION,
@@ -91,7 +90,7 @@ const TableWidget = (
       const sensorValues = currentValues;
 
       // Parameter for custom user unit
-      const isCustomUnit = ![FIRST_COLUMN_CUSTOM_OPT, FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id);
+      const isCustomUnit = ![FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id);
 
       // If the current first column is the custom unit, then we need to add the data
       if (isCustomUnit) {

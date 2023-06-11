@@ -12,6 +12,7 @@ import showOffDataPointIcon from "../../img/expandable-options/line-show-off-dat
 import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
@@ -194,18 +195,29 @@ export const getMaxMinAxises = ({ chartDatas }) => {
 
   chartDatas.forEach((dataset) => {
     dataset.data.forEach((d) => {
-      if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
-        maxX = d.x;
-        minX = d.x;
-        maxY = d.y;
-        minY = d.y;
-        return;
-      }
+      if (!typeof d === "object") {
+        if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
+          maxX = d.x;
+          minX = d.x;
+          maxY = d.y;
+          minY = d.y;
+          return;
+        }
 
-      minX = Math.min(minX, d.x);
-      maxX = Math.max(maxX, d.x);
-      minY = Math.min(minY, d.y);
-      maxY = Math.max(maxY, d.y);
+        minY = Math.min(minY, d.y);
+        maxY = Math.max(maxY, d.y);
+        minX = Math.min(minX, d.x);
+        maxX = Math.max(maxX, d.x);
+      } else {
+        if (maxY === undefined && minY === undefined) {
+          maxY = d;
+          minY = d;
+          return;
+        }
+
+        minY = Math.min(minY, d);
+        maxY = Math.max(maxY, d);
+      }
     });
   });
 
@@ -307,7 +319,7 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
   return chartDataParam;
 };
 
-export const createChartJsDatasForLabel = ({ chartDatas = [], pointRadius, tension }) => {
+export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius, tension }) => {
   let chartDataParam = {};
   chartDataParam.labels = [];
   chartDataParam.datasets = [];
@@ -444,15 +456,17 @@ export const getChartJsPlugin = ({ valueLabelContainerRef }) => {
 };
 
 // ======================================= START EXPANDED OPTIONS FUNCTIONS =======================================
-export const scaleToFixHandler = (chartInstance, axisRef) => {
+export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
   if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
     return;
   }
-  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
 
+  const isXLabel = xAxis.id !== FIRST_COLUMN_DEFAULT_OPT;
+  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
+  console.log("isXLabel: ", isXLabel);
+  console.log("maxX, minX, maxY, minY: ", maxX, minX, maxY, minY);
   const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
-  chartInstance.options.animation = true;
-  chartInstance.options.scales = {
+  const scales = {
     y: {
       min: minY - marginUpperLower,
       suggestedMax: maxY + marginUpperLower,
@@ -463,9 +477,6 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
       },
     },
     x: {
-      type: "linear",
-      suggestedMin: 0,
-      suggestedMax: maxX + X_UPPER_LOWER_MARGIN,
       ticks: {},
       title: {
         color: "orange",
@@ -475,6 +486,15 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
       },
     },
   };
+
+  if (!isXLabel) {
+    scales.x.type = "linear";
+    scales.x.suggestedMin = 0;
+    scales.x.suggestedMax = maxX + X_UPPER_LOWER_MARGIN;
+  }
+
+  chartInstance.options.animation = true;
+  chartInstance.options.scales = scales;
   chartInstance.update();
 };
 
@@ -584,9 +604,8 @@ export const getChartDatas = ({ sensor, defaultSensorIndex, currentDataRunId }) 
   };
 };
 
-export const getCustomUnitDatas = ({ optionId }) => {
+export const getCustomXAxisDatas = ({ optionId }) => {
   const datas = DataManagerIST.getCustomXAxisDatas({ optionId });
-  let isXLabel = false;
 
   const chartDatas = datas.map((data) => {
     let sensorName = data.sensorInfo;
@@ -595,12 +614,10 @@ export const getCustomUnitDatas = ({ optionId }) => {
     if (sensorInfo) {
       sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
     }
-    isXLabel = isXLabel || data.isXLabel;
     return {
       name: sensorName,
       data: data.data,
-      isXLabel: data.isXLabel,
     };
   });
-  return { chartDatas, isXLabel };
+  return { chartDatas };
 };
