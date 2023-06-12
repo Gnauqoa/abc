@@ -195,7 +195,7 @@ export const getMaxMinAxises = ({ chartDatas }) => {
 
   chartDatas.forEach((dataset) => {
     dataset.data.forEach((d) => {
-      if (!typeof d === "object") {
+      if (typeof d === "object") {
         if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
           maxX = d.x;
           minX = d.x;
@@ -496,9 +496,12 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
   chartInstance.options.animation = true;
   chartInstance.options.scales = scales;
   chartInstance.update();
+
+  // Reset the chart options to the default
+  chartInstance.options.animation = false;
 };
 
-export const interpolateHandler = (chartInstance) => {
+export const interpolateHandler = (chartInstance, hiddenDataRunIds) => {
   const newDatasets = chartInstance.data.datasets.map((dataset) => {
     return {
       ...dataset,
@@ -509,6 +512,16 @@ export const interpolateHandler = (chartInstance) => {
   chartInstance.data.datasets = [...newDatasets];
   chartInstance.options.animation = true;
   chartInstance.update();
+
+  for (let index = 0; index < chartInstance.data.datasets.length; index++) {
+    const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
+    if (hiddenDataRunIds.has(dataRunId)) {
+      chartInstance.hide(index);
+    }
+  }
+
+  // Reset the chart options to the default
+  chartInstance.options.animation = false;
 };
 
 // ======================================= END EXPANDED OPTIONS FUNCTIONS =======================================

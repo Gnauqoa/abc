@@ -706,7 +706,7 @@ let LineChart = (props, ref) => {
         addNoteHandler(sensorRef.current);
         break;
       case INTERPOLATE_OPTION:
-        interpolateHandler(chartInstanceRef.current);
+        interpolateHandler(chartInstanceRef.current, hiddenDataRunIds);
         break;
       case STATISTIC_OPTION:
         statisticHandler(chartInstanceRef.current);
