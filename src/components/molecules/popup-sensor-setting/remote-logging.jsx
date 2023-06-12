@@ -29,7 +29,9 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         freq: "",
         wifiName: "",
         wifiPassword: "",
-        server: "",
+        serverAddress: "",
+        serverUsername: "",
+        serverPassword: "",
         unitInfo: {},
         channel: "",
         startOn: "now", // now/reset/always
@@ -41,7 +43,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       unitInfo = unitInfos[sensorDataIndex || 0];
     }
 
-    console.log("savedSetting", savedSetting)
+    console.log("savedSetting", savedSetting);
     setFormSetting({ ...savedSetting, id: sensorId, unitInfo });
   }, [sensorInfo]);
 
@@ -67,8 +69,16 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         f7.dialog.alert("Tên Wifi không hợp lệ");
         return false;
       }
-      if (setting.server === "" || isNaN(setting.server)) {
+      if (setting.serverAddress === "" || isNaN(setting.serverAddress)) {
         f7.dialog.alert("Địa chỉ server không hợp lệ");
+        return false;
+      }
+      if (setting.serverUsername === "" || isNaN(setting.serverUsername)) {
+        f7.dialog.alert("Username server không hợp lệ");
+        return false;
+      }
+      if (setting.serverPassword === "" || isNaN(setting.serverPassword)) {
+        f7.dialog.alert("Mật khẩu server không hợp lệ");
         return false;
       }
       if (setting.channel === "" || isNaN(setting.channel)) {
@@ -85,7 +95,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
 
     if (validateSettingParams(formSetting)) {
       storeSettingService.save(formSetting);
-      storeSettingService.save({ ...formSetting, id: "default" });
+      storeSettingService.save({ ...formSetting, id: "default", mode: "off" });
       onSaveHandler({ sensorId: sensorInfo.id, action: "setting-log", data: formSetting });
     }
   };
@@ -147,36 +157,40 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             );
           })}
         </CustomDropdownInput>
-        <ListInput
-          className="display-setting-input label-color-black"
-          outline
-          size={5}
-          name="duration"
-          label="Tổng thời gian:"
-          type="text"
-          validateOnBlur
-          value={formSetting.duration}
-          onChange={formSettingHandler}
-        >
-          <div slot="inner-end" className="margin-left">
-            phút
-          </div>
-        </ListInput>
-        <ListInput
-          className="display-setting-input label-color-black"
-          outline
-          size={5}
-          name="freq"
-          label="Tần suất:"
-          type="text"
-          validateOnBlur
-          value={formSetting.freq}
-          onChange={formSettingHandler}
-        >
-          <div slot="inner-end" className="margin-left">
-            giây/lần
-          </div>
-        </ListInput>
+        {formSetting.mode !== "off" && (
+          <ListInput
+            className="display-setting-input label-color-black"
+            outline
+            size={5}
+            name="duration"
+            label="Tổng thời gian:"
+            type="text"
+            validateOnBlur
+            value={formSetting.duration}
+            onChange={formSettingHandler}
+          >
+            <div slot="inner-end" className="margin-left">
+              phút
+            </div>
+          </ListInput>
+        )}
+        {formSetting.mode !== "off" && (
+          <ListInput
+            className="display-setting-input label-color-black"
+            outline
+            size={5}
+            name="freq"
+            label="Tần suất:"
+            type="text"
+            validateOnBlur
+            value={formSetting.freq}
+            onChange={formSettingHandler}
+          >
+            <div slot="inner-end" className="margin-left">
+              giây/lần
+            </div>
+          </ListInput>
+        )}
         {formSetting.mode === "server" && (
           <ListInput
             className="display-setting-input label-color-black"
@@ -209,11 +223,39 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="server"
+            name="serverAddress"
             label="Địa chỉ server:"
             type="text"
             validateOnBlur
-            value={formSetting.server}
+            value={formSetting.serverAddress}
+            onChange={formSettingHandler}
+          ></ListInput>
+        )}
+
+        {formSetting.mode === "server" && (
+          <ListInput
+            className="display-setting-input label-color-black"
+            outline
+            size={5}
+            name="serverUsername"
+            label="Username server:"
+            type="text"
+            validateOnBlur
+            value={formSetting.serverUsername}
+            onChange={formSettingHandler}
+          ></ListInput>
+        )}
+
+        {formSetting.mode === "server" && (
+          <ListInput
+            className="display-setting-input label-color-black"
+            outline
+            size={5}
+            name="serverPassword"
+            label="Mật khẩu server:"
+            type="text"
+            validateOnBlur
+            value={formSetting.serverPassword}
             onChange={formSettingHandler}
           ></ListInput>
         )}
@@ -250,25 +292,29 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           ></ListInput>
         )}
 
-        <CustomDropdownInput
-          labelName="Thời gian bắt đầu:"
-          buttonName={START_ON[formSetting.startOn]}
-          popOverName="popover-start-on"
-        >
-          {Object.keys(START_ON).map((startOn) => {
-            return (
-              <Button key={startOn} onClick={() => onStartOnChange(startOn)}>
-                <span style={{ textTransform: "none" }}>{START_ON[startOn]}</span>
-              </Button>
-            );
-          })}
-        </CustomDropdownInput>
+        {formSetting.mode !== "off" && (
+          <CustomDropdownInput
+            labelName="Thời gian bắt đầu:"
+            buttonName={START_ON[formSetting.startOn]}
+            popOverName="popover-start-on"
+          >
+            {Object.keys(START_ON).map((startOn) => {
+              return (
+                <Button key={startOn} onClick={() => onStartOnChange(startOn)}>
+                  <span style={{ textTransform: "none" }}>{START_ON[startOn]}</span>
+                </Button>
+              );
+            })}
+          </CustomDropdownInput>
+        )}
       </List>
-      <div className="buttons">
-        <Button className="save-button" onClick={onSubmitHandler}>
-          Lưu
-        </Button>
-      </div>
+      {formSetting.mode !== "off" && (
+        <div className="buttons">
+          <Button className="save-button" onClick={onSubmitHandler}>
+            Lưu
+          </Button>
+        </div>
+      )}
     </>
   );
 };
