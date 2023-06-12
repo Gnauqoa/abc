@@ -59,25 +59,48 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
 
     console.log(`${parsedSensorId}-${type}: y = ax + b => `, `y = ${k}x + ${offset}`);
+    // calib command: $$$cal,set,k,offset###
+    let strCalib = "$$$cal,set," + k + "," + offset + "###";
 
     if (type === BLE_TYPE) {
       const bleDevices = DeviceManagerIST.getBleDevices();
       const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
       let textEncoder = new TextEncoder();
-      // calib command: ***1,k,offset###
-      let uint8Array = textEncoder.encode("***1," + k + "," + offset + "###");
+      
+      let uint8Array = textEncoder.encode(strCalib);
       DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
     } else if (type === USB_TYPE) {
       const usbDevices = DataManagerIST.getUsbDevices();
       const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
 
-      DeviceManagerIST.writeUsbData(usbDevice.deviceId, "***1," + k + "," + offset + "###");
+      DeviceManagerIST.writeUsbData(usbDevice.deviceId, strCalib);
     }
     onClosePopup();
   };
 
   const onSaveOtherSettingsHandler = ({ sensorId, action, data }) => {
-    console.log(sensorId, action, data);
+    const parsedSensorId = parseInt(sensorId);
+    const uartConnections = DataManagerIST.getUartConnections();
+    const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
+
+    if (action == "zero") {
+      // zero command: $$$zer###
+      let cmdZero = "$$$zer###";
+
+      if (type === BLE_TYPE) {
+        const bleDevices = DeviceManagerIST.getBleDevices();
+        const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
+        let textEncoder = new TextEncoder();
+        
+        let uint8Array = textEncoder.encode(cmdZero);
+        DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
+      } else if (type === USB_TYPE) {
+        const usbDevices = DataManagerIST.getUsbDevices();
+        const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
+
+        DeviceManagerIST.writeUsbData(usbDevice.deviceId, cmdZero);
+      }
+    }
   };
 
   const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {

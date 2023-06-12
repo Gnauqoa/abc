@@ -8,7 +8,7 @@ const OtherSettingsTab = ({ sensorInfo, onSaveHandler }) => {
       <List className="__other-settings" form noHairlinesMd inlineLabels>
         <ListItem>
           <Button className="edl-button" onClick={() => onSaveHandler({ sensorId: sensorInfo.id, action: "zero" })}>
-            Cân chỉnh Zero
+            Đặt giá trị cảm biến về 0
           </Button>
         </ListItem>
       </List>
