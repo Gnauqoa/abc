@@ -14,16 +14,19 @@ function openFile(
   }
 }
 
-async function saveFile(
-  filePath,
-  content,
-  option = {
-    filters: [{ name: "EDL", extensions: ["edl"] }],
-    defaultPath: JSON.parse(content).name,
+async function saveFile(filePath, content, option = null) {
+  let name = "";
+  if (option === null) {
+    name = JSON.parse(content).name;
+    option = { ext: "edl" };
+  } else {
+    name = option.name || "";
   }
-) {
+
   if (f7.device.electron) {
     try {
+      option.filters = [{ name: option.ext.toUpperCase(), extensions: [option.ext] }];
+      option.defaultPath = name;
       return await window.fileApi.save(filePath, content, option);
     } catch (err) {
       console.log("Save file error", err);
@@ -34,14 +37,11 @@ async function saveFile(
       );
     }
   } else if (f7.device.desktop) {
-    exportFileToPc(content, JSON.parse(content).name, {
-      EXT: ".edl",
-      TYPE: "text/json",
-    });
+    exportFileToPc(content, name, option.ext);
     return;
   } else if (f7.device.android) {
     try {
-      const savedPath = await saveProject(JSON.parse(content).name || "EDL", filePath, content);
+      const savedPath = await saveProject(name || "EDL", filePath, content);
       dialog.alert("Lưu thành công", `Lưu file thành công tại ${savedPath}`, () => {});
       return;
     } catch (err) {

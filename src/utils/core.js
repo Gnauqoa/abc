@@ -238,33 +238,43 @@ export function fireClickOnEnter(e) {
 ///////////////////////////////////////////////////////////
 
 export function exportToPc(data, filename) {
-  return exportFileToPc(data, filename, FORMAT_MAP.JSON);
+  return exportFileToPc(data, filename, "json");
 }
 
 export const FORMAT_MAP = {
-  JSON: {
+  json: {
     EXT: ".json",
     TYPE: "text/json",
   },
-  CSV: {
+  csv: {
     EXT: ".csv",
     TYPE: "text/csv;charset=utf-8;",
   },
-  EDL: {
+  edl: {
     EXT: ".edl",
     TYPE: "text/json",
   },
+  txt: {
+    EXT: ".txt",
+    TYPE: "text/plain",
+  },
+  log: {
+    EXT: ".log",
+    TYPE: "text/plain",
+  },
 };
 
-export function exportFileToPc(data, filename, format) {
+export function exportFileToPc(data, filename, ext) {
   if (!data) {
     console.error("No data");
     return;
   }
 
-  if (!format) {
-    format = FORMAT_MAP.JSON;
+  if (!ext) {
+    ext = "json";
   }
+
+  const format = FORMAT_MAP[ext];
 
   if (!filename) {
     filename = "download";
@@ -516,10 +526,7 @@ export function exportToCSV(filename, rows) {
     csvFile += processRow(row);
   });
 
-  exportFileToPc(csvFile, filename, {
-    EXT: ".csv",
-    TYPE: "text/csv;charset=utf-8;",
-  });
+  exportFileToPc(csvFile, filename, "csv");
 }
 
 export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
@@ -550,10 +557,7 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
       );
     }
   } else if (f7.device.desktop) {
-    exportFileToPc(excelBuffer, fileName, {
-      EXT: `.${fileExt}`,
-      TYPE: fileType,
-    });
+    exportFileToPc(excelBuffer, fileName, fileExt);
     return;
   }
 }

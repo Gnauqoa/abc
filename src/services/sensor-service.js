@@ -324,6 +324,14 @@ export class SensorServices {
     });
     return soundSensors;
   }
+
+  isSensorLogAvailable(sensorId) {
+    return Promise.resolve(true); // TODO: check sensor log
+  }
+
+  getSensorLog(sensorId) {
+    return Promise.resolve("data"); // TODO: get sensor log
+  }
 }
 
 export default SensorServices.getInstance();
