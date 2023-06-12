@@ -54,7 +54,7 @@ export const X_AXIS_TIME_UNIT = {
 };
 
 export const getFirstColumnOptions = () => {
-  const customMeasurements = DataManagerIST.getCustomXAxis();
+  const customMeasurements = DataManagerIST.getCustomUnits();
   const result = [TABLE_TIME_COLUMN, ...customMeasurements];
   return result;
 };

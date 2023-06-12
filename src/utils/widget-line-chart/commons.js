@@ -13,6 +13,7 @@ import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
+import { DEFAULT_SENSOR_ID, RETURN_DICT_OPTION } from "../../js/constants";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
@@ -325,12 +326,8 @@ export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius,
   chartDataParam.datasets = [];
 
   chartDatas.forEach((chartData, chartDataIndex) => {
-    const dataList = [];
-
-    chartData.data.forEach((d) => {
-      if (chartDataIndex === 0) chartDataParam.labels.push(d.x);
-      dataList.push(d.y);
-    });
+    if (chartDataIndex === 0) chartDataParam.labels = chartData.labels;
+    const dataList = chartData.data;
 
     const dataset = {
       label: chartData.name,
@@ -617,20 +614,41 @@ export const getChartDatas = ({ sensor, defaultSensorIndex, currentDataRunId }) 
   };
 };
 
-export const getCustomXAxisDatas = ({ optionId }) => {
-  const datas = DataManagerIST.getCustomXAxisDatas({ optionId });
+export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
+  const chartDatas = [];
+  const sensorIds = new Set();
+  for (const sensor of sensors) {
+    if (sensor.id === DEFAULT_SENSOR_ID) continue;
+    sensorIds.add(sensor.id);
+  }
 
-  const chartDatas = datas.map((data) => {
-    let sensorName = data.sensorInfo;
-    const [sensorId, sensorIndex] = data.sensorInfo.split("-");
-    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    if (sensorInfo) {
-      sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
-    }
-    return {
-      name: sensorName,
-      data: data.data,
-    };
+  if (sensorIds.size === 0) return { chartDatas };
+
+  const datas = DataManagerIST.getChartCustomUnitDatas({
+    unitId: unitId,
+    sensorIds: sensorIds,
+    returnOption: RETURN_DICT_OPTION,
   });
+
+  for (const sensor of sensors) {
+    const sensorId = sensor.id;
+    const sensorIndex = sensor.index;
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+    const sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
+
+    let dataOfSensorIndex = [];
+    const data = datas[sensorId]?.data;
+    const labels = datas[sensorId]?.labels || [];
+
+    if (data) {
+      dataOfSensorIndex = data.map((d) => d[sensorIndex]) || [];
+    }
+
+    chartDatas.push({
+      name: sensorName,
+      data: dataOfSensorIndex,
+      labels: labels,
+    });
+  }
   return { chartDatas };
 };

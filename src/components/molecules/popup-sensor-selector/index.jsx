@@ -14,6 +14,7 @@ import {
 import "./index.scss";
 import SensorTab from "./SensorTab";
 import UserTab from "./UserTab";
+
 export default function SensorSelector({
   disabled,
   selectedSensor,
@@ -21,7 +22,7 @@ export default function SensorSelector({
   onChange = () => {},
   onSelectUserInit = () => {},
   style,
-  definedSensors,
+  definedSensors, // Array of int
 }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
@@ -80,7 +81,7 @@ export default function SensorSelector({
     else activeSensors = definedSensors;
 
     const sensorListForDisplay = sensorList.map((sensor) => {
-      const sensorStatus = activeSensors.includes(sensor.id.toString()) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
+      const sensorStatus = activeSensors.includes(sensor.id) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
       return { ...sensor, sensorStatus };
     });
 

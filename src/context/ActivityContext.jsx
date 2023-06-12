@@ -44,10 +44,11 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
-  let prevChartDataRef = useRef({ data: [], dataRunIds: [], customXAxisData: [] });
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [], customXAxisData: [], unitId: null });
 
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
@@ -66,6 +67,7 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
 
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
@@ -73,6 +75,7 @@ export const ActivityContextProvider = ({ children }) => {
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
@@ -115,6 +118,7 @@ export const ActivityContextProvider = ({ children }) => {
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.customXAxisData[currentPageIndex] = [];

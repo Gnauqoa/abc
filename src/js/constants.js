@@ -226,3 +226,6 @@ export const LINE_CHART_RANGE_SELECTION_TABLE = "line-chart-range-selection";
 // ANDROID SAVE EXPORT PROJECTS VARIABLES
 export const PROJECT_FOLDER = "InnoLabProject";
 export const PROJECT_FILE_EXT = ".edl";
+
+export const RETURN_LIST_OPTION = "list";
+export const RETURN_DICT_OPTION = "dict";

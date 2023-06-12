@@ -38,7 +38,7 @@ import {
   PREFIX_STATISTIC_NOTE,
   STATISTIC_NOTE_TYPE,
   getChartDatas,
-  getCustomXAxisDatas,
+  getChartCustomUnitDatas,
   calculateSuggestXYAxis,
   createChartJsDatasForCustomXAxis,
 } from "../../../utils/widget-line-chart/commons";
@@ -63,6 +63,7 @@ import {
   handleDeleteSelection,
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import DataManagerIST from "../../../services/data-manager";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -326,6 +327,8 @@ let LineChart = (props, ref) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
+
+  const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
   // Check whether the options are selected or not
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
@@ -670,20 +673,6 @@ let LineChart = (props, ref) => {
   const onSelectUserUnit = ({ option }) => {
     let chartDatas = [];
     let isCustomXAxis = false;
-    if ([FIRST_COLUMN_DEFAULT_OPT].includes(option.id)) {
-      const defaultSensorIndex = 0;
-      const { chartDatas: datas } = getChartDatas({
-        sensor,
-        defaultSensorIndex,
-        currentDataRunId: null,
-      });
-
-      chartDatas = createChartDataAndParseXAxis({ chartDatas: datas });
-    } else {
-      const { chartDatas: datas } = getCustomXAxisDatas({ optionId: option.id });
-      chartDatas = datas;
-      isCustomXAxis = true;
-    }
 
     axisRef.current.xUnit = option.unit;
     handleXAxisChange({ xAxisId: xAxis.id, option: option });
@@ -731,6 +720,7 @@ let LineChart = (props, ref) => {
               selectedSensor={selectedSensor}
               onChange={(sensor) => onChangeSensor(sensor)}
               onSelectUserInit={onSelectUserUnit}
+              definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
             ></SensorSelector>
           </div>
         </div>

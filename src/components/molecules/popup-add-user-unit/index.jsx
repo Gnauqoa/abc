@@ -6,11 +6,11 @@ import DataManagerIST from "../../../services/data-manager";
 
 const AddUserUnitPopup = ({ onSubmit }) => {
   const addUserUnitPopupRef = useRef();
-  const [measureName, setMeasureName] = useState("");
-  const [measureUnit, setMeasureUnit] = useState("");
+  const [unitName, setUnitName] = useState("");
+  const [unit, setUnit] = useState("");
 
   const onSubmitHandler = () => {
-    const option = DataManagerIST.addCustomXAxis({ measureName, measureUnit });
+    const option = DataManagerIST.addCustomUnit({ unitName, unit });
     onSubmit(option);
     f7.popup.close();
   };
@@ -25,9 +25,9 @@ const AddUserUnitPopup = ({ onSubmit }) => {
               <span>Tên thông tin</span>
               <input
                 type="text"
-                value={measureName}
+                value={unitName}
                 onChange={(e) => {
-                  setMeasureName(e.target.value.trimStart());
+                  setUnitName(e.target.value.trimStart());
                 }}
               />
             </div>
@@ -35,9 +35,9 @@ const AddUserUnitPopup = ({ onSubmit }) => {
               <span>Đơn vị đo</span>
               <input
                 type="text"
-                value={measureUnit}
+                value={unit}
                 onChange={(e) => {
-                  setMeasureUnit(e.target.value.trimStart());
+                  setUnit(e.target.value.trimStart());
                 }}
               />
             </div>

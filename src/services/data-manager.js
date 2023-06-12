@@ -11,6 +11,8 @@ import {
   BLE_TYPE,
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
+  RETURN_DICT_OPTION,
+  RETURN_LIST_OPTION,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../utils/widget-table-chart/commons";
 
@@ -99,8 +101,8 @@ export class DataManager {
     this.uartConnections = new Set();
     this.sensorsQueue = [];
 
-    this.customXAxis = [];
-    this.customXAxisDatas = {};
+    this.customUnits = [];
+    this.customUnitDatas = {};
   }
 
   init() {
@@ -291,12 +293,12 @@ export class DataManager {
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
    */
-  startCollectingData({ optionId }) {
+  startCollectingData({ unitId }) {
     this.collectingDataTime = 0;
     this.timerCollectingTime = 0;
     this.isCollectingData = true;
     // Clear custom axis datas
-    this.clearCustomXAxisDatas({ optionId });
+    this.clearCustomUnitDatas({ unitId });
     const dataRunId = this.createDataRun(null);
     this.emitSubscribersScheduler();
     return dataRunId;
@@ -741,7 +743,7 @@ export class DataManager {
   }
 
   getListActiveSensor() {
-    const activeSensors = Object.keys(this.buffer);
+    const activeSensors = Object.keys(this.buffer).map((sensorId) => parseInt(sensorId));
     return activeSensors;
   }
 
@@ -936,117 +938,133 @@ export class DataManager {
   }
 
   // -------------------------------- CUSTOM MEASUREMENTS -------------------------------- //
-  addCustomXAxis({ measureName, measureUnit }) {
-    const measurementId = uuidv4();
-    const measurement = {
-      id: measurementId,
-      name: measureName,
-      unit: measureUnit,
+  addCustomUnit({ unitName, unit }) {
+    const unitId = uuidv4();
+    const unitInfo = {
+      id: unitId,
+      name: unitName,
+      unit: unit,
     };
-    this.customXAxis.push(measurement);
-    return measurement;
+    this.customUnits.push(unitInfo);
+    return unitInfo;
   }
 
-  deleteCustomXAxis() {}
+  deleteCustomUnit() {}
 
-  getCustomXAxis() {
-    return this.customXAxis;
+  getCustomUnits() {
+    return this.customUnits;
   }
 
-  getCustomUnitSensorInfos({ optionId }) {
-    const customXAxis = this.customXAxisDatas[optionId];
-    if (!customXAxis) {
-      console.error("DataManagerIST-getCustomXAxisDatas: customXAxis not found");
+  getCustomUnitSensorInfos({ unitId }) {
+    const customUnitInfo = this.customUnitDatas[unitId];
+    if (!customUnitInfo) {
       return [];
     }
 
-    return customXAxis.sensorInfos;
-  }
-
-  getCustomXAxisDatas({ optionId }) {
-    const customXAxis = this.customXAxisDatas[optionId];
-    if (!customXAxis) {
-      console.error("DataManagerIST-getCustomXAxisDatas: customXAxis not found");
-      return [];
-    }
-    const customXAxisData = customXAxis.data;
-
-    const result = Object.keys(customXAxisData).map((sensorInfo) => {
-      const datas = [];
-      const sensorDatas = customXAxisData[sensorInfo];
-      for (const data of sensorDatas) {
-        datas.push({
-          x: data.label,
-          y: data.value,
-        });
-      }
-      return {
-        sensorInfo: sensorInfo,
-        data: datas,
-      };
+    return customUnitInfo.sensorIds.map((sensorId) => {
+      return parseInt(sensorId);
     });
+  }
+
+  getChartCustomUnitDatas({ unitId, sensorIds, returnOption = RETURN_DICT_OPTION }) {
+    let result;
+    if (returnOption === RETURN_DICT_OPTION) {
+      result = {};
+    } else if (returnOption === RETURN_LIST_OPTION) {
+      result = [];
+    }
+
+    const customUnitInfo = this.customUnitDatas[unitId];
+    if (!customUnitInfo) {
+      console.log("DataManagerIST-getChartCustomUnitDatas: customXAxis not found");
+      return [];
+    }
+    const customUnitData = customUnitInfo.data;
+    const customUnitDataLabels = customUnitInfo.labels;
+
+    for (const [sensorId, sensorDatas] of Object.entries(customUnitData)) {
+      const parsedSensorId = parseInt(sensorId);
+      if (!sensorIds || !sensorIds.has(parsedSensorId)) continue;
+
+      if (returnOption === RETURN_LIST_OPTION) {
+        result.push({
+          sensorId: parsedSensorId,
+          data: sensorDatas,
+          labels: customUnitDataLabels,
+        });
+      } else if (returnOption === RETURN_DICT_OPTION) {
+        result[parsedSensorId] = {
+          data: sensorDatas,
+          labels: customUnitDataLabels,
+        };
+      }
+    }
     return result;
   }
 
-  exportCustomXAxisDatas() {
-    const customXAxisDatas = Object.keys(this.customXAxisDatas).map((optionId) => {
-      const customXAxis = this.customXAxisDatas[optionId];
+  exportCustomUnitDatas() {
+    const customXAxisDatas = Object.keys(this.customUnitDatas).map((unitId) => {
+      const customXAxis = this.customUnitDatas[unitId];
       return {
-        optionId: optionId,
+        unitId: unitId,
         data: customXAxis.data,
-        sensorInfos: customXAxis.sensorInfos,
+        labels: customXAxis.labels,
+        sensorIds: customXAxis.sensorIds,
       };
     });
     return customXAxisDatas;
   }
 
-  importCustomXAxisDatas(customXAxisDatas) {
+  importCustomUnitDatas(customXAxisDatas) {
     for (const customXAxisData of customXAxisDatas) {
-      this.customXAxisDatas[customXAxisData.optionId] = {
+      this.customUnitDatas[customXAxisData.unitId] = {
         data: customXAxisData.data,
-        sensorInfos: customXAxisData.sensorInfos,
+        labels: customXAxisData.labels,
+        sensorIds: customXAxisData.sensorIds,
       };
     }
   }
 
-  importCustomXAxis(customXAxis) {
-    this.customXAxis = customXAxis;
+  importCustomUnit(customXAxis) {
+    this.customUnits = customXAxis;
   }
 
-  addCustomXAxisDatas({ sensorInfos, optionId, values, index }) {
-    const customXAxis = this.customXAxisDatas[optionId] || { sensorInfos: sensorInfos, data: {} };
+  addCustomUnitDatas({ sensorIds, unitId, datas, index }) {
+    const customXAxis = this.customUnitDatas[unitId] || { sensorIds: sensorIds, data: {}, labels: [] };
     const customXAxisData = customXAxis.data;
+    const customXAxisLabels = customXAxis.labels;
 
-    Object.keys(values).forEach((sensorInfo) => {
-      const sensorData = {
-        label: values[sensorInfo].label,
-        value: values[sensorInfo].value,
-      };
+    Object.keys(datas).forEach((sensorId) => {
+      const label = datas[sensorId].label;
+      const values = datas[sensorId].values;
 
-      if (Object.keys(customXAxisData).includes(sensorInfo)) {
+      if (Object.keys(customXAxisData).includes(sensorId)) {
         if (index !== undefined) {
-          customXAxisData[sensorInfo][index] = sensorData;
+          customXAxisData[sensorId][index] = values;
+          customXAxisLabels[index] = label;
         } else {
-          customXAxisData[sensorInfo].push(sensorData);
+          customXAxisData[sensorId].push(values);
+          customXAxisLabels.push(label);
         }
       } else {
-        customXAxisData[sensorInfo] = [sensorData];
+        customXAxisData[sensorId] = [values];
+        customXAxisLabels.push(label);
       }
     });
 
-    this.customXAxisDatas[optionId] = { ...customXAxis, data: customXAxisData };
-    console.log("addCustomXAxisDatas", this.customXAxisDatas);
+    this.customUnitDatas[unitId] = { ...customXAxis, data: customXAxisData, labels: customXAxisLabels };
+    console.log("addCustomUnitDatas", this.customUnitDatas);
   }
 
   /**
    * Clear all the datas and the sensorIds of user unit
    *
    */
-  clearCustomXAxisDatas({ optionId }) {
-    if ([FIRST_COLUMN_DEFAULT_OPT].includes(optionId) || !Object.keys(this.customXAxisDatas).includes(optionId)) {
+  clearCustomUnitDatas({ unitId }) {
+    if ([FIRST_COLUMN_DEFAULT_OPT].includes(unitId) || !Object.keys(this.customUnitDatas).includes(unitId)) {
       return;
     }
-    this.customXAxisDatas[optionId] = { sensorIds: [], data: {} };
+    this.customUnitDatas[unitId] = { sensorIds: [], data: {} };
   }
 }
 

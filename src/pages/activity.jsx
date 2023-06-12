@@ -48,7 +48,11 @@ import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
 import { useTableContext } from "../context/TableContext";
 import { FIRST_COLUMN_DEFAULT_OPT, TABLE_TIME_COLUMN, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
-import { createChartDataAndParseXAxis, getChartDatas, getCustomXAxisDatas } from "../utils/widget-line-chart/commons";
+import {
+  createChartDataAndParseXAxis,
+  getChartDatas,
+  getChartCustomUnitDatas,
+} from "../utils/widget-line-chart/commons";
 
 const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
@@ -139,8 +143,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   useEffect(() => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
-    DataManagerIST.importCustomXAxis(activity.customXAxis);
-    DataManagerIST.importCustomXAxisDatas(activity.customXAxisDatas);
+    DataManagerIST.importCustomUnit(activity.customXAxis);
+    DataManagerIST.importCustomUnitDatas(activity.customXAxisDatas);
 
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) {
@@ -202,8 +206,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   const saveActivity = () => {
     // Collecting data from dataRuns and export
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const customXAxis = DataManagerIST.getCustomXAxis();
-    const customXAxisDatas = DataManagerIST.exportCustomXAxisDatas();
+    const customXAxis = DataManagerIST.getCustomUnits();
+    const customXAxisDatas = DataManagerIST.exportCustomUnitDatas();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page };
@@ -423,13 +427,13 @@ export default ({ f7route, f7router, filePath, content }) => {
         - Check if the current page is table of not.
         - If yes, clear Custom X Axis Datas with use input id
       */
-      let optionId = FIRST_COLUMN_DEFAULT_OPT;
+      let unitId = FIRST_COLUMN_DEFAULT_OPT;
       if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
         const tableId = `${currentPageIndex}_table`;
-        optionId = getFirstColumnOption({ tableId }).id;
+        unitId = getFirstColumnOption({ tableId }).id;
       }
 
-      const dataRunId = DataManagerIST.startCollectingData({ optionId });
+      const dataRunId = DataManagerIST.startCollectingData({ unitId });
       timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
@@ -484,7 +488,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     return tableDatas;
   }
 
-  function getDataForChart({ sensors, optionId }) {
+  function getDataForChart({ sensors, unitId }) {
     if (!lineChartRef.current[currentPageIndex]) return;
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -504,12 +508,13 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
 
     let isCustomXAxis = false;
-    if (![FIRST_COLUMN_DEFAULT_OPT].includes(optionId)) {
+    const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
+    if (![FIRST_COLUMN_DEFAULT_OPT].includes(unitId)) {
       isCustomXAxis = true;
-      const { chartDatas } = getCustomXAxisDatas({ optionId: optionId });
+      const { chartDatas } = getChartCustomUnitDatas({ unitId: unitId, sensors: sensors });
       const isModifyData = !_.isEqual(chartDatas, prevChartDataRef.current.customXAxisData[currentPageIndex]);
 
-      if (isModifyData) {
+      if (isModifyData || isChangeUnit) {
         lineChartRef.current[currentPageIndex].setChartData({ chartDatas: chartDatas, isCustomXAxis: isCustomXAxis });
         prevChartDataRef.current.customXAxisData[currentPageIndex] = chartDatas;
       }
@@ -530,13 +535,15 @@ export default ({ f7route, f7router, filePath, content }) => {
       // So when we navigate to next page and come back, currentDataRunId will be null, and it
       // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
       // is null, we still render the chart
-      if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
+      if (isModifyData || isModifyDataRunIds || currentDataRunId === null || isChangeUnit) {
         lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas });
 
         if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
         if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
       }
     }
+
+    if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
   }
 
   // =========================== Functions associate with Table ===========================
@@ -634,7 +641,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     pageId={`${currentPageIndex}_chart`}
                     data={getDataForChart({
                       sensors: pages[currentPageIndex].widgets[1].sensors,
-                      optionId: pages[currentPageIndex].xAxises[1].id,
+                      unitId: pages[currentPageIndex].xAxises[1].id,
                     })}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
@@ -672,7 +679,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   pageId={`${currentPageIndex}_chart`}
                   data={getDataForChart({
                     sensors: pages[currentPageIndex].widgets[0].sensors,
-                    optionId: pages[currentPageIndex].xAxises[0].id,
+                    unitId: pages[currentPageIndex].xAxises[0].id,
                   })}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}

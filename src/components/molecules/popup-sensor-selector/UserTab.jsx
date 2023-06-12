@@ -7,7 +7,7 @@ import DataManagerIST from "../../../services/data-manager";
 import { X_AXIS_TIME_UNIT } from "../../../utils/widget-table-chart/commons";
 
 const UserTab = ({ changeHandler = () => {} }) => {
-  const userUnits = DataManagerIST.getCustomXAxis();
+  const userUnits = DataManagerIST.getCustomUnits();
 
   const handleSelect = ({ option }) => {
     changeHandler({ option });
