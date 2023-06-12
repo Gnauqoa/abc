@@ -277,53 +277,12 @@
   }
 }
 
-.sensor-select-device {
-  font-weight: bold;
-  &.__activeDevice {
-    background: #add3fa;
-  }
-
-  &.__default {
-    background: #d1d1d1;
-  }
-}
-
-.sensor-select-measurement {
-  margin-left: 2rem;
-  &.__activeDevice {
-    color: blue;
-    .item-title {
-      font-weight: bold;
-    }
-  }
-  &.__default {
-    color: #d1d1d1;
-  }
-}
-
 .invisible-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
 .zero-padding {
   padding: 0;
-}
-
-.sensor-selector {
-  .button {
-    text-transform: none;
-    font-size: 16px;
-    background-color: #ffbb02;
-    color: var(--f7-theme-color-text-color) !important;
-    border-radius: 5px;
-  }
-}
-
-.sensor-select-title {
-  color: #007ff5;
-  .title {
-    line-height: 100px;
-  }
 }
 
 /* about menu */

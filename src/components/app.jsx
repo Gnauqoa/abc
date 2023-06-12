@@ -10,6 +10,7 @@ import Dialogs from "./molecules/dialog/dialogs";
 
 import dataManager from "../services/data-manager";
 import { ActivityContextProvider } from "../context/ActivityContext";
+import { TableContextProvider } from "../context/TableContext";
 
 const MyApp = () => {
   const device = getDevice();
@@ -82,12 +83,14 @@ const MyApp = () => {
 
   return (
     <ActivityContextProvider>
-      <App {...f7params}>
-        <Dialogs />
-        <MainMenu />
-        {/* Your main view, should have "view-main" class */}
-        <View main className="safe-areas" url="/" />
-      </App>
+      <TableContextProvider>
+        <App {...f7params}>
+          <Dialogs />
+          <MainMenu />
+          {/* Your main view, should have "view-main" class */}
+          <View main className="safe-areas" url="/" />
+        </App>
+      </TableContextProvider>
     </ActivityContextProvider>
   );
 };

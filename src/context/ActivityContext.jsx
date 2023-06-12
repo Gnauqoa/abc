@@ -2,12 +2,15 @@ import React, { useContext, useState, useRef } from "react";
 import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER, TIMER_NO_STOP } from "../js/constants";
 
 import DataManagerIST from "../services/data-manager";
+import { X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
+const defaultXAxises = [X_AXIS_TIME_UNIT];
 const defaultPages = [
   {
     layout: LAYOUT_NUMBER,
     widgets: defaultWidgets,
+    xAxises: defaultXAxises,
     lastDataRunId: null,
     name: "1",
   },
@@ -41,12 +44,14 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
-  let prevChartDataRef = useRef({ data: [], dataRunIds: [] });
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [], customXAxisData: [], unitId: null });
 
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
@@ -62,14 +67,18 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
 
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
@@ -109,8 +118,10 @@ export const ActivityContextProvider = ({ children }) => {
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
+    prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
+    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   // ======================= Datarun functions =======================

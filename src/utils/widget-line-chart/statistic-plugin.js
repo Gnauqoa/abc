@@ -123,7 +123,7 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensor, pageI
 
       const { slope: m, intercept: b } = linearRegression;
       const linearRegFunction = `y = ${m}x + ${b}`;
-      const content = ["Linear fit", "  y = mx + b"];
+      const content = ["Đường tuyến tính", "  y = mx + b"];
       content.push(`  m = ${m}`);
       content.push(`  b = ${b}`);
       content.push("");

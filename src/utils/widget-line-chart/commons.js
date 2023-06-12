@@ -10,6 +10,10 @@ import selectionIcon from "../../img/expandable-options/line-selection.png";
 import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
 import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
 import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
+import DataManagerIST from "../../services/data-manager";
+import SensorServicesIST from "../../services/sensor-service";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
+import { DEFAULT_SENSOR_ID, RETURN_DICT_OPTION } from "../../js/constants";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
@@ -192,18 +196,29 @@ export const getMaxMinAxises = ({ chartDatas }) => {
 
   chartDatas.forEach((dataset) => {
     dataset.data.forEach((d) => {
-      if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
-        maxX = d.x;
-        minX = d.x;
-        maxY = d.y;
-        minY = d.y;
-        return;
-      }
+      if (typeof d === "object") {
+        if (maxX === undefined && maxY === undefined && minX === undefined && minY === undefined) {
+          maxX = d.x;
+          minX = d.x;
+          maxY = d.y;
+          minY = d.y;
+          return;
+        }
 
-      minX = Math.min(minX, d.x);
-      maxX = Math.max(maxX, d.x);
-      minY = Math.min(minY, d.y);
-      maxY = Math.max(maxY, d.y);
+        minY = Math.min(minY, d.y);
+        maxY = Math.max(maxY, d.y);
+        minX = Math.min(minX, d.x);
+        maxX = Math.max(maxX, d.x);
+      } else {
+        if (maxY === undefined && minY === undefined) {
+          maxY = d;
+          minY = d;
+          return;
+        }
+
+        minY = Math.min(minY, d);
+        maxY = Math.max(maxY, d);
+      }
     });
   });
 
@@ -215,8 +230,8 @@ export const getMaxMinAxises = ({ chartDatas }) => {
   };
 };
 
-export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) => {
-  const { maxX } = getMaxMinAxises({
+export const calculateSuggestXYAxis = ({ chartDatas, pageStep, firstPageStep }) => {
+  const { maxX, maxY } = getMaxMinAxises({
     chartDatas: chartDatas,
   });
 
@@ -228,7 +243,7 @@ export const calculateSuggestMaxX = ({ chartDatas, pageStep, firstPageStep }) =>
     suggestMaxX = firstPageStep + pageStep * numOfPage;
   }
 
-  return suggestMaxX;
+  return { suggestMaxX, suggestMaxY: maxY };
 };
 
 export const createChartDataAndParseXAxis = ({ chartDatas }) => {
@@ -302,6 +317,32 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
     chartDataParam.datasets.push(dataset);
   });
 
+  return chartDataParam;
+};
+
+export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius, tension }) => {
+  let chartDataParam = {};
+  chartDataParam.labels = [];
+  chartDataParam.datasets = [];
+
+  chartDatas.forEach((chartData, chartDataIndex) => {
+    if (chartDataIndex === 0) chartDataParam.labels = chartData.labels;
+    const dataList = chartData.data;
+
+    const dataset = {
+      label: chartData.name,
+      data: dataList,
+      borderColor: chartUtils.namedColor(chartDataIndex),
+      backgroundColor: chartUtils.transparentize(chartUtils.namedColor(chartDataIndex), 0.5),
+    };
+
+    if (tension) dataset.tension = tension;
+    if (pointRadius) dataset.pointRadius = pointRadius;
+
+    chartDataParam.datasets.push(dataset);
+  });
+
+  console.log("chartDataParam: ", chartDataParam);
   return chartDataParam;
 };
 
@@ -412,15 +453,17 @@ export const getChartJsPlugin = ({ valueLabelContainerRef }) => {
 };
 
 // ======================================= START EXPANDED OPTIONS FUNCTIONS =======================================
-export const scaleToFixHandler = (chartInstance, axisRef) => {
+export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
   if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
     return;
   }
-  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
 
+  const isXLabel = xAxis.id !== FIRST_COLUMN_DEFAULT_OPT;
+  const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
+  console.log("isXLabel: ", isXLabel);
+  console.log("maxX, minX, maxY, minY: ", maxX, minX, maxY, minY);
   const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
-  chartInstance.options.animation = true;
-  chartInstance.options.scales = {
+  const scales = {
     y: {
       min: minY - marginUpperLower,
       suggestedMax: maxY + marginUpperLower,
@@ -431,9 +474,6 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
       },
     },
     x: {
-      type: "linear",
-      suggestedMin: 0,
-      suggestedMax: maxX + X_UPPER_LOWER_MARGIN,
       ticks: {},
       title: {
         color: "orange",
@@ -443,10 +483,22 @@ export const scaleToFixHandler = (chartInstance, axisRef) => {
       },
     },
   };
+
+  if (!isXLabel) {
+    scales.x.type = "linear";
+    scales.x.suggestedMin = 0;
+    scales.x.suggestedMax = maxX + X_UPPER_LOWER_MARGIN;
+  }
+
+  chartInstance.options.animation = true;
+  chartInstance.options.scales = scales;
   chartInstance.update();
+
+  // Reset the chart options to the default
+  chartInstance.options.animation = false;
 };
 
-export const interpolateHandler = (chartInstance) => {
+export const interpolateHandler = (chartInstance, hiddenDataRunIds) => {
   const newDatasets = chartInstance.data.datasets.map((dataset) => {
     return {
       ...dataset,
@@ -457,6 +509,16 @@ export const interpolateHandler = (chartInstance) => {
   chartInstance.data.datasets = [...newDatasets];
   chartInstance.options.animation = true;
   chartInstance.update();
+
+  for (let index = 0; index < chartInstance.data.datasets.length; index++) {
+    const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
+    if (hiddenDataRunIds.has(dataRunId)) {
+      chartInstance.hide(index);
+    }
+  }
+
+  // Reset the chart options to the default
+  chartInstance.options.animation = false;
 };
 
 // ======================================= END EXPANDED OPTIONS FUNCTIONS =======================================
@@ -508,4 +570,85 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
     startYValue: round(startYValue, 1),
     endYValue: round(endYValue, 1),
   };
+};
+
+export const getChartDatas = ({ sensor, defaultSensorIndex, currentDataRunId }) => {
+  let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+  let currentData = [];
+  const dataRunIds = [];
+
+  /* chartDatas: [
+      {
+        name: dataRunPreview.name,
+        dataRunId: dataRunPreview.id,
+        data: [
+          { x: 1, y: 2 },
+          { x: 2, y: 3 },
+          ...
+        ]
+      }, {
+        ...
+      }
+    ]
+    */
+  const chartDatas = dataRunPreviews.map((dataRunPreview) => {
+    let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
+    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
+    if (dataRunPreview.id === currentDataRunId) {
+      currentData = data;
+    }
+
+    dataRunIds.push(dataRunPreview.id);
+
+    return {
+      name: dataRunPreview.name,
+      data: data,
+      dataRunId: dataRunPreview.id,
+    };
+  });
+
+  return {
+    chartDatas: chartDatas,
+    currentData: currentData,
+    dataRunIds: dataRunIds,
+  };
+};
+
+export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
+  const chartDatas = [];
+  const sensorIds = new Set();
+  for (const sensor of sensors) {
+    if (sensor.id === DEFAULT_SENSOR_ID) continue;
+    sensorIds.add(sensor.id);
+  }
+
+  if (sensorIds.size === 0) return { chartDatas };
+
+  const datas = DataManagerIST.getChartCustomUnitDatas({
+    unitId: unitId,
+    sensorIds: sensorIds,
+    returnOption: RETURN_DICT_OPTION,
+  });
+
+  for (const sensor of sensors) {
+    const sensorId = sensor.id;
+    const sensorIndex = sensor.index;
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+    const sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
+
+    let dataOfSensorIndex = [];
+    const data = datas[sensorId]?.data;
+    const labels = datas[sensorId]?.labels || [];
+
+    if (data) {
+      dataOfSensorIndex = data.map((d) => d[sensorIndex]) || [];
+    }
+
+    chartDatas.push({
+      name: sensorName,
+      data: dataOfSensorIndex,
+      labels: labels,
+    });
+  }
+  return { chartDatas };
 };

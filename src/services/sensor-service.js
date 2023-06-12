@@ -234,9 +234,15 @@ export class SensorServices {
     return this.sensors.filter((s) => !this.excludeSensorsId.includes(s.id));
   }
 
+  /**
+   * Get data for a specific sensor from the buffer.
+   *
+   * @param {Array<int>} definedSensors - The ID of the sensor to get data for.
+   * @returns {Array<sensor>} - The sensor data or the specified data item (if the data is an array).
+   */
   getDefinedSensors(definedSensors) {
     if (!definedSensors) return this.getSensors();
-    return this.sensors.filter((s) => definedSensors.includes(s.id.toString()));
+    return this.sensors.filter((s) => definedSensors.includes(s.id));
   }
 
   getCustomSensors() {

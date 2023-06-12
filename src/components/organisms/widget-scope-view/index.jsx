@@ -79,7 +79,7 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
   const sensorInfo = `${sensor.id}-${sensor.index}`;
 
   const soundSensors = SensorServiceIST.getActiveSoundSensors();
-  const soundSensorsId = soundSensors.map((sensor) => sensor.id?.toString());
+  const soundSensorsId = soundSensors.map((sensor) => sensor.id);
 
   const initWebAudio = () => {
     const samplingRate = MicrophoneServiceIST.getSamplingRate();

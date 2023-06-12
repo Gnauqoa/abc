@@ -13,12 +13,12 @@
 
     .sensor-selector-wrapper {
       position: relative;
-      width: 60px;
+      width: 40px;
       //flex: 0 0 0;
       .sensor-select-vertical-mount-container {
         position: absolute;
         display: block;
-        //width: 25vw;
+        width: 25vw;
         top: 50%;
         left: 6.5%;
         transform: rotate(-90deg) translate(-50%, 0%);
@@ -71,11 +71,20 @@ body {
   .line-chart-wapper {
     .line-chart {
       height: 90%;
-      .sensor-selector {
-        height: 40px;
-      }
-      .sensor-selector .button {
-        font-size: 8px;
+
+      .sensor-selector-wrapper {
+        width: 30px;
+        .sensor-select-vertical-mount-container {
+          width: 35vw;
+          top: 50%;
+
+          .sensor-selector {
+            height: 40px;
+          }
+          .sensor-selector .button {
+            font-size: 12px;
+          }
+        }
       }
 
       .canvas-container .current-value-sec {
@@ -95,11 +104,20 @@ body {
   .line-chart-wapper {
     .line-chart {
       height: 86%;
-      .sensor-selector {
-        height: 40px;
-      }
-      .sensor-selector .button {
-        font-size: 8px;
+
+      .sensor-selector-wrapper {
+        width: 38px;
+        .sensor-select-vertical-mount-container {
+          width: 30vw;
+          top: 50%;
+
+          .sensor-selector {
+            height: 30px;
+          }
+          .sensor-selector .button {
+            font-size: 10px;
+          }
+        }
       }
 
       .canvas-container .current-value-sec {

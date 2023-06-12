@@ -43,11 +43,35 @@
           border-right: 2px solid #000000;
           border-bottom: 2px solid #000000;
 
+          .__header-name-selector {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            margin-left: 45px;
+
+            .custom-select {
+              margin: 1px;
+              height: 36px;
+              width: 80%;
+              position: inherit;
+              text-align: center;
+              font-size: 18px;
+            }
+
+            i {
+              font-size: 30px;
+              color: gray;
+              cursor: pointer;
+            }
+          }
+
           .custom-select,
           .sensor-selector {
             margin: 1px;
             height: 36px;
-            width: 90%;
+            width: 84%;
             position: inherit;
             text-align: center;
             font-size: 18px;
@@ -56,20 +80,6 @@
           .__header-unit {
             display: flex;
             justify-content: center;
-
-            .header-unit__input {
-              display: block;
-              width: 100%;
-              height: 100%;
-              text-align: center;
-              font-size: 18px;
-            }
-
-            input {
-              margin: 3px;
-              text-align: center;
-              font-size: 18px;
-            }
           }
         }
       }
@@ -191,17 +201,23 @@
         padding: 0px;
       }
 
+      .__header-name-selector {
+        .custom-select {
+          font-size: 10px;
+          width: 120px;
+        }
+        i {
+          font-size: 25px;
+        }
+      }
+
       .sensor-selector,
       .custom-select {
         font-size: 10px;
-        width: 80px;
+        width: 120px;
       }
 
       .sensor-selector .button {
-        font-size: 10px;
-      }
-
-      .__header-unit .header-unit__input {
         font-size: 10px;
       }
 
@@ -233,6 +249,13 @@
         padding: 0px;
       }
 
+      .__header-name-selector {
+        .custom-select {
+          font-size: 14px;
+          width: 150px;
+        }
+      }
+
       .sensor-selector,
       .custom-select {
         font-size: 14px;
@@ -240,10 +263,6 @@
       }
 
       .sensor-selector .button {
-        font-size: 14px;
-      }
-
-      .__header-unit .header-unit__input {
         font-size: 14px;
       }
 

@@ -20,7 +20,6 @@ import {
   LINE_CHART_STATISTIC_NOTE_TABLE,
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
-  USER_INPUTS_TABLE,
 } from "../js/constants";
 
 // Import Atom Components
@@ -47,9 +46,15 @@ import ScopeViewWidget from "../components/organisms/widget-scope-view";
 import DataManagerIST from "../services/data-manager";
 import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
+import { useTableContext } from "../context/TableContext";
+import { FIRST_COLUMN_DEFAULT_OPT, TABLE_TIME_COLUMN, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
+import {
+  createChartDataAndParseXAxis,
+  getChartDatas,
+  getChartCustomUnitDatas,
+} from "../utils/widget-line-chart/commons";
 
 const recentFilesService = new storeService("recent-files");
-const userInputsStorage = new storeService(USER_INPUTS_TABLE);
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
@@ -59,11 +64,13 @@ export default ({ f7route, f7router, filePath, content }) => {
   let activity;
   if (selectedLayout) {
     let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
+    let defaultXAxises = [X_AXIS_TIME_UNIT];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(selectedLayout)) {
       defaultWidgets = [
         { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
         { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
+      defaultXAxises = [X_AXIS_TIME_UNIT, X_AXIS_TIME_UNIT];
     }
 
     activity = {
@@ -72,12 +79,15 @@ export default ({ f7route, f7router, filePath, content }) => {
         {
           layout: selectedLayout,
           widgets: defaultWidgets,
+          xAxises: defaultXAxises,
           lastDataRunId: null,
           name: "1",
         },
       ],
       frequency: 1,
       dataRuns: [],
+      customXAxis: [],
+      customXAxisDatas: [],
       sensorSettings: [],
       sensors: defaultSensors,
       customSensors: [],
@@ -109,6 +119,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleNewPage,
     initContext,
   } = useActivityContext();
+  const { getFirstColumnOption } = useTableContext();
 
   // Belong to Activity
   const [name, setName] = useState(activity.name);
@@ -132,6 +143,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   useEffect(() => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
+    DataManagerIST.importCustomUnit(activity.customXAxis);
+    DataManagerIST.importCustomUnitDatas(activity.customXAxisDatas);
+
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) {
       setPreviousActivity(_.cloneDeep(activity));
@@ -192,6 +206,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   const saveActivity = () => {
     // Collecting data from dataRuns and export
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const customXAxis = DataManagerIST.getCustomUnits();
+    const customXAxisDatas = DataManagerIST.exportCustomUnitDatas();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page };
@@ -209,7 +225,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const rangeSelections = rangeSelectionStorage.all();
 
     // Clear all Previous Tables
-    userInputsStorage.deleteAll();
+    // userInputsStorage.deleteAll();
     statisticNotesStorage.deleteAll();
     labelNotesStorage.deleteAll();
     rangeSelectionStorage.deleteAll();
@@ -219,6 +235,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       name,
       pages: updatedPage,
       dataRuns: updatedDataRuns,
+      customXAxis: customXAxis,
+      customXAxisDatas: customXAxisDatas,
       frequency: frequency,
       sensors: sensors,
       customSensors: customSensors,
@@ -297,11 +315,13 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handlePageNew(chartType) {
     if (!chartType) return;
     let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
+    let defaultXAxises = [X_AXIS_TIME_UNIT];
     if ([LAYOUT_TABLE_CHART, LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(chartType)) {
       defaultWidgets = [
         { id: 0, sensors: [DEFAULT_SENSOR_DATA] },
         { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
+      defaultXAxises = [X_AXIS_TIME_UNIT, X_AXIS_TIME_UNIT];
     }
 
     const listPageNames = pages.map((page) => page.name);
@@ -309,6 +329,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const newPage = {
       layout: chartType,
       widgets: defaultWidgets,
+      xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
     };
@@ -358,6 +379,25 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(updatePages);
   }
 
+  function handleXAxisChange({ xAxisId, option }) {
+    const updatedXAxises = pages[currentPageIndex].xAxises.map((xAxis) => {
+      if (xAxis.id !== xAxisId) {
+        return xAxis;
+      }
+
+      return { ...option };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, xAxises: updatedXAxises };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  }
+
   // ========================================================================================
   // =========================== Functions associate with DataRun ===========================
   // ========================================================================================
@@ -383,7 +423,17 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
     if (!isRunning) {
-      const dataRunId = DataManagerIST.startCollectingData();
+      /* For user input collecting data
+        - Check if the current page is table of not.
+        - If yes, clear Custom X Axis Datas with use input id
+      */
+      let unitId = FIRST_COLUMN_DEFAULT_OPT;
+      if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
+        const tableId = `${currentPageIndex}_table`;
+        unitId = getFirstColumnOption({ tableId }).id;
+      }
+
+      const dataRunId = DataManagerIST.startCollectingData({ unitId });
       timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
@@ -438,7 +488,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     return tableDatas;
   }
 
-  function getDataForChart(sensors) {
+  function getDataForChart({ sensors, unitId }) {
     if (!lineChartRef.current[currentPageIndex]) return;
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -457,52 +507,43 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
     }
 
-    let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    let currentData = [];
-    const dataRunIds = [];
-    const chartDatas = dataRunPreviews.map((dataRunPreview) => {
-      let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
-      const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
-      if (dataRunPreview.id === currentDataRunId) {
-        currentData = data;
+    let isCustomXAxis = false;
+    const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
+    if (![FIRST_COLUMN_DEFAULT_OPT].includes(unitId)) {
+      isCustomXAxis = true;
+      const { chartDatas } = getChartCustomUnitDatas({ unitId: unitId, sensors: sensors });
+      const isModifyData = !_.isEqual(chartDatas, prevChartDataRef.current.customXAxisData[currentPageIndex]);
+
+      if (isModifyData || isChangeUnit) {
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: chartDatas, isCustomXAxis: isCustomXAxis });
+        prevChartDataRef.current.customXAxisData[currentPageIndex] = chartDatas;
       }
+    } else {
+      const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensor, defaultSensorIndex, currentDataRunId });
+      const parsedChartDatas = createChartDataAndParseXAxis({ chartDatas });
 
-      dataRunIds.push(dataRunPreview.id);
+      // Check if the current data is = the previous data or not.
+      // The current is retrieved with by the currentDataRunId
+      const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+      // This is used to check if we delete or add new dataRun,
+      // the chart will be updated with the new data run
+      const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+      // Call this function to clear hiddenDataRunIds in the LineChart
+      if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
 
-      return {
-        name: dataRunPreview.name,
-        data: data,
-        dataRunId: dataRunPreview.id,
-      };
-    });
+      // If we create new page and do not run any experiment, we will not have currentDataRunId
+      // So when we navigate to next page and come back, currentDataRunId will be null, and it
+      // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
+      // is null, we still render the chart
+      if (isModifyData || isModifyDataRunIds || currentDataRunId === null || isChangeUnit) {
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas });
 
-    // Check if the current data is = the previous data or not.
-    // The current is retrieved with by the currentDataRunId
-    const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
-
-    // This is used to check if we delete or add new dataRun,
-    // the chart will be updated with the new data run
-    const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
-
-    // Call this function to clear hiddenDataRunIds in the LineChart
-    if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
-
-    // If we create new page and do not run any experiment, we will not have currentDataRunId
-    // So when we navigate to next page and come back, currentDataRunId will be null, and it
-    // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
-    // is null, we still render the chart
-    if (isModifyData || isModifyDataRunIds || currentDataRunId === null) {
-      lineChartRef.current[currentPageIndex].setChartData({
-        chartDatas: chartDatas,
-        xUnit: "ms",
-        yUnit: "",
-        maxHz: 10,
-        curSensor: sensor,
-      });
-
-      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
-      if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+        if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
+        if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+      }
     }
+
+    if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
   }
 
   // =========================== Functions associate with Table ===========================
@@ -598,10 +639,15 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <LineChart
                     key={`${currentPageIndex}_chart`}
                     pageId={`${currentPageIndex}_chart`}
-                    data={getDataForChart(pages[currentPageIndex].widgets[1].sensors)}
+                    data={getDataForChart({
+                      sensors: pages[currentPageIndex].widgets[1].sensors,
+                      unitId: pages[currentPageIndex].xAxises[1].id,
+                    })}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
+                    xAxis={pages[currentPageIndex].xAxises[1]}
                     handleSensorChange={handleSensorChange}
+                    handleXAxisChange={handleXAxisChange}
                   />
                 )}
                 {pages[currentPageIndex].layout === LAYOUT_NUMBER_TABLE && (
@@ -631,10 +677,15 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <LineChart
                   key={`${currentPageIndex}_chart`}
                   pageId={`${currentPageIndex}_chart`}
-                  data={getDataForChart(pages[currentPageIndex].widgets[0].sensors)}
+                  data={getDataForChart({
+                    sensors: pages[currentPageIndex].widgets[0].sensors,
+                    unitId: pages[currentPageIndex].xAxises[0].id,
+                  })}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
+                  xAxis={pages[currentPageIndex].xAxises[0]}
                   handleSensorChange={handleSensorChange}
+                  handleXAxisChange={handleXAxisChange}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TABLE && (

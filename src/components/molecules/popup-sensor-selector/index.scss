@@ -1,0 +1,70 @@
+.sensor-selector {
+  .button {
+    text-transform: none;
+    font-size: 16px;
+    background-color: #ffbb02;
+    color: var(--f7-theme-color-text-color) !important;
+    border-radius: 5px;
+  }
+}
+
+.sensor-select-title {
+  .navbar-inner {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 1px solid #000;
+
+    width: calc(100% - 40px);
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .left,
+  .right {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    .button {
+      width: 100%;
+      line-height: 100px;
+      font-size: 24px;
+      font-weight: 500;
+      text-transform: none;
+      font-family: var(--f7-font-family);
+      color: #666666;
+    }
+  }
+
+  .selected .button {
+    color: #007ff5 !important;
+  }
+}
+
+.sensor-select-device {
+  font-weight: bold;
+  &.__activeDevice {
+    background: #add3fa;
+  }
+
+  &.__default {
+    background: #d1d1d1;
+  }
+}
+
+.sensor-select-user-unit,
+.sensor-select-measurement {
+  margin-left: 2rem;
+  &.__activeDevice {
+    color: blue;
+    .item-title {
+      font-weight: bold;
+    }
+  }
+  &.__default {
+    color: #d1d1d1;
+  }
+}
+
+.sensor-select-user-unit {
+  margin-left: 0rem;
+}

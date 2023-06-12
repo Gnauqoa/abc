@@ -78,7 +78,7 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
           </div>
         </div>
 
-        <div className="buttons">
+        <div className="sampling-settings-buttons">
           <Button className="cancel-button" onClick={onClose}>
             Bỏ qua
           </Button>
