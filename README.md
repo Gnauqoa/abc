@@ -105,14 +105,16 @@ Framework7 app created with following options:
 
 Assets (icons, splash screens) source images located in `assets-src` folder. To generate your own icons and splash screen images, you will need to replace all assets in this directory with your own images (pay attention to image size and format), and run the following command in the project directory:
 
+* First of all we need to install dependencies, run in terminal
 ```
-framework7 assets
+npm install framework7-cli@7.0.1 -g
 ```
+* Update the `cwd` attribute to the current project path in the `framework7.json` file
 
-Or launch UI where you will be able to change icons and splash screens:
+* Launch UI where you will be able to change icons and splash screens:
 
 ```
-framework7 assets --ui
+framework7 assets --ui --skipUpdate
 ```
 
 ## Documentation & Resources

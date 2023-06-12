@@ -83,7 +83,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       unit: formField.unitOfMeasure,
       min: parsedMinValue,
       max: parsedMaxValue,
-      formatFloatingPoint: parsedFormatFloatingPoint,
+       formatFloatingPoint: parsedFormatFloatingPoint,
     };
 
     if (validateSensorSettingParams(newSensorUnitInfo)) {
