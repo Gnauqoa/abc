@@ -13,6 +13,8 @@ import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
 import DataManagerIST from "../../../services/data-manager";
 import { BLE_TYPE, USB_TYPE } from "../../../js/constants";
+import { saveFile } from "../../../services/file-service";
+import { getCurrentTime } from "../../../utils/core";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -74,17 +76,33 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     onClosePopup();
   };
 
-  const onSaveOtherSettingsHandler = () => {
-
+  const onSaveOtherSettingsHandler = ({ sensorId, action, data }) => {
+    console.log(sensorId, action, data);
   };
 
-  const onSaveRemoteLoggingHandler = () => {
-
+  const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {
+    console.log(sensorId, action, data);
+    switch (action) {
+      case "download-log": {
+        const sensorLog = await SensorServicesIST.getSensorLog(sensorId);
+        const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
+        saveFile("", sensorLog, {
+          ext: "log",
+          name,
+        });
+        break;
+      }
+    }
   };
 
-  const onChangeTab = (event) => {
+  const onChangeTab = async (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
+    if (tabId === REMOTE_LOGGING_TAB) {
+      const isSensorLogAvailable = await SensorServicesIST.isSensorLogAvailable(sensorId);
+      const updatedSensorInfo = { ...sensorInfo, isSensorLogAvailable };
+      setSensorInfo(updatedSensorInfo);
+    }
   };
 
   return (
