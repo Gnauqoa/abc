@@ -257,12 +257,19 @@
           .button {
             margin-left: 8px;
           }
+
+          .button:hover {
+            background: #09a8fa;
+          }
         }
       }
 
       .__other-settings {
         margin-top: 10px;
         margin-bottom: 10px;
+        .button:hover {
+          background: #09a8fa;
+        }
       }
 
       .buttons {

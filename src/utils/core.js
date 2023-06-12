@@ -250,6 +250,10 @@ export const FORMAT_MAP = {
     EXT: ".csv",
     TYPE: "text/csv;charset=utf-8;",
   },
+  xlsx: {
+    EXT: ".xlsx",
+    TYPE: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+  },
   edl: {
     EXT: ".edl",
     TYPE: "text/json",
@@ -531,8 +535,6 @@ export function exportToCSV(filename, rows) {
 
 export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
   const fileExt = "xlsx";
-  const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
-
   const workbook = utils.book_new();
   dataRunsInfo.forEach((dataRunInfo) => {
     const { sheetName, sheetRows } = dataRunInfo;

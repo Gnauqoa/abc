@@ -656,7 +656,7 @@ export class DataManager {
             sensorDataIndices[sensorId] = sensorDataIndex + 1;
             hasData = true;
             for (let i = 0; i < invertedSensor.numSubSensor; i++) {
-              row[invertedSensor.sensorIndexInRow + i] = sensorData.values[i];
+              row[invertedSensor.sensorIndexInRow + i] = parseFloat(sensorData.values[i]);
             }
           }
         }
