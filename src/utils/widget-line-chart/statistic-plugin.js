@@ -57,8 +57,6 @@ const getDataStatistic = ({ dataset, boxRange }) => {
   const dataRunData = datasetData.map((data) => parseFloat(data.y));
   if (dataRunData.length === 0) return false;
 
-  console.log("dataRunData: ", dataRunData);
-
   const maxValue = round(max(dataRunData), 2);
   const minValue = round(min(dataRunData), 2);
   const meanValue = round(mean(dataRunData), 2);

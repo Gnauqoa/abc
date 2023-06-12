@@ -17,6 +17,10 @@ import {
   DEFAULT_SENSOR_DATA,
   LAYOUT_TEXT,
   LAYOUT_SCOPE,
+  LINE_CHART_STATISTIC_NOTE_TABLE,
+  LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_RANGE_SELECTION_TABLE,
+  USER_INPUTS_TABLE,
 } from "../js/constants";
 
 // Import Atom Components
@@ -45,6 +49,10 @@ import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
 
 const recentFilesService = new storeService("recent-files");
+const userInputsStorage = new storeService(USER_INPUTS_TABLE);
+const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
+const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
   const selectedLayout = f7route.params.layout;
@@ -73,6 +81,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       sensorSettings: [],
       sensors: defaultSensors,
       customSensors: [],
+      allLabelNotes: [],
+      allStatisticNotes: [],
+      rangeSelections: [],
     };
   } else if (content) {
     activity = content;
@@ -111,11 +122,25 @@ export default ({ f7route, f7router, filePath, content }) => {
   const lineChartRef = useRef([]);
   const deviceManager = useDeviceManager();
 
+  /* This effect is used to:
+    1. initContext(): init all context states for the activity
+    2. DataManagerIST.init(): init variables for DataManager and start emit data scheduler
+    3. MicrophoneServicesIST.init():
+    4. Import all dataRuns from files
+    5. Import saved setting sensors
+   */
   useEffect(() => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
-    if (content) setPreviousActivity(_.cloneDeep(activity));
+    if (content) {
+      setPreviousActivity(_.cloneDeep(activity));
+
+      // Update all annotations into local storage
+      for (const labelNote of activity.allLabelNotes) labelNotesStorage.save(labelNote);
+      for (const statisticNote of activity.allStatisticNotes) statisticNotesStorage.save(statisticNote);
+      for (const rangeSelection of activity.rangeSelections) rangeSelectionStorage.save(rangeSelection);
+    }
 
     // Init states
     setPages(activity.pages);
@@ -123,11 +148,15 @@ export default ({ f7route, f7router, filePath, content }) => {
     setCurrentDataRunId(activity.pages[0].lastDataRunId);
   }, []);
 
+  /* This effect is called when the users change the widgets of current activity
+    1. Unsubscribe all sensors of current widgets
+    1. Subscribe to all sensors of all widgets
+  */
   useEffect(() => {
     let subscriberId = null;
-    const widgets = pages[currentPageIndex]?.widgets;
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
+    const widgets = pages[currentPageIndex]?.widgets;
     if (!widgets) return;
 
     const subscribedSensorIds = [
@@ -141,7 +170,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     ];
 
     subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
-
     return () => {
       subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
@@ -161,9 +189,49 @@ export default ({ f7route, f7router, filePath, content }) => {
     MicrophoneServicesIST.init();
   };
 
+  const saveActivity = () => {
+    // Collecting data from dataRuns and export
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page };
+      } else {
+        return page;
+      }
+    });
+
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServicesIST.exportSensors();
+
+    // Get all the labels, selection and statistic in line chart
+    const allLabelNotes = labelNotesStorage.all();
+    const allStatisticNotes = statisticNotesStorage.all();
+    const rangeSelections = rangeSelectionStorage.all();
+
+    // Clear all Previous Tables
+    userInputsStorage.deleteAll();
+    statisticNotesStorage.deleteAll();
+    labelNotesStorage.deleteAll();
+    rangeSelectionStorage.deleteAll();
+
+    const updatedActivity = {
+      ...activity,
+      name,
+      pages: updatedPage,
+      dataRuns: updatedDataRuns,
+      frequency: frequency,
+      sensors: sensors,
+      customSensors: customSensors,
+      allLabelNotes: allLabelNotes,
+      allStatisticNotes: allStatisticNotes,
+      rangeSelections: rangeSelections,
+    };
+
+    return updatedActivity;
+  };
+
   async function handleActivitySave() {
     const updatedActivity = saveActivity();
-
     const isEqual = _.isEqual(updatedActivity, previousActivity);
     if (isEqual) return;
 
@@ -222,31 +290,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     const result = DataManagerIST.setCollectingDataFrequency(frequency);
     result && setFrequency(frequency);
   }
-
-  const saveActivity = () => {
-    // Collecting data from dataRuns
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page };
-      } else {
-        return page;
-      }
-    });
-    // Get modify sensors and custom sensors
-    const { sensors, customSensors } = SensorServicesIST.exportSensors();
-    const updatedActivity = {
-      ...activity,
-      name,
-      pages: updatedPage,
-      dataRuns: updatedDataRuns,
-      frequency: frequency,
-      sensors: sensors,
-      customSensors: customSensors,
-    };
-
-    return updatedActivity;
-  };
 
   // =====================================================================================
   // =========================== Functions associate with Page ===========================
@@ -433,7 +476,12 @@ export default ({ f7route, f7router, filePath, content }) => {
       };
     });
 
+    // Check if the current data is = the previous data or not.
+    // The current is retrieved with by the currentDataRunId
     const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
+
+    // This is used to check if we delete or add new dataRun,
+    // the chart will be updated with the new data run
     const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
 
     // Call this function to clear hiddenDataRunIds in the LineChart
@@ -452,8 +500,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         curSensor: sensor,
       });
 
-      prevChartDataRef.current.data[currentPageIndex] = currentData;
-      prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
+      if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
     }
   }
 
