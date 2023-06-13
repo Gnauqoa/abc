@@ -1029,28 +1029,30 @@ export class DataManager {
     this.customUnits = customXAxis;
   }
 
-  addCustomUnitDatas({ sensorIds, unitId, datas, index }) {
+  addCustomUnitDatas({ sensorIds, unitId, datas, index, label }) {
     const customXAxis = this.customUnitDatas[unitId] || { sensorIds: sensorIds, data: {}, labels: [] };
     const customXAxisData = customXAxis.data;
     const customXAxisLabels = customXAxis.labels;
 
     Object.keys(datas).forEach((sensorId) => {
-      const label = datas[sensorId].label;
-      const values = datas[sensorId].values;
+      const values = datas[sensorId];
 
       if (Object.keys(customXAxisData).includes(sensorId)) {
         if (index !== undefined) {
           customXAxisData[sensorId][index] = values;
-          customXAxisLabels[index] = label;
         } else {
           customXAxisData[sensorId].push(values);
-          customXAxisLabels.push(label);
         }
       } else {
         customXAxisData[sensorId] = [values];
-        customXAxisLabels.push(label);
       }
     });
+
+    if (index !== undefined) {
+      customXAxisLabels[index] = label;
+    } else {
+      customXAxisLabels.push(label);
+    }
 
     this.customUnitDatas[unitId] = { ...customXAxis, data: customXAxisData, labels: customXAxisLabels };
     console.log("addCustomUnitDatas", this.customUnitDatas);

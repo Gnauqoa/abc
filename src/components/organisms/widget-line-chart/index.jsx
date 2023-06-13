@@ -671,6 +671,8 @@ let LineChart = (props, ref) => {
   };
 
   const onSelectUserUnit = ({ option }) => {
+    if (option.id === xAxis.id) return;
+
     let chartDatas = [];
     let isCustomXAxis = false;
 
