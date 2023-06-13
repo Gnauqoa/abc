@@ -46,7 +46,7 @@ export const defaultSensors = [
   {
     id: 2,
     code: "inno-002",
-    name: "Cảm biến Oxi hòa tan trong nước",
+    name: "Cảm biến Oxi hòa tan (Analog)",
     label: "DO",
     icon: doSensorIcon,
     data: [
@@ -57,7 +57,7 @@ export const defaultSensors = [
   {
     id: 3,
     code: "inno-003",
-    name: "Cảm biến nồng độ Oxi trong không khí",
+    name: "Cảm biến nồng độ khí Oxy",
     label: "O2",
     icon: o2SensorIcon,
     data: [{ id: "inno-003-o2", name: "Nồng độ khí Oxy", unit: "%", min: 0, max: 30, formatFloatingPoint: 1 }],
@@ -73,12 +73,12 @@ export const defaultSensors = [
   {
     id: 5,
     code: "inno-005",
-    name: "Cảm biến nhiệt độ và độ ẩm không khí",
+    name: "Cảm biến độ ẩm không khí",
     label: "Nhiệt độ Độ ẩm",
     icon: tempHumiditySensorIcon,
     data: [
-      { id: "inno-005-hum", name: "Nhiệt độ", unit: "°C", min: 0, max: 80, formatFloatingPoint: 1 },
-      { id: "inno-005-temp", name: "Độ ẩm", unit: "%", min: 0, max: 100, formatFloatingPoint: 0 },
+      { id: "inno-005-hum", name: "Độ ẩm", unit: "%", min: 0, max: 100, formatFloatingPoint: 0 },
+      { id: "inno-005-tem", name: "Nhiệt độ", unit: "°C", min: 0, max: 80, formatFloatingPoint: 1 },
     ],
   },
   {
@@ -118,7 +118,7 @@ export const defaultSensors = [
   {
     id: 10,
     code: "inno-010",
-    name: "Cảm biến cường độ âm thanh",
+    name: "Cảm biến âm thanh",
     label: "Âm thanh",
     icon: soundSensorIcon,
     data: [{ id: "inno-010-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 140, formatFloatingPoint: 1 }],
@@ -142,7 +142,7 @@ export const defaultSensors = [
   {
     id: 65,
     code: "BLE-9909",
-    name: "Cảm biến chất lượng nước",
+    name: "Cảm biến chất lượng nước (9909)",
     label: "Chất lượng nước",
     icon: waterQualitySensorIcon,
     data: [
@@ -157,7 +157,7 @@ export const defaultSensors = [
   {
     id: 66,
     code: "BLE-C600",
-    name: "Cảm biến chất lượng nước",
+    name: "Cảm biến chất lượng nước (C600)",
     label: "Chất lượng nước",
     icon: waterQualitySensorIcon,
     data: [
@@ -172,7 +172,7 @@ export const defaultSensors = [
   {
     id: 67,
     code: "BLE-9100",
-    name: "Cảm biến Oxi hòa tan trong nước",
+    name: "Cảm biến Oxi hòa tan (9100)",
     label: "DO",
     icon: doSensorIcon,
     data: [
