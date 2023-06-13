@@ -1,6 +1,12 @@
 import { f7 } from "framework7-react";
 
-import { PROJECT_FILE_EXT, PROJECT_FOLDER } from "../js/constants";
+import {
+  PROJECT_DATA_RUN_EXT,
+  PROJECT_DATA_RUN_FOLDER,
+  PROJECT_FILE_EXT,
+  PROJECT_FILE_TYPE,
+  PROJECT_FOLDER,
+} from "../js/constants";
 import { getUniqueFileName } from "./core";
 
 let DEFAULT_ROOT_DIRECTORY;
@@ -18,7 +24,7 @@ export async function searchProjects() {
       DEFAULT_ROOT_DIRECTORY,
       function (rootEntry) {
         try {
-          getAllFiles(rootEntry, (files) => resolve(files));
+          getAllFiles(rootEntry, PROJECT_FOLDER, (files) => resolve(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
         }
@@ -62,17 +68,46 @@ export async function saveProject(fileName, filePath, content) {
           const newFileName = getUniqueFileName(fileName, fileNames) + PROJECT_FILE_EXT;
           const newFilePath = PROJECT_FOLDER + "/" + newFileName;
 
-          createFile(rootEntry, newFilePath, content);
+          createFile(rootEntry, newFilePath, content, PROJECT_FILE_TYPE);
           formatReturnPath(DEFAULT_ROOT_DIRECTORY, newFilePath, (returnPath) => resolve(returnPath));
         };
 
         try {
           if (filePath) {
-            createFile(rootEntry, filePath, content);
+            createFile(rootEntry, filePath, content, PROJECT_FILE_TYPE);
             formatReturnPath(DEFAULT_ROOT_DIRECTORY, filePath, (returnPath) => resolve(returnPath));
-          } else getAllFiles(rootEntry, (files) => callbackGetSaveFiles(files));
+          } else getAllFiles(rootEntry, PROJECT_FOLDER, (files) => callbackGetSaveFiles(files));
         } catch (error) {
           reject(new Error("getAllFiles: " + error));
+        }
+      },
+      () => reject(new Error("onErrorLoadFs: " + error))
+    );
+  });
+}
+
+export async function exportDataRun(content, fileName, fileExt, fileType) {
+  return new Promise((resolve, reject) => {
+    window.resolveLocalFileSystemURL(
+      DEFAULT_ROOT_DIRECTORY,
+      (rootEntry) => {
+        const callbackGetSaveFiles = (files) => {
+          const fileNames = files.map((file) => {
+            const regex = new RegExp(`\\${fileExt}$`, "i");
+            const baseName = file.name.replace(regex, "");
+            return baseName;
+          });
+          const newFileName = getUniqueFileName(fileName, fileNames) + fileExt;
+          const newFilePath = PROJECT_DATA_RUN_FOLDER + "/" + newFileName;
+
+          createFile(rootEntry, newFilePath, content, fileType);
+          formatReturnPath(DEFAULT_ROOT_DIRECTORY, newFilePath, (returnPath) => resolve(returnPath));
+        };
+
+        try {
+          getAllFiles(rootEntry, PROJECT_DATA_RUN_FOLDER, (files) => callbackGetSaveFiles(files));
+        } catch (error) {
+          reject(new Error("createFile: " + error));
         }
       },
       () => reject(new Error("onErrorLoadFs: " + error))
@@ -116,9 +151,9 @@ const formatReturnPath = (rootPath, filePath, callback) => {
   );
 };
 
-function getAllFiles(rootEntry, callback) {
+function getAllFiles(rootEntry, folder, callback) {
   rootEntry.getDirectory(
-    PROJECT_FOLDER,
+    folder,
     { create: true },
     (projectDir) => {
       const callbackReadEntries = (entries) => {
@@ -141,16 +176,16 @@ function getAllFiles(rootEntry, callback) {
   );
 }
 
-function createFile(rootEntry, filePath, content) {
+function createFile(rootEntry, filePath, content, type = PROJECT_FILE_TYPE) {
   rootEntry.getFile(
     filePath,
     { create: true, exclusive: false },
-    (fileEntry) => writeFile(fileEntry, content),
-    () => console.log("onErrorCreateFile")
+    (fileEntry) => writeFile(fileEntry, content, type),
+    (err) => console.log("onErrorCreateFile: ", JSON.stringify(err))
   );
 }
 
-function writeFile(fileEntry, content) {
+function writeFile(fileEntry, content, type) {
   fileEntry.createWriter(function (fileWriter) {
     fileWriter.onwriteend = function () {
       readFile(fileEntry, (content) => console.log("Successful file write...", content));
@@ -162,7 +197,7 @@ function writeFile(fileEntry, content) {
 
     // If data object is not passed in,
     // create a new Blob instead.
-    const dataObj = new Blob([content], { type: "text/json" });
+    const dataObj = new Blob([content], { type: type });
     fileWriter.write(dataObj);
   });
 }
