@@ -97,24 +97,21 @@ const TableWidget = (
         const unitId = firstColumnOption.id;
         const datas = {};
 
+        const label = getUserInputValue({ tableId: tableId, inputRow: selectedRow });
         if (Array.isArray(currentValues)) {
           currentValues.forEach((currentValue, index) => {
             const sensorId = parseInt(widget.sensors?.[index]?.id);
             if (sensorId === DEFAULT_SENSOR_ID) return;
 
             const currentValues = currentValue.values;
-            const sensorValue = {
-              values: currentValues,
-              label: getUserInputValue({ tableId: tableId, inputRow: selectedRow }),
-            };
-            datas[sensorId] = sensorValue;
+            datas[sensorId] = currentValues;
           });
         }
 
         if (selectedRow === transformedRows.length) {
-          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas });
+          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, label });
         } else {
-          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, index: selectedRow });
+          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, label, index: selectedRow });
         }
       }
 
