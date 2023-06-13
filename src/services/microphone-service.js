@@ -123,6 +123,24 @@ export class MicrophoneServices {
         this.timerGetDataId = setTimeout(callbackReadMicrophone, GET_SAMPLES_INTERVAL);
       };
 
+      const initializeMicrophoneStream = () => {
+        if (navigator.mediaDevices.getUserMedia) {
+          const constraints = { audio: true };
+          navigator.mediaDevices
+            .getUserMedia(constraints)
+            .then(function (stream) {
+              source = audioCtx.createMediaStreamSource(stream);
+              source.connect(analyser);
+              callbackReadMicrophone();
+            })
+            .catch(function (err) {
+              console.log("The following gUM error occured: " + err);
+            });
+        } else {
+          console.log("getUserMedia not supported on your browser!");
+        }
+      };
+
       if (typeof cordova !== "undefined" && cordova.platformId === "android") {
         if (window.audioinput && !window.audioinput.isCapturing()) {
           this.getMicrophonePermission(
@@ -146,6 +164,7 @@ export class MicrophoneServices {
               // filterNode.connect(audioinput.getAudioContext().destination);
 
               console.log("Capturing audio!");
+              initializeMicrophoneStream();
             },
             function (deniedMsg) {
               console.log(deniedMsg);
@@ -157,22 +176,8 @@ export class MicrophoneServices {
         } else {
           alert("Already capturing!");
         }
-      }
-
-      if (navigator.mediaDevices.getUserMedia) {
-        const constraints = { audio: true };
-        navigator.mediaDevices
-          .getUserMedia(constraints)
-          .then(function (stream) {
-            source = audioCtx.createMediaStreamSource(stream);
-            source.connect(analyser);
-            callbackReadMicrophone();
-          })
-          .catch(function (err) {
-            console.log("The following gUM error occured: " + err);
-          });
       } else {
-        console.log("getUserMedia not supported on your browser!");
+        initializeMicrophoneStream();
       }
     } catch (ex) {
       console.log("startRecordWebAudio exception: " + ex);
