@@ -16,6 +16,10 @@
   flex-direction: column;
   justify-content: space-between;
 
+  .page-content {
+    // overflow: hidden;
+  }
+
   .__header {
     height: 10%;
     display: flex;
@@ -294,10 +298,10 @@
 
 @media only screen and (max-height: 600px) {
   .sensor-setting-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 500px;
-    height: 300px;
-    left: calc(50% - 250px);
-    top: calc(50% - 150px);
+    width: 640px;
+    height: 500px;
+    left: calc(50% - 320px);
+    top: calc(50% - 250px);
     border-radius: 15px;
   }
 
@@ -308,7 +312,6 @@
     .page-content {
       padding-top: 0px;
       margin-bottom: 10px;
-      overflow: hidden;
     }
 
     .__header .navbar-inner .title {
@@ -326,7 +329,6 @@
 
       .__setting-content {
         width: 70%;
-        overflow-y: auto;
         border-radius: 5px;
 
         .__setting {

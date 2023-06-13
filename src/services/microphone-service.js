@@ -8,6 +8,8 @@ const SCALE_DECIBELS = 150;
 const GET_SAMPLES_INTERVAL = 200;
 const BUFFER_LENGTH = 2048;
 
+// var filterNode;
+
 export class MicrophoneServices {
   constructor() {
     this.initializeVariables();
@@ -32,6 +34,30 @@ export class MicrophoneServices {
   stop() {
     this.stopRecordWebAudio();
     this.stopGetDecibel();
+  }
+
+  getMicrophonePermission(onSuccess, onDenied, onError) {
+    window.audioinput.checkMicrophonePermission(function (hasPermission) {
+      try {
+        if (hasPermission) {
+          if (onSuccess) onSuccess();
+        } else {
+          window.audioinput.getMicrophonePermission(function (hasPermission, message) {
+            try {
+              if (hasPermission) {
+                if (onSuccess) onSuccess();
+              } else {
+                if (onDenied) onDenied("User denied permission to record: " + message);
+              }
+            } catch (ex) {
+              if (onError) onError("Start after getting permission exception: " + ex);
+            }
+          });
+        }
+      } catch (ex) {
+        if (onError) onError("getMicrophonePermission exception: " + ex);
+      }
+    });
   }
 
   initializeVariables() {
@@ -78,43 +104,93 @@ export class MicrophoneServices {
   }
 
   startRecordWebAudio() {
-    // Main block for doing the audio recording
-    const audioCtx = this.audioCtx;
-    const analyser = this.analyser;
-    let source;
+    try {
+      // Main block for doing the audio recording
+      const audioCtx = this.audioCtx;
+      const analyser = this.analyser;
+      let source;
 
-    analyser.fftSize = BUFFER_LENGTH;
-    const bufferLengthFrequency = analyser.frequencyBinCount;
-    const bufferLengthTime = BUFFER_LENGTH;
+      analyser.fftSize = BUFFER_LENGTH;
+      const bufferLengthFrequency = analyser.frequencyBinCount;
+      const bufferLengthTime = BUFFER_LENGTH;
 
-    this.timeDataArray = new Float32Array(bufferLengthTime);
-    this.frequencyDataArray = new Float32Array(bufferLengthFrequency);
+      this.timeDataArray = new Float32Array(bufferLengthTime);
+      this.frequencyDataArray = new Float32Array(bufferLengthFrequency);
 
-    const callbackReadMicrophone = () => {
-      this.analyser.getFloatTimeDomainData(this.timeDataArray);
-      this.analyser.getFloatFrequencyData(this.frequencyDataArray);
-      this.timerGetDataId = setTimeout(callbackReadMicrophone, GET_SAMPLES_INTERVAL);
-    };
+      const callbackReadMicrophone = () => {
+        this.analyser.getFloatTimeDomainData(this.timeDataArray);
+        this.analyser.getFloatFrequencyData(this.frequencyDataArray);
+        this.timerGetDataId = setTimeout(callbackReadMicrophone, GET_SAMPLES_INTERVAL);
+      };
 
-    if (navigator.mediaDevices.getUserMedia) {
-      const constraints = { audio: true };
-      navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then(function (stream) {
-          source = audioCtx.createMediaStreamSource(stream);
-          source.connect(analyser);
-          callbackReadMicrophone();
-        })
-        .catch(function (err) {
-          console.log("The following gUM error occured: " + err);
-        });
-    } else {
-      console.log("getUserMedia not supported on your browser!");
+      if (typeof cordova !== "undefined" && cordova.platformId === "android") {
+        if (window.audioinput && !window.audioinput.isCapturing()) {
+          this.getMicrophonePermission(
+            function () {
+              // See utils.js
+              // Connect the audioinput to the speaker(s) in order to hear the captured sound.
+              // We're using a filter here to avoid too much feedback looping...
+              // Start with default values and let the plugin handle conversion from raw data to web audio.
+
+              console.log("Microphone input starting...");
+              window.audioinput.start({
+                streamToWebAudio: true,
+              });
+              console.log("Microphone input started!");
+
+              // // Create a filter to avoid too much feedback
+              // filterNode = audioinput.getAudioContext().createBiquadFilter();
+              // filterNode.frequency.setValueAtTime(2048, audioinput.getAudioContext().currentTime);
+
+              // audioinput.connect(filterNode);
+              // filterNode.connect(audioinput.getAudioContext().destination);
+
+              console.log("Capturing audio!");
+            },
+            function (deniedMsg) {
+              console.log(deniedMsg);
+            },
+            function (errorMsg) {
+              console.log(errorMsg);
+            }
+          );
+        } else {
+          alert("Already capturing!");
+        }
+      }
+
+      if (navigator.mediaDevices.getUserMedia) {
+        const constraints = { audio: true };
+        navigator.mediaDevices
+          .getUserMedia(constraints)
+          .then(function (stream) {
+            source = audioCtx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            callbackReadMicrophone();
+          })
+          .catch(function (err) {
+            console.log("The following gUM error occured: " + err);
+          });
+      } else {
+        console.log("getUserMedia not supported on your browser!");
+      }
+    } catch (ex) {
+      console.log("startRecordWebAudio exception: " + ex);
     }
   }
 
   stopRecordWebAudio() {
     clearTimeout(this.timerGetDataId);
+    console.log("stopRecordWebAudio: Stop callbackReadMicrophone");
+
+    if (typeof cordova !== "undefined" && cordova.platformId === "android") {
+      if (window.audioinput && window.audioinput.isCapturing()) {
+        window.audioinput.stop();
+        // if (filterNode) filterNode.disconnect();
+        window.audioinput.disconnect();
+      }
+      console.log("stopRecordWebAudio: Stop audioinput");
+    }
   }
 
   stopGetDecibel() {
