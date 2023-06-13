@@ -1,3 +1,4 @@
+import { f7 } from "framework7-react";
 import { USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
 import { BUILTIN_DECIBELS_SENSOR_ID } from "./sensor-service";
@@ -141,7 +142,7 @@ export class MicrophoneServices {
         }
       };
 
-      if (typeof cordova !== "undefined" && cordova.platformId === "android") {
+      if (f7.device.cordova) {
         if (window.audioinput && !window.audioinput.isCapturing()) {
           this.getMicrophonePermission(
             function () {
@@ -174,7 +175,7 @@ export class MicrophoneServices {
             }
           );
         } else {
-          alert("Already capturing!");
+          console.log("Already capturing!");
         }
       } else {
         initializeMicrophoneStream();
@@ -188,7 +189,7 @@ export class MicrophoneServices {
     clearTimeout(this.timerGetDataId);
     console.log("stopRecordWebAudio: Stop callbackReadMicrophone");
 
-    if (typeof cordova !== "undefined" && cordova.platformId === "android") {
+    if (f7.device.cordova) {
       if (window.audioinput && window.audioinput.isCapturing()) {
         window.audioinput.stop();
         // if (filterNode) filterNode.disconnect();

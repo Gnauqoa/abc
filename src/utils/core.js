@@ -4,6 +4,7 @@ import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
 import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
+import { exportDataRun } from "./cordova-file-utils";
 
 let deviceHistory = [];
 
@@ -308,6 +309,12 @@ export function exportFileToPc(data, filename, ext) {
   }
 }
 
+export async function exportFileAndroid(data, filename, ext) {
+  const format = FORMAT_MAP[ext];
+  const savedPath = await exportDataRun(data, filename, format.EXT, format.TYPE);
+  return savedPath;
+}
+
 export function isPressEnter(e, callback) {
   const charCode = keyCodeFromEvent(e);
   if (charCode === ENTER_KEY) {
@@ -536,6 +543,7 @@ export function exportToCSV(filename, rows) {
 export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
   const fileExt = "xlsx";
   const workbook = utils.book_new();
+
   dataRunsInfo.forEach((dataRunInfo) => {
     const { sheetName, sheetRows } = dataRunInfo;
     const workSheet = utils.aoa_to_sheet(sheetRows);
@@ -561,6 +569,19 @@ export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
   } else if (f7.device.desktop) {
     exportFileToPc(excelBuffer, fileName, fileExt);
     return;
+  } else if (f7.device.cordova) {
+    try {
+      const savedPath = await exportFileAndroid(excelBuffer, fileName, fileExt);
+      dialog.alert("Lưu thành công", `Lưu data run thành công tại ${savedPath}`, () => {});
+      return;
+    } catch (error) {
+      console.log("Save file error", error);
+      dialog.alert(
+        "Lỗi không thể lưu",
+        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        () => {}
+      );
+    }
   }
 }
 
