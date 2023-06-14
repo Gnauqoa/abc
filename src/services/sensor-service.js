@@ -74,7 +74,7 @@ export const defaultSensors = [
     id: 5,
     code: "inno-005",
     name: "Cảm biến độ ẩm không khí",
-    label: "Nhiệt độ Độ ẩm",
+    label: "Độ ẩm Nhiệt độ",
     icon: tempHumiditySensorIcon,
     data: [
       { id: "inno-005-hum", name: "Độ ẩm", unit: "%", min: 0, max: 100, formatFloatingPoint: 0 },
