@@ -35,6 +35,7 @@ export const ActivityContext = React.createContext({
   handleNewPage: () => {},
   changePageName: () => {},
   handleDeleteDataRun: () => {},
+  isSelectSensor: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -111,6 +112,18 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentDataRunId(newDataRunId);
   };
 
+  const isSelectSensor = (sensorId) => {
+    for (const widget of pages[currentPageIndex].widgets) {
+      const sensors = widget.sensors;
+      for (const sensor of sensors) {
+        if (sensor.id === sensorId) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const initContext = () => {
     setPages(defaultPages);
     setFrequency(1);
@@ -147,6 +160,7 @@ export const ActivityContextProvider = ({ children }) => {
         changePageName,
         handleDeleteDataRun,
         initContext,
+        isSelectSensor,
       }}
     >
       {children}
