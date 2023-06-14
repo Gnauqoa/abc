@@ -33,8 +33,8 @@ export class MicrophoneServices {
   }
 
   stop() {
-    this.stopRecordWebAudio();
     this.stopGetDecibel();
+    this.stopRecordWebAudio();
   }
 
   getMicrophonePermission(onSuccess, onDenied, onError) {
@@ -130,6 +130,7 @@ export class MicrophoneServices {
           navigator.mediaDevices
             .getUserMedia(constraints)
             .then(function (stream) {
+              window.localStream = stream;
               source = audioCtx.createMediaStreamSource(stream);
               source.connect(analyser);
               callbackReadMicrophone();
@@ -196,6 +197,11 @@ export class MicrophoneServices {
         window.audioinput.disconnect();
       }
       console.log("stopRecordWebAudio: Stop audioinput");
+    }
+
+    if (window.localStream && window.localStream.getTracks()) {
+      console.log("stopRecordWebAudio: Stop audio + video streams");
+      window.localStream.getTracks().forEach((track) => track.stop());
     }
   }
 

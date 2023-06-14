@@ -193,14 +193,14 @@ export default ({ f7route, f7router, filePath, content }) => {
   // =========================== Functions associate with Activity ===========================
   // =========================================================================================
   const onBackHandler = () => {
-    MicrophoneServicesIST.stop();
+    // MicrophoneServicesIST.stop();
     DataManagerIST.stopEmitSubscribersScheduler();
   };
 
   const onInitHandler = () => {
     initContext();
     DataManagerIST.init();
-    MicrophoneServicesIST.init();
+    // MicrophoneServicesIST.init();
   };
 
   const saveActivity = () => {
@@ -433,6 +433,11 @@ export default ({ f7route, f7router, filePath, content }) => {
         unitId = getFirstColumnOption({ tableId }).id;
       }
 
+      // MicrophoneServicesIST.init() if the current widget is scope view
+      if (pages[currentPageIndex].layout === LAYOUT_SCOPE) {
+        MicrophoneServicesIST.init();
+      }
+
       const dataRunId = DataManagerIST.startCollectingData({ unitId });
       timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
@@ -440,6 +445,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     } else {
       DataManagerIST.unsubscribeTimer();
       DataManagerIST.stopCollectingData();
+
+      if (pages[currentPageIndex].layout === LAYOUT_SCOPE) {
+        MicrophoneServicesIST.stop();
+      }
     }
     setIsRunning(!isRunning);
   }
