@@ -18,44 +18,42 @@ const ActivityHeader = ({
   handlePageDelete,
   deviceManager,
 }) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // If platform is android, then default is fullscreen
+  const [isFullScreen, setIsFullScreen] = useState(f7.device.android);
 
-  function handleExportExcel() {
+  const handleExportExcel = () => {
     DataManagerIST.exportDataRunExcel();
-  }
+  };
 
-  function handleFullScreen() {
+  const handleFullScreen = (isFullScreen) => {
     try {
       if (f7.device.electron) {
-        window._cdvElectronIpc.setFullscreen(!isFullScreen);
-        setIsFullScreen(!isFullScreen);
+        window._cdvElectronIpc.setFullscreen(isFullScreen);
       } else if (f7.device.desktop) {
         if (!document.fullscreenEnabled) {
           setIsFullScreen(false);
           return;
         }
 
-        if (isFullScreen) {
+        if (!isFullScreen) {
           document.exitFullscreen();
         } else {
           const appEl = f7.el;
           appEl.requestFullscreen();
         }
-        setIsFullScreen(!isFullScreen);
       } else if (f7.device.android) {
-        if (isFullScreen) {
+        if (!isFullScreen) {
           AndroidFullScreen.showSystemUI(console.log("leanMode It worked!"), (error) => console.error(error));
         } else {
           AndroidFullScreen.immersiveMode(console.log("immersiveMode It worked!"), (error) => console.error(error));
         }
-
-        setIsFullScreen(!isFullScreen);
       }
+      setIsFullScreen(isFullScreen);
     } catch (e) {
       console.log(e);
       setIsFullScreen(false);
     }
-  }
+  };
 
   return (
     <div>
@@ -81,7 +79,7 @@ const ActivityHeader = ({
           <RoundButton
             disabled={isRunning}
             icon={isFullScreen ? "fullscreen_exit" : "fullscreen"}
-            onClick={handleFullScreen}
+            onClick={() => handleFullScreen(!isFullScreen)}
           />
         </NavRight>
       </Navbar>
