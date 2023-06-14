@@ -914,7 +914,7 @@ export class DataManager {
 
   dummySensorData() {
     setInterval(() => {
-      const sensorId = (Math.random() * (5 - 2) + 2).toFixed(0);
+      const sensorId = (Math.random() * (5 - 3) + 3).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
 
       const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
@@ -1066,7 +1066,7 @@ export class DataManager {
     if ([FIRST_COLUMN_DEFAULT_OPT].includes(unitId) || !Object.keys(this.customUnitDatas).includes(unitId)) {
       return;
     }
-    this.customUnitDatas[unitId] = { sensorIds: [], data: {} };
+    this.customUnitDatas[unitId] = { sensorIds: [], data: {}, labels: [] };
   }
 }
 
