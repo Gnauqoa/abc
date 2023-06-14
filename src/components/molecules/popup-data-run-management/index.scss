@@ -45,9 +45,11 @@
 
   .data-run-management-content {
     margin-top: 10px;
+    margin-bottom: 10px;
     width: 100%;
 
     table {
+      overflow: scroll;
       width: 100%;
     }
 
@@ -114,14 +116,14 @@
 // Mobile device
 @media only screen and (max-height: 600px) {
   .data-run-management-popup.popup {
-    border-radius: 20px;
+    border-radius: 15px;
   }
 
   .data-run-management-popup {
     width: 440px;
-    height: 260px;
+    height: 300px;
     left: calc(50% - 220px);
-    top: calc(50% - 130px);
+    top: calc(50% - 150px);
 
     .navbar {
       height: 15%;
