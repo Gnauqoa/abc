@@ -74,7 +74,7 @@ export const defaultSensors = [
     id: 5,
     code: "inno-005",
     name: "Cảm biến độ ẩm không khí",
-    label: "Nhiệt độ Độ ẩm",
+    label: "Độ ẩm Nhiệt độ",
     icon: tempHumiditySensorIcon,
     data: [
       { id: "inno-005-hum", name: "Độ ẩm", unit: "%", min: 0, max: 100, formatFloatingPoint: 0 },
@@ -196,6 +196,7 @@ export const defaultSensors = [
     name: "Micro tích hợp",
     label: "Microphone",
     icon: soundSensorIcon,
+    isBuiltin: true,
     data: [
       { id: "inno-069-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
       { id: "inno-069-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
