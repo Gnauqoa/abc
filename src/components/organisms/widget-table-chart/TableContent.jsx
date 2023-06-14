@@ -46,7 +46,11 @@ const TableContent = ({
         const dynamicColumns = [];
         for (let columnIndex = 0; columnIndex < numColumns; columnIndex++) {
           const style = {};
-          if (rowIndex === selectedRow) style["color"] = "#11b444";
+
+          // set the style for data selected only when is running and current row = selected row
+          if (isRunning && rowIndex === selectedRow) style["color"] = "#11b444";
+
+          // set the style for column selected
           if (columnIndex + 1 === selectedColumn) style["background"] = "#F2ECEC";
 
           dynamicColumns.push(
