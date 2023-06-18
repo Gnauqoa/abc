@@ -233,3 +233,15 @@ export const PROJECT_DATA_RUN_EXT = ".xlsx";
 
 export const RETURN_LIST_OPTION = "list";
 export const RETURN_DICT_OPTION = "dict";
+
+// REMOTE LOGGING
+export const OFF = 0;
+export const FLASH = 1;
+export const MQTT = 2;
+
+export const IMMEDIATELY = 1;
+export const NEXT_STARTUP = 2;
+export const EVERY_STARTUP = 3;
+
+export const DOWNLOAD_LOG_ACTION = "download-log";
+export const SET_LOG_SETTING = "set-log-setting";
