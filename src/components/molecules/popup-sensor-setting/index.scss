@@ -266,6 +266,13 @@
             background: #09a8fa;
           }
         }
+
+        .smart-select {
+          .item-after {
+            color: var(--f7-text-color);
+            font-size: var(--f7-list-font-size);
+          }
+        }
       }
 
       .__other-settings {

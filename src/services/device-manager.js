@@ -1,6 +1,14 @@
 import { f7 } from "framework7-react";
 
-import { BLE_SERVICE_ID, BLE_TX_ID, BLE_TYPE, DEVICE_PREFIX, BLE_RX_ID, DEVICE_YINMIK_PREFIX } from "../js/constants";
+import {
+  BLE_SERVICE_ID,
+  BLE_TX_ID,
+  USB_TYPE,
+  BLE_TYPE,
+  DEVICE_PREFIX,
+  BLE_RX_ID,
+  DEVICE_YINMIK_PREFIX,
+} from "../js/constants";
 
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
@@ -84,8 +92,8 @@ export class DeviceManager {
           }
         );
       }
-    } catch (err) {
-      console.error("scan error", err.message);
+    } catch (error) {
+      console.error("scan error", error.message);
     }
   }
 
@@ -528,7 +536,7 @@ export class DeviceManager {
         );
       });
     } catch (error) {
-      console.error(`WriteBleData device ${deviceId} error`, err);
+      console.error(`WriteBleData device ${deviceId} error`, error);
     }
   }
 
@@ -537,7 +545,7 @@ export class DeviceManager {
       await window._cdvElectronIpc.writeDeviceData(port, data);
       console.log(`writeUsbData port ${port} success`, data);
     } catch (error) {
-      console.error(`writeUsbData port ${port} error`, err);
+      console.error(`writeUsbData port ${port} error`, error);
     }
   }
 
@@ -566,6 +574,26 @@ export class DeviceManager {
         }
       }
     }, CHECKING_CONNECTION_INTERVAL);
+  }
+
+  sendCmdDTO(sensorId, cmd) {
+    console.log("sendCmdDTO:", cmd);
+    const parsedSensorId = parseInt(sensorId);
+    const uartConnections = DataManagerIST.getUartConnections();
+    const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
+    if (type === BLE_TYPE) {
+      const bleDevices = this.getBleDevices();
+      const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
+      let textEncoder = new TextEncoder();
+
+      let uint8Array = textEncoder.encode(cmd);
+      this.writeBleData(bleDevice.deviceId, uint8Array);
+    } else if (type === USB_TYPE) {
+      const usbDevices = DataManagerIST.getUsbDevices();
+      const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
+
+      this.writeUsbData(usbDevice.deviceId, cmd);
+    }
   }
 }
 
