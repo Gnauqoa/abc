@@ -11,8 +11,7 @@ import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
-import DataManagerIST from "../../../services/data-manager";
-import { BLE_TYPE, USB_TYPE } from "../../../js/constants";
+import { MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import { saveFile } from "../../../services/file-service";
 import { getCurrentTime } from "../../../utils/core";
 
@@ -53,66 +52,54 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
 
   const onSaveSensorCalibratingHandler = (calculatedValues) => {
     const { k, offset, sensorId } = calculatedValues;
-
-    const parsedSensorId = parseInt(sensorId);
-    const uartConnections = DataManagerIST.getUartConnections();
-    const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
-
-    console.log(`${parsedSensorId}-${type}: y = ax + b => `, `y = ${k}x + ${offset}`);
-    // calib command: $$$cal,set,k,offset###
     let strCalib = "$$$cal,set," + k + "," + offset + "###";
 
-    if (type === BLE_TYPE) {
-      const bleDevices = DeviceManagerIST.getBleDevices();
-      const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
-      let textEncoder = new TextEncoder();
-      
-      let uint8Array = textEncoder.encode(strCalib);
-      DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
-    } else if (type === USB_TYPE) {
-      const usbDevices = DataManagerIST.getUsbDevices();
-      const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
-
-      DeviceManagerIST.writeUsbData(usbDevice.deviceId, strCalib);
-    }
+    DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
     onClosePopup();
   };
 
   const onSaveOtherSettingsHandler = ({ sensorId, action, data }) => {
-    const parsedSensorId = parseInt(sensorId);
-    const uartConnections = DataManagerIST.getUartConnections();
-    const type = uartConnections.has(parsedSensorId) ? USB_TYPE : BLE_TYPE;
-
     if (action == "zero") {
-      // zero command: $$$zer###
-      let cmdZero = "$$$zer###";
+      const cmdZero = "$$$zer###";
 
-      if (type === BLE_TYPE) {
-        const bleDevices = DeviceManagerIST.getBleDevices();
-        const bleDevice = bleDevices.find((device) => device.id === parsedSensorId);
-        let textEncoder = new TextEncoder();
-        
-        let uint8Array = textEncoder.encode(cmdZero);
-        DeviceManagerIST.writeBleData(bleDevice.deviceId, uint8Array);
-      } else if (type === USB_TYPE) {
-        const usbDevices = DataManagerIST.getUsbDevices();
-        const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
-
-        DeviceManagerIST.writeUsbData(usbDevice.deviceId, cmdZero);
-      }
+      DeviceManagerIST.sendCmdDTO(sensorId, cmdZero);
     }
   };
 
   const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {
-    console.log(sensorId, action, data);
     switch (action) {
-      case "download-log": {
+      case DOWNLOAD_LOG_ACTION: {
         const sensorLog = await SensorServicesIST.getSensorLog(sensorId);
         const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
         saveFile("", sensorLog, {
           ext: "log",
           name,
         });
+        break;
+      }
+      case SET_LOG_SETTING: {
+        const {
+          loggingMode,
+          duration,
+          interval,
+          wifiSSID,
+          wifiPassword,
+          mqttUri,
+          mqttUsername,
+          mqttPassword,
+          channel,
+          topics,
+          startMode,
+        } = data;
+        let cmdRemoteLogging = "";
+        if (loggingMode === FLASH) {
+          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
+        } else if (loggingMode === MQTT)
+          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},${channel},{${topics.join(
+            ";"
+          )}}###`;
+
+        DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
         break;
       }
     }

@@ -228,6 +228,7 @@ export class SensorServices {
     this.sensors = _.cloneDeep(defaultSensors);
     this.customSensors = [];
     this.definedSoundSensorsId = [];
+    this.builtinSensors = [BUILTIN_DECIBELS_SENSOR_ID];
     this.excludeSensorsId = [BUILTIN_MICROPHONE_ID];
   }
 
@@ -330,6 +331,15 @@ export class SensorServices {
       else return false;
     });
     return soundSensors;
+  }
+
+  getActiveBuiltinSensors() {
+    const builtinSensors = this.builtinSensors.filter((sensorId) => {
+      if (sensorId === BUILTIN_DECIBELS_SENSOR_ID) {
+        return navigator.mediaDevices !== undefined && navigator.mediaDevices.getUserMedia !== undefined;
+      }
+    });
+    return builtinSensors;
   }
 
   isSensorLogAvailable(sensorId) {

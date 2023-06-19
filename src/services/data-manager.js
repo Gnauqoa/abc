@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
-import SensorServices from "./sensor-service";
+import SensorServicesIST from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
@@ -92,7 +92,7 @@ export class DataManager {
     this.selectedInterval = 1000;
 
     this.samplingMode = SAMPLING_AUTO;
-    this.sensorIds = SensorServices.getSensors().map((sensor) => sensor.id);
+    this.sensorIds = SensorServicesIST.getSensors().map((sensor) => sensor.id);
 
     // Parameters for Timer
     this.timerCollectingTime = 0;
@@ -603,7 +603,7 @@ export class DataManager {
       }
 
       // Create Row Names with all sensor that had been recorded
-      const sensors = SensorServices.getAllSensors();
+      const sensors = SensorServicesIST.getAllSensors();
       for (const sensorId of dataRunInfo.recordedSensors) {
         const sensorInfo = sensors.find((sensor) => sensor.id === parseInt(sensorId));
         if (!sensorInfo) continue;
@@ -684,7 +684,7 @@ export class DataManager {
       const deviceId = data[3];
       const dataLength = data[4];
       const sensorsData = [];
-      const sensorInfo = SensorServices.getSensorInfo(sensorId);
+      const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
 
       for (let i = 0; i < dataLength; i++) {
@@ -743,8 +743,12 @@ export class DataManager {
   }
 
   getListActiveSensor() {
-    const activeSensors = Object.keys(this.buffer).map((sensorId) => parseInt(sensorId));
-    return activeSensors;
+    const activeDeviceSensors = Object.keys(this.buffer).map((sensorId) => parseInt(sensorId));
+
+    // Get the status of built-in devices
+    const activeBuiltinSensors = SensorServicesIST.getActiveBuiltinSensors();
+
+    return [...activeDeviceSensors, ...activeBuiltinSensors];
   }
 
   /**
@@ -917,7 +921,7 @@ export class DataManager {
       const sensorId = (Math.random() * (5 - 3) + 3).toFixed(0);
       const battery = (Math.random() * (100 - 10) + 10).toFixed(0);
 
-      const sensorInfo = SensorServices.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
+      const sensorInfo = SensorServicesIST.getSensors().find((sensor) => Number(sensorId) === Number(sensor.id));
       const dummyData = [sensorId, battery, USB_TYPE, "DUMMY", sensorInfo.data.length];
       for (const numData in sensorInfo.data) {
         const dataInfo = sensorInfo.data[numData];

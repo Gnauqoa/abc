@@ -44,7 +44,7 @@ import TextViewWidget from "../components/organisms/widget-text-view";
 import ScopeViewWidget from "../components/organisms/widget-scope-view";
 
 import DataManagerIST from "../services/data-manager";
-import SensorServicesIST, { defaultSensors } from "../services/sensor-service";
+import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
 import { useTableContext } from "../context/TableContext";
 import { FIRST_COLUMN_DEFAULT_OPT, TABLE_TIME_COLUMN, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
@@ -118,6 +118,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleDeletePage,
     handleNewPage,
     initContext,
+    isSelectSensor,
   } = useActivityContext();
   const { getFirstColumnOption } = useTableContext();
 
@@ -434,7 +435,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
 
       // MicrophoneServicesIST.init() if the current widget is scope view
-      if (pages[currentPageIndex].layout === LAYOUT_SCOPE) {
+      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
+      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
         MicrophoneServicesIST.init();
       }
 
@@ -446,7 +448,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       DataManagerIST.unsubscribeTimer();
       DataManagerIST.stopCollectingData();
 
-      if (pages[currentPageIndex].layout === LAYOUT_SCOPE) {
+      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
+      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
         MicrophoneServicesIST.stop();
       }
     }

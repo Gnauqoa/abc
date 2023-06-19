@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { List, ListInput, Button, f7, Icon } from "framework7-react";
+import { List, ListInput, Button, f7, ListItem } from "framework7-react";
 
 import "./index.scss";
 import CustomDropdownInput from "./custom-list-input";
 import storeService from "../../../services/store-service";
+import {
+  OFF,
+  FLASH,
+  MQTT,
+  IMMEDIATELY,
+  NEXT_STARTUP,
+  EVERY_STARTUP,
+  DOWNLOAD_LOG_ACTION,
+  SET_LOG_SETTING,
+} from "../../../js/constants";
 
 const storeSettingService = new storeService("remote-logging");
+
 const LOGGING_MODE = {
-  off: "Tắt",
-  memory: "Lưu vào bộ nhớ",
-  server: "Gởi lên server",
+  [OFF]: "Tắt",
+  [FLASH]: "Lưu vào bộ nhớ",
+  [MQTT]: "Gởi lên server",
 };
-const START_ON = {
-  now: "Ngay lập tức",
-  reset: "Sau khi reset",
-  always: "Luôn luôn chạy",
+
+const START_MODE = {
+  [IMMEDIATELY]: "Ngay lập tức",
+  [NEXT_STARTUP]: "Sau khi reset",
+  [EVERY_STARTUP]: "Luôn luôn chạy",
 };
 
 const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
@@ -24,27 +36,20 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   useEffect(() => {
     let savedSetting = storeSettingService.find(sensorId) ||
       storeSettingService.find("default") || {
-        mode: "off", // off/memory/server
+        loggingMode: OFF,
         duration: "",
-        freq: "",
-        wifiName: "",
+        interval: "",
+        wifiSSID: "",
         wifiPassword: "",
-        serverAddress: "",
-        serverUsername: "",
-        serverPassword: "",
-        unitInfo: {},
+        mqttUri: "",
+        mqttUsername: "",
+        mqttPassword: "",
         channel: "",
-        startOn: "now", // now/reset/always
+        topics: ["v1"],
+        startMode: IMMEDIATELY,
       };
 
-    let unitInfo = { name: "", unit: "" };
-    const unitInfos = sensorInfo.data;
-    if (Array.isArray(unitInfos) && unitInfos.length > 0) {
-      unitInfo = unitInfos[sensorDataIndex || 0];
-    }
-
-    console.log("savedSetting", savedSetting);
-    setFormSetting({ ...savedSetting, id: sensorId, unitInfo });
+    setFormSetting({ ...savedSetting, id: sensorId });
   }, [sensorInfo]);
 
   const formSettingHandler = (e) => {
@@ -59,30 +64,34 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       return false;
     }
 
-    if (setting.freq === "" || isNaN(setting.freq)) {
+    if (setting.interval === "" || isNaN(setting.interval)) {
       f7.dialog.alert("Tần suất không hợp lệ");
       return false;
     }
 
-    if (setting.mode === "server") {
-      if (setting.wifiName === "" || isNaN(setting.wifiName)) {
+    if (setting.loggingMode === MQTT) {
+      if (setting.wifiSSID === "") {
         f7.dialog.alert("Tên Wifi không hợp lệ");
         return false;
       }
-      if (setting.serverAddress === "" || isNaN(setting.serverAddress)) {
+      if (setting.mqttUri === "") {
         f7.dialog.alert("Địa chỉ server không hợp lệ");
         return false;
       }
-      if (setting.serverUsername === "" || isNaN(setting.serverUsername)) {
+      if (setting.mqttUsername === "") {
         f7.dialog.alert("Username server không hợp lệ");
         return false;
       }
-      if (setting.serverPassword === "" || isNaN(setting.serverPassword)) {
+      if (setting.mqttPassword === "") {
         f7.dialog.alert("Mật khẩu server không hợp lệ");
         return false;
       }
-      if (setting.channel === "" || isNaN(setting.channel)) {
+      if (setting.channel === "") {
         f7.dialog.alert("Kênh thông tin không hợp lệ");
+        return false;
+      }
+      if (setting.topics.length === 0) {
+        f7.dialog.alert("Thông tin gởi không hợp lệ");
         return false;
       }
     }
@@ -90,38 +99,38 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
     return true;
   };
 
+  const onLoggingModeChange = (loggingMode) => {
+    setFormSetting({
+      ...formSetting,
+      loggingMode: Number(loggingMode),
+    });
+    f7.popover.close();
+  };
+
+  const onStartModeChange = (startMode) => {
+    setFormSetting({
+      ...formSetting,
+      startMode: Number(startMode),
+    });
+    f7.popover.close();
+  };
+
+  const handleTopicsChange = (e) => {
+    let topics = Array.from(e.target.selectedOptions, (option) => option.value);
+    setFormSetting({
+      ...formSetting,
+      topics,
+    });
+  };
+
   const onSubmitHandler = (event) => {
     event.preventDefault();
-
     if (validateSettingParams(formSetting)) {
       storeSettingService.save(formSetting);
-      storeSettingService.save({ ...formSetting, id: "default", mode: "off" });
-      onSaveHandler({ sensorId: sensorInfo.id, action: "setting-log", data: formSetting });
+
+      storeSettingService.save({ ...formSetting, id: "default", loggingMode: OFF, topics: ["v1"] });
+      onSaveHandler({ sensorId: sensorInfo.id, action: SET_LOG_SETTING, data: formSetting });
     }
-  };
-
-  const onLoggingModeChange = (mode) => {
-    setFormSetting({
-      ...formSetting,
-      mode,
-    });
-    f7.popover.close();
-  };
-
-  const onStartOnChange = (startOn) => {
-    setFormSetting({
-      ...formSetting,
-      startOn,
-    });
-    f7.popover.close();
-  };
-
-  const onChangeSensorUnit = (unitInfo) => {
-    setFormSetting({
-      ...formSetting,
-      unitInfo,
-    });
-    f7.popover.close();
   };
 
   return (
@@ -134,7 +143,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
                 <div className="item-title item-label">Log data:</div>
                 <Button
                   className="edl-button"
-                  onClick={() => onSaveHandler({ sensorId: sensorInfo.id, action: "download-log" })}
+                  onClick={() => onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION })}
                 >
                   Download
                 </Button>
@@ -146,18 +155,18 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       <List className="__setting __remote-logging" form noHairlinesMd inlineLabels>
         <CustomDropdownInput
           labelName="Chế độ:"
-          buttonName={LOGGING_MODE[formSetting.mode]}
+          buttonName={LOGGING_MODE[formSetting.loggingMode]}
           popOverName="popover-logging-mode"
         >
-          {Object.keys(LOGGING_MODE).map((mode) => {
+          {Object.keys(LOGGING_MODE).map((loggingMode) => {
             return (
-              <Button key={mode} onClick={() => onLoggingModeChange(mode)}>
-                <span style={{ textTransform: "none" }}>{LOGGING_MODE[mode]}</span>
+              <Button key={loggingMode} onClick={() => onLoggingModeChange(loggingMode)}>
+                <span style={{ textTransform: "none" }}>{LOGGING_MODE[loggingMode]}</span>
               </Button>
             );
           })}
         </CustomDropdownInput>
-        {formSetting.mode !== "off" && (
+        {formSetting.loggingMode !== OFF && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
@@ -174,16 +183,16 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             </div>
           </ListInput>
         )}
-        {formSetting.mode !== "off" && (
+        {formSetting.loggingMode !== OFF && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="freq"
+            name="interval"
             label="Tần suất:"
             type="text"
             validateOnBlur
-            value={formSetting.freq}
+            value={formSetting.interval}
             onChange={formSettingHandler}
           >
             <div slot="inner-end" className="margin-left">
@@ -191,20 +200,20 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             </div>
           </ListInput>
         )}
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="wifiName"
+            name="wifiSSID"
             label="Tên Wifi:"
             type="text"
             validateOnBlur
-            value={formSetting.wifiName}
+            value={formSetting.wifiSSID}
             onChange={formSettingHandler}
           ></ListInput>
         )}
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
@@ -218,67 +227,69 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           ></ListInput>
         )}
 
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="serverAddress"
+            name="mqttUri"
             label="Địa chỉ server:"
             type="text"
             validateOnBlur
-            value={formSetting.serverAddress}
+            value={formSetting.mqttUri}
             onChange={formSettingHandler}
           ></ListInput>
         )}
 
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="serverUsername"
+            name="mqttUsername"
             label="Username server:"
             type="text"
             validateOnBlur
-            value={formSetting.serverUsername}
+            value={formSetting.mqttUsername}
             onChange={formSettingHandler}
           ></ListInput>
         )}
 
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
             size={5}
-            name="serverPassword"
+            name="mqttPassword"
             label="Mật khẩu server:"
             type="text"
             validateOnBlur
-            value={formSetting.serverPassword}
+            value={formSetting.mqttPassword}
             onChange={formSettingHandler}
           ></ListInput>
         )}
 
-        {formSetting.mode === "server" && sensorInfo?.data?.length > 1 && (
-          <CustomDropdownInput
-            labelName="Thông tin gởi:"
-            buttonName={`${formSetting.unitInfo.name} (${formSetting.unitInfo.unit})`}
-            popOverName="popover-sensor-unit"
+        {formSetting.loggingMode === MQTT && (
+          <ListItem
+            disabled={sensorInfo?.data?.length === 1}
+            title="Thông tin gởi:"
+            smartSelect
+            smartSelectParams={{ openIn: "popover" }}
           >
-            <List className="list-frequency">
-              {sensorInfo?.data?.map((unitInfo) => {
+            <select onChange={handleTopicsChange} name="superhero" multiple defaultValue={["v1"]}>
+              {sensorInfo?.data?.map((unitInfo, index) => {
                 return (
-                  <Button key={sensorInfo?.id + "|" + unitInfo.id} onClick={() => onChangeSensorUnit(unitInfo)}>
-                    <span style={{ textTransform: "none" }}>{`${unitInfo.name} (${unitInfo.unit})`}</span>
-                  </Button>
+                  <option
+                    key={sensorInfo?.id + "|" + unitInfo.id}
+                    value={`v${index + 1}`}
+                  >{`${unitInfo.name} (${unitInfo.unit})`}</option>
                 );
               })}
-            </List>
-          </CustomDropdownInput>
+            </select>
+          </ListItem>
         )}
 
-        {formSetting.mode === "server" && (
+        {formSetting.loggingMode === MQTT && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
@@ -292,23 +303,23 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           ></ListInput>
         )}
 
-        {formSetting.mode !== "off" && (
+        {formSetting.loggingMode !== OFF && (
           <CustomDropdownInput
             labelName="Thời gian bắt đầu:"
-            buttonName={START_ON[formSetting.startOn]}
+            buttonName={START_MODE[formSetting.startMode]}
             popOverName="popover-start-on"
           >
-            {Object.keys(START_ON).map((startOn) => {
+            {Object.keys(START_MODE).map((startMode) => {
               return (
-                <Button key={startOn} onClick={() => onStartOnChange(startOn)}>
-                  <span style={{ textTransform: "none" }}>{START_ON[startOn]}</span>
+                <Button key={startMode} onClick={() => onStartModeChange(startMode)}>
+                  <span style={{ textTransform: "none" }}>{START_MODE[startMode]}</span>
                 </Button>
               );
             })}
           </CustomDropdownInput>
         )}
       </List>
-      {formSetting.mode !== "off" && (
+      {formSetting.loggingMode !== OFF && (
         <div className="buttons">
           <Button className="save-button" onClick={onSubmitHandler}>
             Lưu
