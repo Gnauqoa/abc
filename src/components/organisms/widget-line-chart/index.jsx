@@ -10,7 +10,6 @@ import SensorServices from "../../../services/sensor-service";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
-  createChartDataAndParseXAxis,
   createChartJsDatas,
   roundAndGetSignificantDigitString,
   getCustomTooltipFunc,
@@ -37,8 +36,6 @@ import {
   PREFIX_LABEL_NOTE,
   PREFIX_STATISTIC_NOTE,
   STATISTIC_NOTE_TYPE,
-  getChartDatas,
-  getChartCustomUnitDatas,
   calculateSuggestXYAxis,
   createChartJsDatasForCustomXAxis,
 } from "../../../utils/widget-line-chart/commons";
@@ -64,6 +61,8 @@ import {
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import DataManagerIST from "../../../services/data-manager";
+import PopoverDataRunSensors from "./PopoverDataRunSensors";
+import { Button } from "framework7-react";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -323,7 +322,7 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
-  const { widget, xAxis, handleSensorChange, handleXAxisChange, pageId } = props;
+  const { widget, xAxis, handleSensorChange, handleXAxisChange, pageId, isRunning } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -738,7 +737,15 @@ let LineChart = (props, ref) => {
           </div>
           <canvas ref={chartEl} />
         </div>
+
+        <div className="data-run-sensors">
+          <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
+            Button
+          </Button>
+        </div>
       </div>
+
+      <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors>
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />

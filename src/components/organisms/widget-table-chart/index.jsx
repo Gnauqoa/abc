@@ -108,6 +108,7 @@ const TableWidget = (
           });
         }
 
+        console.log(selectedRow, transformedRows.length);
         if (selectedRow === transformedRows.length) {
           DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, label });
         } else {

@@ -159,8 +159,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     // Init states
     setPages(activity.pages);
-    handleFrequencySelect(activity.frequency);
     setCurrentDataRunId(activity.pages[0].lastDataRunId);
+    handleFrequencySelect(activity.frequency);
   }, []);
 
   /* This effect is called when the users change the widgets of current activity
@@ -651,6 +651,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <LineChart
                     key={`${currentPageIndex}_chart`}
                     pageId={`${currentPageIndex}_chart`}
+                    isRunning={isRunning}
                     data={getDataForChart({
                       sensors: pages[currentPageIndex].widgets[1].sensors,
                       unitId: pages[currentPageIndex].xAxises[1].id,

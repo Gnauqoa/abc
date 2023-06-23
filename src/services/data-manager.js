@@ -13,6 +13,7 @@ import {
   SAMPLING_INTERVAL_LESS_1HZ,
   RETURN_DICT_OPTION,
   RETURN_LIST_OPTION,
+  DEFAULT_CUSTOM_UNIT_DATA,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../utils/widget-table-chart/commons";
 
@@ -32,7 +33,7 @@ export class DataManager {
 
     // calls two scheduler functions
     // this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    this.dummySensorData();
   }
 
   initializeVariables() {
@@ -439,6 +440,26 @@ export class DataManager {
       return { id: dataRunId, name: dataRun.name, createdAt: dataRun.createdAt };
     });
     return dataRunInfos;
+  }
+
+  getSensorsOfDataRun(dataRunId) {
+    const result = [];
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
+      return [];
+    }
+
+    for (const sensorId of Object.keys(dataRun.data)) {
+      const sensor = SensorServicesIST.getSensorInfo(sensorId);
+      if (!sensor || !sensor.data?.length) continue;
+
+      result.push({
+        sensorId: parseInt(sensorId),
+        sensorIndex: sensor.data.length - 1,
+      });
+    }
+    return result;
   }
 
   addSoundDataDataRun(sensorId, sensorData, dataRunId) {
@@ -959,6 +980,10 @@ export class DataManager {
     return this.customUnits;
   }
 
+  getCustomUnitInfo({ unitId }) {
+    return this.customUnits.find((unit) => unit.id === unitId);
+  }
+
   getCustomUnitSensorInfos({ unitId }) {
     const customUnitInfo = this.customUnitDatas[unitId];
     if (!customUnitInfo) {
@@ -1034,7 +1059,7 @@ export class DataManager {
   }
 
   addCustomUnitDatas({ sensorIds, unitId, datas, index, label }) {
-    const customXAxis = this.customUnitDatas[unitId] || { sensorIds: sensorIds, data: {}, labels: [] };
+    const customXAxis = this.customUnitDatas[unitId] || DEFAULT_CUSTOM_UNIT_DATA;
     const customXAxisData = customXAxis.data;
     const customXAxisLabels = customXAxis.labels;
 
@@ -1058,7 +1083,7 @@ export class DataManager {
       customXAxisLabels.push(label);
     }
 
-    this.customUnitDatas[unitId] = { ...customXAxis, data: customXAxisData, labels: customXAxisLabels };
+    this.customUnitDatas[unitId] = { sensorIds: sensorIds, data: customXAxisData, labels: customXAxisLabels };
     console.log("addCustomUnitDatas", this.customUnitDatas);
   }
 
@@ -1070,7 +1095,7 @@ export class DataManager {
     if ([FIRST_COLUMN_DEFAULT_OPT].includes(unitId) || !Object.keys(this.customUnitDatas).includes(unitId)) {
       return;
     }
-    this.customUnitDatas[unitId] = { sensorIds: [], data: {}, labels: [] };
+    this.customUnitDatas[unitId] = DEFAULT_CUSTOM_UNIT_DATA;
   }
 }
 
