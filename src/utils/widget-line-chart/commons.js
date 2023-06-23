@@ -602,10 +602,9 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
 // ======================================= CONVERT CHART DATA UTILS =======================================
 /**
  * @typedef {Object} YAxisInfo
- * @property {string} yUnit - The name of the sensor.
- * @property {number} yMin - The data for the sensor.
- * @property {number} yMax - The data for the sensor.
- * @property {number} ySensorInfo - sensorId-sensorIndex.
+ * @property {string} info - Used for draw y axis in the chart.
+ * @property {number} sensorInfo - `${sensorId}-${sensorIndex}`.
+ * @property {number} id - index === 0 ? "y" : `y${index}`.
  */
 
 /**
@@ -652,6 +651,7 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (!sensorInfo) return;
       const sensorSubInfo = sensorInfo.data[sensorIndex];
+      const sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
 
       const yAxisID = index === 0 ? "y" : `y${index}`;
       const yAxisInfo = createYAxisLineChart(sensorSubInfo);
@@ -661,7 +661,7 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
       allSelectedSensorsData.push(data);
 
       chartDatas.push({
-        name: dataRunPreview.name,
+        name: `${dataRunPreview.name} - ${sensorName}`,
         data: data,
         dataRunId: dataRunPreview.id,
         yAxis: {
@@ -752,9 +752,9 @@ export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
 };
 
 export const createYAxisLineChart = (sensorInfo) => {
-  const minValue = sensorInfo?.yMin ? sensorInfo.yMin : 0;
-  const maxValue = sensorInfo?.yMax ? sensorInfo.yMax : 1.0;
-  const unitValue = sensorInfo?.yUnit ? sensorInfo.yUnit : "";
+  const minValue = sensorInfo?.min ? sensorInfo.min : 0;
+  const maxValue = sensorInfo?.max ? sensorInfo.max : 1.0;
+  const unitValue = sensorInfo?.unit ? sensorInfo.unit : "";
 
   return {
     position: "left",

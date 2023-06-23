@@ -271,7 +271,12 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis 
         setYAxisInfo.add(sensorInfo);
       });
     } else {
-      const yAxisInfo = createYAxisLineChart(axisRef.current);
+      const sensorInfo = {
+        max: axisRef.current.yMax,
+        min: axisRef.current.yMin,
+        unit: axisRef.current.yUnit,
+      };
+      const yAxisInfo = createYAxisLineChart(sensorInfo);
       scales.y = yAxisInfo;
     }
 
