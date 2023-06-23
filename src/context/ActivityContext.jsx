@@ -36,6 +36,12 @@ export const ActivityContext = React.createContext({
   changePageName: () => {},
   handleDeleteDataRun: () => {},
   isSelectSensor: () => {},
+  extraYAxises: [],
+  handleToggleExtraYAxis: () => {},
+  handleAddExtraCollectingSensor: () => {},
+  handleDeleteExtraCollectingSensor: () => {},
+  handleSensorChange: () => {},
+  handleXAxisChange: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -46,6 +52,9 @@ export const ActivityContextProvider = ({ children }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
   let prevChartDataRef = useRef({ data: [], dataRunIds: [], customXAxisData: [], unitId: null });
+
+  // Support multiple Y-Axises
+  const [extraYAxises, setExtraYAxises] = useState([]);
 
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
@@ -124,6 +133,109 @@ export const ActivityContextProvider = ({ children }) => {
     return false;
   };
 
+  const handleToggleExtraYAxis = ({ sensorInfo }) => {
+    console.log("handleToggleExtraYAxis: ", extraYAxises);
+    if (sensorInfo.id === undefined || sensorInfo.index === undefined) return;
+
+    const newExtraYAxises = [...extraYAxises];
+    for (const extraAxis of newExtraYAxises) {
+      if (extraAxis.id === sensorInfo.id && extraAxis.index === sensorInfo.index) {
+        const index = newExtraYAxises.indexOf(extraAxis);
+        newExtraYAxises.splice(index, 1);
+        setExtraYAxises(newExtraYAxises);
+        return;
+      }
+    }
+
+    newExtraYAxises.push(sensorInfo);
+    setExtraYAxises(newExtraYAxises);
+  };
+
+  // =========================== Functions associate with Table ===========================
+  const handleAddExtraCollectingSensor = (widgetId) => {
+    const currentWidget = pages[currentPageIndex].widgets[widgetId];
+    if (!currentWidget) return;
+
+    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = [...w.sensors, DEFAULT_SENSOR_DATA];
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  };
+
+  const handleDeleteExtraCollectingSensor = (widgetId, sensorIndex) => {
+    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = w.sensors.filter((s, i) => i !== sensorIndex);
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  };
+
+  // =========================== Functions associate with Axises ===========================
+  function handleSensorChange({ widgetId, sensorIndex, sensor }) {
+    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      const newSensors = [...w.sensors];
+      newSensors[sensorIndex] = { ...sensor };
+      return { ...w, sensors: newSensors };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  }
+
+  function handleXAxisChange({ xAxisId, option }) {
+    const updatedXAxises = pages[currentPageIndex].xAxises.map((xAxis) => {
+      if (xAxis.id !== xAxisId) {
+        return xAxis;
+      }
+
+      return { ...option };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, xAxises: updatedXAxises };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  }
+
   const initContext = () => {
     setPages(defaultPages);
     setFrequency(1);
@@ -161,6 +273,12 @@ export const ActivityContextProvider = ({ children }) => {
         handleDeleteDataRun,
         initContext,
         isSelectSensor,
+        extraYAxises,
+        handleToggleExtraYAxis,
+        handleAddExtraCollectingSensor,
+        handleDeleteExtraCollectingSensor,
+        handleSensorChange,
+        handleXAxisChange,
       }}
     >
       {children}

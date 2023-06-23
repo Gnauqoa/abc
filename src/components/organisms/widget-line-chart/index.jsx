@@ -38,6 +38,9 @@ import {
   STATISTIC_NOTE_TYPE,
   calculateSuggestXYAxis,
   createChartJsDatasForCustomXAxis,
+  ADD_COLUMN_OPTION,
+  DELETE_COLUMN_OPTION,
+  createYAxisLineChart,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -63,6 +66,7 @@ import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/comm
 import DataManagerIST from "../../../services/data-manager";
 import PopoverDataRunSensors from "./PopoverDataRunSensors";
 import { Button } from "framework7-react";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -225,8 +229,9 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis }) => {
   try {
+    const setYAxisInfo = new Set();
     const pageStep = 5;
     const firstPageStep = 10;
     let { suggestMaxX } = calculateSuggestXYAxis({
@@ -239,16 +244,9 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
     }
 
     const stepSize = suggestMaxX / 10;
+
+    // ------ Update scales variables for 2-axises ------
     const scales = {
-      y: {
-        min: axisRef.current.yMin,
-        suggestedMax: axisRef.current.yMax,
-        title: {
-          color: "orange",
-          display: false,
-          text: axisRef.current.yUnit,
-        },
-      },
       x: {
         ticks: {
           // forces step size to be 50 units
@@ -263,6 +261,20 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
         },
       },
     };
+
+    // Add y axises depending on number of sensors
+    if (data && data.length !== 0) {
+      data.forEach((chartData) => {
+        const { info, sensorInfo, id } = chartData.yAxis;
+        if (setYAxisInfo.has(sensorInfo)) return; // Skip if YAxis is duplicated
+        scales[id] = info;
+        setYAxisInfo.add(sensorInfo);
+      });
+    } else {
+      const yAxisInfo = createYAxisLineChart(axisRef.current);
+      scales.y = yAxisInfo;
+    }
+
     if (!isCustomXAxis) {
       scales.x.type = "linear";
       scales.x.suggestedMin = 0;
@@ -270,12 +282,12 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
       if (stepSize) {
         scales.x.ticks.stepSize = stepSize;
       }
-
       chartInstance.options.plugins.zoom.zoom.mode = "xy";
     } else {
       chartInstance.options.plugins.zoom.zoom.mode = "y";
     }
 
+    // Check if the x-axis is time to custom unit to create appropriate chart
     if (!isCustomXAxis) {
       chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
     } else {
@@ -322,10 +334,11 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
-  const { widget, xAxis, handleSensorChange, handleXAxisChange, pageId, isRunning } = props;
+  const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
+    useActivityContext();
+  const { widget, xAxis, pageId, isRunning } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
-  const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
   const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
@@ -436,13 +449,6 @@ let LineChart = (props, ref) => {
     },
 
     setChartData: ({ chartDatas = [], isCustomXAxis }) => {
-      /**
-       * chartData = [
-       * { name, data: [{x,y}, ...]}
-       * ]
-       */
-      // axisRef.current.xUnit = xUnit;
-
       const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
       if (!isHasData) return;
 
@@ -665,10 +671,6 @@ let LineChart = (props, ref) => {
   };
 
   //========================= CUSTOM X AXIS FUNCTION =========================
-  const onChangeSensor = (sensor) => {
-    handleSensorChange(widget.id, defaultSensorIndex, sensor);
-  };
-
   const onSelectUserUnit = ({ option }) => {
     if (option.id === xAxis.id) return;
 
@@ -684,6 +686,36 @@ let LineChart = (props, ref) => {
       pageId,
       isCustomXAxis,
     });
+  };
+
+  const changeSelectedSensor = ({ sensor, sensorIndex }) => {
+    // Check if the user select the same sensor or not
+    for (const selectedSensor of widget.sensors) {
+      if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
+    }
+    handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor });
+  };
+
+  const addColumnHandler = () => {
+    const numSensor = widget.sensors?.length ?? 0;
+    const container = document.getElementById("line-chart-canvas-container");
+    const canvas = container.querySelector("canvas");
+    canvas.style.width = 40 * (numSensor + 1) + "px";
+
+    handleAddExtraCollectingSensor(widget.id);
+  };
+
+  const deleteColumnHandler = () => {
+    const numSensor = widget.sensors?.length ?? 1;
+    if (numSensor <= 1) return;
+    const deletedColumn = numSensor - 1;
+    const deleteSensorIndex = deletedColumn - 1;
+
+    const container = document.getElementById("line-chart-canvas-container");
+    const canvas = container.querySelector("canvas");
+    canvas.style.width = 40 * (numSensor - 1) + "px";
+
+    handleDeleteExtraCollectingSensor(widget.id, deleteSensorIndex);
   };
 
   //========================= OPTIONS FUNCTIONS =========================
@@ -707,6 +739,12 @@ let LineChart = (props, ref) => {
       case SHOW_OFF_DATA_POINT_MARKER:
         showOffDataPointHandler(chartInstanceRef.current);
         break;
+      case ADD_COLUMN_OPTION:
+        addColumnHandler();
+        break;
+      case DELETE_COLUMN_OPTION:
+        deleteColumnHandler();
+        break;
       default:
         break;
     }
@@ -715,18 +753,20 @@ let LineChart = (props, ref) => {
   return (
     <div className="line-chart-wapper">
       <div className="line-chart">
-        <div className="sensor-selector-wrapper">
-          <div className="sensor-select-vertical-mount-container">
-            <SensorSelector
-              selectedSensor={selectedSensor}
-              onChange={(sensor) => onChangeSensor(sensor)}
-              onSelectUserInit={onSelectUserUnit}
-              definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
-            ></SensorSelector>
+        {widget.sensors.map((sensor, sensorIndex) => (
+          <div key={`line-sensor-selector-${pageId}-${sensorIndex}`} className="sensor-selector-wrapper">
+            <div className="sensor-select-vertical-mount-container">
+              <SensorSelector
+                selectedSensor={sensor}
+                onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+                onSelectUserInit={onSelectUserUnit}
+                definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
+              ></SensorSelector>
+            </div>
           </div>
-        </div>
+        ))}
 
-        <div className="canvas-container">
+        <div id="line-chart-canvas-container" className="canvas-container">
           <div className="current-value-sec" ref={valueContainerElRef}>
             <div className="value-container">
               x=<span ref={xElRef}></span>
@@ -738,11 +778,13 @@ let LineChart = (props, ref) => {
           <canvas ref={chartEl} />
         </div>
 
-        <div className="data-run-sensors">
-          <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
-            Button
-          </Button>
-        </div>
+        {xAxis.id !== FIRST_COLUMN_DEFAULT_OPT && (
+          <div className="data-run-sensors">
+            <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
+              Button
+            </Button>
+          </div>
+        )}
       </div>
 
       <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors>

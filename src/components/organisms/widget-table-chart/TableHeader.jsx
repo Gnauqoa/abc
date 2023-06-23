@@ -64,13 +64,13 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
 
       {/* ========================== DYNAMIC COLUMN ========================== */}
       {widget.sensors.map((sensor, sensorIndex) => (
-        <td key={`header-row-dynamic-column-${sensorIndex}`} className="__header-name">
+        <td key={`header-row-dynamic-colum-${sensorIndex}`} className="__header-name">
           <SensorSelector
             className="sensor-selector "
             disabled={isRunning}
             selectedSensor={sensor}
             hideDisplayUnit={true}
-            onChange={(sensor) => handleSensorChange(widget.id, sensorIndex, sensor)}
+            onChange={(sensor) => handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor })}
           ></SensorSelector>
           <div className="__header-unit">
             {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}

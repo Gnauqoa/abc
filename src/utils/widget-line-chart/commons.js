@@ -1,6 +1,7 @@
 import $ from "jquery";
 import chartUtils from "./chartjs-utils";
-import { min, max, std, mean, round } from "mathjs";
+import { round } from "mathjs";
+
 import interpolateIcon from "../../img/expandable-options/line-interpolate.png";
 import autoScaleIcon from "../../img/expandable-options/line-auto-scale.png";
 import noteIcon from "../../img/expandable-options/line-note.png";
@@ -10,6 +11,9 @@ import selectionIcon from "../../img/expandable-options/line-selection.png";
 import selectedSelectionIcon from "../../img/expandable-options/line-selection-selected.png";
 import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
 import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
+import addColumnIcon from "../../img/expandable-options/add-column.png";
+import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
+
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
@@ -23,6 +27,8 @@ export const INTERPOLATE_OPTION = 2;
 export const STATISTIC_OPTION = 3;
 export const SELECTION_OPTION = 4;
 export const SHOW_OFF_DATA_POINT_MARKER = 5;
+export const ADD_COLUMN_OPTION = 6;
+export const DELETE_COLUMN_OPTION = 7;
 
 export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 
@@ -103,6 +109,16 @@ export const expandableOptions = [
     selectedIcon: selectedStatisticIcon,
     selected: false,
     size: "70%",
+  },
+  {
+    id: ADD_COLUMN_OPTION,
+    icon: addColumnIcon,
+    selected: false,
+  },
+  {
+    id: DELETE_COLUMN_OPTION,
+    icon: deleteColumnIcon,
+    selected: false,
   },
 ];
 
@@ -188,6 +204,17 @@ const roundXValue = (value) => {
 };
 
 // chartData: chartInstance.data.datasets
+/**
+ * Calculates the maximum and minimum values of x and y axes from the given chart datas.
+ *
+ * @param {Object} options - The options object.
+ * @param {Array<ChartData>} options.chartDatas - The array of chart datas.
+ * @returns {Object} An object containing the maximum and minimum values of x and y axes.
+ * @property {number} maxX - The maximum value of the x-axis.
+ * @property {number} minX - The minimum value of the x-axis.
+ * @property {number} maxY - The maximum value of the y-axis.
+ * @property {number} minY - The minimum value of the y-axis.
+ */
 export const getMaxMinAxises = ({ chartDatas }) => {
   let maxX;
   let maxY;
@@ -262,9 +289,13 @@ export const createChartDataAndParseXAxis = ({ chartDatas }) => {
   return result;
 };
 
-/**
- *
- * @param {{chartData: Array.<{name: string, data: Array<{x, y}>}>}} param0
+/** Creates Chart.js data object for rendering charts.
+ * @param {Object} options - Options for creating the chart data.
+ * @param {Array<{name: string, data: Array<{x, y}>}>} options.chartDatas - Array of chart data objects.
+ * @param {number} options.pointRadius - Point radius for the chart data.
+ * @param {number} options.tension - Tension value for the chart data.
+ * @param {Array} options.hiddenDataRunIds - Array of hidden data run IDs.
+ * @returns {Object} - Chart.js data object.
  */
 export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hiddenDataRunIds }) => {
   let chartDataParam = {
@@ -278,16 +309,14 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
   };
 
   chartDataParam.datasets = [];
-  chartDatas.forEach((s, index) => {
+  chartDatas.forEach((chartData, index) => {
     const dataList = [];
     let firstPoint = null;
-    // const isDataRunHidden = hiddenDataRunIds.has(s.dataRunId);
-    // console.log(`widget-line-utils_createChartJsDatas_isDataRun_${s.dataRunId}_hidden_${isDataRunHidden}`);
+    const yAxisID = chartData.yAxis?.id ? chartData.yAxis.id : "y";
 
-    // if (!isDataRunHidden) {
-    s.data.forEach((d, dataIndex) => {
+    chartData.data.forEach((d, dataIndex) => {
       if (dataIndex == 0) {
-        const firstData = s.data[0];
+        const firstData = chartData.data[0];
         firstPoint = {
           x: roundXValue(firstData.x),
           y: firstData.y,
@@ -298,17 +327,15 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
         y: d.y,
       });
     });
-    // }
 
     const dataset = {
-      label: s.name,
+      label: chartData.name,
       data: dataList,
-      dataRunId: s.dataRunId,
-      // pointStyle: "circle",
-      // pointRadius: 5,
-      // pointHoverRadius: 10,
+      dataRunId: chartData.dataRunId,
       borderColor: chartUtils.namedColor(index),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
+      yAxis: chartData.yAxis,
+      yAxisID: yAxisID,
     };
 
     if (tension) dataset.tension = tension;
@@ -328,12 +355,15 @@ export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius,
   chartDatas.forEach((chartData, chartDataIndex) => {
     if (chartDataIndex === 0) chartDataParam.labels = chartData.labels;
     const dataList = chartData.data;
+    const yAxisID = chartData.yAxis?.id ? chartData.yAxis.id : "y";
 
     const dataset = {
       label: chartData.name,
       data: dataList,
       borderColor: chartUtils.namedColor(chartDataIndex),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(chartDataIndex), 0.5),
+      yAxis: chartData.yAxis,
+      yAxisID: yAxisID,
     };
 
     if (tension) dataset.tension = tension;
@@ -458,21 +488,13 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
     return;
   }
 
+  console.log("chartInstance.data.datasets: ", chartInstance.data.datasets);
   const isXLabel = xAxis.id !== FIRST_COLUMN_DEFAULT_OPT;
   const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
   console.log("isXLabel: ", isXLabel);
   console.log("maxX, minX, maxY, minY: ", maxX, minX, maxY, minY);
   const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
   const scales = {
-    y: {
-      min: minY - marginUpperLower,
-      suggestedMax: maxY + marginUpperLower,
-      title: {
-        color: "orange",
-        display: false,
-        text: axisRef.current.yUnit,
-      },
-    },
     x: {
       ticks: {},
       title: {
@@ -483,6 +505,11 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
       },
     },
   };
+
+  for (const dataset of chartInstance.data.datasets) {
+    const yAxisInfo = dataset.yAxis.info;
+    scales[dataset.yAxis.id] = { ...yAxisInfo, min: minY - marginUpperLower, suggestedMax: maxY + marginUpperLower };
+  }
 
   if (!isXLabel) {
     scales.x.type = "linear";
@@ -572,48 +599,107 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
   };
 };
 
-export const getChartDatas = ({ sensor, defaultSensorIndex, currentDataRunId }) => {
-  let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+// ======================================= CONVERT CHART DATA UTILS =======================================
+/**
+ * @typedef {Object} YAxisInfo
+ * @property {string} yUnit - The name of the sensor.
+ * @property {number} yMin - The data for the sensor.
+ * @property {number} yMax - The data for the sensor.
+ * @property {number} ySensorInfo - sensorId-sensorIndex.
+ */
+
+/**
+ * @typedef {Object} DataPoint
+ * @property {number} x - The x-axis value.
+ * @property {number|string} y - The y-axis value.
+ */
+
+/**
+ * @typedef {Object} ChartData
+ * @property {string} name - The name of the data run.
+ * @property {Array<DataPoint>} data - The data points for the chart.
+ * @property {string} dataRunId - The ID of the data run.
+ * @property {YAxisInfo} yAxis - The labels associated with the data.
+ */
+
+/**
+ * Retrieves chart data for the specified sensor.
+ * @param {Object} options - The options for retrieving chart data.
+ * @param {Object} options.sensor - The sensor object.
+ * @param {number} options.defaultSensorIndex - The default sensor index.
+ * @param {string} options.currentDataRunId - The ID of the current data run.
+ * @returns {Object} - The chart data.
+ * @property {Array<ChartData>} chartDatas - The array of chart data.
+ * @property {Array<DataPoint>} currentData - The data points for the current data run.
+ * @property {Array<string>} dataRunIds - The IDs of the data runs.
+ */
+export const getChartDatas = ({ sensors, currentDataRunId }) => {
   let currentData = [];
+  const chartDatas = [];
   const dataRunIds = [];
-
-  /* chartDatas: [
-      {
-        name: dataRunPreview.name,
-        dataRunId: dataRunPreview.id,
-        data: [
-          { x: 1, y: 2 },
-          { x: 2, y: 3 },
-          ...
-        ]
-      }, {
-        ...
-      }
-    ]
-    */
-  const chartDatas = dataRunPreviews.map((dataRunPreview) => {
-    let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[defaultSensorIndex] || [];
-    const data = chartData.map((d) => ({ x: d.time, y: d.values[sensor.index] || "" })) || [];
-    if (dataRunPreview.id === currentDataRunId) {
-      currentData = data;
-    }
-
-    dataRunIds.push(dataRunPreview.id);
-
-    return {
-      name: dataRunPreview.name,
-      data: data,
-      dataRunId: dataRunPreview.id,
-    };
-  });
-
-  return {
+  const result = {
     chartDatas: chartDatas,
     currentData: currentData,
     dataRunIds: dataRunIds,
   };
+
+  let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+  for (const dataRunPreview of dataRunPreviews) {
+    const allSelectedSensorsData = [];
+    sensors?.forEach((sensor, index) => {
+      const sensorId = sensor.id;
+      const sensorIndex = sensor.index;
+      const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+      if (!sensorInfo) return;
+      const sensorSubInfo = sensorInfo.data[sensorIndex];
+
+      const yAxisID = index === 0 ? "y" : `y${index}`;
+      const yAxisInfo = createYAxisLineChart(sensorSubInfo);
+
+      let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
+      const data = chartData.map((d) => ({ x: d.time, y: d.values[sensorIndex] || "" })) || [];
+      allSelectedSensorsData.push(data);
+
+      chartDatas.push({
+        name: dataRunPreview.name,
+        data: data,
+        dataRunId: dataRunPreview.id,
+        yAxis: {
+          info: yAxisInfo,
+          sensorInfo: `${sensorId}-${sensorIndex}`,
+          id: yAxisID,
+        },
+      });
+    });
+
+    dataRunIds.push(dataRunPreview.id);
+    if (dataRunPreview.id === currentDataRunId) {
+      currentData = allSelectedSensorsData;
+    }
+  }
+
+  result.chartDatas = chartDatas;
+  result.currentData = currentData;
+  result.dataRunIds = dataRunIds;
+  return result;
 };
 
+/**
+ * @typedef {Object} ChartCustomUnitData
+ * @property {string} name - The name of the sensor.
+ * @property {Array<number>} data - The data for the sensor.
+ * @property {Array} labels - The labels associated with the data.
+ * @property {YAxisInfo} yAxis - The labels associated with the data.
+ */
+
+/**
+ * Retrieves chart data for custom units.
+ * @param {Object} options - The options for retrieving chart data.
+ * @param {string} options.unitId - The ID of the unit.
+ * @param {Array} options.sensors - The array of sensors.
+ * @returns {Object} - The chart data.
+ * @property {Array<ChartCustomUnitData>} chartDatas - The array of chart data.
+ */
 export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
   const chartDatas = [];
   const sensorIds = new Set();
@@ -630,11 +716,17 @@ export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
     returnOption: RETURN_DICT_OPTION,
   });
 
-  for (const sensor of sensors) {
+  sensors?.forEach((sensor, index) => {
     const sensorId = sensor.id;
     const sensorIndex = sensor.index;
     const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    const sensorName = `${sensorInfo.data[sensorIndex]?.name} (${sensorInfo.data[sensorIndex]?.unit})`;
+    if (!sensorInfo) return;
+
+    const sensorSubInfo = sensorInfo.data[sensorIndex];
+    const sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
+
+    const yAxisID = index === 0 ? "y" : `y${index}`;
+    const yAxisInfo = createYAxisLineChart(sensorSubInfo);
 
     let dataOfSensorIndex = [];
     const data = datas[sensorId]?.data;
@@ -648,7 +740,30 @@ export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
       name: sensorName,
       data: dataOfSensorIndex,
       labels: labels,
+      yAxis: {
+        info: yAxisInfo,
+        sensorInfo: `${sensorId}-${sensorIndex}`,
+        id: yAxisID,
+      },
     });
-  }
+  });
+
   return { chartDatas };
+};
+
+export const createYAxisLineChart = (sensorInfo) => {
+  const minValue = sensorInfo?.yMin ? sensorInfo.yMin : 0;
+  const maxValue = sensorInfo?.yMax ? sensorInfo.yMax : 1.0;
+  const unitValue = sensorInfo?.yUnit ? sensorInfo.yUnit : "";
+
+  return {
+    position: "left",
+    min: minValue,
+    suggestedMax: maxValue,
+    title: {
+      color: "orange",
+      display: true,
+      text: unitValue,
+    },
+  };
 };

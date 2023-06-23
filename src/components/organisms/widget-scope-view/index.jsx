@@ -69,8 +69,8 @@ const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, te
   chartInstance.update();
 };
 
-const ScopeViewWidget = ({ widget, handleSensorChange }) => {
-  const { currentDataRunId, isRunning } = useActivityContext();
+const ScopeViewWidget = ({ widget }) => {
+  const { currentDataRunId, isRunning, handleSensorChange } = useActivityContext();
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
 
@@ -254,7 +254,9 @@ const ScopeViewWidget = ({ widget, handleSensorChange }) => {
         <SensorSelector
           disabled={isRunning}
           selectedSensor={sensor}
-          onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
+          onChange={(sensor) =>
+            handleSensorChange({ widgetId: widget.id, sensorIndex: defaultSensorIndex, sensor: sensor })
+          }
           definedSensors={soundSensorsId}
         ></SensorSelector>
       </div>

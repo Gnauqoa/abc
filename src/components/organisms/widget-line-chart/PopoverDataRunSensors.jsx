@@ -1,12 +1,15 @@
 import React from "react";
-import { BlockTitle, List, ListItem, Navbar, Popover } from "framework7-react";
+import { List, ListItem, Navbar, Popover } from "framework7-react";
 
 import "./PopoverDataRunSensors.scss";
 import SensorServicesIST from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 const PopoverDataRunSensors = ({ unitId }) => {
+  const { handleToggleExtraYAxis } = useActivityContext();
+
   let dataRuns = [];
   if (unitId === FIRST_COLUMN_DEFAULT_OPT) {
     const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
@@ -18,11 +21,11 @@ const PopoverDataRunSensors = ({ unitId }) => {
           })
         : [];
   } else {
-    const test = DataManagerIST.getCustomUnitSensorInfos({ unitId });
+    const customUnitSensorInfo = DataManagerIST.getCustomUnitSensorInfos({ unitId });
     const customUnitInfo = DataManagerIST.getCustomUnitInfo({ unitId });
     const sensors = [];
 
-    for (const sensorId of test) {
+    for (const sensorId of customUnitSensorInfo) {
       const sensor = SensorServicesIST.getSensorInfo(sensorId);
       if (!sensor || !sensor.data?.length) continue;
 
@@ -38,23 +41,19 @@ const PopoverDataRunSensors = ({ unitId }) => {
         sensors: sensors,
       },
     ];
-
-    console.log("dataRuns: ", dataRuns);
   }
 
-  const onSelectSenorInfo = ({ id, index }) => {};
+  const onSelectSenorInfo = ({ id, index }) => {
+    const sensorInfo = { id: id, index: index };
+    handleToggleExtraYAxis({ sensorInfo });
+  };
 
   return (
     <Popover className="popover-data-run-sensors">
       <Navbar title="Các lần chạy"></Navbar>
       <List strongIos outlineIos dividersIos>
         {dataRuns.map((dataRun, dataRunIndex) => (
-          <ListItem
-            key={`dataRun-${dataRunIndex}`}
-            title={dataRun.name}
-            name="demo-checkbox"
-            // onChange={(e) => onMoviesChange(e)}
-          >
+          <ListItem key={`dataRun-${dataRunIndex}`} title={dataRun.name} name="demo-checkbox">
             <ul slot="root">
               {dataRun.sensors.map((sensor, index) => {
                 const sensorInfo = SensorServicesIST.getSensorInfo(sensor.sensorId);

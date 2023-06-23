@@ -10,10 +10,11 @@
     display: flex;
     width: 100%;
     height: 92%;
-    justify-content: space-between;
+    // justify-content: space-between;
     position: relative;
 
     .sensor-selector-wrapper {
+      flex-shrink: 0; /* Prevents the first component from shrinking */
       position: relative;
       width: 40px;
       //flex: 0 0 0;
@@ -35,7 +36,7 @@
       position: relative;
       // flex: 1 0 0;
       height: 100%;
-      width: 95%;
+      width: calc(100% - 40px); /* Width is calculated dynamically */
 
       > .current-value-sec {
         right: 0px;

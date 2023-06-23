@@ -22,23 +22,12 @@ import SummarizedTable from "./TableSummary";
 import TableHeader from "./TableHeader";
 import TableContent from "./TableContent";
 import { useTableContext } from "../../../context/TableContext";
+import { useActivityContext } from "../../../context/ActivityContext";
 
-const TableWidget = (
-  {
-    id: tableId,
-    datas,
-    currentValues,
-    widget,
-    handleSensorChange,
-    chartLayout,
-    isRunning,
-    samplingMode,
-    handleTableAddColumn,
-    handleTableDeleteColumn,
-  },
-  ref
-) => {
+const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, samplingMode }, ref) => {
   const { getUserInputValue, getFirstColumnOption } = useTableContext();
+  const { isRunning, handleDeleteExtraCollectingSensor, handleAddExtraCollectingSensor, handleSensorChange } =
+    useActivityContext();
 
   // ========================== Create variables depending on number of columns ==========================
   const numColumns = widget.sensors.length;
@@ -316,7 +305,7 @@ const TableWidget = (
     if (!selectedColumn || numColumns <= 1) return;
 
     const deleteSensorIndex = selectedColumn - 1;
-    handleTableDeleteColumn(widget.id, deleteSensorIndex);
+    handleDeleteExtraCollectingSensor(widget.id, deleteSensorIndex);
   };
 
   const summarizeTableHandler = () => {
@@ -326,7 +315,7 @@ const TableWidget = (
   const onChooseOptionHandler = (optionId) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
-        handleTableAddColumn(widget.id);
+        handleAddExtraCollectingSensor(widget.id);
         break;
       case DELETE_COLUMN_OPTION:
         deleteColumnHandler();
