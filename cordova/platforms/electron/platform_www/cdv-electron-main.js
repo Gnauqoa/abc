@@ -321,51 +321,50 @@ async function listSerialPorts() {
                 0xBB - stop byte (already cut off by serial delimiter parser)
               */
 
-              if (data[0] != 0xAA) {
-                // Invalid data, ignore
-                return;
-              }
-
-              var sensorId = data[1];
-              var sensorSerial = data[2]; // TODO: Will use later
-              var battery = data[3]; // TODO: Will use later
-              var dataLength = data[4];
-              var checksum = data[5 + dataLength];
-              var calculatedChecksum = 0xFF;
-              for (var i=0; i<(dataLength+5); i++) {
-                calculatedChecksum = calculatedChecksum ^ data[i];
-              }
-
-              if (calculatedChecksum != checksum) {
-                console.log('Invalid data received');
-                return;
-              }
-
-              var dataRead = 0;
-              var sensorData = [];
-
-              while (dataRead < dataLength) {
-                // read next 4 bytes
-                var rawBytes = data.slice(dataRead+5, dataRead+9);
-
-                var view = new DataView(new ArrayBuffer(4));
-
-                rawBytes.forEach(function (b, i) {
-                    view.setUint8(3-i, b);
+              if (data[0] === 0xAA) { // sensor data
+                var sensorId = data[1];
+                var sensorSerial = data[2]; // TODO: Will use later
+                var battery = data[3]; // TODO: Will use later
+                var dataLength = data[4];
+                var checksum = data[5 + dataLength];
+                var calculatedChecksum = 0xFF;
+                for (var i=0; i<(dataLength+5); i++) {
+                  calculatedChecksum = calculatedChecksum ^ data[i];
+                }
+  
+                if (calculatedChecksum != checksum) {
+                  console.log('Invalid data received');
+                  return;
+                }
+  
+                var dataRead = 0;
+                var sensorData = [];
+  
+                while (dataRead < dataLength) {
+                  // read next 4 bytes
+                  var rawBytes = data.slice(dataRead+5, dataRead+9);
+  
+                  var view = new DataView(new ArrayBuffer(4));
+  
+                  rawBytes.forEach(function (b, i) {
+                      view.setUint8(3-i, b);
+                  });
+  
+                  sensorData.push(view.getFloat32(0).toFixed(2));
+                  dataRead += 4;
+                }
+  
+                var dataArray = [sensorId, battery, USB_TYPE, port.path, dataLength]
+                sensorData.forEach(function (d, i) {
+                  dataArray.push(d);
                 });
-
-                sensorData.push(view.getFloat32(0).toFixed(2));
-                dataRead += 4;
+  
+                portsList[port.path].lastDdata = dataArray;
+  
+                mainWindow.webContents.send("device-data", dataArray);
+              } else if (data.slice(0, 3) === "$$$" && data.slice(-3) === "###") { // command DTO
+                mainWindow.webContents.send("command-dto", data.slice(3, -3).split(","));
               }
-
-              var dataArray = [sensorId, battery, USB_TYPE, port.path, dataLength]
-              sensorData.forEach(function (d, i) {
-                dataArray.push(d);
-              });
-
-              portsList[port.path].lastDdata = dataArray;
-
-              mainWindow.webContents.send("device-data", dataArray);
             });
 
             portsList[port.path] = {

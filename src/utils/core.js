@@ -642,6 +642,21 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
+export function timeoutEventData(eventName, timeout = 1000) {
+  function getCustomEventData(e) {
+    return e.detail;
+  }
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      document.removeEventListener(eventName, getCustomEventData);
+      reject("timeout");
+    }, timeout);
+
+    document.addEventListener(eventName, (e) => resolve(getCustomEventData(e)));
+  });
+}
+
 export function mergeLists(...lists) {
   const mergedList = [];
   const uniqueIds = {};

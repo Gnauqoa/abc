@@ -160,8 +160,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     // Init states
     setPages(activity.pages);
-    setCurrentDataRunId(activity.pages[0].lastDataRunId);
     handleFrequencySelect(activity.frequency);
+    setCurrentDataRunId(activity.pages[0].lastDataRunId);
   }, []);
 
   /* This effect is called when the users change the widgets of current activity
