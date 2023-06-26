@@ -4,6 +4,7 @@ import { List, ListInput, Button, f7, ListItem } from "framework7-react";
 import "./index.scss";
 import CustomDropdownInput from "./custom-list-input";
 import storeService from "../../../services/store-service";
+import SensorServicesIST from "../../../services/sensor-service";
 import {
   OFF,
   FLASH,
@@ -31,6 +32,7 @@ const START_MODE = {
 
 const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   const [formSetting, setFormSetting] = useState({});
+  const [remoteLoggingSize, setRemoteLoggingSize] = useState(0);
   const sensorId = sensorInfo.id;
 
   useEffect(() => {
@@ -50,6 +52,10 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       };
 
     setFormSetting({ ...savedSetting, id: sensorId });
+
+    (async () => {
+      setRemoteLoggingSize(await SensorServicesIST.remoteLoggingSize(sensorId));
+    })();
   }, [sensorInfo]);
 
   const formSettingHandler = (e) => {
@@ -136,7 +142,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   return (
     <>
       <List className="__setting __remote-logging" form noHairlinesMd inlineLabels>
-        {sensorInfo.isSensorLogAvailable && (
+        {remoteLoggingSize && (
           <li className="display-setting-input label-color-black">
             <div className="item-content item-input item-input-outline item-input-with-value">
               <div className="item-inner download-log-wrap">

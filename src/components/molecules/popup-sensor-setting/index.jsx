@@ -69,7 +69,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
-        const sensorLog = await SensorServicesIST.getSensorLog(sensorId);
+        const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId);
         const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
         saveFile("", sensorLog, {
           ext: "log",
@@ -108,11 +108,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const onChangeTab = async (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
-    if (tabId === REMOTE_LOGGING_TAB) {
-      const isSensorLogAvailable = await SensorServicesIST.isSensorLogAvailable(sensorId);
-      const updatedSensorInfo = { ...sensorInfo, isSensorLogAvailable };
-      setSensorInfo(updatedSensorInfo);
-    }
   };
 
   return (
