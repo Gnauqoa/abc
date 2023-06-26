@@ -510,7 +510,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
       // is null, we still render the chart
       if (isModifyData || isModifyDataRunIds || currentDataRunId === null || isChangeUnit) {
-        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas });
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas, sensors });
 
         if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
         if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;

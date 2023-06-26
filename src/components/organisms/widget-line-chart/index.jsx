@@ -6,7 +6,7 @@ import _ from "lodash";
 import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
-import SensorServices from "../../../services/sensor-service";
+import SensorServicesIST from "../../../services/sensor-service";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
@@ -229,7 +229,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis, sensors }) => {
   try {
     const setYAxisInfo = new Set();
     const pageStep = 5;
@@ -270,15 +270,37 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis 
         scales[id] = info;
         setYAxisInfo.add(sensorInfo);
       });
+    } else if (sensors && sensors.length !== 0) {
+      sensors.forEach((sensor, index) => {
+        // Revert index to map with the order sensor selector button
+        // y0 stay on the right most of the axises
+        const curIndex = sensors.length - 1 - index;
+        const yAxisID = curIndex === 0 ? "y" : `y${curIndex}`;
+        const sensorId = sensor.id;
+        const sensorIndex = sensor.index;
+        const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+        let sensorSubInfo;
+        if (sensorInfo && sensorInfo.data) sensorSubInfo = sensorInfo.data[sensorIndex];
+        else
+          sensorSubInfo = {
+            max: 1.0,
+            min: 0,
+            unit: "",
+          };
+
+        const yAxisInfo = createYAxisLineChart(sensorSubInfo);
+        scales[yAxisID] = yAxisInfo;
+      });
     } else {
       const sensorInfo = {
-        max: axisRef.current.yMax,
-        min: axisRef.current.yMin,
-        unit: axisRef.current.yUnit,
+        max: 1.0,
+        min: 0,
+        unit: "",
       };
       const yAxisInfo = createYAxisLineChart(sensorInfo);
       scales.y = yAxisInfo;
     }
+    // console.log("scales: ", scales, sensors);
 
     if (!isCustomXAxis) {
       scales.x.type = "linear";
@@ -365,12 +387,7 @@ let LineChart = (props, ref) => {
   const chartInstanceRef = useRef();
   const sensorRef = useRef({});
   const xAxisRef = useRef({});
-  const axisRef = useRef({
-    xUnit: "",
-    yUnit: "",
-    yMin: 0,
-    yMax: null,
-  });
+  const axisRef = useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 });
 
   let valueContainerElRef = useRef();
   let xElRef = useRef();
@@ -381,7 +398,7 @@ let LineChart = (props, ref) => {
       id: sensor?.id,
       index: sensor?.index,
     };
-    const sensorList = SensorServices.getAllSensors();
+    const sensorList = SensorServicesIST.getAllSensors();
     const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id);
     if (existingSensorData) {
       const sensorDetailData = existingSensorData.data[sensorRef.current.index];
@@ -453,9 +470,9 @@ let LineChart = (props, ref) => {
       }
     },
 
-    setChartData: ({ chartDatas = [], isCustomXAxis }) => {
-      const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
-      if (!isHasData) return;
+    setChartData: ({ chartDatas = [], isCustomXAxis, sensors }) => {
+      // const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
+      // if (!isHasData) return;
 
       updateChart({
         chartInstance: chartInstanceRef.current,
@@ -463,6 +480,7 @@ let LineChart = (props, ref) => {
         axisRef,
         pageId,
         isCustomXAxis,
+        sensors,
       });
     },
   }));
@@ -471,7 +489,7 @@ let LineChart = (props, ref) => {
     // Clear Range Selection
     isRangeSelected = isSelectRegion;
 
-    const minUnitValue = SensorServices.getMinUnitValueAllSensors();
+    const minUnitValue = SensorServicesIST.getMinUnitValueAllSensors();
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
@@ -714,13 +732,12 @@ let LineChart = (props, ref) => {
     const numSensor = widget.sensors?.length ?? 1;
     if (numSensor <= 1) return;
     const deletedColumn = numSensor - 1;
-    const deleteSensorIndex = deletedColumn - 1;
 
     const container = document.getElementById("line-chart-canvas-container");
     const canvas = container.querySelector("canvas");
     canvas.style.width = 40 * (numSensor - 1) + "px";
 
-    handleDeleteExtraCollectingSensor(widget.id, deleteSensorIndex);
+    handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
   };
 
   //========================= OPTIONS FUNCTIONS =========================

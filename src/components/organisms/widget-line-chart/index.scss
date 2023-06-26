@@ -12,6 +12,7 @@
     height: 92%;
     // justify-content: space-between;
     position: relative;
+    gap: 10px;
 
     .sensor-selector-wrapper {
       flex-shrink: 0; /* Prevents the first component from shrinking */
