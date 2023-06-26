@@ -75,6 +75,9 @@ const MyApp = () => {
       window._cdvElectronIpc.onDeviceDataReceived((event, value) => {
         dataManager.callbackReadSensor(value);
       });
+      window._cdvElectronIpc.onCommandDTOReceived((event, value) => {
+        dataManager.callbackCommandDTO(value);
+      });
       window._cdvElectronIpc.onDeviceDisconnected((event, value) => {
         dataManager.callbackSensorDisconnected(value);
       });

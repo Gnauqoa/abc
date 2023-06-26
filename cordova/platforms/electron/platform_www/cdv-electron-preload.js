@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   onDeviceDataReceived: (callback) => ipcRenderer.on("device-data", callback),
   onDeviceDisconnected: (callback) => ipcRenderer.on("device-disconnected", callback),
   writeDeviceData: (port, data) => ipcRenderer.send("write-data", port, data),
+  onCommandDTOReceived: (callback) => ipcRenderer.on("command-dto", callback),
 
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
 

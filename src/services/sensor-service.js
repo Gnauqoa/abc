@@ -12,6 +12,8 @@ import pressureSensorIcon from "../img/sensor-info/sensor-icons/pressure.png";
 import waterQualitySensorIcon from "../img/sensor-info/sensor-icons/water-quality.png";
 import voltageSensorIcon from "../img/sensor-info/sensor-icons/voltage.png";
 import amperageSensorIcon from "../img/sensor-info/sensor-icons/amperage.png";
+import DeviceManagerIST from "./device-manager";
+import * as core from "../utils/core";
 
 export const defaultSensors = [
   {
@@ -342,11 +344,19 @@ export class SensorServices {
     return builtinSensors;
   }
 
-  isSensorLogAvailable(sensorId) {
-    return Promise.resolve(true); // TODO: check sensor log
+  async remoteLoggingSize(sensorId) {
+    DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###");
+
+    // setTimeout(() => { // TODO: Clean dummy data
+    //   const evt = new CustomEvent("log,chk", { detail: "log,chk,0,512".split(",") });
+    //   document.dispatchEvent(evt);
+    // }, 500);
+    const data = await core.timeoutEventData("log,chk");
+    return Number(data[3]);
   }
 
-  getSensorLog(sensorId) {
+  remoteLoggingData(sensorId) {
+    DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###");
     return Promise.resolve("data"); // TODO: get sensor log
   }
 }
