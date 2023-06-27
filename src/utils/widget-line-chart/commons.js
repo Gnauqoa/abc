@@ -646,18 +646,22 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
   for (const dataRunPreview of dataRunPreviews) {
     const allSelectedSensorsData = [];
     sensors?.forEach((sensor, index) => {
+      const yAxisID = index === 0 ? "y" : `y${index}`;
       const sensorId = sensor.id;
       const sensorIndex = sensor.index;
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-      if (!sensorInfo) return;
-      const sensorSubInfo = sensorInfo.data[sensorIndex];
-      const sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
+      let sensorSubInfo = null,
+        sensorName = "",
+        data = [];
 
-      const yAxisID = index === 0 ? "y" : `y${index}`;
+      if (sensorInfo) {
+        sensorSubInfo = sensorInfo.data[sensorIndex];
+        sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
+        const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
+        data = chartData.map((d) => ({ x: d.time, y: d.values[sensorIndex] || "" })) || [];
+      }
+
       const yAxisInfo = createYAxisLineChart(sensorSubInfo);
-
-      let chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
-      const data = chartData.map((d) => ({ x: d.time, y: d.values[sensorIndex] || "" })) || [];
       allSelectedSensorsData.push(data);
 
       chartDatas.push({
@@ -751,6 +755,25 @@ export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
   return { chartDatas };
 };
 
+/**
+ * @typedef {Object} SensorInfo
+ * @property {string} id - The name of the data run.
+ * @property {string} name - The name of the data run.
+ * @property {string} unit - The name of the data run.
+ * @property {number} min - The name of the data run.
+ * @property {number} max - The name of the data run.
+ * @property {number} formatFloatingPoint - The name of the data run.
+ */
+
+/**
+ * Creates the configuration object for the Y-axis of a line chart.
+ *
+ * @param {SensorInfo} sensorInfo - Information about the sensor.
+ * @param {number} sensorInfo.min - The minimum value for the axis (optional).
+ * @param {number} sensorInfo.max - The maximum value for the axis (optional).
+ * @param {string} sensorInfo.unit - The unit of measurement for the axis (optional).
+ * @returns {Object} The configuration object for the Y-axis of the line chart.
+ */
 export const createYAxisLineChart = (sensorInfo) => {
   const minValue = sensorInfo?.min ? sensorInfo.min : 0;
   const maxValue = sensorInfo?.max ? sensorInfo.max : 1.0;

@@ -263,14 +263,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
     };
 
     // Add y axises depending on number of sensors
-    if (data && data.length !== 0) {
-      data.forEach((chartData) => {
-        const { info, sensorInfo, id } = chartData.yAxis;
-        if (setYAxisInfo.has(sensorInfo)) return; // Skip if YAxis is duplicated
-        scales[id] = info;
-        setYAxisInfo.add(sensorInfo);
-      });
-    } else if (sensors && sensors.length !== 0) {
+    if (sensors && sensors.length !== 0) {
       sensors.forEach((sensor, index) => {
         // Revert index to map with the order sensor selector button
         // y0 stay on the right most of the axises
