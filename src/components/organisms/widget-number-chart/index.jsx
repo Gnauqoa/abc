@@ -5,11 +5,11 @@ import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useActivityContext } from "../../../context/ActivityContext";
 
-const NumberWidget = ({ value, widget, handleSensorChange }) => {
+const NumberWidget = ({ value, widget }) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
   const [currentValue, setCurrentData] = useState(value);
-  const { isRunning } = useActivityContext();
+  const { isRunning, handleSensorChange } = useActivityContext();
 
   useEffect(() => {
     function handleResize() {
@@ -35,7 +35,9 @@ const NumberWidget = ({ value, widget, handleSensorChange }) => {
       <div className="sensor-select-container">
         <SensorSelector
           selectedSensor={sensor}
-          onChange={(sensor) => handleSensorChange(widget.id, defaultSensorIndex, sensor)}
+          onChange={(sensor) =>
+            handleSensorChange({ widgetId: widget.id, sensorIndex: defaultSensorIndex, sensor: sensor })
+          }
         ></SensorSelector>
       </div>
     </div>

@@ -656,3 +656,20 @@ export function timeoutEventData(eventName, timeout = 1000) {
     document.addEventListener(eventName, (e) => resolve(getCustomEventData(e)));
   });
 }
+
+export function mergeLists(...lists) {
+  const mergedList = [];
+  const uniqueIds = {};
+
+  lists.forEach((list) => {
+    list.forEach((element) => {
+      const id = JSON.stringify(element);
+      if (!uniqueIds[id]) {
+        mergedList.push(element);
+        uniqueIds[id] = true;
+      }
+    });
+  });
+
+  return mergedList;
+}

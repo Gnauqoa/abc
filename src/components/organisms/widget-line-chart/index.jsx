@@ -6,11 +6,10 @@ import _ from "lodash";
 import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
-import SensorServices from "../../../services/sensor-service";
+import SensorServicesIST from "../../../services/sensor-service";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
-  createChartDataAndParseXAxis,
   createChartJsDatas,
   roundAndGetSignificantDigitString,
   getCustomTooltipFunc,
@@ -37,10 +36,11 @@ import {
   PREFIX_LABEL_NOTE,
   PREFIX_STATISTIC_NOTE,
   STATISTIC_NOTE_TYPE,
-  getChartDatas,
-  getChartCustomUnitDatas,
   calculateSuggestXYAxis,
   createChartJsDatasForCustomXAxis,
+  ADD_COLUMN_OPTION,
+  DELETE_COLUMN_OPTION,
+  createYAxisLineChart,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -64,6 +64,9 @@ import {
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import DataManagerIST from "../../../services/data-manager";
+import PopoverDataRunSensors from "./PopoverDataRunSensors";
+import { Button } from "framework7-react";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -226,8 +229,9 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis, sensors }) => {
   try {
+    const setYAxisInfo = new Set();
     const pageStep = 5;
     const firstPageStep = 10;
     let { suggestMaxX } = calculateSuggestXYAxis({
@@ -240,16 +244,9 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
     }
 
     const stepSize = suggestMaxX / 10;
+
+    // ------ Update scales variables for 2-axises ------
     const scales = {
-      y: {
-        min: axisRef.current.yMin,
-        suggestedMax: axisRef.current.yMax,
-        title: {
-          color: "orange",
-          display: false,
-          text: axisRef.current.yUnit,
-        },
-      },
       x: {
         ticks: {
           // forces step size to be 50 units
@@ -264,6 +261,40 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
         },
       },
     };
+
+    // Add y axises depending on number of sensors
+    if (sensors && sensors.length !== 0) {
+      sensors.forEach((sensor, index) => {
+        // Revert index to map with the order sensor selector button
+        // y0 stay on the right most of the axises
+        const curIndex = sensors.length - 1 - index;
+        const yAxisID = curIndex === 0 ? "y" : `y${curIndex}`;
+        const sensorId = sensor.id;
+        const sensorIndex = sensor.index;
+        const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+        let sensorSubInfo;
+        if (sensorInfo && sensorInfo.data) sensorSubInfo = sensorInfo.data[sensorIndex];
+        else
+          sensorSubInfo = {
+            max: 1.0,
+            min: 0,
+            unit: "",
+          };
+
+        const yAxisInfo = createYAxisLineChart(sensorSubInfo);
+        scales[yAxisID] = yAxisInfo;
+      });
+    } else {
+      const sensorInfo = {
+        max: 1.0,
+        min: 0,
+        unit: "",
+      };
+      const yAxisInfo = createYAxisLineChart(sensorInfo);
+      scales.y = yAxisInfo;
+    }
+    // console.log("scales: ", scales, sensors);
+
     if (!isCustomXAxis) {
       scales.x.type = "linear";
       scales.x.suggestedMin = 0;
@@ -271,12 +302,12 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
       if (stepSize) {
         scales.x.ticks.stepSize = stepSize;
       }
-
       chartInstance.options.plugins.zoom.zoom.mode = "xy";
     } else {
       chartInstance.options.plugins.zoom.zoom.mode = "y";
     }
 
+    // Check if the x-axis is time to custom unit to create appropriate chart
     if (!isCustomXAxis) {
       chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
     } else {
@@ -323,10 +354,11 @@ const updateChart = ({ chartInstance, data, axisRef, pageId, isCustomXAxis }) =>
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
-  const { widget, xAxis, handleSensorChange, handleXAxisChange, pageId } = props;
+  const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
+    useActivityContext();
+  const { widget, xAxis, pageId, isRunning } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
-  const selectedSensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
   const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
@@ -348,12 +380,7 @@ let LineChart = (props, ref) => {
   const chartInstanceRef = useRef();
   const sensorRef = useRef({});
   const xAxisRef = useRef({});
-  const axisRef = useRef({
-    xUnit: "",
-    yUnit: "",
-    yMin: 0,
-    yMax: null,
-  });
+  const axisRef = useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 });
 
   let valueContainerElRef = useRef();
   let xElRef = useRef();
@@ -364,7 +391,7 @@ let LineChart = (props, ref) => {
       id: sensor?.id,
       index: sensor?.index,
     };
-    const sensorList = SensorServices.getAllSensors();
+    const sensorList = SensorServicesIST.getAllSensors();
     const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id);
     if (existingSensorData) {
       const sensorDetailData = existingSensorData.data[sensorRef.current.index];
@@ -436,16 +463,9 @@ let LineChart = (props, ref) => {
       }
     },
 
-    setChartData: ({ chartDatas = [], isCustomXAxis }) => {
-      /**
-       * chartData = [
-       * { name, data: [{x,y}, ...]}
-       * ]
-       */
-      // axisRef.current.xUnit = xUnit;
-
-      const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
-      if (!isHasData) return;
+    setChartData: ({ chartDatas = [], isCustomXAxis, sensors }) => {
+      // const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
+      // if (!isHasData) return;
 
       updateChart({
         chartInstance: chartInstanceRef.current,
@@ -453,6 +473,7 @@ let LineChart = (props, ref) => {
         axisRef,
         pageId,
         isCustomXAxis,
+        sensors,
       });
     },
   }));
@@ -461,7 +482,7 @@ let LineChart = (props, ref) => {
     // Clear Range Selection
     isRangeSelected = isSelectRegion;
 
-    const minUnitValue = SensorServices.getMinUnitValueAllSensors();
+    const minUnitValue = SensorServicesIST.getMinUnitValueAllSensors();
     const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
     chartInstanceRef.current = new Chart(chartEl.current, {
       type: "line",
@@ -666,10 +687,6 @@ let LineChart = (props, ref) => {
   };
 
   //========================= CUSTOM X AXIS FUNCTION =========================
-  const onChangeSensor = (sensor) => {
-    handleSensorChange(widget.id, defaultSensorIndex, sensor);
-  };
-
   const onSelectUserUnit = ({ option }) => {
     if (option.id === xAxis.id) return;
 
@@ -685,6 +702,35 @@ let LineChart = (props, ref) => {
       pageId,
       isCustomXAxis,
     });
+  };
+
+  const changeSelectedSensor = ({ sensor, sensorIndex }) => {
+    // Check if the user select the same sensor or not
+    for (const selectedSensor of widget.sensors) {
+      if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
+    }
+    handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor });
+  };
+
+  const addColumnHandler = () => {
+    const numSensor = widget.sensors?.length ?? 0;
+    const container = document.getElementById("line-chart-canvas-container");
+    const canvas = container.querySelector("canvas");
+    canvas.style.width = 40 * (numSensor + 1) + "px";
+
+    handleAddExtraCollectingSensor(widget.id);
+  };
+
+  const deleteColumnHandler = () => {
+    const numSensor = widget.sensors?.length ?? 1;
+    if (numSensor <= 1) return;
+    const deletedColumn = numSensor - 1;
+
+    const container = document.getElementById("line-chart-canvas-container");
+    const canvas = container.querySelector("canvas");
+    canvas.style.width = 40 * (numSensor - 1) + "px";
+
+    handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
   };
 
   //========================= OPTIONS FUNCTIONS =========================
@@ -708,6 +754,12 @@ let LineChart = (props, ref) => {
       case SHOW_OFF_DATA_POINT_MARKER:
         showOffDataPointHandler(chartInstanceRef.current);
         break;
+      case ADD_COLUMN_OPTION:
+        addColumnHandler();
+        break;
+      case DELETE_COLUMN_OPTION:
+        deleteColumnHandler();
+        break;
       default:
         break;
     }
@@ -716,18 +768,20 @@ let LineChart = (props, ref) => {
   return (
     <div className="line-chart-wapper">
       <div className="line-chart">
-        <div className="sensor-selector-wrapper">
-          <div className="sensor-select-vertical-mount-container">
-            <SensorSelector
-              selectedSensor={selectedSensor}
-              onChange={(sensor) => onChangeSensor(sensor)}
-              onSelectUserInit={onSelectUserUnit}
-              definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
-            ></SensorSelector>
+        {widget.sensors.map((sensor, sensorIndex) => (
+          <div key={`line-sensor-selector-${pageId}-${sensorIndex}`} className="sensor-selector-wrapper">
+            <div className="sensor-select-vertical-mount-container">
+              <SensorSelector
+                selectedSensor={sensor}
+                onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+                onSelectUserInit={onSelectUserUnit}
+                definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
+              ></SensorSelector>
+            </div>
           </div>
-        </div>
+        ))}
 
-        <div className="canvas-container">
+        <div id="line-chart-canvas-container" className="canvas-container">
           <div className="current-value-sec" ref={valueContainerElRef}>
             <div className="value-container">
               x=<span ref={xElRef}></span>
@@ -738,7 +792,17 @@ let LineChart = (props, ref) => {
           </div>
           <canvas ref={chartEl} />
         </div>
+
+        {xAxis.id !== FIRST_COLUMN_DEFAULT_OPT && (
+          <div className="data-run-sensors">
+            <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
+              Button
+            </Button>
+          </div>
+        )}
       </div>
+
+      <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors>
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />

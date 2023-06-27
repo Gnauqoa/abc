@@ -209,6 +209,7 @@ export const SENSOR_SELECTOR_USER_TAB = "user";
 
 export const DEFAULT_SENSOR_ID = -1;
 export const DEFAULT_SENSOR_DATA = { id: DEFAULT_SENSOR_ID, index: 0 };
+export const DEFAULT_CUSTOM_UNIT_DATA = { sensorIds: [], data: {}, labels: [] };
 
 export const WIDGET_SENSOR_ACTIVE = 0;
 export const WIDGET_SENSOR_INACTIVE = 1;

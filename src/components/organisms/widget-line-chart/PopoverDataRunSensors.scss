@@ -1,0 +1,27 @@
+.popover-data-run-sensors {
+  width: 300px;
+  background: white;
+  max-height: 300px;
+  overflow-y: scroll;
+  min-height: 300px;
+
+  .popover-inner {
+    cursor: pointer;
+
+    .navbar {
+      overflow: hidden;
+    }
+    .list {
+      ul {
+        .item-content {
+          //   min-height: 40px;
+          //   height: 40px;
+        }
+
+        ul {
+          padding-left: 30px;
+        }
+      }
+    }
+  }
+}

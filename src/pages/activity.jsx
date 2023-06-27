@@ -39,7 +39,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import useDeviceManager from "../components/molecules/popup-scan-devices";
 import { useActivityContext } from "../context/ActivityContext";
-import { getPageName } from "../utils/core";
+import { getPageName, mergeLists } from "../utils/core";
 import TextViewWidget from "../components/organisms/widget-text-view";
 import ScopeViewWidget from "../components/organisms/widget-scope-view";
 
@@ -119,6 +119,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleNewPage,
     initContext,
     isSelectSensor,
+    extraYAxises,
   } = useActivityContext();
   const { getFirstColumnOption } = useTableContext();
 
@@ -359,46 +360,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleNavigatePage(nextPageIndex);
   }
 
-  function handleSensorChange(widgetId, sensorIndex, sensor) {
-    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
-      if (w.id !== widgetId) {
-        return w;
-      }
-
-      const newSensors = [...w.sensors];
-      newSensors[sensorIndex] = { ...sensor };
-      return { ...w, sensors: newSensors };
-    });
-
-    const updatePages = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets: updatedWidgets };
-      }
-      return page;
-    });
-
-    setPages(updatePages);
-  }
-
-  function handleXAxisChange({ xAxisId, option }) {
-    const updatedXAxises = pages[currentPageIndex].xAxises.map((xAxis) => {
-      if (xAxis.id !== xAxisId) {
-        return xAxis;
-      }
-
-      return { ...option };
-    });
-
-    const updatePages = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, xAxises: updatedXAxises };
-      }
-      return page;
-    });
-
-    setPages(updatePages);
-  }
-
   // ========================================================================================
   // =========================== Functions associate with DataRun ===========================
   // ========================================================================================
@@ -504,6 +465,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     if (!lineChartRef.current[currentPageIndex]) return;
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
+    const allSelectedSensors = mergeLists(sensors, extraYAxises);
 
     // Update current value for Line Chart
     if (isRunning) {
@@ -523,7 +485,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
     if (![FIRST_COLUMN_DEFAULT_OPT].includes(unitId)) {
       isCustomXAxis = true;
-      const { chartDatas } = getChartCustomUnitDatas({ unitId: unitId, sensors: sensors });
+      const { chartDatas } = getChartCustomUnitDatas({ unitId: unitId, sensors: allSelectedSensors });
       const isModifyData = !_.isEqual(chartDatas, prevChartDataRef.current.customXAxisData[currentPageIndex]);
 
       if (isModifyData || isChangeUnit) {
@@ -531,7 +493,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         prevChartDataRef.current.customXAxisData[currentPageIndex] = chartDatas;
       }
     } else {
-      const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensor, defaultSensorIndex, currentDataRunId });
+      const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensors, currentDataRunId });
       const parsedChartDatas = createChartDataAndParseXAxis({ chartDatas });
 
       // Check if the current data is = the previous data or not.
@@ -548,7 +510,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
       // is null, we still render the chart
       if (isModifyData || isModifyDataRunIds || currentDataRunId === null || isChangeUnit) {
-        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas });
+        lineChartRef.current[currentPageIndex].setChartData({ chartDatas: parsedChartDatas, sensors });
 
         if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
         if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
@@ -557,50 +519,6 @@ export default ({ f7route, f7router, filePath, content }) => {
 
     if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
   }
-
-  // =========================== Functions associate with Table ===========================
-  const handleTableAddColumn = (widgetId) => {
-    const currentWidget = pages[currentPageIndex].widgets[widgetId];
-    if (!currentWidget) return;
-
-    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
-      if (w.id !== widgetId) {
-        return w;
-      }
-
-      const newSensors = [...w.sensors, DEFAULT_SENSOR_DATA];
-      return { ...w, sensors: newSensors };
-    });
-
-    const updatePages = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets: updatedWidgets };
-      }
-      return page;
-    });
-
-    setPages(updatePages);
-  };
-
-  const handleTableDeleteColumn = (widgetId, sensorIndex) => {
-    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
-      if (w.id !== widgetId) {
-        return w;
-      }
-
-      const newSensors = w.sensors.filter((s, i) => i !== sensorIndex);
-      return { ...w, sensors: newSensors };
-    });
-
-    const updatePages = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page, widgets: updatedWidgets };
-      }
-      return page;
-    });
-
-    setPages(updatePages);
-  };
 
   return (
     <Page className="bg-color-regal-blue activity">
@@ -630,11 +548,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     currentValues={getCurrentValues(pages[currentPageIndex].widgets[0].sensors, true)}
                     widget={pages[currentPageIndex].widgets[0]}
                     chartLayout={LAYOUT_TABLE_CHART}
-                    isRunning={isRunning}
                     samplingMode={samplingMode}
-                    handleSensorChange={handleSensorChange}
-                    handleTableAddColumn={handleTableAddColumn}
-                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
                 {[LAYOUT_NUMBER_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout) && (
@@ -642,7 +556,6 @@ export default ({ f7route, f7router, filePath, content }) => {
                     key={`${currentPageIndex}_number`}
                     value={getCurrentValues(pages[currentPageIndex].widgets[0].sensors)}
                     widget={pages[currentPageIndex].widgets[0]}
-                    handleSensorChange={handleSensorChange}
                   />
                 )}
               </div>
@@ -651,6 +564,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   <LineChart
                     key={`${currentPageIndex}_chart`}
                     pageId={`${currentPageIndex}_chart`}
+                    isRunning={isRunning}
                     data={getDataForChart({
                       sensors: pages[currentPageIndex].widgets[1].sensors,
                       unitId: pages[currentPageIndex].xAxises[1].id,
@@ -658,8 +572,6 @@ export default ({ f7route, f7router, filePath, content }) => {
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
                     xAxis={pages[currentPageIndex].xAxises[1]}
-                    handleSensorChange={handleSensorChange}
-                    handleXAxisChange={handleXAxisChange}
                   />
                 )}
                 {pages[currentPageIndex].layout === LAYOUT_NUMBER_TABLE && (
@@ -671,11 +583,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     currentValues={getCurrentValues(pages[currentPageIndex].widgets[1].sensors, true)}
                     widget={pages[currentPageIndex].widgets[1]}
                     chartLayout={LAYOUT_NUMBER_TABLE}
-                    isRunning={isRunning}
                     samplingMode={samplingMode}
-                    handleSensorChange={handleSensorChange}
-                    handleTableAddColumn={handleTableAddColumn}
-                    handleTableDeleteColumn={handleTableDeleteColumn}
                   />
                 )}
               </div>
@@ -696,8 +604,6 @@ export default ({ f7route, f7router, filePath, content }) => {
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
                   xAxis={pages[currentPageIndex].xAxises[0]}
-                  handleSensorChange={handleSensorChange}
-                  handleXAxisChange={handleXAxisChange}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TABLE && (
@@ -709,11 +615,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   currentValues={getCurrentValues(pages[currentPageIndex].widgets[0].sensors, true)}
                   widget={pages[currentPageIndex].widgets[0]}
                   chartLayout={LAYOUT_TABLE}
-                  isRunning={isRunning}
                   samplingMode={samplingMode}
-                  handleSensorChange={handleSensorChange}
-                  handleTableAddColumn={handleTableAddColumn}
-                  handleTableDeleteColumn={handleTableDeleteColumn}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_NUMBER && (
@@ -721,16 +623,11 @@ export default ({ f7route, f7router, filePath, content }) => {
                   key={`${currentPageIndex}_number`}
                   value={getCurrentValues(pages[currentPageIndex].widgets[0].sensors)}
                   widget={pages[currentPageIndex].widgets[0]}
-                  handleSensorChange={handleSensorChange}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TEXT && <TextViewWidget />}
               {pages[currentPageIndex].layout === LAYOUT_SCOPE && (
-                <ScopeViewWidget
-                  key={`${currentPageIndex}_scope`}
-                  widget={pages[currentPageIndex].widgets[0]}
-                  handleSensorChange={handleSensorChange}
-                />
+                <ScopeViewWidget key={`${currentPageIndex}_scope`} widget={pages[currentPageIndex].widgets[0]} />
               )}
             </div>
           )}
