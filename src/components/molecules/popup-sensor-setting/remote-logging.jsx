@@ -149,7 +149,9 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
                 <div className="item-title item-label">Log data:</div>
                 <Button
                   className="edl-button"
-                  onClick={() => onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION })}
+                  onClick={() =>
+                    onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION, data: remoteLoggingSize })
+                  }
                 >
                   Download
                 </Button>

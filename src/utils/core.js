@@ -643,17 +643,20 @@ export function getPageName(listPageName) {
 }
 
 export function timeoutEventData(eventName, timeout = 1000) {
-  function getCustomEventData(e) {
-    return e.detail;
-  }
-
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      document.removeEventListener(eventName, getCustomEventData);
+    let timeoutHandler;
+    function dataHandler(e) {
+      clearTimeout(timeoutHandler);
+      document.removeEventListener(eventName, dataHandler);
+      resolve(e.detail);
+    }
+
+    timeoutHandler = setTimeout(() => {
+      document.removeEventListener(eventName, dataHandler);
       reject("timeout");
     }, timeout);
 
-    document.addEventListener(eventName, (e) => resolve(getCustomEventData(e)));
+    document.addEventListener(eventName, dataHandler);
   });
 }
 
