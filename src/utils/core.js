@@ -642,19 +642,23 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, timeout = 1000) {
+export function timeoutEventData(eventName, dataSize = 1, timeout = 1000) {
   return new Promise((resolve, reject) => {
     let timeoutHandler;
+    let dataBuffer = [];
     function dataHandler(e) {
-      clearTimeout(timeoutHandler);
-      document.removeEventListener(eventName, dataHandler);
-      resolve(e.detail);
+      dataBuffer.push(e.detail);
+      if (dataBuffer.length === dataSize) {
+        clearTimeout(timeoutHandler);
+        document.removeEventListener(eventName, dataHandler);
+        resolve(dataBuffer);
+      }
     }
 
     timeoutHandler = setTimeout(() => {
       document.removeEventListener(eventName, dataHandler);
       reject("timeout");
-    }, timeout);
+    }, timeout + 100 * dataSize);
 
     document.addEventListener(eventName, dataHandler);
   });

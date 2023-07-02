@@ -70,8 +70,13 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
         const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, data);
+        var csvData = sensorLog
+          .map(function (d) {
+            return d.join();
+          })
+          .join("\n");
         const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
-        saveFile("", sensorLog, {
+        saveFile("", csvData, {
           ext: "log",
           name,
         });
