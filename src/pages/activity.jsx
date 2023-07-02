@@ -502,8 +502,10 @@ export default ({ f7route, f7router, filePath, content }) => {
       // This is used to check if we delete or add new dataRun,
       // the chart will be updated with the new data run
       const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
+      const isModifySensors = !_.isEqual(sensors, prevChartDataRef.current.sensors[currentPageIndex]);
       // Call this function to clear hiddenDataLineIds in the LineChart
       if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
+      if (isModifySensors) lineChartRef.current[currentPageIndex].modifySensors({ sensors });
 
       // If we create new page and do not run any experiment, we will not have currentDataRunId
       // So when we navigate to next page and come back, currentDataRunId will be null, and it
@@ -514,6 +516,7 @@ export default ({ f7route, f7router, filePath, content }) => {
 
         if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
         if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
+        if (isModifySensors) prevChartDataRef.current.sensors[currentPageIndex] = sensors;
       }
     }
 

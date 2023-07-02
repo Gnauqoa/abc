@@ -663,6 +663,8 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
         sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
         const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
         data = chartData.map((d) => ({ x: d.time, y: d.values[sensorIndex] || "" })) || [];
+      } else {
+        return;
       }
 
       const yAxisInfo = createYAxisLineChart(sensorSubInfo);

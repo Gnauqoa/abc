@@ -679,7 +679,7 @@ export function createSensorInfo(sensor) {
   return `${sensor.id}-${sensor.index}`;
 }
 
-export function unParseSensorInfo(sensorInfo) {
+export function parseSensorInfo(sensorInfo) {
   if (!sensorInfo) return DEFAULT_SENSOR_DATA;
   const [id, index] = sensorInfo.split("-");
   return { id: parseInt(id), index: parseInt(index) };

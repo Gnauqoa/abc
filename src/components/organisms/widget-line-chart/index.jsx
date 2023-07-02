@@ -75,7 +75,7 @@ import DataManagerIST from "../../../services/data-manager";
 import PopoverDataRunSensors from "./PopoverDataRunSensors";
 import { Button } from "framework7-react";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { unParseSensorInfo } from "../../../utils/core";
+import { createSensorInfo, parseSensorInfo } from "../../../utils/core";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -469,6 +469,40 @@ let LineChart = (props, ref) => {
         }
 
         console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataLineIds: ", hiddenDataLineIds);
+      } catch (error) {
+        console.error("LineChart_modifyDataRunIds: ", error);
+      }
+    },
+
+    modifySensors: ({ sensors }) => {
+      try {
+        // Delete all the label + statistic notes of the deleted dataRunIds
+        const allLabelNotes = labelNotesStorage.all();
+        const allStatisticNotes = statisticNotesStorage.all();
+        const curSensorInfos = [];
+
+        for (const sensor of sensors) {
+          const sensorInfo = createSensorInfo(sensor);
+          curSensorInfos.push(sensorInfo);
+        }
+
+        for (const labelNote of allLabelNotes) {
+          if (!curSensorInfos.includes(labelNote.sensorInfo)) {
+            labelNotesStorage.delete(labelNote.id);
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelNote.id];
+          }
+        }
+
+        for (const statisticNote of allStatisticNotes) {
+          if (!curSensorInfos.includes(statisticNote.sensorInfo)) {
+            const summaryNoteId = statisticNote.summary.id;
+            const linearRegNoteId = statisticNote.linearReg.id;
+
+            statisticNotesStorage.delete(statisticNote.id);
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[summaryNoteId];
+            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[linearRegNoteId];
+          }
+        }
       } catch (error) {
         console.error("LineChart_modifyDataRunIds: ", error);
       }
