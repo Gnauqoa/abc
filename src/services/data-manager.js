@@ -1097,6 +1097,16 @@ export class DataManager {
     }
     this.customUnitDatas[unitId] = DEFAULT_CUSTOM_UNIT_DATA;
   }
+
+  callbackCommandDTO(data) {
+    try {
+      console.error("callbackCommandDTO", data);
+      const evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
+      document.dispatchEvent(evt);
+    } catch (e) {
+      console.error(`callbackCommandDTO error: ${e.message}`);
+    }
+  }
 }
 
 export default DataManager.getInstance();
