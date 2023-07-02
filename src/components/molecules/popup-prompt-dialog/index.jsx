@@ -3,7 +3,7 @@ import { Popup, Page, Navbar, Button } from "framework7-react";
 
 import "./index.scss";
 
-const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup }) => {
+const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup, extraData }) => {
   const [input, setInput] = useState(defaultValue);
 
   const onChangeInput = (e) => {
@@ -11,7 +11,7 @@ const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup }) => {
   };
 
   const onClose = (newInput) => {
-    onClosePopup(newInput);
+    onClosePopup({ newInput, extraData });
     // setInput(defaultValue);
   };
 

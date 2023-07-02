@@ -7,19 +7,24 @@ import {
   clearAllSelectedPoints,
   prepareContentNote,
 } from "./commons";
+import { createHiddenDataLineId } from "./legend-plugin";
 
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 
-export const getAllCurrentLabelNotes = ({ pageId, dataRunId, hiddenDataRunIds }) => {
+export const getAllCurrentLabelNotes = ({ pageId, sensorInfo, dataRunId, hiddenDataLineIds }) => {
   const condition = {};
   if (pageId) condition.pageId = pageId;
   if (dataRunId) condition.dataRunId = dataRunId;
+  if (sensorInfo) condition.sensorInfo = sensorInfo;
 
   const allLabelNotes = labelNotesStorage.query(condition);
   const labelNotes = {};
 
   allLabelNotes.forEach((note) => {
-    if (hiddenDataRunIds && hiddenDataRunIds.has(note.dataRunId)) return;
+    const dataRunId = note.dataRunId;
+    const sensorInfo = note.sensorInfo;
+    const hiddenDataLineId = createHiddenDataLineId({ dataRunId, sensorInfo });
+    if (hiddenDataLineIds?.has(hiddenDataLineId)) return;
 
     const labelNote = note.label;
     const newLabelNote = {
@@ -30,6 +35,7 @@ export const getAllCurrentLabelNotes = ({ pageId, dataRunId, hiddenDataRunIds })
       yValue: labelNote.yValue,
       xAdjust: labelNote.xAdjust,
       yAdjust: labelNote.yAdjust,
+      yScaleID: labelNote.yScaleID,
     };
 
     labelNotes[labelNote.id] = newLabelNote;
@@ -37,17 +43,28 @@ export const getAllCurrentLabelNotes = ({ pageId, dataRunId, hiddenDataRunIds })
   return labelNotes;
 };
 
-export const addLabelNote = ({ chartInstance, pageId, newContent, selectedPointElement, selectedNoteElement }) => {
-  const isValidPointElement = selectedPointElement && selectedPointElement.element;
-  const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
+export const addLabelNote = ({
+  chartInstance,
+  pageId,
+  sensorInfo,
+  newContent,
+  selectedPointElement,
+  selectedNoteElement,
+}) => {
+  const isValidPointElement = selectedPointElement?.element;
+  const isValidNoteElement = selectedNoteElement?.options;
   if (!isValidPointElement && !isValidNoteElement) return false;
 
-  let noteId;
+  let noteId, dataRunId, yAxisID;
   if (isValidNoteElement) {
     noteId = selectedNoteElement.options.id;
-  } else {
-    noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
-  }
+  } else if (isValidPointElement) {
+    const datasetIndex = selectedPointElement.datasetIndex;
+    const dataPointIndex = selectedPointElement.index;
+    dataRunId = chartInstance.data.datasets[datasetIndex].dataRunId;
+    yAxisID = chartInstance.data.datasets[datasetIndex].yAxis?.id;
+    noteId = createLabelNoteId({ pageId, dataRunId, sensorInfo, dataPointIndex });
+  } else return;
 
   const handleOpenPopup = (noteContent) => {
     const newNoteContent = !noteContent ? null : prepareContentNote(noteContent);
@@ -69,6 +86,7 @@ export const addLabelNote = ({ chartInstance, pageId, newContent, selectedPointE
         yValue: yValueNoteElement,
         xAdjust: -60,
         yAdjust: -60,
+        yScaleID: yAxisID,
       };
 
       const newNoteElement = {
@@ -80,7 +98,8 @@ export const addLabelNote = ({ chartInstance, pageId, newContent, selectedPointE
         id: noteId,
         label: newNote,
         pageId: pageId,
-        dataRunId: chartInstance.data.datasets[selectedPointElement.datasetIndex].dataRunId,
+        sensorInfo: sensorInfo,
+        dataRunId: dataRunId,
       });
       chartInstance.config.options.plugins.annotation.annotations = {
         ...chartInstance.config.options.plugins.annotation.annotations,
@@ -93,4 +112,9 @@ export const addLabelNote = ({ chartInstance, pageId, newContent, selectedPointE
 
   handleOpenPopup(newContent);
   return true;
+};
+
+export const createLabelNoteId = ({ pageId, dataRunId, sensorInfo, dataPointIndex }) => {
+  const noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${dataRunId}_${sensorInfo}_${dataPointIndex}`;
+  return noteId;
 };

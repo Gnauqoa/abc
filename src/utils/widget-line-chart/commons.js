@@ -18,6 +18,8 @@ import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
 import { DEFAULT_SENSOR_ID, RETURN_DICT_OPTION } from "../../js/constants";
+import { createSensorInfo } from "../core";
+import { createHiddenDataLineId } from "./legend-plugin";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
@@ -196,7 +198,7 @@ export const SAMPLE_RANGE_SELECTION_ANNOTATION = {
   // yMin: 10,
 };
 
-export const hiddenDataRunIds = new Set();
+export const hiddenDataLineIds = new Set();
 
 // ======================================= CHART UTILS =======================================
 const roundXValue = (value) => {
@@ -294,10 +296,10 @@ export const createChartDataAndParseXAxis = ({ chartDatas }) => {
  * @param {Array<{name: string, data: Array<{x, y}>}>} options.chartDatas - Array of chart data objects.
  * @param {number} options.pointRadius - Point radius for the chart data.
  * @param {number} options.tension - Tension value for the chart data.
- * @param {Array} options.hiddenDataRunIds - Array of hidden data run IDs.
+ * @param {Array} options.hiddenDataLineIds - Array of hidden data run IDs.
  * @returns {Object} - Chart.js data object.
  */
-export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hiddenDataRunIds }) => {
+export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hiddenDataLineIds }) => {
   let chartDataParam = {
     labels: [],
     datasets: [
@@ -525,7 +527,7 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
   chartInstance.options.animation = false;
 };
 
-export const interpolateHandler = (chartInstance, hiddenDataRunIds) => {
+export const interpolateHandler = (chartInstance, hiddenDataLineIds) => {
   const newDatasets = chartInstance.data.datasets.map((dataset) => {
     return {
       ...dataset,
@@ -539,7 +541,9 @@ export const interpolateHandler = (chartInstance, hiddenDataRunIds) => {
 
   for (let index = 0; index < chartInstance.data.datasets.length; index++) {
     const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
-    if (hiddenDataRunIds.has(dataRunId)) {
+    const sensorInfo = chartInstance.data.datasets[index]?.sensorInfo;
+    const hiddenDataLineId = createHiddenDataLineId({ dataRunId, sensorInfo });
+    if (hiddenDataLineIds.has(hiddenDataLineId)) {
       chartInstance.hide(index);
     }
   }
@@ -659,6 +663,8 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
         sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
         const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
         data = chartData.map((d) => ({ x: d.time, y: d.values[sensorIndex] || "" })) || [];
+      } else {
+        return;
       }
 
       const yAxisInfo = createYAxisLineChart(sensorSubInfo);
@@ -670,7 +676,7 @@ export const getChartDatas = ({ sensors, currentDataRunId }) => {
         dataRunId: dataRunPreview.id,
         yAxis: {
           info: yAxisInfo,
-          sensorInfo: `${sensorId}-${sensorIndex}`,
+          sensorInfo: createSensorInfo(sensor),
           id: yAxisID,
         },
       });
@@ -746,7 +752,7 @@ export const getChartCustomUnitDatas = ({ unitId, sensors }) => {
       labels: labels,
       yAxis: {
         info: yAxisInfo,
-        sensorInfo: `${sensorId}-${sensorIndex}`,
+        sensorInfo: createSensorInfo(sensor),
         id: yAxisID,
       },
     });

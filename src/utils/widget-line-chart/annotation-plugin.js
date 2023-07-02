@@ -6,7 +6,7 @@ import {
   clearAllSelectedPoints,
 } from "./commons";
 import StoreService from "../../services/store-service";
-import { LINE_CHART_LABEL_NOTE_TABLE, LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
+import { LINE_CHART_LABEL_NOTE_TABLE } from "../../js/constants";
 
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 

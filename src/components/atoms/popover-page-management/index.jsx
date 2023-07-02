@@ -9,7 +9,7 @@ import PromptPopup from "../../molecules/popup-prompt-dialog";
 const PageManagement = () => {
   const { pages, changePageName, currentPageIndex, handleNavigatePage } = useActivityContext();
 
-  const onCloseChangeNamePopup = (newPageName) => {
+  const onCloseChangeNamePopup = ({ newInput: newPageName }) => {
     newPageName && changePageName(currentPageIndex, newPageName);
   };
 
