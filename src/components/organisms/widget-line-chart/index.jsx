@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
-import _ from "lodash";
+import _, { create } from "lodash";
 import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
@@ -29,7 +29,7 @@ import {
   POINT_STYLE,
   POINT_HOVER_RADIUS,
   POINT_RADIUS,
-  hiddenDataRunIds,
+  hiddenDataLineIds,
   SHOW_OFF_DATA_POINT_MARKER,
   ALLOW_ENTER_LEAVE_ANNOTATIONS,
   LABEL_NOTE_TYPE,
@@ -54,9 +54,17 @@ import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
 import StoreService from "../../../services/store-service";
 import { addStatisticNote, getAllCurrentStatisticNotes } from "../../../utils/widget-line-chart/statistic-plugin";
-import { addLabelNote, getAllCurrentLabelNotes } from "../../../utils/widget-line-chart/label-plugin";
+import {
+  addLabelNote,
+  createLabelNoteId,
+  getAllCurrentLabelNotes,
+} from "../../../utils/widget-line-chart/label-plugin";
 import { onClickChartHandler, onClickNoteElement } from "../../../utils/widget-line-chart/annotation-plugin";
-import { onClickLegendHandler } from "../../../utils/widget-line-chart/legend-plugin";
+import {
+  createHiddenDataLineId,
+  onClickLegendHandler,
+  parseHiddenDataLineId,
+} from "../../../utils/widget-line-chart/legend-plugin";
 import {
   getRangeSelections,
   handleAddSelection,
@@ -67,6 +75,7 @@ import DataManagerIST from "../../../services/data-manager";
 import PopoverDataRunSensors from "./PopoverDataRunSensors";
 import { Button } from "framework7-react";
 import { useActivityContext } from "../../../context/ActivityContext";
+import { unParseSensorInfo } from "../../../utils/core";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -231,7 +240,6 @@ export const onLeaveNoteElement = ({ chart, element }) => {
 // TODO: check axisRef does not change for first time change sensor value
 const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis, sensors }) => {
   try {
-    const setYAxisInfo = new Set();
     const pageStep = 5;
     const firstPageStep = 10;
     let { suggestMaxX } = calculateSuggestXYAxis({
@@ -309,9 +317,9 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
 
     // Check if the x-axis is time to custom unit to create appropriate chart
     if (!isCustomXAxis) {
-      chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+      chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataLineIds: hiddenDataLineIds });
     } else {
-      chartInstance.data = createChartJsDatasForCustomXAxis({ chartDatas: data, hiddenDataRunIds: hiddenDataRunIds });
+      chartInstance.data = createChartJsDatasForCustomXAxis({ chartDatas: data, hiddenDataLineIds: hiddenDataLineIds });
     }
     chartInstance.options.animation = false;
     chartInstance.options.scales = scales;
@@ -322,8 +330,8 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
     // Update the chart selection
     if (data?.length > 0) {
       // update chart notes
-      const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataRunIds });
-      const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataRunIds });
+      const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataLineIds });
+      const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataLineIds });
       const { rangeSelections } = getRangeSelections({ pageId: pageId });
       newChartAnnotations = {
         ...labelNoteAnnotations,
@@ -343,7 +351,9 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
 
     for (let index = 0; index < chartInstance.data.datasets.length; index++) {
       const dataRunId = chartInstance.data.datasets[index]?.dataRunId;
-      if (hiddenDataRunIds.has(dataRunId)) {
+      const sensorInfo = chartInstance.data.datasets[index]?.yAxis?.sensorInfo;
+      const hiddenDataLineId = createHiddenDataLineId({ dataRunId, sensorInfo });
+      if (hiddenDataLineIds.has(hiddenDataLineId)) {
         chartInstance.hide(index);
       }
     }
@@ -424,14 +434,15 @@ let LineChart = (props, ref) => {
     },
 
     /*
-    This function is used to clear hiddenDataRunIds
+    This function is used to clear hiddenDataLineIds
     in the LineChart for the deleted dataRunIds
     */
     modifyDataRunIds: ({ dataRunIds }) => {
       try {
-        for (const dataRunId of hiddenDataRunIds) {
+        for (const hiddenDataLineId of hiddenDataLineIds) {
+          const { dataRunId } = parseHiddenDataLineId(hiddenDataLineId);
           if (!dataRunIds.includes(dataRunId)) {
-            hiddenDataRunIds.delete(dataRunId);
+            hiddenDataLineIds.delete(dataRunId);
           }
         }
 
@@ -457,7 +468,7 @@ let LineChart = (props, ref) => {
           }
         }
 
-        console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataRunIds: ", hiddenDataRunIds);
+        console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataLineIds: ", hiddenDataLineIds);
       } catch (error) {
         console.error("LineChart_modifyDataRunIds: ", error);
       }
@@ -604,17 +615,26 @@ let LineChart = (props, ref) => {
   }, []);
 
   //========================= ADD NOTE FUNCTIONS =========================
-  const addNoteHandler = (sensorInstance) => {
-    const isValidPointElement = selectedPointElement && selectedPointElement.element;
-    const isValidNoteElement = selectedNoteElement && selectedNoteElement.options;
+  const addNoteHandler = ({ chartInstance }) => {
+    const isValidPointElement = selectedPointElement?.element;
+    const isValidNoteElement = selectedNoteElement?.options;
     if (!isValidPointElement && !isValidNoteElement) return;
 
-    let noteId;
+    let noteId, sensorInfo;
     let prevContent = [""];
 
-    if (isValidNoteElement) noteId = selectedNoteElement.options.id;
-    else
-      noteId = `note-element_${sensorInstance.id}_${sensorInstance.index}_${selectedPointElement.datasetIndex}_${selectedPointElement.index}`;
+    // Get NoteId to find whether the note is exist or not
+    // for getting the old content of note
+    if (isValidNoteElement) {
+      noteId = selectedNoteElement.options.id;
+    } else if (isValidPointElement) {
+      const datasetIndex = selectedPointElement.datasetIndex;
+      const dataPointIndex = selectedPointElement.index;
+      const dataset = chartInstance.data.datasets[datasetIndex];
+      const dataRunId = dataset?.dataRunId;
+      sensorInfo = dataset?.yAxis?.sensorInfo;
+      noteId = createLabelNoteId({ pageId, dataRunId, sensorInfo, dataPointIndex });
+    } else return;
 
     const labelNote = labelNotesStorage.find(noteId);
     if (labelNote) {
@@ -624,14 +644,21 @@ let LineChart = (props, ref) => {
     }
 
     showModal((onClose) => (
-      <PromptPopup title="Thêm chú giải" inputLabel="Chú giải" defaultValue={prevContent} onClosePopup={onClose} />
+      <PromptPopup
+        title="Thêm chú giải"
+        inputLabel="Chú giải"
+        defaultValue={prevContent}
+        onClosePopup={onClose}
+        extraData={sensorInfo}
+      />
     ));
   };
 
-  const callbackAddLabelNote = (newContent) => {
+  const callbackAddLabelNote = ({ newInput: newContent, extraData: sensorInfo }) => {
     const result = addLabelNote({
       chartInstance: chartInstanceRef.current,
       pageId: pageId,
+      sensorInfo: sensorInfo,
       newContent: newContent,
       selectedPointElement,
       selectedNoteElement,
@@ -646,14 +673,14 @@ let LineChart = (props, ref) => {
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
-  const statisticHandler = (chartInstance) => {
-    if (_.isEqual(sensor, DEFAULT_SENSOR_DATA)) return;
+  const statisticHandler = ({ sensors, chartInstance }) => {
+    if (_.isEqual(sensors, DEFAULT_SENSOR_DATA)) return;
     const result = addStatisticNote({
       chartInstance,
       isShowStatistic,
-      sensor,
+      sensors,
       pageId,
-      hiddenDataRunIds,
+      hiddenDataLineIds,
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
@@ -740,13 +767,13 @@ let LineChart = (props, ref) => {
         scaleToFixHandler(chartInstanceRef.current, axisRef, xAxis);
         break;
       case NOTE_OPTION:
-        addNoteHandler(sensorRef.current);
+        addNoteHandler({ chartInstance: chartInstanceRef.current });
         break;
       case INTERPOLATE_OPTION:
-        interpolateHandler(chartInstanceRef.current, hiddenDataRunIds);
+        interpolateHandler(chartInstanceRef.current, hiddenDataLineIds);
         break;
       case STATISTIC_OPTION:
-        statisticHandler(chartInstanceRef.current);
+        statisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current });
         break;
       case SELECTION_OPTION:
         selectRegionHandler(chartInstanceRef.current);

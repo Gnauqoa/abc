@@ -1,4 +1,4 @@
-import { hiddenDataRunIds } from "./commons";
+import { hiddenDataLineIds } from "./commons";
 import { getAllCurrentLabelNotes } from "./label-plugin";
 import { getAllCurrentStatisticNotes } from "./statistic-plugin";
 
@@ -10,22 +10,24 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
   const ci = legend.chart;
 
   const dataRunId = ci.data.datasets[datasetIndex]?.dataRunId;
+  const sensorInfo = ci.data.datasets[datasetIndex]?.yAxis?.sensorInfo;
+  const hiddenDataLineId = createHiddenDataLineId({ dataRunId, sensorInfo });
 
   let isShowNote = false;
   if (ci.isDatasetVisible(datasetIndex)) {
     ci.hide(datasetIndex);
     legendItem.hidden = true;
     isShowNote = false;
-    hiddenDataRunIds.add(dataRunId);
+    hiddenDataLineIds.add(hiddenDataLineId);
   } else {
     ci.show(datasetIndex);
     legendItem.hidden = false;
     isShowNote = true;
-    hiddenDataRunIds.delete(dataRunId);
+    hiddenDataLineIds.delete(hiddenDataLineId);
   }
 
   // Update show/off label note
-  const labelNotes = getAllCurrentLabelNotes({ dataRunId: dataRunId });
+  const labelNotes = getAllCurrentLabelNotes({ dataRunId: dataRunId, sensorInfo: sensorInfo });
   Object.keys(labelNotes).forEach((nodeId) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element
@@ -37,7 +39,10 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
   });
 
   // Update show/off statistic note
-  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ dataRunId: dataRunId });
+  const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({
+    dataRunId: dataRunId,
+    sensorInfo: sensorInfo,
+  });
   Object.keys(summaryNotes).forEach((nodeId) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element
@@ -58,4 +63,13 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
   });
 
   ci.update();
+};
+
+export const createHiddenDataLineId = ({ dataRunId, sensorInfo }) => {
+  return `${dataRunId}_${sensorInfo}`;
+};
+
+export const parseHiddenDataLineId = (lineId) => {
+  const [dataRunId, sensorInfo] = lineId.split("_");
+  return { dataRunId, sensorInfo };
 };

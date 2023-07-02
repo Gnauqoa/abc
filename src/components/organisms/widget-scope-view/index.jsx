@@ -13,6 +13,7 @@ import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID } from "../../../services/sensor-service";
 import MicrophoneServiceIST from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
+import { createSensorInfo } from "../../../utils/core";
 
 const MAX_DECIBELS = 140;
 const MIN_DECIBELS = 0;
@@ -76,7 +77,7 @@ const ScopeViewWidget = ({ widget }) => {
 
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
-  const sensorInfo = `${sensor.id}-${sensor.index}`;
+  const sensorInfo = createSensorInfo(sensor);
 
   const soundSensors = SensorServiceIST.getActiveSoundSensors();
   const soundSensorsId = soundSensors.map((sensor) => sensor.id);

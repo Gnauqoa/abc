@@ -502,7 +502,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       // This is used to check if we delete or add new dataRun,
       // the chart will be updated with the new data run
       const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
-      // Call this function to clear hiddenDataRunIds in the LineChart
+      // Call this function to clear hiddenDataLineIds in the LineChart
       if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
 
       // If we create new page and do not run any experiment, we will not have currentDataRunId

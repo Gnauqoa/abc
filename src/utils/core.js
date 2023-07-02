@@ -3,7 +3,7 @@ import { f7 } from "framework7-react";
 import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
-import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE } from "../js/constants";
+import { ENTER_KEY, SPACE_KEY, CONNECT_BLE_TYPE, DEFAULT_SENSOR_DATA } from "../js/constants";
 import { exportDataRun } from "./cordova-file-utils";
 
 let deviceHistory = [];
@@ -672,4 +672,15 @@ export function mergeLists(...lists) {
   });
 
   return mergedList;
+}
+
+export function createSensorInfo(sensor) {
+  if (!sensor || sensor.id === undefined || sensor.index === undefined) return false;
+  return `${sensor.id}-${sensor.index}`;
+}
+
+export function unParseSensorInfo(sensorInfo) {
+  if (!sensorInfo) return DEFAULT_SENSOR_DATA;
+  const [id, index] = sensorInfo.split("-");
+  return { id: parseInt(id), index: parseInt(index) };
 }
