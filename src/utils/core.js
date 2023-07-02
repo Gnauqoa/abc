@@ -642,18 +642,25 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, timeout = 1000) {
-  function getCustomEventData(e) {
-    return e.detail;
-  }
-
+export function timeoutEventData(eventName, dataSize = 1, timeout = 1000) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      document.removeEventListener(eventName, getCustomEventData);
-      reject("timeout");
-    }, timeout);
+    let timeoutHandler;
+    let dataBuffer = [];
+    function dataHandler(e) {
+      dataBuffer.push(e.detail);
+      if (dataBuffer.length === dataSize) {
+        clearTimeout(timeoutHandler);
+        document.removeEventListener(eventName, dataHandler);
+        resolve(dataBuffer);
+      }
+    }
 
-    document.addEventListener(eventName, (e) => resolve(getCustomEventData(e)));
+    timeoutHandler = setTimeout(() => {
+      document.removeEventListener(eventName, dataHandler);
+      reject("timeout");
+    }, timeout + 100 * dataSize);
+
+    document.addEventListener(eventName, dataHandler);
   });
 }
 

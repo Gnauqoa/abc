@@ -347,17 +347,15 @@ export class SensorServices {
   async remoteLoggingSize(sensorId) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###");
 
-    // setTimeout(() => { // TODO: Clean dummy data
-    //   const evt = new CustomEvent("log,chk", { detail: "log,chk,0,512".split(",") });
-    //   document.dispatchEvent(evt);
-    // }, 500);
     const data = await core.timeoutEventData("log,chk");
-    return Number(data[3]);
+    return Number(data[1]);
   }
 
-  remoteLoggingData(sensorId) {
+  async remoteLoggingData(sensorId, size) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###");
-    return Promise.resolve("data"); // TODO: get sensor log
+
+    const data = await core.timeoutEventData("log,get", size);
+    return Promise.resolve(data);
   }
 }
 

@@ -24,7 +24,7 @@ const NumberWidget = ({ value, widget }) => {
 
   useEffect(() => {
     if (isRunning) setCurrentData(value);
-  }, [value]);
+  }, [value, isRunning]);
 
   return (
     <div className="number-widget">
