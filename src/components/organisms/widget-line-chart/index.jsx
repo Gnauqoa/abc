@@ -47,6 +47,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
+  SENSOR_SELECTOR_USER_TAB,
 } from "../../../js/constants";
 
 import "./index.scss";
@@ -849,20 +850,25 @@ let LineChart = (props, ref) => {
           </div>
           <canvas ref={chartEl} />
         </div>
-
-        {/* {xAxis.id !== FIRST_COLUMN_DEFAULT_OPT && (
-          <div className="data-run-sensors">
-            <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
-              Button
-            </Button>
-          </div>
-        )} */}
       </div>
 
       {/* <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors> */}
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
+        {widget.sensors.map((sensor, sensorIndex) => (
+          <div key={`line-sensor-selector-${pageId}-${sensorIndex}`} className="sensor-selector-wrapper">
+            <div className="sensor-select-vertical-mount-container">
+              <SensorSelector
+                selectedSensor={sensor}
+                selectedUnit={xAxis?.name}
+                onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+                onSelectUserInit={onSelectUserUnit}
+                defaultTab={SENSOR_SELECTOR_USER_TAB}
+              ></SensorSelector>
+            </div>
+          </div>
+        ))}
       </div>
       {prompt}
     </div>

@@ -72,6 +72,15 @@
     position: relative;
     left: 20px;
     padding-bottom: 10px;
+    flex-direction: row;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .sensor-selector-wrapper {
+      width: 300px;
+      margin-right: 80px;
+    }
   }
 }
 body {
