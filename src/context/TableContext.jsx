@@ -4,6 +4,7 @@ import {
   TABLE_TIME_COLUMN,
   getFirstColumnOptions,
 } from "../utils/widget-table-chart/commons";
+import { createInputIdCustomUnit } from "../utils/core";
 
 export const TableContext = createContext({
   userInputs: {},
@@ -12,14 +13,15 @@ export const TableContext = createContext({
   setFirstColumnOptions: () => {},
   getUserInputValue: () => {},
   getFirstColumnOption: () => {},
+  initTableContext: () => {},
 });
 
 export const TableContextProvider = ({ children }) => {
   const [userInputs, setUserInputs] = useState({});
   const [firstColumnOptions, setFirstColumnOptions] = useState({});
 
-  const getUserInputValue = ({ tableId, inputRow }) => {
-    const inputId = `${tableId}_${inputRow}`;
+  const getUserInputValue = ({ unitId, inputRow }) => {
+    const inputId = createInputIdCustomUnit({ unitId, index: inputRow });
     return userInputs[inputId] || "";
   };
 
@@ -27,6 +29,19 @@ export const TableContextProvider = ({ children }) => {
     const option = firstColumnOptions[tableId];
     if (!option) return TABLE_TIME_COLUMN;
     else return option;
+  };
+
+  const initTableContext = ({ customUnits }) => {
+    const initUserInput = {};
+    for (const customUnit of customUnits) {
+      const unitId = customUnit.id;
+      const userInput = customUnit.userInput || [];
+      for (let index = 0; index < userInput.length; index++) {
+        const inputId = createInputIdCustomUnit({ unitId, index });
+        initUserInput[inputId] = userInput[index];
+      }
+    }
+    setUserInputs({ ...initUserInput });
   };
 
   return (
@@ -38,6 +53,7 @@ export const TableContextProvider = ({ children }) => {
         setFirstColumnOptions,
         getUserInputValue,
         getFirstColumnOption,
+        initTableContext,
       }}
     >
       {children}

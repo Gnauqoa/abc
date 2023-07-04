@@ -71,8 +71,8 @@ import {
   handleDeleteSelection,
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
-import DataManagerIST from "../../../services/data-manager";
-import PopoverDataRunSensors from "./PopoverDataRunSensors";
+// import DataManagerIST from "../../../services/data-manager";
+// import PopoverDataRunSensors from "./PopoverDataRunSensors";
 import { Button } from "framework7-react";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createSensorInfo, parseSensorInfo } from "../../../utils/core";
@@ -238,7 +238,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis, sensors }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors }) => {
   try {
     const pageStep = 5;
     const firstPageStep = 10;
@@ -303,7 +303,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
     }
     // console.log("scales: ", scales, sensors);
 
-    if (!isCustomXAxis) {
+    if (isDefaultXAxis) {
       scales.x.type = "linear";
       scales.x.suggestedMin = 0;
       scales.x.suggestedMax = suggestMaxX;
@@ -316,7 +316,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isCustomXAxis,
     }
 
     // Check if the x-axis is time to custom unit to create appropriate chart
-    if (!isCustomXAxis) {
+    if (isDefaultXAxis) {
       chartInstance.data = createChartJsDatas({ chartDatas: data, hiddenDataLineIds: hiddenDataLineIds });
     } else {
       chartInstance.data = createChartJsDatasForCustomXAxis({ chartDatas: data, hiddenDataLineIds: hiddenDataLineIds });
@@ -370,7 +370,7 @@ let LineChart = (props, ref) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
-  const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
+  // const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
   // Check whether the options are selected or not
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
@@ -508,7 +508,7 @@ let LineChart = (props, ref) => {
       }
     },
 
-    setChartData: ({ chartDatas = [], isCustomXAxis, sensors }) => {
+    setChartData: ({ chartDatas = [], isDefaultXAxis, sensors }) => {
       // const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
       // if (!isHasData) return;
 
@@ -517,7 +517,7 @@ let LineChart = (props, ref) => {
         data: chartDatas,
         axisRef,
         pageId,
-        isCustomXAxis,
+        isDefaultXAxis,
         sensors,
       });
     },
@@ -752,7 +752,7 @@ let LineChart = (props, ref) => {
     if (option.id === xAxis.id) return;
 
     let chartDatas = [];
-    let isCustomXAxis = false;
+    let isDefaultXAxis = true;
 
     axisRef.current.xUnit = option.unit;
     handleXAxisChange({ xAxisId: xAxis.id, option: option });
@@ -761,7 +761,7 @@ let LineChart = (props, ref) => {
       data: chartDatas,
       axisRef,
       pageId,
-      isCustomXAxis,
+      isDefaultXAxis,
     });
   };
 
@@ -836,7 +836,7 @@ let LineChart = (props, ref) => {
                 selectedSensor={sensor}
                 onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
                 onSelectUserInit={onSelectUserUnit}
-                definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
+                // definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
               ></SensorSelector>
             </div>
           </div>
@@ -854,16 +854,16 @@ let LineChart = (props, ref) => {
           <canvas ref={chartEl} />
         </div>
 
-        {xAxis.id !== FIRST_COLUMN_DEFAULT_OPT && (
+        {/* {xAxis.id !== FIRST_COLUMN_DEFAULT_OPT && (
           <div className="data-run-sensors">
             <Button raised popoverOpen=".popover-data-run-sensors" disabled={isRunning}>
               Button
             </Button>
           </div>
-        )}
+        )} */}
       </div>
 
-      <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors>
+      {/* <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors> */}
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />

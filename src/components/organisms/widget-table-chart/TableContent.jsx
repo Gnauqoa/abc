@@ -2,6 +2,8 @@ import React from "react";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../../js/constants";
 import { useTableContext } from "../../../context/TableContext";
+import DataManagerIST from "../../../services/data-manager";
+import { createInputIdCustomUnit } from "../../../utils/core";
 
 const TableContent = ({
   tableId,
@@ -22,8 +24,9 @@ const TableContent = ({
     const inputSelectedRow = event.target.id;
     const inputValue = event.target.value;
     const inputRow = inputSelectedRow.split("_")[0];
-    const inputId = `${tableId}_${inputRow}`;
+    const inputId = createInputIdCustomUnit({ unitId: firstColumnOption.id, index: inputRow });
 
+    DataManagerIST.addUseInputCustomUnit({ unitId: firstColumnOption.id, input: inputValue, index: inputRow });
     setUserInputs((prev) => {
       return { ...prev, [inputId]: inputValue };
     });
@@ -75,7 +78,7 @@ const TableContent = ({
                 <input
                   id={`${rowIndex}_0`}
                   type="text"
-                  value={getUserInputValue({ tableId: tableId, inputRow: rowIndex })}
+                  value={getUserInputValue({ unitId: firstColumnOption.id, inputRow: rowIndex })}
                   onChange={userInputHandler}
                   disabled={firstColumnOption.id === FIRST_COLUMN_DEFAULT_OPT}
                 />
