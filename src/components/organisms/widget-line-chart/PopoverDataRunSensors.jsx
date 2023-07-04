@@ -11,37 +11,37 @@ const PopoverDataRunSensors = ({ unitId }) => {
   const { handleToggleExtraYAxis } = useActivityContext();
 
   let dataRuns = [];
-  if (unitId === FIRST_COLUMN_DEFAULT_OPT) {
-    const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
-    dataRuns =
-      dataRunPreviews.length !== 0
-        ? dataRunPreviews.map((dataRunPreview) => {
-            const sensorIds = DataManagerIST.getSensorsOfDataRun(dataRunPreview.id);
-            return { name: dataRunPreview.name, sensors: sensorIds };
-          })
-        : [];
-  } else {
-    const customUnitSensorInfo = DataManagerIST.getCustomUnitSensorInfos({ unitId });
-    const customUnitInfo = DataManagerIST.getCustomUnitInfo({ unitId });
-    const sensors = [];
+  // if (unitId === FIRST_COLUMN_DEFAULT_OPT) {
+  //   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+  //   dataRuns =
+  //     dataRunPreviews.length !== 0
+  //       ? dataRunPreviews.map((dataRunPreview) => {
+  //           const sensorIds = DataManagerIST.getSensorsOfDataRun(dataRunPreview.id);
+  //           return { name: dataRunPreview.name, sensors: sensorIds };
+  //         })
+  //       : [];
+  // } else {
+  //   const customUnitSensorInfo = DataManagerIST.getCustomUnitSensorInfos({ unitId });
+  //   const customUnitInfo = DataManagerIST.getCustomUnitInfo({ unitId });
+  //   const sensors = [];
 
-    for (const sensorId of customUnitSensorInfo) {
-      const sensor = SensorServicesIST.getSensorInfo(sensorId);
-      if (!sensor || !sensor.data?.length) continue;
+  //   for (const sensorId of customUnitSensorInfo) {
+  //     const sensor = SensorServicesIST.getSensorInfo(sensorId);
+  //     if (!sensor || !sensor.data?.length) continue;
 
-      sensors.push({
-        sensorId: parseInt(sensorId),
-        sensorIndex: sensor.data.length - 1,
-      });
-    }
+  //     sensors.push({
+  //       sensorId: parseInt(sensorId),
+  //       sensorIndex: sensor.data.length - 1,
+  //     });
+  //   }
 
-    dataRuns = [
-      {
-        name: customUnitInfo?.name,
-        sensors: sensors,
-      },
-    ];
-  }
+  //   dataRuns = [
+  //     {
+  //       name: customUnitInfo?.name,
+  //       sensors: sensors,
+  //     },
+  //   ];
+  // }
 
   const onSelectSenorInfo = ({ id, index }) => {
     const sensorInfo = { id: id, index: index };

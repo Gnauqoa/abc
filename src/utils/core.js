@@ -691,3 +691,7 @@ export function parseSensorInfo(sensorInfo) {
   const [id, index] = sensorInfo.split("-");
   return { id: parseInt(id), index: parseInt(index) };
 }
+
+export function createInputIdCustomUnit({ unitId, index }) {
+  return `${unitId}_${index}`;
+}
