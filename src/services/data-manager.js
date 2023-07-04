@@ -11,11 +11,7 @@ import {
   BLE_TYPE,
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
-  RETURN_DICT_OPTION,
-  RETURN_LIST_OPTION,
-  DEFAULT_CUSTOM_UNIT_DATA,
 } from "../js/constants";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -33,7 +29,7 @@ export class DataManager {
 
     // calls two scheduler functions
     // this.runEmitSubscribersScheduler();
-    this.dummySensorData();
+    // this.dummySensorData();
   }
 
   initializeVariables() {

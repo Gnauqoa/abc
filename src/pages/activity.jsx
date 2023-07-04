@@ -39,7 +39,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import useDeviceManager from "../components/molecules/popup-scan-devices";
 import { useActivityContext } from "../context/ActivityContext";
-import { getPageName, mergeLists } from "../utils/core";
+import { getPageName } from "../utils/core";
 import TextViewWidget from "../components/organisms/widget-text-view";
 import ScopeViewWidget from "../components/organisms/widget-scope-view";
 
@@ -47,7 +47,7 @@ import DataManagerIST from "../services/data-manager";
 import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
 import { useTableContext } from "../context/TableContext";
-import { FIRST_COLUMN_DEFAULT_OPT, TABLE_TIME_COLUMN, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
+import { FIRST_COLUMN_DEFAULT_OPT, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 import { createChartDataAndParseXAxis, getChartDatas } from "../utils/widget-line-chart/commons";
 
 const recentFilesService = new storeService("recent-files");

@@ -1,9 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import {
-  FIRST_COLUMN_DEFAULT_OPT,
-  TABLE_TIME_COLUMN,
-  getFirstColumnOptions,
-} from "../utils/widget-table-chart/commons";
+import { TABLE_TIME_COLUMN } from "../utils/widget-table-chart/commons";
 import { createInputIdCustomUnit } from "../utils/core";
 
 export const TableContext = createContext({

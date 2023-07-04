@@ -17,7 +17,6 @@ import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
-import { DEFAULT_SENSOR_ID, RETURN_DICT_OPTION } from "../../js/constants";
 import { createSensorInfo } from "../core";
 import { createHiddenDataLineId } from "./legend-plugin";
 

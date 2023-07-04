@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } f
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import annotationPlugin from "chartjs-plugin-annotation";
-import _, { create } from "lodash";
+import _ from "lodash";
 import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
@@ -70,12 +70,8 @@ import {
   handleAddSelection,
   handleDeleteSelection,
 } from "../../../utils/widget-line-chart/selection-plugin";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
-// import DataManagerIST from "../../../services/data-manager";
-// import PopoverDataRunSensors from "./PopoverDataRunSensors";
-import { Button } from "framework7-react";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createSensorInfo, parseSensorInfo } from "../../../utils/core";
+import { createSensorInfo } from "../../../utils/core";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
