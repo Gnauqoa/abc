@@ -2,27 +2,28 @@ import React, { useRef, useEffect, useState } from "react";
 import { TextEditor, Button, f7 } from "framework7-react";
 import { getDocument } from "ssr-window";
 import { openFile } from "../../../services/file-service";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 import "./index.scss";
 
 const EDIT_MODE = "edit";
 const VIEW_MODE = "view";
 
-const TextViewWidget = () => {
+const TextViewWidget = ({ widget }) => {
   const [mode, setMode] = useState(VIEW_MODE);
-  const [customValue, setCustomValue] = React.useState("");
+  const { handleTextChange } = useActivityContext();
   const containerRef = useRef(null);
   const inputFile = useRef(null);
   const editorRef = useRef(null);
 
   useEffect(() => {
-    if (mode === EDIT_MODE) return;
-    const dom = new DOMParser().parseFromString(customValue.replace(/\n/g, ""), "text/html");
+    if (widget.text === undefined) return;
+    const dom = new DOMParser().parseFromString(widget.text.replace(/\n/g, ""), "text/html");
     const container = containerRef.current;
     if (container && dom.body) {
-      container.appendChild(dom.body);
+      container.replaceChildren(dom.body);
     }
-  }, [mode]);
+  }, [widget, mode]);
 
   const onToggleHandler = () => {
     if (mode === VIEW_MODE) {
@@ -73,8 +74,8 @@ const TextViewWidget = () => {
         <TextEditor
           ref={editorRef}
           placeholder="Enter text..."
-          value={customValue}
-          onTextEditorChange={(value) => setCustomValue(value)}
+          value={widget.text}
+          onTextEditorChange={(value) => handleTextChange({ widgetId: widget.id, text: value })}
           customButtons={{
             image: {
               content: '<i class="material-icons">image</i>',
