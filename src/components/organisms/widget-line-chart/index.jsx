@@ -74,6 +74,7 @@ import {
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createSensorInfo } from "../../../utils/core";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -365,7 +366,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
 let LineChart = (props, ref) => {
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
-  const { widget, xAxis, pageId, isRunning } = props;
+  const { widget, xAxis, pageId } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
@@ -708,12 +709,14 @@ let LineChart = (props, ref) => {
   //========================= STATISTIC OPTION FUNCTIONS =========================
   const statisticHandler = ({ sensors, chartInstance }) => {
     if (_.isEqual(sensors, DEFAULT_SENSOR_DATA)) return;
+    let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(xAxis?.id);
     const result = addStatisticNote({
       chartInstance,
       isShowStatistic,
       sensors,
       pageId,
       hiddenDataLineIds,
+      isDefaultXAxis,
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
