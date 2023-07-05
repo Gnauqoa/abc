@@ -625,19 +625,15 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
  * @param {Object} options - The options for retrieving chart data.
  * @param {Object} options.sensor - The sensor object.
  * @param {number} options.defaultSensorIndex - The default sensor index.
- * @param {string} options.currentDataRunId - The ID of the current data run.
  * @returns {Object} - The chart data.
  * @property {Array<ChartData>} chartDatas - The array of chart data.
- * @property {Array<DataPoint>} currentData - The data points for the current data run.
  * @property {Array<string>} dataRunIds - The IDs of the data runs.
  */
-export const getChartDatas = ({ sensors, currentDataRunId, unitId }) => {
-  let currentData = [];
+export const getChartDatas = ({ sensors, unitId }) => {
   const chartDatas = [];
   const dataRunIds = [];
   const result = {
     chartDatas: chartDatas,
-    currentData: currentData,
     dataRunIds: dataRunIds,
   };
 
@@ -707,13 +703,9 @@ export const getChartDatas = ({ sensors, currentDataRunId, unitId }) => {
     });
 
     dataRunIds.push(dataRunPreview.id);
-    if (dataRunPreview.id === currentDataRunId) {
-      currentData = allSelectedSensorsData;
-    }
   }
 
   result.chartDatas = chartDatas;
-  result.currentData = currentData;
   result.dataRunIds = dataRunIds;
   return result;
 };

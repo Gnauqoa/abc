@@ -83,7 +83,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       frequency: 1,
       dataRuns: [],
       customXAxis: [],
-      // customXAxisDatas: [],
       sensorSettings: [],
       sensors: defaultSensors,
       customSensors: [],
@@ -115,7 +114,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     handleNewPage,
     initContext,
     isSelectSensor,
-    extraYAxises,
+    isChangePage,
+    setIsChangePage,
   } = useActivityContext();
 
   const { initTableContext } = useTableContext();
@@ -144,7 +144,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     DataManagerIST.importCustomUnit(activity.customXAxis);
-    // DataManagerIST.importCustomUnitDatas(activity.customXAxisDatas);
 
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) {
@@ -208,7 +207,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     // Collecting data from dataRuns and export
     const updatedDataRuns = DataManagerIST.exportActivityDataRun();
     const customXAxis = DataManagerIST.getCustomUnits();
-    // const customXAxisDatas = DataManagerIST.exportCustomUnitDatas();
     const updatedPage = pages.map((page, index) => {
       if (index === currentPageIndex) {
         return { ...page };
@@ -237,7 +235,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       pages: updatedPage,
       dataRuns: updatedDataRuns,
       customXAxis: customXAxis,
-      // customXAxisDatas: customXAxisDatas,
       frequency: frequency,
       sensors: sensors,
       customSensors: customSensors,
@@ -480,41 +477,36 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
 
     let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(unitId);
-
-    const { chartDatas, currentData, dataRunIds } = getChartDatas({ sensors, currentDataRunId, unitId });
+    const { chartDatas, dataRunIds } = getChartDatas({ sensors, unitId });
     const parsedChartDatas = isDefaultXAxis ? createChartDataAndParseXAxis({ chartDatas }) : chartDatas;
 
-    // Check if the current data is = the previous data or not.
-    // The current is retrieved with by the currentDataRunId
-    const isModifyData = !_.isEqual(currentData, prevChartDataRef.current.data[currentPageIndex]);
-
-    // This is used to check if we delete or add new dataRun,
-    // the chart will be updated with the new data run
+    // Check the condition for re-render chart. The chart is re-render whenever:
+    // 1. isModifyData: The data off all chart is modifying by running collecting data
+    // 2. isModifyDataRunIds: User add or remove dataRunId
+    // 3. isModifySensors: User add or delete number of Y-Axis
+    // 4. isChangeUnit: User change the unit for displaying
+    // 5. isChangePage: User navigate between page
+    const isModifyData = !_.isEqual(parsedChartDatas, prevChartDataRef.current.data[currentPageIndex]);
     const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
     const isModifySensors = !_.isEqual(sensors, prevChartDataRef.current.sensors[currentPageIndex]);
-
-    // Check if the user change custom unit or not
     const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
 
     // Call this function to clear hiddenDataLineIds in the LineChart
     if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
     if (isModifySensors) lineChartRef.current[currentPageIndex].modifySensors({ sensors });
 
-    // If we create new page and do not run any experiment, we will not have currentDataRunId
-    // So when we navigate to next page and come back, currentDataRunId will be null, and it
-    // causes the chart is not updated when we change the sensors data. => add if currentDataRunId
-    // is null, we still render the chart
-    if (isModifyData || isModifyDataRunIds || currentDataRunId === null || isChangeUnit) {
+    if (isModifyData || isModifyDataRunIds || isModifySensors || isChangeUnit || isChangePage) {
       lineChartRef.current[currentPageIndex].setChartData({
         chartDatas: parsedChartDatas,
         sensors,
         isDefaultXAxis: isDefaultXAxis,
       });
 
-      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = currentData;
+      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = parsedChartDatas;
       if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
       if (isModifySensors) prevChartDataRef.current.sensors[currentPageIndex] = sensors;
       if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
+      if (isChangePage) setIsChangePage(false);
     }
   }
 
