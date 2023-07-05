@@ -42,6 +42,8 @@ export const ActivityContext = React.createContext({
   handleDeleteExtraCollectingSensor: () => {},
   handleSensorChange: () => {},
   handleXAxisChange: () => {},
+  isChangePage: false,
+  setIsChangePage: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -51,7 +53,8 @@ export const ActivityContextProvider = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
-  let prevChartDataRef = useRef({ data: [], dataRunIds: [], sensors: [], customXAxisData: [], unitId: null });
+  const [isChangePage, setIsChangePage] = useState(false);
+  let prevChartDataRef = useRef({ data: [], dataRunIds: [], sensors: [], unitId: null });
 
   // Support multiple Y-Axises
   const [extraYAxises, setExtraYAxises] = useState([]);
@@ -62,8 +65,8 @@ export const ActivityContextProvider = ({ children }) => {
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.sensors[currentPageIndex] = [];
-    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
+    setIsChangePage(true);
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(pages[newPageIndex].lastDataRunId);
   };
@@ -82,7 +85,6 @@ export const ActivityContextProvider = ({ children }) => {
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.sensors[currentPageIndex] = [];
-    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   const handleNewPage = (newPages) => {
@@ -91,7 +93,6 @@ export const ActivityContextProvider = ({ children }) => {
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.sensors[currentPageIndex] = [];
-    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
@@ -246,11 +247,11 @@ export const ActivityContextProvider = ({ children }) => {
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
+    setIsChangePage(false);
     prevChartDataRef.current.unitId = null;
     prevChartDataRef.current.data[currentPageIndex] = [];
     prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
     prevChartDataRef.current.sensors[currentPageIndex] = [];
-    prevChartDataRef.current.customXAxisData[currentPageIndex] = [];
   };
 
   // ======================= Datarun functions =======================
@@ -283,6 +284,8 @@ export const ActivityContextProvider = ({ children }) => {
         handleDeleteExtraCollectingSensor,
         handleSensorChange,
         handleXAxisChange,
+        isChangePage,
+        setIsChangePage,
       }}
     >
       {children}

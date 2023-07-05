@@ -489,8 +489,7 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
 
   const isDefaultXAxis = xAxis.id === FIRST_COLUMN_DEFAULT_OPT;
   const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
-  console.log("maxX, minX, maxY, minY: ", maxX, minX, maxY, minY);
-  const marginUpperLower = parseInt((maxY - minY) * Y_UPPER_LOWER_MARGIN_SCALE);
+  console.log("maxX, minX, maxY, minY, marginUpperLower: ", maxX, minX, maxY, minY);
   const scales = {
     x: {
       ticks: {},
@@ -505,7 +504,11 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
 
   for (const dataset of chartInstance.data.datasets) {
     const yAxisInfo = dataset.yAxis.info;
-    scales[dataset.yAxis.id] = { ...yAxisInfo, min: minY - marginUpperLower, suggestedMax: maxY + marginUpperLower };
+    scales[dataset.yAxis.id] = {
+      ...yAxisInfo,
+      suggestedMin: minY,
+      suggestedMax: maxY,
+    };
   }
 
   if (isDefaultXAxis) {
@@ -625,19 +628,15 @@ export const calculateBoxRange = ({ chartInstance, startElement, endElement }) =
  * @param {Object} options - The options for retrieving chart data.
  * @param {Object} options.sensor - The sensor object.
  * @param {number} options.defaultSensorIndex - The default sensor index.
- * @param {string} options.currentDataRunId - The ID of the current data run.
  * @returns {Object} - The chart data.
  * @property {Array<ChartData>} chartDatas - The array of chart data.
- * @property {Array<DataPoint>} currentData - The data points for the current data run.
  * @property {Array<string>} dataRunIds - The IDs of the data runs.
  */
-export const getChartDatas = ({ sensors, currentDataRunId, unitId }) => {
-  let currentData = [];
+export const getChartDatas = ({ sensors, unitId }) => {
   const chartDatas = [];
   const dataRunIds = [];
   const result = {
     chartDatas: chartDatas,
-    currentData: currentData,
     dataRunIds: dataRunIds,
   };
 
@@ -648,7 +647,7 @@ export const getChartDatas = ({ sensors, currentDataRunId, unitId }) => {
   for (const dataRunPreview of dataRunPreviews) {
     const allSelectedSensorsData = [];
     sensors?.forEach((sensor, index) => {
-      const yAxisID = index === 0 ? "y" : `y${index}`;
+      const yAxisID = createYAxisId({ index });
       const sensorId = sensor.id;
       const sensorIndex = sensor.index;
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
@@ -707,13 +706,9 @@ export const getChartDatas = ({ sensors, currentDataRunId, unitId }) => {
     });
 
     dataRunIds.push(dataRunPreview.id);
-    if (dataRunPreview.id === currentDataRunId) {
-      currentData = allSelectedSensorsData;
-    }
   }
 
   result.chartDatas = chartDatas;
-  result.currentData = currentData;
   result.dataRunIds = dataRunIds;
   return result;
 };
@@ -744,7 +739,7 @@ export const createYAxisLineChart = (sensorInfo) => {
 
   return {
     position: "left",
-    min: minValue,
+    suggestedMin: minValue,
     suggestedMax: maxValue,
     title: {
       color: "orange",
@@ -752,4 +747,7 @@ export const createYAxisLineChart = (sensorInfo) => {
       text: unitValue,
     },
   };
+};
+export const createYAxisId = ({ index }) => {
+  return index === 0 ? "y" : `y${index}`;
 };
