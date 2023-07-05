@@ -67,6 +67,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
       defaultXAxises = [X_AXIS_TIME_UNIT, X_AXIS_TIME_UNIT];
+    } else if (selectedLayout === LAYOUT_TEXT) {
+      defaultWidgets = [{ id: 0, text: "" }];
     }
 
     activity = {
@@ -176,7 +178,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       ...new Set(
         widgets.flatMap((widget) =>
           widget.sensors
-            .map((sensor) => (sensor.id !== DEFAULT_SENSOR_ID ? parseInt(sensor.id) : false))
+            ?.map((sensor) => (sensor.id !== DEFAULT_SENSOR_ID ? parseInt(sensor.id) : false))
             .filter(Boolean)
         )
       ),
@@ -320,6 +322,8 @@ export default ({ f7route, f7router, filePath, content }) => {
         { id: 1, sensors: [DEFAULT_SENSOR_DATA] },
       ];
       defaultXAxises = [X_AXIS_TIME_UNIT, X_AXIS_TIME_UNIT];
+    } else if (chartType === LAYOUT_TEXT) {
+      defaultWidgets = [{ id: 0, text: "" }];
     }
 
     const listPageNames = pages.map((page) => page.name);
@@ -615,7 +619,9 @@ export default ({ f7route, f7router, filePath, content }) => {
                   widget={pages[currentPageIndex].widgets[0]}
                 />
               )}
-              {pages[currentPageIndex].layout === LAYOUT_TEXT && <TextViewWidget />}
+              {pages[currentPageIndex].layout === LAYOUT_TEXT && (
+                <TextViewWidget key={`${currentPageIndex}_text`} widget={pages[currentPageIndex].widgets[0]} />
+              )}
               {pages[currentPageIndex].layout === LAYOUT_SCOPE && (
                 <ScopeViewWidget key={`${currentPageIndex}_scope`} widget={pages[currentPageIndex].widgets[0]} />
               )}
