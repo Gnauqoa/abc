@@ -15,8 +15,8 @@ import MicrophoneServiceIST from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
 import { createSensorInfo } from "../../../utils/core";
 
-const MAX_DECIBELS = 140;
-const MIN_DECIBELS = 0;
+const MAX_DECIBEL = 140;
+const MIN_DECIBEL = 0;
 const GET_SAMPLES_INTERVAL = 200;
 const BUFFER_TIME_DOMAIN = 1024;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
@@ -154,8 +154,8 @@ const ScopeViewWidget = ({ widget }) => {
             chartInstance: chartInstanceRef.current,
             data: chartDatas,
             maxX: MAX_FREQUENCY,
-            maxY: MAX_DECIBELS,
-            minY: MIN_DECIBELS,
+            maxY: MAX_DECIBEL,
+            minY: MIN_DECIBEL,
             labelY: "decibels",
             labelX: "frequency",
             tension: 0.2,

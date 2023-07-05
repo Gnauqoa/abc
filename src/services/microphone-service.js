@@ -3,9 +3,9 @@ import { USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
 import { BUILTIN_DECIBELS_SENSOR_ID } from "./sensor-service";
 
-const MIN_DECIBELS = -90;
-const MAX_DECIBELS = 0;
-const SCALE_DECIBELS = 150;
+const MIN_DECIBEL = -90;
+const MAX_DECIBEL = 0;
+const SCALE_DECIBEL = 150;
 const GET_SAMPLES_INTERVAL = 200;
 const BUFFER_LENGTH = 2048;
 
@@ -93,8 +93,8 @@ export class MicrophoneServices {
 
     // Set up the different audio nodes we will use for the app
     this.analyser = this.audioCtx.createAnalyser();
-    this.analyser.minDecibels = MIN_DECIBELS;
-    this.analyser.maxDecibels = MAX_DECIBELS;
+    this.analyser.minDecibels = MIN_DECIBEL;
+    this.analyser.maxDecibels = MAX_DECIBEL;
     this.analyser.smoothingTimeConstant = 0.9;
 
     this.timeDataArray;
@@ -252,7 +252,7 @@ export class MicrophoneServices {
       let sum = 0;
       let count = 0;
       for (let i = startIndex; i < endIndex; i++) {
-        // if (dataArray[i] <= MIN_DECIBELS) continue;
+        // if (dataArray[i] <= MIN_DECIBEL) continue;
         sum += Math.pow(10, dataArray[i] / 20); // Convert the amplitude to linear scale
         count++;
       }
@@ -261,19 +261,22 @@ export class MicrophoneServices {
       const averageAmplitude = sum / count;
 
       // Convert the average amplitude to decibels
-      const decibelValue = 20 * Math.log10(averageAmplitude);
+      const decibelValue = 20 * Math.log10(averageAmplitude) + SCALE_DECIBEL;
 
-      return decibelValue + SCALE_DECIBELS;
+      return Number.isFinite(decibelValue) ? decibelValue : null;
     } catch (error) {
       console.log("getCurrentDecibel: ", error);
+      return null;
     }
   }
 
   startGetDecibel() {
     this.getDecibelIntervalId = setInterval(() => {
       const decibelValue = this.getCurrentDecibel();
-      const dataArray = [BUILTIN_DECIBELS_SENSOR_ID, 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
-      DataManagerIST.callbackReadSensor(dataArray);
+      if (decibelValue !== null) {
+        const dataArray = [BUILTIN_DECIBELS_SENSOR_ID, 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
+        DataManagerIST.callbackReadSensor(dataArray);
+      }
     }, 1000);
   }
 }

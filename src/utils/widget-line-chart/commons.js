@@ -359,6 +359,7 @@ export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius,
     const dataset = {
       label: chartData.name,
       data: dataList,
+      dataRunId: chartData.dataRunId,
       borderColor: chartUtils.namedColor(chartDataIndex),
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(chartDataIndex), 0.5),
       yAxis: chartData.yAxis,

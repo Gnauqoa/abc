@@ -970,15 +970,22 @@ export class DataManager {
 
   // -------------------------------- CUSTOM MEASUREMENTS -------------------------------- //
   addCustomUnit({ unitName, unit }) {
-    const unitId = uuidv4();
-    const unitInfo = {
-      id: unitId,
-      name: unitName,
-      unit: unit,
-      userInput: [],
-    };
-    this.customUnits.push(unitInfo);
-    return unitInfo;
+    const unitIndex = this.customUnits.findIndex((unit) => unit.name === unitName);
+    if (unitIndex === -1) {
+      const unitId = uuidv4();
+      const unitInfo = {
+        id: unitId,
+        name: unitName,
+        unit: unit,
+        userInput: [],
+      };
+      this.customUnits.push(unitInfo);
+      return unitInfo;
+    } else {
+      const unitInfo = { ...this.customUnits[unitIndex], unit: unit };
+      this.customUnits[unitIndex] = unitInfo;
+      return unitInfo;
+    }
   }
 
   deleteCustomUnit() {}

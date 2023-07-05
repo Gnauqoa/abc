@@ -40,7 +40,7 @@ const calculateLinearRegression = ({ dataRunData }) => {
   return { slope: round(slope, 2), intercept: round(intercept, 2) };
 };
 
-const getDataStatistic = ({ datasets, boxRange }) => {
+const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis }) => {
   const result = [];
   for (const dataset of datasets) {
     let datasetData = dataset.data;
@@ -49,8 +49,8 @@ const getDataStatistic = ({ datasets, boxRange }) => {
     if (!datasetData || !sensorInfo) continue;
 
     if (boxRange) {
-      datasetData = datasetData.filter((data) => {
-        const dataX = parseFloat(data.x);
+      datasetData = datasetData.filter((data, index) => {
+        const dataX = isDefaultXAxis ? parseFloat(data.x) : index;
         const dataY = parseFloat(data.y);
 
         const boxRangeX1 = parseFloat(boxRange.x1);
@@ -74,13 +74,16 @@ const getDataStatistic = ({ datasets, boxRange }) => {
     const lastDataIndex = datasetData.length - 1;
     const middleDataIndex = parseInt(datasetData.length / 2);
 
-    const x1 = parseFloat(datasetData[0].x);
-    const x2 = parseFloat(datasetData[lastDataIndex].x);
+    const x1 = isDefaultXAxis ? parseFloat(datasetData[0].x) : datasetData[0].x;
+    const x2 = isDefaultXAxis ? parseFloat(datasetData[lastDataIndex].x) : datasetData[lastDataIndex].x;
     const y1 = slope * 0 + intercept;
     const y2 = slope * lastDataIndex + intercept;
 
     const startPoint = { x: x1, y: y1 };
-    const midPoint = { x: parseFloat(datasetData[middleDataIndex].x), y: parseFloat(datasetData[middleDataIndex].y) };
+    const midPoint = {
+      x: isDefaultXAxis ? parseFloat(datasetData[middleDataIndex].x) : datasetData[middleDataIndex].x,
+      y: parseFloat(datasetData[middleDataIndex].y),
+    };
     const endPoint = { x: x2, y: y2 };
 
     result.push({
@@ -98,8 +101,16 @@ const getDataStatistic = ({ datasets, boxRange }) => {
   }
   return result;
 };
+
 // ======================================= STATISTIC OPTION =======================================
-export const addStatisticNote = ({ chartInstance, isShowStatistic, sensors, pageId, hiddenDataLineIds }) => {
+export const addStatisticNote = ({
+  chartInstance,
+  isShowStatistic,
+  sensors,
+  pageId,
+  hiddenDataLineIds,
+  isDefaultXAxis,
+}) => {
   if (!isShowStatistic) {
     // Get Range Selection and extract bounding box
     let boxRange;
@@ -130,7 +141,7 @@ export const addStatisticNote = ({ chartInstance, isShowStatistic, sensors, page
         return false;
       }
 
-      const statisticsResult = getDataStatistic({ datasets, boxRange });
+      const statisticsResult = getDataStatistic({ datasets, boxRange, isDefaultXAxis });
       if (statisticsResult.length === 0) continue;
 
       for (const statisticResult of statisticsResult) {
