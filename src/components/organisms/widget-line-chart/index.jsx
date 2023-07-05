@@ -41,6 +41,7 @@ import {
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
   createYAxisLineChart,
+  createYAxisId,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -273,7 +274,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
         // Revert index to map with the order sensor selector button
         // y0 stay on the right most of the axises
         const curIndex = sensors.length - 1 - index;
-        const yAxisID = curIndex === 0 ? "y" : `y${curIndex}`;
+        const yAxisID = createYAxisId({ index: curIndex });
         const sensorId = sensor.id;
         const sensorIndex = sensor.index;
         const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
@@ -298,7 +299,6 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
       const yAxisInfo = createYAxisLineChart(sensorInfo);
       scales.y = yAxisInfo;
     }
-    // console.log("scales: ", scales, sensors);
 
     if (isDefaultXAxis) {
       scales.x.type = "linear";
@@ -308,8 +308,10 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
         scales.x.ticks.stepSize = stepSize;
       }
       chartInstance.options.plugins.zoom.zoom.mode = "xy";
+      chartInstance.options.plugins.zoom.pan.mode = "xy";
     } else {
       chartInstance.options.plugins.zoom.zoom.mode = "y";
+      chartInstance.options.plugins.zoom.pan.mode = "y";
     }
 
     // Check if the x-axis is time to custom unit to create appropriate chart
@@ -856,19 +858,17 @@ let LineChart = (props, ref) => {
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
-        {widget.sensors.map((sensor, sensorIndex) => (
-          <div key={`line-sensor-selector-${pageId}-${sensorIndex}`} className="sensor-selector-wrapper">
-            <div className="sensor-select-vertical-mount-container">
-              <SensorSelector
-                selectedSensor={sensor}
-                selectedUnit={xAxis?.name}
-                onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
-                onSelectUserInit={onSelectUserUnit}
-                defaultTab={SENSOR_SELECTOR_USER_TAB}
-              ></SensorSelector>
-            </div>
+        <div className="sensor-selector-wrapper">
+          <div className="sensor-select-vertical-mount-container">
+            <SensorSelector
+              selectedSensor={sensor}
+              selectedUnit={xAxis?.name}
+              onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+              onSelectUserInit={onSelectUserUnit}
+              defaultTab={SENSOR_SELECTOR_USER_TAB}
+            ></SensorSelector>
           </div>
-        ))}
+        </div>
       </div>
       {prompt}
     </div>
