@@ -49,7 +49,6 @@ export const getBarChartDatas = ({ sensor, unitId }) => {
     const label = [];
     const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensor.id])[0] || [];
     const numDataPoints = isDefaultXAxis ? chartData.length : Math.min(chartData.length, userInput.length);
-    console.log(isDefaultXAxis, numDataPoints, chartData.length, userInput.length);
 
     let numEmptyInput;
 
