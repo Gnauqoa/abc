@@ -1,19 +1,36 @@
 import { Button, Navbar, Page, Popup, f7 } from "framework7-react";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
+import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 
-const AddUserUnitPopup = ({ onSubmit }) => {
+const AddUserUnitPopup = ({ onSubmit, unitId }) => {
   const addUserUnitPopupRef = useRef();
   const [unitName, setUnitName] = useState("");
   const [unit, setUnit] = useState("");
 
   const onSubmitHandler = () => {
-    const option = DataManagerIST.addCustomUnit({ unitName, unit });
-    onSubmit(option);
+    let option;
+    if (unitId === FIRST_COLUMN_DEFAULT_OPT) {
+      option = DataManagerIST.addCustomUnit({ unitName, unit });
+    } else {
+      option = DataManagerIST.updateCustomUnit({ unitId, unitName, unit });
+    }
+
+    if (option) {
+      onSubmit(option);
+    }
     f7.popup.close();
   };
+
+  useEffect(() => {
+    const unitInfo = DataManagerIST.getCustomUnitInfo({ unitId });
+    if (unitInfo) {
+      setUnitName(unitInfo.name);
+      setUnit(unitInfo.unit);
+    }
+  }, [unitId]);
 
   return (
     <Popup className="add-user-unit-popup" ref={addUserUnitPopupRef} onPopupClose={() => {}}>

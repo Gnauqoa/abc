@@ -492,15 +492,7 @@ export const scaleToFixHandler = (chartInstance, axisRef, xAxis) => {
   const { maxX, minX, maxY, minY } = getMaxMinAxises({ chartDatas: chartInstance.data.datasets });
   console.log("maxX, minX, maxY, minY, marginUpperLower: ", maxX, minX, maxY, minY);
   const scales = {
-    x: {
-      ticks: {},
-      title: {
-        color: "orange",
-        display: true,
-        text: `(${X_DEFAULT_UNIT})`,
-        align: "end",
-      },
-    },
+    x: createXAxisLineChart({ unit: axisRef.current.xUnit }),
   };
 
   for (const dataset of chartInstance.data.datasets) {
@@ -751,4 +743,20 @@ export const createYAxisLineChart = (sensorInfo) => {
 };
 export const createYAxisId = ({ index }) => {
   return index === 0 ? "y" : `y${index}`;
+};
+
+export const createXAxisLineChart = ({ unit }) => {
+  return {
+    ticks: {
+      // forces step size to be 50 units
+      //stepSize: ((1 / maxHz) * 1000).toFixed(0),
+      //stepSize: stepSize
+    },
+    title: {
+      color: "orange",
+      display: false,
+      text: unit,
+      align: "end",
+    },
+  };
 };

@@ -42,6 +42,7 @@ import {
   DELETE_COLUMN_OPTION,
   createYAxisLineChart,
   createYAxisId,
+  createXAxisLineChart,
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
@@ -254,19 +255,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
 
     // ------ Update scales variables for 2-axises ------
     const scales = {
-      x: {
-        ticks: {
-          // forces step size to be 50 units
-          //stepSize: ((1 / maxHz) * 1000).toFixed(0),
-          //stepSize: stepSize
-        },
-        title: {
-          color: "orange",
-          display: true,
-          text: axisRef.current.xUnit,
-          align: "end",
-        },
-      },
+      x: createXAxisLineChart({ unit: axisRef.current.xUnit }),
     };
 
     // Add y axises depending on number of sensors
@@ -865,7 +854,7 @@ let LineChart = (props, ref) => {
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
               selectedSensor={sensor}
-              selectedUnit={xAxis?.name}
+              selectedUnit={`${xAxis?.name} (${xAxis?.unit})`}
               onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
               onSelectUserInit={onSelectUserUnit}
               defaultTab={SENSOR_SELECTOR_USER_TAB}
