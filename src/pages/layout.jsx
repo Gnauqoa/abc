@@ -58,8 +58,7 @@ export default () => (
             </Link>
           </Col>
           <Col>
-            {/* <Link href={`/layout/${LAYOUT_BAR}`} view=".view-main"> */}
-            <Link view=".view-main">
+            <Link href={`/layout/${LAYOUT_BAR}`} view=".view-main">
               <img src={barChartImg} className="responsive" />
             </Link>
           </Col>

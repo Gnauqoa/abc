@@ -76,6 +76,7 @@ const TableContent = ({
                 <span className="span-input">{row.column0}</span>
               ) : (
                 <input
+                  key={`${rowIndex}_0`}
                   id={`${rowIndex}_0`}
                   type="text"
                   value={getUserInputValue({ unitId: firstColumnOption.id, inputRow: rowIndex })}

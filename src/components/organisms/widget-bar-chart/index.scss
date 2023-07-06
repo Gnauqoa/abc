@@ -1,0 +1,55 @@
+.bar-chart-widget {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .bar-chart {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 94%;
+    position: relative;
+
+    .canvas-container {
+      position: relative;
+      // flex: 1 0 0;
+      height: 100%;
+      width: calc(100% - 50px);
+    }
+
+    .sensor-selector-wrapper {
+      flex-shrink: 0; /* Prevents the first component from shrinking */
+      position: relative;
+      width: 40px;
+      // flex: 0 0 0;
+
+      .sensor-select-vertical-mount-container {
+        position: absolute;
+        display: block;
+        width: 25vw;
+        top: 50%;
+        left: 6.5%;
+        transform: rotate(-90deg) translate(-50%, 0%);
+        transform-origin: 0% 0%;
+        text-align: center;
+        text-align-last: center;
+        z-index: 1;
+      }
+    }
+  }
+
+  .expandable-options {
+    height: 55px;
+    width: 100%;
+    flex-direction: row;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .sensor-selector-wrapper {
+      width: 300px;
+    }
+  }
+}
