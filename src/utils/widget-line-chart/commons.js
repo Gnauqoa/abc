@@ -1,5 +1,5 @@
 import $ from "jquery";
-import chartUtils from "./chartjs-utils";
+import chartUtils from "../chartjs-utils";
 import { round } from "mathjs";
 
 import interpolateIcon from "../../img/expandable-options/line-interpolate.png";

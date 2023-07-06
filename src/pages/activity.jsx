@@ -20,6 +20,7 @@ import {
   LINE_CHART_STATISTIC_NOTE_TABLE,
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
+  LAYOUT_BAR,
 } from "../js/constants";
 
 // Import Atom Components
@@ -49,6 +50,8 @@ import MicrophoneServicesIST from "../services/microphone-service";
 import { useTableContext } from "../context/TableContext";
 import { FIRST_COLUMN_DEFAULT_OPT, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 import { createChartDataAndParseXAxis, getChartDatas } from "../utils/widget-line-chart/commons";
+import BarCharWidget from "../components/organisms/widget-bar-chart";
+import { getBarChartDatas } from "../utils/widget-bar-chart/common";
 
 const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
@@ -461,6 +464,13 @@ export default ({ f7route, f7router, filePath, content }) => {
     return tableDatas;
   }
 
+  function getDataForBarChart({ sensors, unitId }) {
+    const defaultSensorIndex = 0;
+    const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
+    const data = getBarChartDatas({ sensor, unitId });
+    return data;
+  }
+
   function getDataForChart({ sensors, unitId }) {
     if (!lineChartRef.current[currentPageIndex]) return;
     const defaultSensorIndex = 0;
@@ -583,7 +593,7 @@ export default ({ f7route, f7router, filePath, content }) => {
               </div>
             </>
           )}
-          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT, LAYOUT_SCOPE].includes(
+          {[LAYOUT_CHART, LAYOUT_TABLE, LAYOUT_NUMBER, LAYOUT_TEXT, LAYOUT_SCOPE, LAYOUT_BAR].includes(
             pages[currentPageIndex]?.layout
           ) && (
             <div className="__card-widget">
@@ -624,6 +634,17 @@ export default ({ f7route, f7router, filePath, content }) => {
               )}
               {pages[currentPageIndex].layout === LAYOUT_SCOPE && (
                 <ScopeViewWidget key={`${currentPageIndex}_scope`} widget={pages[currentPageIndex].widgets[0]} />
+              )}
+              {pages[currentPageIndex].layout === LAYOUT_BAR && (
+                <BarCharWidget
+                  key={`${currentPageIndex}_number`}
+                  widget={pages[currentPageIndex].widgets[0]}
+                  datas={getDataForBarChart({
+                    sensors: pages[currentPageIndex].widgets[0].sensors,
+                    unitId: pages[currentPageIndex].xAxises[0].id,
+                  })}
+                  xAxis={pages[currentPageIndex].xAxises[0]}
+                />
               )}
             </div>
           )}

@@ -5,6 +5,16 @@ export function points(config) {
   const ys = this.numbers(config);
   return xs.map((x, i) => ({ x, y: ys[i] }));
 }
+var _seed = Date.now();
+
+export function srand(seed) {
+  _seed = seed;
+}
+
+export function rand(min, max) {
+  _seed = (_seed * 9301 + 49297) % 233280;
+  return min + (_seed / 233280) * (max - min);
+}
 
 export function bubbles(config) {
   return this.points(config).map((pt) => {
@@ -105,4 +115,6 @@ export default {
   namedColor,
   CHART_COLORS,
   transparentize,
+  months,
+  rand,
 };
