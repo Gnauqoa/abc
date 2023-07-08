@@ -63,7 +63,7 @@ const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis, statisticOptionI
     }
 
     const dataRunData = datasetData.map((data) => parseFloat(data.y));
-    if (dataRunData.length === 0) return false;
+    if (dataRunData.length === 0) return result;
 
     const maxValue = round(max(dataRunData), 2);
     const minValue = round(min(dataRunData), 2);
@@ -112,7 +112,7 @@ export const addStatisticNote = ({
   isDefaultXAxis,
   statisticOptionId,
 }) => {
-  if (!isShowStatistic) {
+  try {
     // Get Range Selection and extract bounding box
     let boxRange;
     const { rangeSelections } = getRangeSelections({ pageId });
@@ -220,17 +220,30 @@ export const addStatisticNote = ({
         };
       }
     }
-  } else {
+
+    chartInstance.update();
+    return true;
+  } catch (error) {
+    console.error("addStatisticNote: ", error);
+    return false;
+  }
+};
+
+export const removeStatisticNote = ({ chartInstance, pageId }) => {
+  try {
     const currentStatisticNotes = statisticNotesStorage.query({ pageId });
     currentStatisticNotes.forEach((note) => {
       delete chartInstance.config.options.plugins.annotation.annotations[note.summary.id];
       delete chartInstance.config.options.plugins.annotation.annotations[note.linearReg.id];
       statisticNotesStorage.delete(note.id);
     });
-  }
 
-  chartInstance.update();
-  return true;
+    chartInstance.update();
+    return true;
+  } catch (err) {
+    console.error("removeStatisticNote: ", err);
+    return false;
+  }
 };
 
 export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hiddenDataLineIds }) => {

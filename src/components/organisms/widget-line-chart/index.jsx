@@ -56,7 +56,11 @@ import "./index.scss";
 import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
 import StoreService from "../../../services/store-service";
-import { addStatisticNote, getAllCurrentStatisticNotes } from "../../../utils/widget-line-chart/statistic-plugin";
+import {
+  addStatisticNote,
+  getAllCurrentStatisticNotes,
+  removeStatisticNote,
+} from "../../../utils/widget-line-chart/statistic-plugin";
 import {
   addLabelNote,
   createLabelNoteId,
@@ -698,8 +702,21 @@ let LineChart = (props, ref) => {
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
-  const statisticHandler = ({ sensors, chartInstance, statisticOptionId }) => {
-    if (_.isEqual(sensors, DEFAULT_SENSOR_DATA)) return;
+  const statisticHandler = ({ optionId }) => {
+    if (_.isEqual(widget.sensors, DEFAULT_SENSOR_DATA)) return;
+
+    if (!isShowStatistic) {
+      f7.popover.open(".popover-statistic-options", `#${optionId}`);
+    } else {
+      const result = removeStatisticNote({
+        chartInstance: chartInstanceRef.current,
+        pageId,
+      });
+      result && setIsShowStatistic(!isShowStatistic);
+    }
+  };
+
+  const addStatisticHandler = ({ sensors, chartInstance, statisticOptionId }) => {
     let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(xAxis?.id);
     const result = addStatisticNote({
       chartInstance,
@@ -801,7 +818,7 @@ let LineChart = (props, ref) => {
         interpolateHandler(chartInstanceRef.current, hiddenDataLineIds);
         break;
       case STATISTIC_OPTION:
-        f7.popover.open(".popover-statistic-options", `#${optionId}`);
+        statisticHandler({ optionId });
         break;
       case SELECTION_OPTION:
         selectRegionHandler(chartInstanceRef.current);
@@ -855,7 +872,7 @@ let LineChart = (props, ref) => {
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
         <PopoverStatisticOptions
           callback={({ statisticOptionId }) =>
-            statisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current, statisticOptionId })
+            addStatisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current, statisticOptionId })
           }
         />
         ;
