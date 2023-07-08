@@ -540,16 +540,22 @@ export function exportToCSV(filename, rows) {
   exportFileToPc(csvFile, filename, "csv");
 }
 
-export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
-  const fileExt = "xlsx";
+export function createExcelWorkbookBuffer({ sheets }) {
   const workbook = utils.book_new();
 
-  dataRunsInfo.forEach((dataRunInfo) => {
-    const { sheetName, sheetRows } = dataRunInfo;
+  sheets.forEach((sheet) => {
+    const { sheetName, sheetRows } = sheet;
     const workSheet = utils.aoa_to_sheet(sheetRows);
     utils.book_append_sheet(workbook, workSheet, sheetName);
   });
+
   const excelBuffer = write(workbook, { bookType: "xlsx", type: "buffer" });
+  return excelBuffer;
+}
+
+export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
+  const fileExt = "xlsx";
+  const excelBuffer = createExcelWorkbookBuffer({ sheets: dataRunsInfo });
 
   if (f7.device.electron) {
     const option = {
@@ -690,4 +696,8 @@ export function parseSensorInfo(sensorInfo) {
   if (!sensorInfo) return DEFAULT_SENSOR_DATA;
   const [id, index] = sensorInfo.split("-");
   return { id: parseInt(id), index: parseInt(index) };
+}
+
+export function createInputIdCustomUnit({ unitId, index }) {
+  return `${unitId}_${index}`;
 }

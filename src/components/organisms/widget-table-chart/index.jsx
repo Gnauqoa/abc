@@ -78,33 +78,6 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
       const sensorIds = widget.sensors.map((sensor) => parseInt(sensor.id));
       const sensorValues = currentValues;
 
-      // Parameter for custom user unit
-      const isCustomUnit = ![FIRST_COLUMN_DEFAULT_OPT].includes(firstColumnOption.id);
-
-      // If the current first column is the custom unit, then we need to add the data
-      if (isCustomUnit) {
-        const unitId = firstColumnOption.id;
-        const datas = {};
-
-        const label = getUserInputValue({ tableId: tableId, inputRow: selectedRow });
-        if (Array.isArray(currentValues)) {
-          currentValues.forEach((currentValue, index) => {
-            const sensorId = parseInt(widget.sensors?.[index]?.id);
-            if (sensorId === DEFAULT_SENSOR_ID) return;
-
-            const currentValues = currentValue.values;
-            datas[sensorId] = currentValues;
-          });
-        }
-
-        console.log(selectedRow, transformedRows.length);
-        if (selectedRow === transformedRows.length) {
-          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, label });
-        } else {
-          DataManagerIST.addCustomUnitDatas({ sensorIds: sensorIds, unitId, datas: datas, label, index: selectedRow });
-        }
-      }
-
       if (selectedRow === transformedRows.length) {
         DataManagerIST.appendManualSample(sensorIds, sensorValues);
         curSelectedRow = transformedRows.length + 1;

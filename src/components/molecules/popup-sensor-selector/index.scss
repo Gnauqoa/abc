@@ -17,6 +17,9 @@
     width: calc(100% - 40px);
     margin-left: 20px;
     margin-right: 20px;
+
+    color: #007ff5;
+    font-weight: 500;
   }
 
   .left,
@@ -35,9 +38,9 @@
     }
   }
 
-  .selected .button {
-    color: #007ff5 !important;
-  }
+  // .selected .button {
+  //   color: #007ff5 !important;
+  // }
 }
 
 .sensor-select-device {

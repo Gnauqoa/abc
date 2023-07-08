@@ -55,7 +55,7 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
             iconAurora={`material:edit`}
             popupOpen=".add-user-unit-popup"
           ></Button>
-          <AddUserUnitPopup onSubmit={handleAddUserUnit} />
+          <AddUserUnitPopup onSubmit={handleAddUserUnit} unitId={firstColumnOption.id} />
         </div>
         <div className="__header-unit">
           {firstColumnTables.find((option) => option.id === firstColumnOption.id)?.unit}

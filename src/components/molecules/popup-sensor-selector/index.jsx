@@ -18,16 +18,24 @@ import UserTab from "./UserTab";
 export default function SensorSelector({
   disabled,
   selectedSensor,
+  selectedUnit,
   hideDisplayUnit,
   onChange = () => {},
   onSelectUserInit = () => {},
   style,
   definedSensors, // Array of int
+  defaultTab = SENSOR_SELECTOR_SENSOR_TAB,
 }) {
   const [selectedSensorState, setSelectedSensorState] = useState();
   const [sensorListForDisplay, setSensorListForDisplay] = useState([]);
   const [sensorSelectPopupOpened, setSensorSelectPopupOpened] = useState(false);
-  const [tab, setTab] = useState(SENSOR_SELECTOR_SENSOR_TAB);
+  const [tab, setTab] = useState(defaultTab);
+  const displayButton =
+    tab === SENSOR_SELECTOR_SENSOR_TAB
+      ? selectedSensor.id === DEFAULT_SENSOR_ID
+        ? "----- Chọn cảm biến -----"
+        : selectedSensorState
+      : selectedUnit;
 
   useEffect(() => {
     const sensorList = getSensorList();
@@ -120,7 +128,7 @@ export default function SensorSelector({
   return (
     <div className="sensor-selector " style={style}>
       <Button disabled={disabled} fill round onClick={handleOpenPopup}>
-        {selectedSensor.id === DEFAULT_SENSOR_ID ? "----- Chọn cảm biến -----" : selectedSensorState}
+        {displayButton}
       </Button>
       <Popup
         className="edl-popup"
@@ -130,12 +138,13 @@ export default function SensorSelector({
       >
         <Page>
           <Navbar className="sensor-select-title">
-            <NavLeft className={`${tab === SENSOR_SELECTOR_SENSOR_TAB ? "selected" : ""}`}>
+            {/* <NavLeft className={`${tab === SENSOR_SELECTOR_SENSOR_TAB ? "selected" : ""}`}>
               <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_SENSOR_TAB)}>Cảm biến</Button>
             </NavLeft>
             <NavRight className={`${tab === SENSOR_SELECTOR_USER_TAB ? "selected" : ""}`}>
               <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_USER_TAB)}>Người dùng nhập</Button>
-            </NavRight>
+            </NavRight> */}
+            {tab === SENSOR_SELECTOR_SENSOR_TAB ? "Cảm biến" : "Người dùng nhập"}
           </Navbar>
           {tab === SENSOR_SELECTOR_SENSOR_TAB ? (
             <SensorTab sensorListForDisplay={sensorListForDisplay} changeHandler={changeHandler}></SensorTab>
