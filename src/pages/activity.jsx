@@ -23,34 +23,36 @@ import {
   LAYOUT_BAR,
 } from "../js/constants";
 
-// Import Atom Components
-import dialog from "../components/molecules/dialog/dialog";
-
 // Import Molecules Components
 import SensorContainer from "../components/molecules/widget-sensor-container";
+import dialog from "../components/molecules/dialog/dialog";
+import useDeviceManager from "../components/molecules/popup-scan-devices";
 
 // Import Organisms Components
+import ActivityHeader from "../components/organisms/activity-page-header";
+import ActivityFooter from "../components/organisms/activity-page-footer";
 import LineChart from "../components/organisms/widget-line-chart";
 import NumberWidget from "../components/organisms/widget-number-chart";
 import TableWidget from "../components/organisms/widget-table-chart";
-import ActivityHeader from "../components/organisms/activity-page-header";
-import ActivityFooter from "../components/organisms/activity-page-footer";
-
-import { saveFile } from "../services/file-service";
-import storeService from "../services/store-service";
-import useDeviceManager from "../components/molecules/popup-scan-devices";
-import { useActivityContext } from "../context/ActivityContext";
-import { getPageName } from "../utils/core";
 import TextViewWidget from "../components/organisms/widget-text-view";
+import BarCharWidget from "../components/organisms/widget-bar-chart";
 import ScopeViewWidget from "../components/organisms/widget-scope-view";
 
+// Services
+import { saveFile } from "../services/file-service";
+import storeService from "../services/store-service";
 import DataManagerIST from "../services/data-manager";
-import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, defaultSensors } from "../services/sensor-service";
 import MicrophoneServicesIST from "../services/microphone-service";
+import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, defaultSensors } from "../services/sensor-service";
+
+// Context
+import { useActivityContext } from "../context/ActivityContext";
 import { useTableContext } from "../context/TableContext";
+
+// Utils
+import { getPageName } from "../utils/core";
 import { FIRST_COLUMN_DEFAULT_OPT, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 import { createChartDataAndParseXAxis, getChartDatas } from "../utils/widget-line-chart/commons";
-import BarCharWidget from "../components/organisms/widget-bar-chart";
 import { getBarChartDatas } from "../utils/widget-bar-chart/common";
 
 const recentFilesService = new storeService("recent-files");
@@ -88,7 +90,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       frequency: 1,
       dataRuns: [],
       customXAxis: [],
-      sensorSettings: [],
       sensors: defaultSensors,
       customSensors: [],
       allLabelNotes: [],
@@ -103,9 +104,10 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   const {
+    name,
+    setName,
     pages,
     setPages,
-    frequency,
     timerStopCollecting,
     setFrequency,
     isRunning,
@@ -121,13 +123,13 @@ export default ({ f7route, f7router, filePath, content }) => {
     isSelectSensor,
     isChangePage,
     setIsChangePage,
+    handleExportActivity,
+    handleClearLocalStorage,
   } = useActivityContext();
 
-  const { initTableContext } = useTableContext();
-  const { getFirstColumnOption } = useTableContext();
+  const { initTableContext, getFirstColumnOption } = useTableContext();
 
   // Belong to Activity
-  const [name, setName] = useState(activity.name);
   const [samplingMode, setSamplingMode] = useState(SAMPLING_AUTO);
   const [previousActivity, setPreviousActivity] = useState({});
 
@@ -160,7 +162,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       for (const rangeSelection of activity.rangeSelections) rangeSelectionStorage.save(rangeSelection);
     }
 
-    // Init states
+    // Init activity states
+    setName(activity.name);
     setPages(activity.pages);
     handleFrequencySelect(activity.frequency);
     setCurrentDataRunId(activity.pages[0].lastDataRunId);
@@ -208,51 +211,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     // MicrophoneServicesIST.init();
   };
 
-  const saveActivity = () => {
-    // Collecting data from dataRuns and export
-    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
-    const customXAxis = DataManagerIST.getCustomUnits();
-    const updatedPage = pages.map((page, index) => {
-      if (index === currentPageIndex) {
-        return { ...page };
-      } else {
-        return page;
-      }
-    });
-
-    // Get modify sensors and custom sensors
-    const { sensors, customSensors } = SensorServicesIST.exportSensors();
-
-    // Get all the labels, selection and statistic in line chart
-    const allLabelNotes = labelNotesStorage.all();
-    const allStatisticNotes = statisticNotesStorage.all();
-    const rangeSelections = rangeSelectionStorage.all();
-
-    // Clear all Previous Tables
-    // userInputsStorage.deleteAll();
-    statisticNotesStorage.deleteAll();
-    labelNotesStorage.deleteAll();
-    rangeSelectionStorage.deleteAll();
-
-    const updatedActivity = {
-      ...activity,
-      name,
-      pages: updatedPage,
-      dataRuns: updatedDataRuns,
-      customXAxis: customXAxis,
-      frequency: frequency,
-      sensors: sensors,
-      customSensors: customSensors,
-      allLabelNotes: allLabelNotes,
-      allStatisticNotes: allStatisticNotes,
-      rangeSelections: rangeSelections,
-    };
-
-    return updatedActivity;
-  };
-
   async function handleActivitySave() {
-    const updatedActivity = saveActivity();
+    const updatedActivity = handleExportActivity();
     const isEqual = _.isEqual(updatedActivity, previousActivity);
     if (isEqual) return;
 
@@ -278,10 +238,12 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   async function handleActivityBack() {
-    const updatedActivity = saveActivity();
+    const updatedActivity = handleExportActivity();
     const isEqual = _.isEqual(updatedActivity, previousActivity);
+
     if (isEqual) {
       f7router.navigate("/");
+      handleClearLocalStorage();
     } else {
       dialog.prompt(
         "Bạn có muốn lưu lại những thay đổi này không?",
@@ -292,9 +254,11 @@ export default ({ f7route, f7router, filePath, content }) => {
           const savedFilePath = await saveFile(filePath, JSON.stringify(updatedActivityWithName));
           savedFilePath && recentFilesService.save({ id: savedFilePath, activityName: name });
           setPreviousActivity(_.cloneDeep(updatedActivityWithName));
+          handleClearLocalStorage();
         },
         () => {
           onBackHandler();
+          handleClearLocalStorage();
           f7router.navigate("/");
         },
         name

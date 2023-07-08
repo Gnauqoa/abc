@@ -13,6 +13,13 @@
       display: flex;
       line-height: 100px;
       font-size: larger;
+
+      padding-right: 20px;
+
+      .right .button {
+        width: 150px;
+        text-transform: none;
+      }
     }
   }
 

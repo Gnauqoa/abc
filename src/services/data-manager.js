@@ -595,6 +595,11 @@ export class DataManager {
    * @returns {void}
    */
   exportDataRunExcel() {
+    const dataRunsInfo = this.createDataRunInfos();
+    exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
+  }
+
+  createDataRunInfos() {
     const dataRunsInfo = Object.entries(this.dataRuns).map(([id, { interval, name }]) => ({
       id,
       interval,
@@ -684,7 +689,7 @@ export class DataManager {
       dataRunInfo.sheetRows = sheetRows;
     });
 
-    exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
+    return dataRunsInfo;
   }
 
   // -------------------------------- Read sensor data -------------------------------- //

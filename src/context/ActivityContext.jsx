@@ -1,8 +1,17 @@
 import React, { useContext, useState, useRef } from "react";
-import { DEFAULT_SENSOR_DATA, LAYOUT_NUMBER, TIMER_NO_STOP } from "../js/constants";
+import {
+  DEFAULT_SENSOR_DATA,
+  LAYOUT_NUMBER,
+  LINE_CHART_LABEL_NOTE_TABLE,
+  LINE_CHART_RANGE_SELECTION_TABLE,
+  LINE_CHART_STATISTIC_NOTE_TABLE,
+  TIMER_NO_STOP,
+} from "../js/constants";
 
 import DataManagerIST from "../services/data-manager";
+import SensorServicesIST from "../services/sensor-service";
 import { X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
+import storeService from "../services/store-service";
 
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
 const defaultXAxises = [X_AXIS_TIME_UNIT];
@@ -16,7 +25,13 @@ const defaultPages = [
   },
 ];
 
+const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
+const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
+const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
+
 export const ActivityContext = React.createContext({
+  name: [],
+  setName: () => {},
   pages: [],
   setPages: () => {},
   frequency: null,
@@ -45,9 +60,12 @@ export const ActivityContext = React.createContext({
   handleXAxisChange: () => {},
   isChangePage: false,
   setIsChangePage: () => {},
+  handleExportActivity: () => {},
+  handleClearLocalStorage: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
+  const [name, setName] = useState("");
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
   const [timerStopCollecting, setTimerStopCollecting] = useState(TIMER_NO_STOP);
@@ -260,6 +278,49 @@ export const ActivityContextProvider = ({ children }) => {
     setPages(updatePages);
   }
 
+  function handleExportActivity() {
+    // Collecting data from dataRuns and export
+    const updatedDataRuns = DataManagerIST.exportActivityDataRun();
+    const customXAxis = DataManagerIST.getCustomUnits();
+    const updatedPage = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page };
+      } else {
+        return page;
+      }
+    });
+
+    // Get modify sensors and custom sensors
+    const { sensors, customSensors } = SensorServicesIST.exportSensors();
+
+    // Get all the labels, selection and statistic in line chart
+    const allLabelNotes = labelNotesStorage.all();
+    const allStatisticNotes = statisticNotesStorage.all();
+    const rangeSelections = rangeSelectionStorage.all();
+
+    const activity = {
+      name,
+      pages: updatedPage,
+      frequency: frequency,
+      dataRuns: updatedDataRuns,
+      customXAxis: customXAxis,
+      sensors: sensors,
+      customSensors: customSensors,
+      allLabelNotes: allLabelNotes,
+      allStatisticNotes: allStatisticNotes,
+      rangeSelections: rangeSelections,
+    };
+
+    return activity;
+  }
+
+  function handleClearLocalStorage() {
+    // Clear all Previous Tables userInputsStorage.deleteAll();
+    statisticNotesStorage.deleteAll();
+    labelNotesStorage.deleteAll();
+    rangeSelectionStorage.deleteAll();
+  }
+
   const initContext = () => {
     setPages(defaultPages);
     setFrequency(1);
@@ -278,6 +339,8 @@ export const ActivityContextProvider = ({ children }) => {
   return (
     <ActivityContext.Provider
       value={{
+        name,
+        setName,
         pages,
         setPages,
         frequency,
@@ -307,6 +370,8 @@ export const ActivityContextProvider = ({ children }) => {
         handleXAxisChange,
         isChangePage,
         setIsChangePage,
+        handleExportActivity,
+        handleClearLocalStorage,
       }}
     >
       {children}
