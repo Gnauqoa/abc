@@ -285,7 +285,7 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
     setIsShowSummarizedData(!isShowSummarizedData);
   };
 
-  const onChooseOptionHandler = (optionId) => {
+  const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
         handleAddExtraCollectingSensor(widget.id);

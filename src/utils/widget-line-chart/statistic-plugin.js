@@ -40,7 +40,7 @@ const calculateLinearRegression = ({ dataRunData }) => {
   return { slope: round(slope, 2), intercept: round(intercept, 2) };
 };
 
-const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis }) => {
+const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis, statisticOptionId }) => {
   const result = [];
   for (const dataset of datasets) {
     let datasetData = dataset.data;
@@ -110,6 +110,7 @@ export const addStatisticNote = ({
   pageId,
   hiddenDataLineIds,
   isDefaultXAxis,
+  statisticOptionId,
 }) => {
   if (!isShowStatistic) {
     // Get Range Selection and extract bounding box
@@ -141,7 +142,7 @@ export const addStatisticNote = ({
         return false;
       }
 
-      const statisticsResult = getDataStatistic({ datasets, boxRange, isDefaultXAxis });
+      const statisticsResult = getDataStatistic({ datasets, boxRange, isDefaultXAxis, statisticOptionId });
       if (statisticsResult.length === 0) continue;
 
       for (const statisticResult of statisticsResult) {
