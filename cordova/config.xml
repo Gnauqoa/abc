@@ -24,6 +24,9 @@
     <allow-navigation href="*" />
 
     <platform name="android">
+      <config-file parent="/manifest" target="AndroidManifest.xml" xmlns:android="http://schemas.android.com/apk/res/android">
+        <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+      </config-file>
       <preference name="StatusBarOverlaysWebView" value="false" />
       <preference name="android-minSdkVersion" value="22" />
       <preference name="android-targetSdkVersion" value="33" />
