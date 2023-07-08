@@ -56,6 +56,7 @@ export const ActivityContext = React.createContext({
   handleAddExtraCollectingSensor: () => {},
   handleDeleteExtraCollectingSensor: () => {},
   handleSensorChange: () => {},
+  handleTextChange: () => {},
   handleXAxisChange: () => {},
   isChangePage: false,
   setIsChangePage: () => {},
@@ -239,6 +240,25 @@ export const ActivityContextProvider = ({ children }) => {
     setPages(updatePages);
   }
 
+  function handleTextChange({ widgetId, text }) {
+    const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
+      if (w.id !== widgetId) {
+        return w;
+      }
+
+      return { ...w, text };
+    });
+
+    const updatePages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+
+    setPages(updatePages);
+  }
+
   function handleXAxisChange({ xAxisId, option }) {
     const updatedXAxises = pages[currentPageIndex].xAxises.map((xAxis) => {
       if (xAxis.id !== xAxisId) {
@@ -346,6 +366,7 @@ export const ActivityContextProvider = ({ children }) => {
         handleAddExtraCollectingSensor,
         handleDeleteExtraCollectingSensor,
         handleSensorChange,
+        handleTextChange,
         handleXAxisChange,
         isChangePage,
         setIsChangePage,

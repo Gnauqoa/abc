@@ -701,3 +701,72 @@ export function parseSensorInfo(sensorInfo) {
 export function createInputIdCustomUnit({ unitId, index }) {
   return `${unitId}_${index}`;
 }
+
+export function shareFile(filename, blob) {
+  window.requestFileSystem(
+    LocalFileSystem.PERSISTENT,
+    0,
+    function (fs) {
+      fs.root.getFile(
+        filename,
+        { create: true, exclusive: false },
+        function (fileEntry) {
+          writeFile(fileEntry, blob);
+        },
+        function (error) {
+          dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+        }
+      );
+    },
+    function (error) {
+      dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+    }
+  );
+}
+
+function writeFile(fileEntry, blob) {
+  fileEntry.createWriter(function (fileWriter) {
+    fileWriter.onwriteend = function () {
+      readFile(fileEntry);
+    };
+
+    fileWriter.onerror = function (error) {
+      dialog.alert("Lỗi ghi dữ liệu", error, () => {});
+    };
+    fileWriter.write(blob);
+  });
+}
+
+function readFile(fileEntry) {
+  fileEntry.file(
+    function (file) {
+      var reader = new FileReader();
+
+      reader.onloadend = function () {
+        shareFileCordova(fileEntry.nativeURL);
+      };
+
+      reader.readAsText(file);
+    },
+    function (error) {
+      dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+    }
+  );
+}
+
+function shareFileCordova(fullPath) {
+  console.log(fullPath);
+  var options = {
+    files: [fullPath],
+    chooserTitle: "Chọn ứng dụng",
+  };
+  window.plugins.socialsharing.shareWithOptions(
+    options,
+    (result) => {
+      console.log(result);
+    },
+    (error) => {
+      dialog.alert("Lỗi chia sẻ", error, () => {});
+    }
+  );
+}

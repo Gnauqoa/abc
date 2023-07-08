@@ -5,7 +5,7 @@ import DataManagerIST from "../../../services/data-manager";
 import "./index.scss";
 import dataManagementIcon from "../../../img/activity/data-management.png";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createExcelWorkbookBuffer } from "../../../utils/core";
+import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
 
 const DataRunManagementPopup = () => {
   const dataRunManagementPopupRef = useRef();
@@ -32,9 +32,11 @@ const DataRunManagementPopup = () => {
 
   const handleShareDataRuns = () => {
     const dataRunInfo = DataManagerIST.createDataRunInfos();
-    console.log("dataRunInfo: ", dataRunInfo);
     const dataRunInfoBuffer = createExcelWorkbookBuffer({ sheets: dataRunInfo });
-    // TODO: share data run
+    const blob = new Blob([dataRunInfoBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+    shareFile("Dữ liệu thí ngiệm" + ".xlsx", blob);
   };
 
   const header =
