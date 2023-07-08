@@ -1,16 +1,17 @@
 import React, { useRef, useState } from "react";
-import { Navbar, Button, Page, Popup, Block } from "framework7-react";
+import { Navbar, Button, Page, Popup, Block, NavTitle, NavRight, NavLeft, f7 } from "framework7-react";
 import DataManagerIST from "../../../services/data-manager";
 
 import "./index.scss";
 import dataManagementIcon from "../../../img/activity/data-management.png";
 import { useActivityContext } from "../../../context/ActivityContext";
+import { createExcelWorkbookBuffer } from "../../../utils/core";
 
 const DataRunManagementPopup = () => {
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const [dataRunNameEdited, setDataRunNameEdited] = useState({});
-  const { currentDataRunId, handleDeleteDataRun } = useActivityContext();
+  const { handleDeleteDataRun } = useActivityContext();
 
   const onSaveDataRun = () => {
     for (const [dataRunId, newDataRunName] of Object.entries(dataRunNameEdited)) {
@@ -29,11 +30,37 @@ const DataRunManagementPopup = () => {
     setDataRunNameEdited((values) => ({ ...values, [dataRunId]: newName }));
   };
 
+  const handleShareDataRuns = () => {
+    const dataRunInfo = DataManagerIST.createDataRunInfos();
+    console.log("dataRunInfo: ", dataRunInfo);
+    const dataRunInfoBuffer = createExcelWorkbookBuffer({ sheets: dataRunInfo });
+    // TODO: share data run
+  };
+
+  const header =
+    f7.device.android || f7.device.ios ? (
+      <Navbar>
+        <NavLeft>
+          <NavTitle>Quản lý dữ liệu</NavTitle>
+        </NavLeft>
+        <NavRight>
+          <Button raised fill onClick={handleShareDataRuns}>
+            Chia sẻ dữ liệu
+          </Button>
+        </NavRight>
+      </Navbar>
+    ) : (
+      <Navbar>
+        <NavLeft>
+          <NavTitle>Quản lý dữ liệu</NavTitle>
+        </NavLeft>
+      </Navbar>
+    );
+
   return (
     <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef} onPopupClose={onSaveDataRun}>
       <Page className="data-run-management">
-        <Navbar title="Quản lý dữ liệu"></Navbar>
-
+        {header}
         <div className="data-run-management-content">
           <div className="data-run-management-header ">
             <div className="data-name-column">Dữ liệu</div>

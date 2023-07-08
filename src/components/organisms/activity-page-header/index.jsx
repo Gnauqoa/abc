@@ -6,6 +6,7 @@ import NewPagePopup from "../../molecules/popup-new-page";
 import DataRunManagementPopup from "../../molecules/popup-data-run-management";
 
 import DataManagerIST from "../../../services/data-manager";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 const ActivityHeader = ({
   name,
@@ -20,9 +21,13 @@ const ActivityHeader = ({
 }) => {
   // If platform is android, then default is fullscreen
   const [isFullScreen, setIsFullScreen] = useState(f7.device.android);
+  const { handleExportActivity } = useActivityContext();
+  let settings = [];
 
-  const handleExportExcel = () => {
-    DataManagerIST.exportDataRunExcel();
+  // Handle Functions
+  const handleShareProject = () => {
+    const activity = handleExportActivity();
+    // TODO: Share project
   };
 
   const handleFullScreen = (isFullScreen) => {
@@ -55,6 +60,19 @@ const ActivityHeader = ({
     }
   };
 
+  // Declare settings function for each device
+  if (f7.device.android || f7.device.ios) {
+    settings = [
+      <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
+      <ListItem link="#" popoverClose title="Chia sẻ toàn bộ thí nghiệm" onClick={handleShareProject} />,
+    ];
+  } else {
+    settings = [
+      <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
+      <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={() => DataManagerIST.exportDataRunExcel()} />,
+    ];
+  }
+
   return (
     <div>
       <Navbar>
@@ -86,10 +104,7 @@ const ActivityHeader = ({
 
       {/* Popup and Popover associate with Header */}
       <Popover className="setting-popover-menu">
-        <List>
-          <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />
-          <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={handleExportExcel} />
-        </List>
+        <List>{settings}</List>
       </Popover>
 
       <NewPagePopup handleNewPage={handleNewPage} />
