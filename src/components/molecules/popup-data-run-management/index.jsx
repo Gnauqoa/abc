@@ -11,7 +11,7 @@ const DataRunManagementPopup = () => {
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const [dataRunNameEdited, setDataRunNameEdited] = useState({});
-  const { handleDeleteDataRun } = useActivityContext();
+  const { name, handleDeleteDataRun } = useActivityContext();
 
   const onSaveDataRun = () => {
     for (const [dataRunId, newDataRunName] of Object.entries(dataRunNameEdited)) {
@@ -36,7 +36,9 @@ const DataRunManagementPopup = () => {
     const blob = new Blob([dataRunInfoBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
-    shareFile("Dữ liệu thí ngiệm" + ".xlsx", blob);
+
+    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    shareFile(activityName + ".xlsx", blob);
   };
 
   const header =

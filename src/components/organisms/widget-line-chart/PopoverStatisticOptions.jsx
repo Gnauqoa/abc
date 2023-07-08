@@ -7,7 +7,7 @@ import { STATISTIC_LINEAR } from "../../../utils/widget-line-chart/commons";
 const PopoverStatisticOptions = ({ callback }) => {
   return (
     <Popover className="popover-statistic-options">
-      <Navbar title="Chọn đường cong mong muốn"></Navbar>
+      <Navbar title="Chọn hàm tính toán"></Navbar>
       <List strongIos outlineIos dividersIos>
         <ListItem
           link="#"

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Navbar, NavLeft, NavRight, Popover, List, ListItem, f7 } from "framework7-react";
+import { Navbar, NavLeft, NavRight, Popover, List, ListItem, f7, AccordionContent } from "framework7-react";
 import BackButton from "../../atoms/back-button";
 import RoundButton from "../../atoms/round-button";
 import NewPagePopup from "../../molecules/popup-new-page";
 import DataRunManagementPopup from "../../molecules/popup-data-run-management";
-import { shareFile } from "../../../utils/core";
+import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
 
 import DataManagerIST from "../../../services/data-manager";
 import { useActivityContext } from "../../../context/ActivityContext";
@@ -31,7 +31,19 @@ const ActivityHeader = ({
     const blob = new Blob([JSON.stringify(activity, null, 2)], {
       type: "application/json",
     });
+
     shareFile((activity.name || "Hoạt động thí ngiệm") + ".edl", blob);
+  };
+
+  const handleShareDataRuns = () => {
+    const dataRunInfo = DataManagerIST.createDataRunInfos();
+    const dataRunInfoBuffer = createExcelWorkbookBuffer({ sheets: dataRunInfo });
+    const blob = new Blob([dataRunInfoBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+    });
+
+    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    shareFile(activityName + ".xlsx", blob);
   };
 
   const handleFullScreen = (isFullScreen) => {
@@ -68,7 +80,27 @@ const ActivityHeader = ({
   if (f7.device.android || f7.device.ios) {
     settings = [
       <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
-      <ListItem link="#" popoverClose title="Chia sẻ toàn bộ thí nghiệm" onClick={handleShareProject} />,
+      // <ListItem link="#" popoverClose title="Chia sẻ" >
+      <ListItem accordionItem title="Chia sẻ">
+        <AccordionContent>
+          <List>
+            <ListItem
+              key="activity-header-share-project"
+              popupClose
+              title="Chia sẻ thí nghiệm"
+              onClick={handleShareProject}
+              style={{ paddingLeft: "20px" }}
+            />
+            <ListItem
+              key="activity-header-share-data-run"
+              popupClose
+              title="Chia sẻ dữ liệu"
+              style={{ paddingLeft: "20px" }}
+              onClick={handleShareDataRuns}
+            />
+          </List>
+        </AccordionContent>
+      </ListItem>,
     ];
   } else {
     settings = [
