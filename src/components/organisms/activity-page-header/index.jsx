@@ -80,27 +80,8 @@ const ActivityHeader = ({
   if (f7.device.android || f7.device.ios) {
     settings = [
       <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
-      // <ListItem link="#" popoverClose title="Chia sẻ" >
-      <ListItem accordionItem title="Chia sẻ">
-        <AccordionContent>
-          <List>
-            <ListItem
-              key="activity-header-share-project"
-              popupClose
-              title="Chia sẻ thí nghiệm"
-              onClick={handleShareProject}
-              style={{ paddingLeft: "20px" }}
-            />
-            <ListItem
-              key="activity-header-share-data-run"
-              popupClose
-              title="Chia sẻ dữ liệu"
-              style={{ paddingLeft: "20px" }}
-              onClick={handleShareDataRuns}
-            />
-          </List>
-        </AccordionContent>
-      </ListItem>,
+      <ListItem link="#" popoverClose title="Chia sẻ thí nghiệm" onClick={handleShareProject} />,
+      <ListItem link="#" popoverClose title="Chia sẻ dữ liệu" onClick={handleShareDataRuns} />,
     ];
   } else {
     settings = [
