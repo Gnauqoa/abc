@@ -600,6 +600,17 @@ export class DataManager {
   }
 
   createDataRunInfos() {
+    const defaultDataRunInfo = {
+      id: 0,
+      interval: 1000,
+      maxTimeStamp: 0,
+      headers: [],
+      sheetRows: [],
+      sheetName: "Sheet 1",
+      recordedSensors: new Set([TIME_STAMP_ID]),
+      invertedSensorsInfo: {},
+    };
+
     const dataRunsInfo = Object.entries(this.dataRuns).map(([id, { interval, name }]) => ({
       id,
       interval,
@@ -610,6 +621,10 @@ export class DataManager {
       recordedSensors: new Set([TIME_STAMP_ID]),
       invertedSensorsInfo: {},
     }));
+
+    if (dataRunsInfo.length === 0) {
+      return [defaultDataRunInfo];
+    }
 
     for (const dataRunInfo of dataRunsInfo) {
       let currentIndex = 0;
