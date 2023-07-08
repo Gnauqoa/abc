@@ -76,6 +76,8 @@ import {
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createSensorInfo } from "../../../utils/core";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { f7 } from "framework7-react";
+import PopoverStatisticOptions from "./PopoverStatisticOptions";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -696,7 +698,7 @@ let LineChart = (props, ref) => {
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
-  const statisticHandler = ({ sensors, chartInstance }) => {
+  const statisticHandler = ({ sensors, chartInstance, statisticOptionId }) => {
     if (_.isEqual(sensors, DEFAULT_SENSOR_DATA)) return;
     let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(xAxis?.id);
     const result = addStatisticNote({
@@ -706,6 +708,7 @@ let LineChart = (props, ref) => {
       pageId,
       hiddenDataLineIds,
       isDefaultXAxis,
+      statisticOptionId,
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
@@ -786,7 +789,7 @@ let LineChart = (props, ref) => {
   };
 
   //========================= OPTIONS FUNCTIONS =========================
-  const onChooseOptionHandler = (optionId) => {
+  const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
       case SCALE_FIT_OPTION:
         scaleToFixHandler(chartInstanceRef.current, axisRef, xAxis);
@@ -798,7 +801,7 @@ let LineChart = (props, ref) => {
         interpolateHandler(chartInstanceRef.current, hiddenDataLineIds);
         break;
       case STATISTIC_OPTION:
-        statisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current });
+        f7.popover.open(".popover-statistic-options", `#${optionId}`);
         break;
       case SELECTION_OPTION:
         selectRegionHandler(chartInstanceRef.current);
@@ -850,6 +853,12 @@ let LineChart = (props, ref) => {
 
       <div className="expandable-options">
         <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
+        <PopoverStatisticOptions
+          callback={({ statisticOptionId }) =>
+            statisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current, statisticOptionId })
+          }
+        />
+        ;
         <div className="sensor-selector-wrapper">
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
@@ -858,7 +867,7 @@ let LineChart = (props, ref) => {
               onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
               onSelectUserInit={onSelectUserUnit}
               defaultTab={SENSOR_SELECTOR_USER_TAB}
-            ></SensorSelector>
+            />
           </div>
         </div>
       </div>

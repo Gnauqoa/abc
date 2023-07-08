@@ -12,9 +12,8 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
     setExpanded(!expanded);
   };
 
-  const onOptionClickedHandler = (event) => {
-    const optionId = parseInt(event.currentTarget.id);
-    onChooseOption(optionId);
+  const onOptionClickedHandler = ({ optionId }) => {
+    onChooseOption({ optionId });
   };
 
   return (
@@ -30,9 +29,9 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
             return (
               <div
                 key={option.id}
-                className={`expand-button ${option.selected && "selected"}`}
                 id={option.id}
-                onClick={onOptionClickedHandler}
+                className={`expand-button ${option.selected && "selected"}`}
+                onClick={() => onOptionClickedHandler({ optionId: option.id })}
               >
                 <img
                   src={option.selected ? option.selectedIcon : option.icon}

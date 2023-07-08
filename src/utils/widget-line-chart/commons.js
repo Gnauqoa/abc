@@ -19,17 +19,21 @@ import SensorServicesIST from "../../services/sensor-service";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
 import { createSensorInfo } from "../core";
 import { createHiddenDataLineId } from "./legend-plugin";
+import { LAYOUT_CHART } from "../../js/constants";
 
 // ============== DECLARE CONSTANTS ==============
 // OPTIONS
-export const SCALE_FIT_OPTION = 0;
-export const NOTE_OPTION = 1;
-export const INTERPOLATE_OPTION = 2;
-export const STATISTIC_OPTION = 3;
-export const SELECTION_OPTION = 4;
-export const SHOW_OFF_DATA_POINT_MARKER = 5;
-export const ADD_COLUMN_OPTION = 6;
-export const DELETE_COLUMN_OPTION = 7;
+export const SCALE_FIT_OPTION = `${LAYOUT_CHART}-expandable-options-0`;
+export const NOTE_OPTION = `${LAYOUT_CHART}-expandable-options-1`;
+export const INTERPOLATE_OPTION = `${LAYOUT_CHART}-expandable-options-2`;
+export const STATISTIC_OPTION = `${LAYOUT_CHART}-expandable-options-3`;
+export const SELECTION_OPTION = `${LAYOUT_CHART}-expandable-options-4`;
+export const SHOW_OFF_DATA_POINT_MARKER = `${LAYOUT_CHART}-expandable-options-5`;
+export const ADD_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-6`;
+export const DELETE_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-7`;
+
+// Statistic Options
+export const STATISTIC_LINEAR = `${LAYOUT_CHART}-statistic-option-0`;
 
 export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 

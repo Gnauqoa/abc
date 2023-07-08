@@ -12,9 +12,9 @@ export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";
 // export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
-export const ADD_COLUMN_OPTION = 0;
-export const DELETE_COLUMN_OPTION = 1;
-export const SUMMARIZE_OPTION = 2;
+export const ADD_COLUMN_OPTION = `${LAYOUT_TABLE}-expandable-options-0`;
+export const DELETE_COLUMN_OPTION = `${LAYOUT_TABLE}-expandable-options-1`;
+export const SUMMARIZE_OPTION = `${LAYOUT_TABLE}-expandable-options-2`;
 
 export const expandableOptions = [
   {
