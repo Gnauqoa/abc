@@ -27,7 +27,9 @@
     "cordova-plugin-keyboard": "^1.2.0",
     "cordova-plugin-splashscreen": "^6.0.2",
     "cordova-plugin-statusbar": "^3.0.0",
-    "electron-rebuild": "^3.2.9"
+    "cordova-plugin-x-socialsharing": "^6.0.4",
+    "electron-rebuild": "^3.2.9",
+    "es6-promise-plugin": "^4.2.2"
   },
   "dependencies": {
     "@serialport/list": "^10.5.0",
@@ -46,7 +48,8 @@
       },
       "cordova-plugin-file": {},
       "cordova-plugin-fullscreen": {},
-      "cordova-plugin-audioinput": {}
+      "cordova-plugin-audioinput": {},
+      "cordova-plugin-x-socialsharing": {}
     },
     "platforms": [
       "electron",

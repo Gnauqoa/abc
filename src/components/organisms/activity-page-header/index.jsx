@@ -4,6 +4,7 @@ import BackButton from "../../atoms/back-button";
 import RoundButton from "../../atoms/round-button";
 import NewPagePopup from "../../molecules/popup-new-page";
 import DataRunManagementPopup from "../../molecules/popup-data-run-management";
+import { shareFile } from "../../../utils/core";
 
 import DataManagerIST from "../../../services/data-manager";
 import { useActivityContext } from "../../../context/ActivityContext";
@@ -27,7 +28,10 @@ const ActivityHeader = ({
   // Handle Functions
   const handleShareProject = () => {
     const activity = handleExportActivity();
-    // TODO: Share project
+    const blob = new Blob([JSON.stringify(activity, null, 2)], {
+      type: "application/json",
+    });
+    shareFile((activity.name || "Hoạt động thí ngiệm") + ".edl", blob);
   };
 
   const handleFullScreen = (isFullScreen) => {

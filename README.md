@@ -29,15 +29,18 @@ npm install
 ## Build Android apk 
 * Install JDK 11 https://drive.google.com/file/d/1mRpvL9SIM9LQhmEdvOR8zzo4FDJ0q_Kv/view?usp=share_link
 * Install Android Studio https://developer.android.com/studio
-* Install Cordova: `npm install cordova -g`
-* Set ANDROID_SDK_ROOT (path can be found from Android Studio): `setx ANDROID_SDK_ROOT "C:\Users\your-username\AppData\Local\Android\Sdk"`
+* Install Cordova:  
+`npm install cordova -g`
+* Set ANDROID_SDK_ROOT (path can be found from Android Studio):  
+`setx ANDROID_SDK_ROOT "C:\Users\your-username\AppData\Local\Android\Sdk"`
 * Download Graddle at https://gradle.org/next-steps/?version=8.1.1&format=bin and extract and set path to the it's bin folder
-* Remove and add Android platform:
-  `cd cordova`
-  `cordova platform remove android`
-  `cordova platform add android`
+* Remove and add Android platform:  
+  `cd cordova`  
+  `cordova platform remove android`  
+  `cordova platform add android@10.1.2`  
 * Run the app with usb cable: `npm run cordova-android`
-* Build Android apk: `npm run build-cordova-android`
+* Build Android apk:  
+`npm run build-cordova-android`
 * Use Android studio to open existing project at ./cordova/platform/android
 
 ## PWA
@@ -57,7 +60,7 @@ There is also cordova Electron platform installed. To learn more about it and El
 
 App requires serialport and its related npm packages to parse usb serial data so we need to install them in cordova/platforms/electron/www/ to build and run successfully, or we will meet error "Module not found when app starts". Run following commands to install:
 
-`cd cordova/platforms/electron/www/`
+`cd cordova/platforms/electron/www/`  
 `npm install -s serialport @serialport/list @serialport/parser-readline @serialport/parser-delimiter`
 
 ## Framework7 CLI Options
