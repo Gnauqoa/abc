@@ -1,37 +1,41 @@
 .text-view-widget {
   height: 100%;
-  margin: 10px;
   display: flex;
   flex-direction: column;
-  // justify-content: space-around;
-
+  position: relative;
   .toggle-button {
-    margin: 5px;
-    height: 10%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    a {
-      width: 100px;
-      text-transform: none;
-    }
-  }
-
-  .text-view-view-mode {
-    body {
-      overflow: scroll;
-      img {
-        max-width: 100%;
+    .button--round {
+      height: 32px;
+      width: 32px;
+      position: absolute;
+      right: 0;
+      top: 5px;
+      i {
+        font-size: 24px;
       }
     }
   }
 
-  .text-view-view-mode,
-  .text-editor {
-    width: 100%;
-    height: 90%;
-    margin: 0px;
+  .quill {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+    .ql-container {
+      height: calc(100% - 64px);
+      border: none !important;
+    }
+  }
+
+  .text-view-view-mode {
+    height: 100%;
+    margin: 10px;
+    body {
+      overflow-y: scroll;
+      height: calc(100% - 20px);
+      img {
+        max-width: 100%;
+      }
+    }
   }
 }
 
