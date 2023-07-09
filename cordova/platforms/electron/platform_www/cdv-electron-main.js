@@ -320,6 +320,7 @@ async function listSerialPorts() {
                 Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
                 0xBB - stop byte (already cut off by serial delimiter parser)
               */
+              
 
               if (data[0] === 0xAA) { // sensor data
                 var sensorId = data[1];
@@ -362,8 +363,13 @@ async function listSerialPorts() {
                 portsList[port.path].lastDdata = dataArray;
   
                 mainWindow.webContents.send("device-data", dataArray);
-              } else if (data.slice(0, 3) === "$$$" && data.slice(-3) === "###") { // command DTO
-                mainWindow.webContents.send("command-dto", data.slice(3, -3).split(","));
+              } else {
+                // parse command DTO
+                const startIndex = data.indexOf("$$$");
+                const endIndex = data.indexOf("###");
+                if (startIndex >= 0 && endIndex > startIndex + 3) {
+                  mainWindow.webContents.send("command-dto", new TextDecoder("utf-8").decode(data.slice(startIndex + 3, endIndex)).split(","));
+                }
               }
             });
 

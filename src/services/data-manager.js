@@ -980,7 +980,7 @@ export class DataManager {
 
   callbackCommandDTO(data) {
     try {
-      console.error("callbackCommandDTO", data);
+      console.log("callbackCommandDTO", data);
       const evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
       document.dispatchEvent(evt);
     } catch (e) {
