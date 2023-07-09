@@ -46,6 +46,7 @@
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-quill": "^2.0.0",
     "skeleton-elements": "^4.0.1",
     "store": "^2.0.12",
     "swiper": "^8.4.7",
