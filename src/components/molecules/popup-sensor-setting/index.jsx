@@ -11,7 +11,7 @@ import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
-import { MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
+import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import { saveFile } from "../../../services/file-service";
 import { getCurrentTime } from "../../../utils/core";
 
@@ -99,10 +99,13 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         let cmdRemoteLogging = "";
         if (loggingMode === FLASH) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
-        } else if (loggingMode === MQTT)
+        } else if (loggingMode === MQTT) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},${channel},{${topics.join(
             ";"
           )}}###`;
+        } else if (loggingMode === OFF) {
+          cmdRemoteLogging = "$$$log,set,0,0";
+        }
 
         DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
         break;

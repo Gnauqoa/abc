@@ -65,6 +65,10 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   };
 
   const validateSettingParams = (setting) => {
+    if (setting.loggingMode === OFF) {
+      return true;
+    }
+
     if (setting.duration === "" || isNaN(setting.duration)) {
       f7.dialog.alert("Tổng thời gian không hợp lệ");
       return false;
@@ -327,13 +331,11 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           </CustomDropdownInput>
         )}
       </List>
-      {formSetting.loggingMode !== OFF && (
-        <div className="buttons">
-          <Button className="save-button" onClick={onSubmitHandler}>
-            Lưu
-          </Button>
-        </div>
-      )}
+      <div className="buttons">
+        <Button className="save-button" onClick={onSubmitHandler}>
+          Lưu
+        </Button>
+      </div>
     </>
   );
 };
