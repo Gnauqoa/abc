@@ -594,9 +594,9 @@ export class DataManager {
    * @memberof ClassName
    * @returns {void}
    */
-  exportDataRunExcel() {
+  exportDataRunExcel({ fileName }) {
     const dataRunsInfo = this.createDataRunInfos();
-    exportDataRunsToExcel(null, "ReportDataRun", dataRunsInfo);
+    exportDataRunsToExcel({ filePath: null, fileName: fileName, dataRunsInfo: dataRunsInfo });
   }
 
   createDataRunInfos() {

@@ -46,6 +46,11 @@ const ActivityHeader = ({
     shareFile(activityName + ".xlsx", blob);
   };
 
+  const handleExportDataRuns = () => {
+    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    DataManagerIST.exportDataRunExcel({ fileName: activityName });
+  };
+
   const handleFullScreen = (isFullScreen) => {
     try {
       if (f7.device.electron) {
@@ -79,14 +84,44 @@ const ActivityHeader = ({
   // Declare settings function for each device
   if (f7.device.android || f7.device.ios) {
     settings = [
-      <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
-      <ListItem link="#" popoverClose title="Chia sẻ thí nghiệm" onClick={handleShareProject} />,
-      <ListItem link="#" popoverClose title="Chia sẻ dữ liệu" onClick={handleShareDataRuns} />,
+      <ListItem
+        key="activity-header-data-run-management"
+        link="#"
+        popupOpen=".data-run-management-popup"
+        popoverClose
+        title="Quản lý dữ liệu"
+      />,
+      <ListItem
+        key="activity-header-share-project"
+        link="#"
+        popoverClose
+        title="Chia sẻ thí nghiệm"
+        onClick={handleShareProject}
+      />,
+      <ListItem
+        key="activity-header-share-data-run"
+        link="#"
+        popoverClose
+        title="Chia sẻ dữ liệu"
+        onClick={handleShareDataRuns}
+      />,
     ];
   } else {
     settings = [
-      <ListItem link="#" popupOpen=".data-run-management-popup" popoverClose title="Quản lý dữ liệu" />,
-      <ListItem link="#" popoverClose title="Xuất ra Excel" onClick={() => DataManagerIST.exportDataRunExcel()} />,
+      <ListItem
+        key="activity-header-data-run-management"
+        link="#"
+        popupOpen=".data-run-management-popup"
+        popoverClose
+        title="Quản lý dữ liệu"
+      />,
+      <ListItem
+        key="activity-header-export-excel"
+        link="#"
+        popoverClose
+        title="Xuất ra Excel"
+        onClick={handleExportDataRuns}
+      />,
     ];
   }
 

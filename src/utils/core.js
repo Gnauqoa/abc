@@ -553,7 +553,7 @@ export function createExcelWorkbookBuffer({ sheets }) {
   return excelBuffer;
 }
 
-export async function exportDataRunsToExcel(filePath, fileName, dataRunsInfo) {
+export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }) {
   const fileExt = "xlsx";
   const excelBuffer = createExcelWorkbookBuffer({ sheets: dataRunsInfo });
 
