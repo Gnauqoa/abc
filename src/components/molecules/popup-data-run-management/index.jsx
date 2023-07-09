@@ -41,30 +41,14 @@ const DataRunManagementPopup = () => {
     shareFile(activityName + ".xlsx", blob);
   };
 
-  const header =
-    f7.device.android || f7.device.ios ? (
-      <Navbar>
-        <NavLeft>
-          <NavTitle>Quản lý dữ liệu</NavTitle>
-        </NavLeft>
-        <NavRight>
-          <Button raised fill onClick={handleShareDataRuns}>
-            Chia sẻ dữ liệu
-          </Button>
-        </NavRight>
-      </Navbar>
-    ) : (
-      <Navbar>
-        <NavLeft>
-          <NavTitle>Quản lý dữ liệu</NavTitle>
-        </NavLeft>
-      </Navbar>
-    );
-
   return (
     <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef} onPopupClose={onSaveDataRun}>
       <Page className="data-run-management">
-        {header}
+        <Navbar>
+          <NavLeft>
+            <NavTitle>Quản lý dữ liệu</NavTitle>
+          </NavLeft>
+        </Navbar>
         <div className="data-run-management-content">
           <div className="data-run-management-header ">
             <div className="data-name-column">Dữ liệu</div>
@@ -87,14 +71,6 @@ const DataRunManagementPopup = () => {
                   <td className="detail-column">
                     <span className="timestamp">{item.createdAt}</span>
                     <div className="list-buttons">
-                      {/* <Button
-                        iconIos={"material:edit"}
-                        iconMd={"material:edit"}
-                        iconAurora={"material:edit"}
-                        iconSize={35}
-                        iconColor="gray"
-                        onClick={() => onSaveDataRun(item.id)}
-                      ></Button> */}
                       <Button
                         iconIos={"material:delete"}
                         iconMd={"material:delete"}
@@ -110,6 +86,13 @@ const DataRunManagementPopup = () => {
             </tbody>
           </table>
         </div>
+        {(f7.device.android || f7.device.ios) && (
+          <div className="share-button">
+            <Button raised fill onClick={handleShareDataRuns}>
+              Chia sẻ dữ liệu
+            </Button>
+          </div>
+        )}
       </Page>
     </Popup>
   );
