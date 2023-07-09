@@ -127,19 +127,19 @@ export const defaultSensors = [
   },
   {
     id: 11,
-    code: "inno-010",
+    code: "inno-011",
     name: "Cảm biến dòng điện",
     label: "Dòng điện",
     icon: amperageSensorIcon,
-    data: [{ id: "inno-010-amp", name: "Dòng điện", unit: "mA", min: -2500, max: 2500, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-011-amp", name: "Dòng điện", unit: "mA", min: 0, max: 5000, formatFloatingPoint: 1 }],
   },
   {
     id: 12,
-    code: "inno-011",
+    code: "inno-012",
     name: "Cảm biến điện áp",
     label: "Điện áp",
     icon: voltageSensorIcon,
-    data: [{ id: "inno-011-volt", name: "Điện áp", unit: "V", min: -20, max: 20, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-012-volt", name: "Điện áp", unit: "V", min: -10, max: 10, formatFloatingPoint: 1 }],
   },
   {
     id: 65,
@@ -348,7 +348,8 @@ export class SensorServices {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###");
 
     const data = await core.timeoutEventData("log,chk");
-    return Number(data[1]);
+
+    return Number(data[0][1]);
   }
 
   async remoteLoggingData(sensorId, size) {
