@@ -105,6 +105,14 @@ const ActivityHeader = ({
         title="Chia sẻ dữ liệu"
         onClick={handleShareDataRuns}
       />,
+      <ListItem
+        key="activity-header-resource"
+        external
+        back
+        href="https://www.google.com.vn/"
+        popoverClose
+        title="Tài nguyên"
+      />,
     ];
   } else {
     settings = [
@@ -121,6 +129,14 @@ const ActivityHeader = ({
         popoverClose
         title="Xuất ra Excel"
         onClick={handleExportDataRuns}
+      />,
+      <ListItem
+        key="activity-header-resource"
+        external
+        back
+        href="https://www.google.com.vn/"
+        popoverClose
+        title="Tài nguyên"
       />,
     ];
   }
