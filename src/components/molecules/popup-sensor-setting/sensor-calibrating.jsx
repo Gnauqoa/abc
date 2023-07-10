@@ -173,35 +173,42 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                 }
               ></ListInput>
 
-              <div className="display-setting-input-button label-color-black input-color-blue">
-                <div className="item-content item-input item-input-outline item-input-with-value">
-                  <div className="item-inner">
-                    <div className="item-title item-label">Giá trị đọc được</div>
-                    <div className="item-input-wrap">
-                      <input
-                        value={formField.calibrationValuesRead?.[calibrateType]}
-                        onChange={(e) =>
-                          formFieldHandler({
-                            value: e.target.value,
-                            type: "calibrationValuesRead",
-                            index: calibrateType,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="sampling-button">
-                      <Button
-                        key={`calibrationValuesRead_${calibrateType}`}
-                        id={`calibrationValuesRead_${calibrateType}`}
-                        className="sampling-button"
-                        onClick={onGetSampleHandler}
-                      >
-                        Đọc cảm biến
-                      </Button>
+              <ul>
+                <li className="display-setting-input-button label-color-black input-color-blue">
+                  <div className="item-content item-input item-input-outline item-input-with-value">
+                    <div className="item-inner">
+                      <div className="item-title item-label">Giá trị đọc được:</div>
+                      <div className="item-input-wrap">
+                        <input
+                          type="text"
+                          size="5"
+                          data-validate="true"
+                          data-validate-on-blur="true"
+                          class=""
+                          value={formField.calibrationValuesRead?.[calibrateType]}
+                          onChange={(e) =>
+                            formFieldHandler({
+                              value: e.target.value,
+                              type: "calibrationValuesRead",
+                              index: calibrateType,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="sampling-button">
+                        <Button
+                          key={`calibrationValuesRead_${calibrateType}`}
+                          id={`calibrationValuesRead_${calibrateType}`}
+                          className="sampling-button"
+                          onClick={onGetSampleHandler}
+                        >
+                          Đọc cảm biến
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                </li>
+              </ul>
             </List>
           );
         })}
