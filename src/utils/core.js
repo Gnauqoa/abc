@@ -245,7 +245,7 @@ export function exportToPc(data, filename) {
 export const FORMAT_MAP = {
   json: {
     EXT: ".json",
-    TYPE: "text/json",
+    TYPE: "application/json",
   },
   csv: {
     EXT: ".csv",
@@ -257,7 +257,7 @@ export const FORMAT_MAP = {
   },
   edl: {
     EXT: ".edl",
-    TYPE: "text/json",
+    TYPE: "application/json",
   },
   txt: {
     EXT: ".txt",
