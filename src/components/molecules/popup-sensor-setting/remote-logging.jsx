@@ -46,8 +46,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         mqttUri: "",
         mqttUsername: "",
         mqttPassword: "",
-        channel: "",
-        topics: ["v1"],
+        topics: [""],
         startMode: IMMEDIATELY,
       };
 
@@ -96,14 +95,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         f7.dialog.alert("Mật khẩu server không hợp lệ");
         return false;
       }
-      if (setting.channel === "") {
-        f7.dialog.alert("Kênh thông tin không hợp lệ");
-        return false;
-      }
-      if (setting.topics.length === 0) {
-        f7.dialog.alert("Thông tin gởi không hợp lệ");
-        return false;
-      }
     }
 
     return true;
@@ -125,8 +116,10 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
     f7.popover.close();
   };
 
-  const handleTopicsChange = (e) => {
-    let topics = Array.from(e.target.selectedOptions, (option) => option.value);
+  const handleTopicsChange = (e, index) => {
+    let topics = [...formSetting.topics];
+    topics[index] = e.target.value;
+
     setFormSetting({
       ...formSetting,
       topics,
@@ -138,7 +131,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
     if (validateSettingParams(formSetting)) {
       storeSettingService.save(formSetting);
 
-      storeSettingService.save({ ...formSetting, id: "default", loggingMode: OFF, topics: ["v1"] });
+      storeSettingService.save({ ...formSetting, id: "default", loggingMode: OFF, topics: [""] });
       onSaveHandler({ sensorId: sensorInfo.id, action: SET_LOG_SETTING, data: formSetting });
     }
   };
@@ -282,38 +275,27 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         )}
 
         {formSetting.loggingMode === MQTT && (
-          <ListItem
-            disabled={sensorInfo?.data?.length === 1}
-            title="Thông tin gởi:"
-            smartSelect
-            smartSelectParams={{ openIn: "popover" }}
-          >
-            <select onChange={handleTopicsChange} name="superhero" multiple defaultValue={["v1"]}>
-              {sensorInfo?.data?.map((unitInfo, index) => {
-                return (
-                  <option
-                    key={sensorInfo?.id + "|" + unitInfo.id}
-                    value={`v${index + 1}`}
-                  >{`${unitInfo.name} (${unitInfo.unit})`}</option>
-                );
-              })}
-            </select>
-          </ListItem>
+          <li>
+            <div className="item-content">Kênh thông tin:</div>
+          </li>
         )}
 
-        {formSetting.loggingMode === MQTT && (
-          <ListInput
-            className="display-setting-input label-color-black"
-            outline
-            size={5}
-            name="channel"
-            label="Kênh thông tin:"
-            type="text"
-            validateOnBlur
-            value={formSetting.channel}
-            onChange={formSettingHandler}
-          ></ListInput>
-        )}
+        {formSetting.loggingMode === MQTT &&
+          sensorInfo?.data?.map((unitInfo, index) => {
+            return (
+              <ListInput
+                className="__topics display-setting-input label-color-black"
+                outline
+                size={5}
+                key={sensorInfo?.id + "|" + unitInfo.id}
+                label={`● ${unitInfo.name} (${unitInfo.unit}):`}
+                type="text"
+                validateOnBlur
+                value={formSetting.topics[index]}
+                onChange={(e) => handleTopicsChange(e, index)}
+              ></ListInput>
+            );
+          })}
 
         {formSetting.loggingMode !== OFF && (
           <CustomDropdownInput

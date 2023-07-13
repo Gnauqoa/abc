@@ -21,7 +21,7 @@ const REMOTE_LOGGING_TAB = 3;
 const OTHER_SETTINGS_TAB = 4;
 
 const defaultTab = 1;
-const settingTabs = {
+const defaultSettingTabs = {
   [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
   [REMOTE_LOGGING_TAB]: "Remote logging",
@@ -31,22 +31,32 @@ const settingTabs = {
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
-  const [sensorInfo, setSensorInfo] = useState({});
+  const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
+  const settingTabs = getSettingTabs();
 
   useEffect(() => {
-    getSensors();
     setCurrentTab(defaultTab);
   }, [sensorId]);
 
-  const getSensors = () => {
-    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    sensorInfo !== null && setSensorInfo(sensorInfo);
-  };
+  function getSettingTabs() {
+    return Object.keys(defaultSettingTabs)
+      .filter((key) => {
+        if (
+          (Number(key) === REMOTE_LOGGING_TAB && sensorInfo.remote_logging === false) ||
+          (Number(key) === SENSOR_CALIBRATING_TAB && sensorInfo.support_calib === false)
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .reduce((cur, key) => {
+        return Object.assign(cur, { [key]: defaultSettingTabs[key] });
+      }, {});
+  }
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServicesIST.updateSensorSetting(sensorId, newSensorUnitInfo);
     onSaveSetting(sensorId, newSensorUnitInfo);
-    getSensors();
     onClosePopup();
   };
 
@@ -92,7 +102,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           mqttUri,
           mqttUsername,
           mqttPassword,
-          channel,
           topics,
           startMode,
         } = data;
@@ -100,7 +109,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         if (loggingMode === FLASH) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
         } else if (loggingMode === MQTT) {
-          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},${channel},{${topics.join(
+          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},{${topics.join(
             ";"
           )}}###`;
         } else if (loggingMode === OFF) {
