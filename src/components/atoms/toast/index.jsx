@@ -29,7 +29,7 @@ export default function useToast() {
   /**
    * Notify status of DTO command via Toast
    */
-  const notifyDTOCommand = async () => {
+  const notifyCmdDTO = async () => {
     try {
       const status = await timeoutEventData("CommandDTOStatus");
       if (status === "OK") {
@@ -42,5 +42,5 @@ export default function useToast() {
     }
   };
 
-  return { show, notifyDTOCommand };
+  return { show, notifyCmdDTO };
 }

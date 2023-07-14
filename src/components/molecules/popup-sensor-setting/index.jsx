@@ -67,7 +67,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     let strCalib = "$$$cal,set," + k + "," + offset + "###";
 
     DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
-    toast.notifyDTOCommand();
+    toast.notifyCmdDTO();
     onClosePopup();
   };
 
@@ -76,7 +76,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       const cmdZero = "$$$zer###";
 
       DeviceManagerIST.sendCmdDTO(sensorId, cmdZero);
-      toast.notifyDTOCommand();
+      toast.notifyCmdDTO();
     }
   };
 
@@ -121,7 +121,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         }
 
         DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
-        toast.notifyDTOCommand();
+        toast.notifyCmdDTO();
         break;
       }
     }
