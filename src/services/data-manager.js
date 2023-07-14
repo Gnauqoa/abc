@@ -985,7 +985,7 @@ export class DataManager {
       if (Array.isArray(data)) {
         evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
       } else if (["OK", "ERR"].includes(data)) {
-        evt = new CustomEvent("CommandDTOStatus", { detail: data });
+        evt = new CustomEvent("statusCmdDTO", { detail: data });
       }
       document.dispatchEvent(evt);
     } catch (e) {

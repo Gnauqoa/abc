@@ -31,7 +31,7 @@ export default function useToast() {
    */
   const notifyCmdDTO = async () => {
     try {
-      const status = await timeoutEventData("CommandDTOStatus");
+      const status = await timeoutEventData("statusCmdDTO");
       if (status === "OK") {
         show("Gởi lệnh thành công.", "success");
       } else {
