@@ -981,7 +981,12 @@ export class DataManager {
   callbackCommandDTO(data) {
     try {
       console.log("callbackCommandDTO", data);
-      const evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
+      let evt;
+      if (Array.isArray(data)) {
+        evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
+      } else if (["OK", "ERR"].includes(data)) {
+        evt = new CustomEvent("CommandDTOStatus", { detail: data });
+      }
       document.dispatchEvent(evt);
     } catch (e) {
       console.error(`callbackCommandDTO error: ${e.message}`);

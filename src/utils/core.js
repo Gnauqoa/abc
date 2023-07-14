@@ -648,7 +648,7 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, dataSize = 1, timeout = 1000) {
+export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
   return new Promise((resolve, reject) => {
     let timeoutHandler;
     let dataBuffer = [];
@@ -657,7 +657,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 1000) {
       if (dataBuffer.length === dataSize) {
         clearTimeout(timeoutHandler);
         document.removeEventListener(eventName, dataHandler);
-        resolve(dataBuffer);
+        resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
       }
     }
 

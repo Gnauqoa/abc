@@ -13,7 +13,6 @@ import {
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
-import * as core from "../utils/core";
 
 const CHECKING_CONNECTION_INTERVAL = 1000;
 const webBle = new WebBle();
