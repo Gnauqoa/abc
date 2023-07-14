@@ -14,6 +14,7 @@ import DeviceManagerIST from "../../../services/device-manager";
 import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import { saveFile } from "../../../services/file-service";
 import { getCurrentTime } from "../../../utils/core";
+import useToast from "../../atoms/toast";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -33,6 +34,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
   const settingTabs = getSettingTabs();
+  const toast = useToast();
 
   useEffect(() => {
     setCurrentTab(defaultTab);
@@ -65,6 +67,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     let strCalib = "$$$cal,set," + k + "," + offset + "###";
 
     DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
+    toast.notifyDTOCommand();
     onClosePopup();
   };
 
@@ -73,6 +76,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       const cmdZero = "$$$zer###";
 
       DeviceManagerIST.sendCmdDTO(sensorId, cmdZero);
+      toast.notifyDTOCommand();
     }
   };
 
@@ -117,6 +121,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         }
 
         DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
+        toast.notifyDTOCommand();
         break;
       }
     }

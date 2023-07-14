@@ -380,7 +380,7 @@ export class SensorServices {
 
     const data = await core.timeoutEventData("log,chk");
 
-    return Number(data[0][1]);
+    return Number(data[1]);
   }
 
   async remoteLoggingData(sensorId, size) {
