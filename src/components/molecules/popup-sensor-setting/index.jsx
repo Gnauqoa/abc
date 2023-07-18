@@ -13,8 +13,9 @@ import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
 import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import { saveFile } from "../../../services/file-service";
-import { getCurrentTime } from "../../../utils/core";
 import useToast from "../../atoms/toast";
+import { exportDataRunsToExcel } from "../../../utils/core";
+import DataManagerIST from "../../../services/data-manager";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -89,11 +90,14 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             return d.join();
           })
           .join("\n");
-        const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
+        const name = `${sensorInfo.name}.log`;
         saveFile("", csvData, {
           ext: "log",
           name,
         });
+        // let dataRuns = {};
+        // const dataRunsInfo = DataManagerIST.createDataRunInfos(dataRuns);
+        // exportDataRunsToExcel({ filePath: null, fileName: sensorInfo.name, dataRunsInfo: dataRunsInfo });
         break;
       }
       case SET_LOG_SETTING: {

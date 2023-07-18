@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { exportDataRunsToExcel, getCurrentTime } from "./../utils/core";
+import { exportDataRunsToExcel, getCurrentTime, getFromBetween } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import SensorServicesIST from "./sensor-service";
 import {
@@ -599,7 +599,7 @@ export class DataManager {
     exportDataRunsToExcel({ filePath: null, fileName: fileName, dataRunsInfo: dataRunsInfo });
   }
 
-  createDataRunInfos() {
+  createDataRunInfos(dataRuns = this.dataRuns) {
     const defaultDataRunInfo = {
       id: 0,
       interval: 1000,
@@ -611,7 +611,7 @@ export class DataManager {
       invertedSensorsInfo: {},
     };
 
-    const dataRunsInfo = Object.entries(this.dataRuns).map(([id, { interval, name }]) => ({
+    const dataRunsInfo = Object.entries(dataRuns).map(([id, { interval, name }]) => ({
       id,
       interval,
       maxTimeStamp: 0,
@@ -628,7 +628,7 @@ export class DataManager {
 
     for (const dataRunInfo of dataRunsInfo) {
       let currentIndex = 0;
-      const dataRunData = this.dataRuns[dataRunInfo.id].data;
+      const dataRunData = dataRuns[dataRunInfo.id].data;
 
       // Collect all sensor IDs and find max record time for each data run
       for (const [sensorId, sensorData] of Object.entries(dataRunData)) {
@@ -665,7 +665,7 @@ export class DataManager {
     dataRunsInfo.forEach((dataRunInfo) => {
       const { headers, interval: stepInterval, maxTimeStamp, recordedSensors, invertedSensorsInfo, id } = dataRunInfo;
       // dataRunData: {sensorId: [sensorData]}
-      const dataRunData = this.dataRuns[id].data;
+      const dataRunData = dataRuns[id].data;
       const sheetRows = [headers];
       const sensorDataIndices = {};
       recordedSensors.forEach((sensorId) => {
@@ -981,13 +981,32 @@ export class DataManager {
   callbackCommandDTO(data) {
     try {
       console.log("callbackCommandDTO", data);
-      let evt;
-      if (Array.isArray(data)) {
-        evt = new CustomEvent(`${data[0]},${data[1]}`, { detail: data.slice(2) });
-      } else if (["OK", "ERR"].includes(data)) {
-        evt = new CustomEvent("statusCmdDTO", { detail: data });
+      if (data.slice(0, 2) === "OK") {
+        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: "OK" }));
+      } else if (data.slice(0, 3) === "ERR") {
+        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: "ERR" }));
       }
-      document.dispatchEvent(evt);
+
+      // parse command DTO
+      if ((data.match(/\$\$\$/g) || []).length === (data.match(/###/g) || []).length) {
+        // need buffer
+        if (window.dataBuffer === undefined) window.dataBuffer = "";
+        window.dataBuffer += data;
+      }
+
+      if (
+        window.dataBuffer &&
+        (window.dataBuffer.match(/\$\$\$/g) || []).length === (window.dataBuffer.match(/###/g) || []).length
+      ) {
+        data = window.dataBuffer;
+        window.dataBuffer = "";
+      }
+
+      const results = getFromBetween.get(data, "$$$", "###");
+      results.forEach((item) => {
+        const result = item.split(",");
+        document.dispatchEvent(new CustomEvent(`${result[0]},${result[1]}`, { detail: result.slice(2) }));
+      });
     } catch (e) {
       console.error(`callbackCommandDTO error: ${e.message}`);
     }

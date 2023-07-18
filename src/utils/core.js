@@ -1,5 +1,6 @@
 import store from "store";
 import { f7 } from "framework7-react";
+import moment from "moment";
 import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
@@ -611,24 +612,7 @@ export function getUniqueFileName(fileName, existingFileNames) {
 }
 
 export function getCurrentTime() {
-  const now = new Date();
-  const formattedDate = now
-    .toLocaleString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    })
-    .replace(",", "")
-    .replace(/\//g, "-")
-    .replace(/\s/g, " ")
-    .replace(":", "-");
-
-  // Remove AM/PM and underscore
-  const createdAtWithoutAMPM = formattedDate.replace(/ (AM|PM)/, "");
-  return createdAtWithoutAMPM;
+  return moment().format("DD:MM:YYYY HH:mm:ss");
 }
 export function getPageName(listPageName) {
   let newFileName = String(listPageName.length + 1);
@@ -664,7 +648,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
     timeoutHandler = setTimeout(() => {
       document.removeEventListener(eventName, dataHandler);
       reject("timeout");
-    }, timeout + 100 * dataSize);
+    }, timeout + 200 * dataSize);
 
     document.addEventListener(eventName, dataHandler);
   });
@@ -770,3 +754,43 @@ function shareFileCordova(fullPath) {
     }
   );
 }
+
+export var getFromBetween = {
+  results: [],
+  string: "",
+  getFromBetween: function (sub1, sub2) {
+    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return false;
+    var SP = this.string.indexOf(sub1) + sub1.length;
+    var string1 = this.string.substr(0, SP);
+    var string2 = this.string.substr(SP);
+    var TP = string1.length + string2.indexOf(sub2);
+    return this.string.substring(SP, TP);
+  },
+  removeFromBetween: function (sub1, sub2) {
+    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return false;
+    var removal = sub1 + this.getFromBetween(sub1, sub2) + sub2;
+    this.string = this.string.replace(removal, "");
+  },
+  getAllResults: function (sub1, sub2) {
+    // first check to see if we do have both substrings
+    if (this.string.indexOf(sub1) < 0 || this.string.indexOf(sub2) < 0) return;
+
+    // find one result
+    var result = this.getFromBetween(sub1, sub2);
+    // push it to the results array
+    this.results.push(result);
+    // remove the most recently found one from the string
+    this.removeFromBetween(sub1, sub2);
+
+    // if there's more substrings
+    if (this.string.indexOf(sub1) > -1 && this.string.indexOf(sub2) > -1) {
+      this.getAllResults(sub1, sub2);
+    } else return;
+  },
+  get: function (string, sub1, sub2) {
+    this.results = [];
+    this.string = string;
+    this.getAllResults(sub1, sub2);
+    return this.results;
+  },
+};
