@@ -163,6 +163,21 @@ export const defaultSensors = [
     data: [{ id: "inno-012-volt", name: "Điện áp", unit: "V", min: -10, max: 10, formatFloatingPoint: 1 }],
   },
   {
+    id: 13,
+    code: "inno-013",
+    name: "Cảm biến ánh sáng",
+    label: "Ánh sáng",
+    icon: voltageSensorIcon,
+    remote_logging: true,
+    support_calib: true,
+    data: [
+      { id: "inno-013-light", name: "Độ sáng", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      { id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      { id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      { id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 }
+    ],
+  },
+  {
     id: 65,
     code: "BLE-9909",
     name: "Cảm biến chất lượng nước (9909)",
