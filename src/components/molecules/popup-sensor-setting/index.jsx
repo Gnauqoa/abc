@@ -12,9 +12,12 @@ import "./index.scss";
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
 import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
-import { saveFile } from "../../../services/file-service";
-import { getCurrentTime } from "../../../utils/core";
 import useToast from "../../atoms/toast";
+import { exportDataRunsToExcel, getCurrentTime } from "../../../utils/core";
+import DataManagerIST from "../../../services/data-manager";
+import storeService from "../../../services/store-service";
+
+const storeSettingService = new storeService("remote-logging");
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -84,16 +87,28 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
         const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, data);
-        var csvData = sensorLog
-          .map(function (d) {
-            return d.join();
-          })
-          .join("\n");
-        const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
-        saveFile("", csvData, {
-          ext: "log",
-          name,
+        const savedSetting = storeSettingService.find(sensorId);
+        const interval = Number(savedSetting?.interval || 1); // TODO: should get frequency from logs
+        let dataRuns = {};
+        let dataRunData = {};
+        dataRunData[sensorId] = [];
+        sensorLog.forEach((log, index) => {
+          const sensorData = {
+            time: (interval * index).toFixed(3),
+            values: log.slice(2),
+          };
+          dataRunData[sensorId].push(sensorData);
         });
+
+        dataRuns["remote-logging"] = {
+          name: "Remote logging",
+          createdAt: getCurrentTime(),
+          data: dataRunData,
+          interval,
+        };
+
+        const dataRunsInfo = DataManagerIST.createDataRunInfos(dataRuns);
+        exportDataRunsToExcel({ filePath: null, fileName: sensorInfo.name, dataRunsInfo: dataRunsInfo });
         break;
       }
       case SET_LOG_SETTING: {

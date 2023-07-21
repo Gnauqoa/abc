@@ -364,18 +364,7 @@ async function listSerialPorts() {
                 mainWindow.webContents.send("device-data", dataArray);
               } else {
                 data = new TextDecoder("utf-8").decode(data);
-                console.log(">>> Command DTO response:", data);
-                if (data.slice(0, 2) === "OK") {
-                  mainWindow.webContents.send("command-dto", "OK");
-                } else if (data.slice(0, 3) === "ERR") {
-                  mainWindow.webContents.send("command-dto", "ERR");
-                }
-                // parse command DTO
-                const startIndex = data.indexOf("$$$");
-                const endIndex = data.indexOf("###");
-                if (startIndex >= 0 && endIndex > startIndex + 3) {
-                  mainWindow.webContents.send("command-dto", data.slice(startIndex + 3, endIndex).split(","));
-                }
+                mainWindow.webContents.send("command-dto", data);
               }
             });
 
