@@ -32,7 +32,7 @@ const START_MODE = {
 
 const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   const [formSetting, setFormSetting] = useState({});
-  const [remoteLoggingSize, setRemoteLoggingSize] = useState(0);
+  const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
   const sensorId = sensorInfo.id;
 
   useEffect(() => {
@@ -53,7 +53,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
     setFormSetting({ ...savedSetting, id: sensorId });
 
     (async () => {
-      setRemoteLoggingSize(await SensorServicesIST.remoteLoggingSize(sensorId));
+      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
     })();
   }, [sensorInfo]);
 
@@ -139,7 +139,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
   return (
     <>
       <List className="__setting __remote-logging" form noHairlinesMd inlineLabels>
-        {remoteLoggingSize && (
+        {remoteLoggingInfo[3] && (
           <li className="display-setting-input label-color-black">
             <div className="item-content item-input item-input-outline item-input-with-value">
               <div className="item-inner download-log-wrap">
@@ -147,7 +147,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
                 <Button
                   className="edl-button"
                   onClick={() =>
-                    onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION, data: remoteLoggingSize })
+                    onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION, data: remoteLoggingInfo })
                   }
                 >
                   Download

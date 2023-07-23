@@ -612,8 +612,9 @@ export function getUniqueFileName(fileName, existingFileNames) {
 }
 
 export function getCurrentTime() {
-  return moment().format("DD:MM:YYYY HH:mm:ss");
+  return moment().format("DD-MM-YYYY HH:mm:ss");
 }
+
 export function getPageName(listPageName) {
   let newFileName = String(listPageName.length + 1);
   try {

@@ -13,11 +13,7 @@ import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
 import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import useToast from "../../atoms/toast";
-import { exportDataRunsToExcel, getCurrentTime } from "../../../utils/core";
 import DataManagerIST from "../../../services/data-manager";
-import storeService from "../../../services/store-service";
-
-const storeSettingService = new storeService("remote-logging");
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -86,29 +82,32 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
-        const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, data);
-        const savedSetting = storeSettingService.find(sensorId);
-        const interval = Number(savedSetting?.interval || 1); // TODO: should get frequency from logs
-        let dataRuns = {};
-        let dataRunData = {};
-        dataRunData[sensorId] = [];
-        sensorLog.forEach((log, index) => {
-          const sensorData = {
-            time: (interval * index).toFixed(3),
-            values: log.slice(2),
+        try {
+          f7.dialog.preloader("Đang tải...");
+          const interval = data[2];
+          const size = data[3];
+          const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, size);
+          let dataRunData = {};
+          dataRunData[sensorId] = [];
+          sensorLog.forEach((log, index) => {
+            const sensorData = {
+              time: (interval * index).toFixed(3),
+              values: log.slice(2),
+            };
+            dataRunData[sensorId].push(sensorData);
+          });
+
+          const dataRun = {
+            data: dataRunData,
+            interval,
           };
-          dataRunData[sensorId].push(sensorData);
-        });
-
-        dataRuns["remote-logging"] = {
-          name: "Remote logging",
-          createdAt: getCurrentTime(),
-          data: dataRunData,
-          interval,
-        };
-
-        const dataRunsInfo = DataManagerIST.createDataRunInfos(dataRuns);
-        exportDataRunsToExcel({ filePath: null, fileName: sensorInfo.name, dataRunsInfo: dataRunsInfo });
+          DataManagerIST.addRemoteLoggingDataRun(dataRun);
+          f7.dialog.close();
+          toast.show("Tải dữ liệu thành công.");
+        } catch (err) {
+          console.error("Download remote logging error", err);
+          toast.show("Tải dữ liệu bị lỗi.", "error");
+        }
         break;
       }
       case SET_LOG_SETTING: {

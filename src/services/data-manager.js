@@ -328,8 +328,7 @@ export class DataManager {
      */
     // Find the max dataRun Name
     const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
-      const dataRunNameSplitted = dataRun.name.split(" ");
-      const value = Number(dataRunNameSplitted?.[1]);
+      const value = parseInt(dataRun.name.replace("Lần ", ""));
       return !Number.isNaN(value) && Math.max(maxValue, value);
     }, 0);
 
@@ -343,6 +342,24 @@ export class DataManager {
       interval: this.collectingDataInterval,
     };
     return this.curDataRunId;
+  }
+
+  /**
+   * Add a new remote logging data run.
+   * @param {object} dataRun - The data run to add.
+   * @returns {string} The ID of the newly added data run.
+   */
+  addRemoteLoggingDataRun(dataRun) {
+    const maxRemoteLoggingDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
+      const value = parseInt(dataRun.name.replace("Remote logging ", ""));
+      return !Number.isNaN(value) && Math.max(maxValue, value);
+    }, 0);
+
+    dataRun.name = `Remote logging ${maxRemoteLoggingDataRunNum + 1}`;
+    dataRun.createdAt = getCurrentTime();
+    const dataRunId = uuidv4();
+    this.dataRuns[dataRunId] = dataRun;
+    return dataRunId;
   }
 
   /**

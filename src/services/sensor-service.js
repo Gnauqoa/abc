@@ -174,7 +174,7 @@ export const defaultSensors = [
       { id: "inno-013-light", name: "Độ sáng", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
       { id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
       { id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
-      { id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 }
+      { id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
     ],
   },
   {
@@ -390,12 +390,12 @@ export class SensorServices {
     return builtinSensors;
   }
 
-  async remoteLoggingSize(sensorId) {
+  async remoteLoggingInfo(sensorId) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###");
 
     const data = await core.timeoutEventData("log,chk");
 
-    return Number(data[1]);
+    return data.map((d) => Number(d));
   }
 
   async remoteLoggingData(sensorId, size) {
