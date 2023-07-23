@@ -10,7 +10,7 @@ import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
 const DataRunManagementPopup = () => {
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const dataRunManagementPopupRef = useRef();
-  let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
+  const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const [dataRunNameEdited, setDataRunNameEdited] = useState({});
   const { name, handleDeleteDataRun } = useActivityContext();
 
