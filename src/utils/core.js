@@ -634,7 +634,7 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
+export function timeoutEventData(eventName, dataSize = 1, timeout = 3000) {
   f7.dialog.preloader("Đang tải...");
   return new Promise((resolve, reject) => {
     let timeoutHandler;
@@ -656,7 +656,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
       f7.dialog.close();
       document.removeEventListener(eventName, dataHandler);
       reject("timeout");
-    }, timeout + 100 * dataSize);
+    }, timeout + 200 * dataSize);
 
     document.addEventListener(eventName, dataHandler);
   });
