@@ -25,10 +25,9 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
     return ipcRenderer.invoke("cdv-plugin-exec", serviceName, action, args).then(success, error);
   },
 
-  onDeviceDataReceived: (callback) => ipcRenderer.on("device-data", callback),
+  onDeviceDataReceived: (data, source, device) => ipcRenderer.on("device-data", data, source, device),
   onDeviceDisconnected: (callback) => ipcRenderer.on("device-disconnected", callback),
   writeDeviceData: (port, data) => ipcRenderer.send("write-data", port, data),
-  onCommandDTOReceived: (callback) => ipcRenderer.on("command-dto", callback),
 
   hasService: (serviceName) => cordova && cordova.services && cordova.services[serviceName],
 
@@ -41,7 +40,6 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   },
 
   selectBleDevice: (deviceId) => ipcRenderer.send("webble-selected", deviceId),
-
 });
 
 contextBridge.exposeInMainWorld("fileApi", {

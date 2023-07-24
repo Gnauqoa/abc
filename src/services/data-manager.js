@@ -726,6 +726,243 @@ export class DataManager {
 
   // -------------------------------- Read sensor data -------------------------------- //
   /**
+   * Entry point for all kind of device data
+   * @param {string} data Uint8Array data from sensor
+   * @param {string} source The connection type. Can be USB_TYPE or BLE_TYPE.
+   * @param {object} device - The device object {code, deviceId}, deviceId is sensor ID or USB port path.
+   *
+   */
+  onDataCallback(data, source, device) {
+    if (device.code && (device.code.includes("BLE-9909") || device.code.includes("BLE-C600"))) {
+      const dataArray = this.decodeDataFromBLE9909Sensor(data, source, device);
+      dataArray && this.callbackReadSensor(dataArray);
+    } else if (device.code && device.code.includes("BLE-9100")) {
+      const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
+      dataArray && this.callbackReadSensor(dataArray);
+    } else if (data[0] === 0xaa) {
+      const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
+      dataArray && this.callbackReadSensor(dataArray);
+    } else {
+      data = new TextDecoder("utf-8").decode(data);
+      this.callbackCommandDTO(data);
+    }
+  }
+
+  decodeDataFromInnoLabSensor(data, source, device) {
+    // sensor data
+    /* Each sensor data record has following structure
+        0xAA - start byte
+        Sensor ID - 1 byte
+        Sensor Serial ID - 1 byte
+        Data length - 1 byte
+        Sensor data [0..len] - 4 byte per data
+        Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
+        0xBB - stop byte (already cut off by serial delimiter parser)
+      */
+    let sensorId = data[1];
+    let sensorSerial = data[2]; // TODO: Will use later
+    let battery = data[3]; // TODO: Will use later
+    let dataLength = data[4];
+    let checksum = data[5 + dataLength];
+    let calculatedChecksum = 0xff;
+    for (let i = 0; i < dataLength + 5; i++) {
+      calculatedChecksum = calculatedChecksum ^ data[i];
+    }
+
+    if (calculatedChecksum != checksum) {
+      console.log("decodeDataFromInnoLabSensor: Invalid data received");
+      return;
+    }
+
+    let dataRead = 0;
+    let sensorData = [];
+
+    while (dataRead < dataLength) {
+      // read next 4 bytes
+      let rawBytes = data.slice(dataRead + 5, dataRead + 9);
+
+      let view = new DataView(new ArrayBuffer(4));
+
+      rawBytes.forEach(function (b, i) {
+        view.setUint8(3 - i, b);
+      });
+
+      sensorData.push(view.getFloat32(0));
+      dataRead += 4;
+    }
+
+    var dataArray = [sensorId, battery, source, device.deviceId, dataLength];
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    return dataArray;
+  }
+
+  decodeDataFromBLE9909Sensor(message, source, device) {
+    //YINMIK BLE-9909 type sensors
+    /* Each sensor data record has following structure
+      serial    number            data    significance
+      0         1                 data
+                2                 Calibration data
+      1         fixed at 2
+      2         0                 BLE-None,    Product name code
+                12                BLE-9100,
+                BLE-9100
+      3         DO(mg/L)Value high 8 bits
+      4         DO(mg/L)lower 8 bits of value
+      5         DO(%)Value high 8 bits
+      6         DO(%)lower 8 bits of value
+      7
+      8
+      9
+      10
+      11
+      12
+      13        8-bit high temperature value
+      14        Temperature value lower 8 bits
+      15        Battery voltage value high 8 bits
+      16        Battery voltage value lower 8 bits
+      17        flag bit        0b 0000 0000    7    6    5    4    3    2    1    0
+                    hold reading    Backlight status
+      18
+      19
+      20
+      21
+      22
+      23    Check Digit    Please refer to the CheckSum form
+    */
+    // ### DECODING ###
+    let tmp = 0;
+    let hibit = 0;
+    let lobit = 0;
+    let hibit1 = 0;
+    let lobit1 = 0;
+
+    for (let i = message.length - 1; i > 0; i--) {
+      tmp = message[i];
+      hibit1 = (tmp & 0x55) << 1;
+      lobit1 = (tmp & 0xaa) >> 1;
+      tmp = message[i - 1];
+      hibit = (tmp & 0x55) << 1;
+      lobit = (tmp & 0xaa) >> 1;
+
+      message[i] = ~(hibit1 | lobit);
+      message[i - 1] = ~(hibit | lobit1);
+    }
+
+    let hold_reading = message[17] >> 4;
+
+    let backlight = (message[17] & 0x0f) >> 3;
+
+    let ec = (message[5] << 8) + message[6];
+
+    let tds = (message[7] << 8) + message[8];
+
+    let salt_tds = (message[9] << 8) + message[10];
+
+    let salt_sg = ((message[11] << 8) + message[12]) / 100;
+
+    let ph = ((message[3] << 8) + message[4]) / 100;
+
+    let temp = ((message[13] << 8) + message[14]) / 10;
+
+    let batt = parseInt(((message[15] << 8) + message[16]) / 32);
+
+    var sensorData = [];
+
+    sensorData.push(ph);
+    sensorData.push(ec);
+    sensorData.push(tds);
+    sensorData.push(salt_sg);
+    sensorData.push(salt_tds);
+    sensorData.push(temp);
+
+    var dataArray = [device.id, batt, source, device.deviceId, 24];
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    return dataArray;
+  }
+
+  decodeDataFromBLE9100Sensor(message, source, device) {
+    //YINMIK BLE-9100 DO type sensors
+    /* Each sensor data record has following structure
+      serial    number            data    significance
+      0         1                 data
+                2                 Calibration data
+      1         fixed at 2
+      2         0                 BLE-None,    Product name code
+                12                BLE-9100,
+                BLE-9100
+      3         DO(mg/L)Value high 8 bits
+      4         DO(mg/L)lower 8 bits of value
+      5         DO(%)Value high 8 bits
+      6         DO(%)lower 8 bits of value
+      7
+      8
+      9
+      10
+      11
+      12
+      13        8-bit high temperature value
+      14        Temperature value lower 8 bits
+      15        Battery voltage value high 8 bits
+      16        Battery voltage value lower 8 bits
+      17        flag bit        0b 0000 0000    7    6    5    4    3    2    1    0
+                    hold reading    Backlight status
+      18
+      19
+      20
+      21
+      22
+      23    Check Digit    Please refer to the CheckSum form
+    */
+
+    // ### DECODING ###
+    let tmp = 0;
+    let hibit = 0;
+    let lobit = 0;
+    let hibit1 = 0;
+    let lobit1 = 0;
+
+    for (let i = message.length - 1; i > 0; i--) {
+      tmp = message[i];
+      hibit1 = (tmp & 0x55) << 1;
+      lobit1 = (tmp & 0xaa) >> 1;
+      tmp = message[i - 1];
+      hibit = (tmp & 0x55) << 1;
+      lobit = (tmp & 0xaa) >> 1;
+
+      message[i] = ~(hibit1 | lobit);
+      message[i - 1] = ~(hibit | lobit1);
+    }
+
+    let do_mg = ((message[3] << 8) + message[4]) / 100;
+    //console.log('DO (mg/L) = ' + do_mg);
+    let do_percent = ((message[5] << 8) + message[6]) / 10;
+    //console.log('DO (%) = ' + do_percent);
+    let temp = ((message[13] << 8) + message[14]) / 10;
+    //console.log('Temp (*C) = ' + (((temp/10.0) * (9.0/5.0)) + 32.0));
+    let batt = parseInt(((message[15] << 8) + message[16]) / 32);
+    //console.log('Battery (%) = ' + batt);
+
+    var sensorData = [];
+
+    sensorData.push(do_mg);
+    sensorData.push(do_percent);
+    sensorData.push(temp);
+
+    var dataArray = [device.id, batt, source, device.deviceId, 12];
+    sensorData.forEach(function (d, i) {
+      dataArray.push(d);
+    });
+
+    return dataArray;
+  }
+
+  /**
    * Callback function called in DeviceManager when there is data available
    * @param {string} sensorsData - The format sensor data (@, id, data1, data2, data3, data 4, *).
    * @returns {void} - No return.

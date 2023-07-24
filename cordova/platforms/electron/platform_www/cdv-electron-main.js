@@ -300,7 +300,7 @@ async function listSerialPorts() {
             serialPort.on("close", function (err) {
               if (err.disconnected == true) {
                 console.log(port.path, " disconnected");
-                mainWindow.webContents.send("device-disconnected", portsList[port.path].lastDdata);
+                mainWindow.webContents.send("device-disconnected", portsList[port.path].sensorInfo);
               } else {
                 console.log(port.path, " got unknown error");
               }
@@ -310,67 +310,19 @@ async function listSerialPorts() {
 
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xbb] }));
             parser.on("data", function (data) {
-              /* Each sensor data record has following structure
-                0xAA - start byte
-                Sensor ID - 1 byte
-                Sensor Serial ID - 1 byte
-                Data length - 1 byte
-                Sensor data [0..len] - 4 byte per data
-                Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
-                0xBB - stop byte (already cut off by serial delimiter parser)
-              */
-
               if (data[0] === 0xaa) {
                 // sensor data
                 var sensorId = data[1];
-                var sensorSerial = data[2]; // TODO: Will use later
                 var battery = data[3]; // TODO: Will use later
-                var dataLength = data[4];
-                var checksum = data[5 + dataLength];
-                var calculatedChecksum = 0xff;
-                for (var i = 0; i < dataLength + 5; i++) {
-                  calculatedChecksum = calculatedChecksum ^ data[i];
-                }
-
-                if (calculatedChecksum != checksum) {
-                  console.log("Invalid data received");
-                  return;
-                }
-
-                var dataRead = 0;
-                var sensorData = [];
-
-                while (dataRead < dataLength) {
-                  // read next 4 bytes
-                  var rawBytes = data.slice(dataRead + 5, dataRead + 9);
-
-                  var view = new DataView(new ArrayBuffer(4));
-
-                  rawBytes.forEach(function (b, i) {
-                    view.setUint8(3 - i, b);
-                  });
-
-                  sensorData.push(view.getFloat32(0).toFixed(2));
-                  dataRead += 4;
-                }
-
-                var dataArray = [sensorId, battery, USB_TYPE, port.path, dataLength];
-                sensorData.forEach(function (d, i) {
-                  dataArray.push(d);
-                });
-
-                portsList[port.path].lastDdata = dataArray;
-
-                mainWindow.webContents.send("device-data", dataArray);
-              } else {
-                data = new TextDecoder("utf-8").decode(data);
-                mainWindow.webContents.send("command-dto", data);
+                var dataArray = [sensorId, battery, USB_TYPE];
+                portsList[port.path].sensorInfo = dataArray;
               }
+              mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
             });
 
             portsList[port.path] = {
               port: serialPort,
-              lastDdata: "",
+              sensorInfo: "",
             };
           } catch (err) {
             console.log(err);
