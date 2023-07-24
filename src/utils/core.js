@@ -1,6 +1,7 @@
 import store from "store";
 import { f7 } from "framework7-react";
 import moment from "moment";
+import $ from "jquery";
 import dialog from "../components/molecules/dialog/dialog";
 
 import { utils, write } from "xlsx";
@@ -634,12 +635,17 @@ export function getPageName(listPageName) {
 }
 
 export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
+  f7.dialog.preloader("Đang tải...");
   return new Promise((resolve, reject) => {
     let timeoutHandler;
     let dataBuffer = [];
     function dataHandler(e) {
       dataBuffer.push(e.detail);
+      if (dataSize > 1) {
+        $(".dialog-preloader .dialog-title").text(`Đang tải ${Math.round((dataBuffer.length / dataSize) * 100)}%`);
+      }
       if (dataBuffer.length === dataSize) {
+        f7.dialog.close();
         clearTimeout(timeoutHandler);
         document.removeEventListener(eventName, dataHandler);
         resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
@@ -647,6 +653,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
     }
 
     timeoutHandler = setTimeout(() => {
+      f7.dialog.close();
       document.removeEventListener(eventName, dataHandler);
       reject("timeout");
     }, timeout + 100 * dataSize);

@@ -1005,25 +1005,19 @@ export class DataManager {
       }
 
       // parse command DTO
-      if ((data.match(/\$\$\$/g) || []).length === (data.match(/###/g) || []).length) {
-        // need buffer
-        if (window.dataBuffer === undefined) window.dataBuffer = "";
-        window.dataBuffer += data;
+      if (window.dataBuffer === undefined) window.dataBuffer = "";
+      window.dataBuffer += data;
+      const results = getFromBetween.get(window.dataBuffer, "$$$", "###");
+      if (results.length > 0) {
+        results.forEach((item) => {
+          const result = item.split(",");
+          document.dispatchEvent(new CustomEvent(`${result[0]},${result[1]}`, { detail: result.slice(2) }));
+        });
+        window.dataBuffer = window.dataBuffer.slice(window.dataBuffer.lastIndexOf("###") + 3);
+        if ((window.dataBuffer.match(/\$\$\$/g) || []).length === (window.dataBuffer.match(/###/g) || []).length) {
+          window.dataBuffer = "";
+        }
       }
-
-      if (
-        window.dataBuffer &&
-        (window.dataBuffer.match(/\$\$\$/g) || []).length === (window.dataBuffer.match(/###/g) || []).length
-      ) {
-        data = window.dataBuffer;
-        window.dataBuffer = "";
-      }
-
-      const results = getFromBetween.get(data, "$$$", "###");
-      results.forEach((item) => {
-        const result = item.split(",");
-        document.dispatchEvent(new CustomEvent(`${result[0]},${result[1]}`, { detail: result.slice(2) }));
-      });
     } catch (e) {
       console.error(`callbackCommandDTO error: ${e.message}`);
     }

@@ -83,7 +83,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
         try {
-          f7.dialog.preloader("Đang tải...");
           const interval = data[2];
           const size = data[3];
           const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, size);
@@ -106,8 +105,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         } catch (err) {
           console.error("Download remote logging error", err);
           toast.show("Tải dữ liệu bị lỗi timeout.", "error");
-        } finally {
-          f7.dialog.close();
         }
         break;
       }
