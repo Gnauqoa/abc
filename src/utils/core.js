@@ -649,7 +649,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
     timeoutHandler = setTimeout(() => {
       document.removeEventListener(eventName, dataHandler);
       reject("timeout");
-    }, timeout + 200 * dataSize);
+    }, timeout + 100 * dataSize);
 
     document.addEventListener(eventName, dataHandler);
   });

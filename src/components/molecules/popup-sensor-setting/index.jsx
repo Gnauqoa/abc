@@ -102,11 +102,12 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             interval,
           };
           DataManagerIST.addRemoteLoggingDataRun(dataRun);
-          f7.dialog.close();
           toast.show("Tải dữ liệu thành công.");
         } catch (err) {
           console.error("Download remote logging error", err);
-          toast.show("Tải dữ liệu bị lỗi.", "error");
+          toast.show("Tải dữ liệu bị lỗi timeout.", "error");
+        } finally {
+          f7.dialog.close();
         }
         break;
       }

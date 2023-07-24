@@ -401,8 +401,7 @@ export class SensorServices {
   async remoteLoggingData(sensorId, size) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###");
 
-    const data = await core.timeoutEventData("log,get", size);
-    return Promise.resolve(data);
+    return core.timeoutEventData("log,get", size);
   }
 }
 
