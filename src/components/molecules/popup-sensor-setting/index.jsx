@@ -145,17 +145,27 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     }
   };
 
+  async function checkRemoteLogging() {
+    try {
+      const logInfo = SensorServicesIST.remoteLoggingInfo(sensorId);
+      toast.notifyCmdDTO("kiểm tra log");
+      setRemoteLoggingInfo(await logInfo);
+    } catch {
+      setRemoteLoggingInfo([0, 0, 0, 0]);
+    }
+  }
+
   const onChangeTab = async (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
     if (tabId === REMOTE_LOGGING_TAB) {
-      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
+      checkRemoteLogging();
     }
   };
 
   const onOpenPopup = async () => {
     if (currentTab === REMOTE_LOGGING_TAB) {
-      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
+      checkRemoteLogging();
     }
   };
 
