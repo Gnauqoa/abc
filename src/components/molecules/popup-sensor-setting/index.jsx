@@ -11,7 +11,7 @@ import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
-import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
+import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, DELETE_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
 import useToast from "../../atoms/toast";
 import DataManagerIST from "../../../services/data-manager";
 
@@ -31,6 +31,7 @@ const defaultSettingTabs = {
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
+  const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
   const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
   const settingTabs = getSettingTabs();
   const toast = useToast();
@@ -108,6 +109,11 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         }
         break;
       }
+      case DELETE_LOG_ACTION: {
+        DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,del###");
+        toast.notifyCmdDTO();
+        break;
+      }
       case SET_LOG_SETTING: {
         const {
           loggingMode,
@@ -142,12 +148,22 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const onChangeTab = async (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
+    if (tabId === REMOTE_LOGGING_TAB) {
+      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
+    }
+  };
+
+  const onOpenPopup = async () => {
+    if (currentTab === REMOTE_LOGGING_TAB) {
+      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
+    }
   };
 
   return (
     <Popup
       opened={openedPopup}
       onPopupClosed={onClosePopup}
+      onPopupOpened={onOpenPopup}
       className="sensor-setting-popup"
       ref={sensorSettingPopupRef}
     >
@@ -200,6 +216,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             {currentTab === REMOTE_LOGGING_TAB && (
               <RemoteLoggingTab
                 sensorInfo={sensorInfo}
+                remoteLoggingInfo={remoteLoggingInfo}
                 sensorDataIndex={sensorDataIndex}
                 onSaveHandler={onSaveRemoteLoggingHandler}
               />

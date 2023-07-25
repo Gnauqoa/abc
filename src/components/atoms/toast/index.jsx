@@ -34,11 +34,14 @@ export default function useToast() {
       const status = await timeoutEventData("statusCmdDTO");
       if (status === "OK") {
         show("Gởi lệnh thành công.", "success");
+        return true;
       } else {
         show("Gởi lệnh bị lỗi.", "error");
+        return false;
       }
     } catch (err) {
       show("Lỗi không nhận được tín hiệu phản hồi.", "error");
+      return false;
     }
   };
 

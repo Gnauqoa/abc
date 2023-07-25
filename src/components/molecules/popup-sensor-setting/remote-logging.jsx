@@ -13,6 +13,7 @@ import {
   NEXT_STARTUP,
   EVERY_STARTUP,
   DOWNLOAD_LOG_ACTION,
+  DELETE_LOG_ACTION,
   SET_LOG_SETTING,
 } from "../../../js/constants";
 
@@ -30,9 +31,8 @@ const START_MODE = {
   [EVERY_STARTUP]: "Luôn luôn chạy",
 };
 
-const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
+const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSaveHandler }) => {
   const [formSetting, setFormSetting] = useState({});
-  const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
   const sensorId = sensorInfo.id;
 
   useEffect(() => {
@@ -49,12 +49,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         topics: [""],
         startMode: IMMEDIATELY,
       };
-
     setFormSetting({ ...savedSetting, id: sensorId });
-
-    (async () => {
-      setRemoteLoggingInfo(await SensorServicesIST.remoteLoggingInfo(sensorId));
-    })();
   }, [sensorInfo]);
 
   const formSettingHandler = (e) => {
@@ -152,6 +147,15 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
                   }
                 >
                   Download
+                </Button>
+                <Button
+                  className="edl-button"
+                  bgColor="red"
+                  onClick={() =>
+                    onSaveHandler({ sensorId: sensorInfo.id, action: DELETE_LOG_ACTION, data: remoteLoggingInfo })
+                  }
+                >
+                  Xóa
                 </Button>
               </div>
             </div>
@@ -297,6 +301,9 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             popOverName="popover-start-on"
           >
             {Object.keys(START_MODE).map((startMode) => {
+              if (formSetting.loggingMode === FLASH && Number(startMode) === EVERY_STARTUP) {
+                return;
+              }
               return (
                 <Button key={startMode} onClick={() => onStartModeChange(startMode)}>
                   <span style={{ textTransform: "none" }}>{START_MODE[startMode]}</span>
