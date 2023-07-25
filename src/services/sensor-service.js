@@ -401,7 +401,7 @@ export class SensorServices {
   async remoteLoggingData(sensorId, size) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###");
 
-    return core.timeoutEventData("log,get", size);
+    return core.timeoutEventData("log,get", size, 2000, true);
   }
 }
 

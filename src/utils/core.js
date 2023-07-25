@@ -634,15 +634,23 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
+export function timeoutEventData(eventName, dataSize = 1, timeout = 2000, hasCancel = false) {
   f7.dialog.preloader("Đang tải...");
+  hasCancel &&
+    $(".dialog-preloader .dialog-title").html(
+      `Đang tải... <span class="edl-cancel-preloader dialog-button">Hủy</span>`
+    );
   return new Promise((resolve, reject) => {
     let timeoutHandler;
     let dataBuffer = [];
     function dataHandler(e) {
       dataBuffer.push(e.detail);
       if (dataSize > 1) {
-        $(".dialog-preloader .dialog-title").text(`Đang tải ${Math.round((dataBuffer.length / dataSize) * 100)}%`);
+        $(".dialog-preloader .dialog-title").html(
+          `Đang tải ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
+            hasCancel ? '<span class="edl-cancel-preloader dialog-button">Hủy</span>' : ""
+          }`
+        );
       }
       if (dataBuffer.length === dataSize) {
         f7.dialog.close();
@@ -651,6 +659,11 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 2000) {
         resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
       }
     }
+
+    $(".edl-cancel-preloader").on("click", () => {
+      f7.dialog.close();
+      reject("cancel");
+    });
 
     timeoutHandler = setTimeout(() => {
       f7.dialog.close();

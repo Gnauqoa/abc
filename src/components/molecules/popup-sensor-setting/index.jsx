@@ -105,7 +105,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           toast.show("Tải dữ liệu thành công.");
         } catch (err) {
           console.error("Download remote logging error", err);
-          toast.show("Tải dữ liệu bị lỗi timeout.", "error");
+          err !== "cancel" && toast.show("Tải dữ liệu bị lỗi timeout.", "error");
         }
         break;
       }
