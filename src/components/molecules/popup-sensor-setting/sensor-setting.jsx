@@ -119,7 +119,6 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           name="displayedNamed"
           label="Thông tin hiển thị:"
           type="text"
-          validateOnBlur
           value={formField.displayedNamed}
           onChange={formFieldHandler}
         ></ListInput>
@@ -130,7 +129,6 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           name="unitOfMeasure"
           label="Đơn vị đo:"
           type="text"
-          validateOnBlur
           value={formField.unitOfMeasure}
           onChange={formFieldHandler}
         ></ListInput>
@@ -140,8 +138,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           size={5}
           name="minValue"
           label="Giá trị min:"
-          type="text"
-          validateOnBlur
+          type="number"
           value={formField.minValue}
           onChange={formFieldHandler}
         ></ListInput>
@@ -151,8 +148,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           size={5}
           name="maxValue"
           label="Giá trị max:"
-          type="text"
-          validateOnBlur
+          type="number"
           value={formField.maxValue}
           onChange={formFieldHandler}
         ></ListInput>
@@ -163,7 +159,6 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           name="formatFloatingPoint"
           label="Format số lẻ:"
           type="text"
-          validateOnBlur
           value={formField.formatFloatingPoint}
           onChange={formFieldHandler}
         ></ListInput>

@@ -59,8 +59,9 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
 
   const formSettingHandler = (e) => {
     const name = e.target.name;
-    const value = e.target.value;
-    setFormSetting((setting) => ({ ...setting, [name]: value.trim() }));
+    let value = e.target.value.trim();
+    if (["duration", "interval"].includes(name)) value = parseInt(value);
+    setFormSetting((setting) => ({ ...setting, [name]: value }));
   };
 
   const validateSettingParams = (setting) => {
@@ -68,12 +69,12 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       return true;
     }
 
-    if (setting.duration === "" || isNaN(setting.duration)) {
+    if (setting.duration === "" || isNaN(setting.duration) || setting.duration < 1) {
       f7.dialog.alert("Tổng thời gian không hợp lệ");
       return false;
     }
 
-    if (setting.interval === "" || isNaN(setting.interval)) {
+    if (setting.interval === "" || isNaN(setting.interval) || setting.interval < 1) {
       f7.dialog.alert("Tần suất không hợp lệ");
       return false;
     }
@@ -178,8 +179,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             size={5}
             name="duration"
             label="Tổng thời gian:"
-            type="text"
-            validateOnBlur
+            type="number"
             value={formSetting.duration}
             onChange={formSettingHandler}
           >
@@ -195,8 +195,7 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             size={5}
             name="interval"
             label="Tần suất:"
-            type="text"
-            validateOnBlur
+            type="number"
             value={formSetting.interval}
             onChange={formSettingHandler}
           >
@@ -213,7 +212,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             name="wifiSSID"
             label="Tên Wifi:"
             type="text"
-            validateOnBlur
             value={formSetting.wifiSSID}
             onChange={formSettingHandler}
           ></ListInput>
@@ -226,7 +224,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             name="wifiPassword"
             label="Mật khẩu Wifi:"
             type="text"
-            validateOnBlur
             value={formSetting.wifiPassword}
             onChange={formSettingHandler}
           ></ListInput>
@@ -240,7 +237,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             name="mqttUri"
             label="Địa chỉ server:"
             type="text"
-            validateOnBlur
             value={formSetting.mqttUri}
             onChange={formSettingHandler}
           ></ListInput>
@@ -254,7 +250,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             name="mqttUsername"
             label="Username server:"
             type="text"
-            validateOnBlur
             value={formSetting.mqttUsername}
             onChange={formSettingHandler}
           ></ListInput>
@@ -268,7 +263,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
             name="mqttPassword"
             label="Mật khẩu server:"
             type="text"
-            validateOnBlur
             value={formSetting.mqttPassword}
             onChange={formSettingHandler}
           ></ListInput>
@@ -290,7 +284,6 @@ const RemoteLoggingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
                 key={sensorInfo?.id + "|" + unitInfo.id}
                 label={`● ${unitInfo.name} (${unitInfo.unit}):`}
                 type="text"
-                validateOnBlur
                 value={formSetting.topics[index]}
                 onChange={(e) => handleTopicsChange(e, index)}
               ></ListInput>

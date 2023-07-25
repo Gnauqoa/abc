@@ -165,8 +165,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                 outline
                 size={5}
                 label="Giá trị chuẩn:"
-                type="text"
-                validateOnBlur
+                type="number"
                 value={formField.calibrationValues?.[calibrateType]}
                 onChange={(e) =>
                   formFieldHandler({ value: e.target.value, type: "calibrationValues", index: calibrateType })
@@ -180,10 +179,8 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                       <div className="item-title item-label">Giá trị đọc được:</div>
                       <div className="item-input-wrap">
                         <input
-                          type="text"
+                          type="number"
                           size="5"
-                          data-validate="true"
-                          data-validate-on-blur="true"
                           class=""
                           value={formField.calibrationValuesRead?.[calibrateType]}
                           onChange={(e) =>
