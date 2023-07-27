@@ -634,7 +634,7 @@ export function getPageName(listPageName) {
   return newFileName;
 }
 
-export function timeoutEventData(eventName, dataSize = 1, timeout = 2000, hasCancel = false) {
+export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCancel = false) {
   f7.dialog.preloader("Đang tải...");
   hasCancel &&
     $(".dialog-preloader .dialog-title").html(
