@@ -15,6 +15,7 @@ import {
   DOWNLOAD_LOG_ACTION,
   DELETE_LOG_ACTION,
   SET_LOG_SETTING,
+  MAX_SAMPLE_REMOTE_LOGGING,
 } from "../../../js/constants";
 
 const storeSettingService = new storeService("remote-logging");
@@ -71,6 +72,14 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
 
     if (setting.interval === "" || isNaN(setting.interval) || setting.interval < 1) {
       f7.dialog.alert("Tần suất không hợp lệ");
+      return false;
+    }
+
+    const sampleCount = setting.interval * setting.duration;
+    if (sampleCount > MAX_SAMPLE_REMOTE_LOGGING) {
+      f7.dialog.alert(
+        `Số lượng mẫu vượt quá giới hạn ${MAX_SAMPLE_REMOTE_LOGGING}. Vui lòng giảm Tổng thời gian hoặc Tần suất.`
+      );
       return false;
     }
 
@@ -207,6 +216,13 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
               giây/lần
             </div>
           </ListInput>
+        )}
+        {formSetting.loggingMode !== OFF && (
+          <ListItem
+            title={`Tổng số lượng mẫu: ${
+              formSetting.interval * formSetting.duration
+            } (tối đa ${MAX_SAMPLE_REMOTE_LOGGING})`}
+          ></ListItem>
         )}
         {formSetting.loggingMode === MQTT && (
           <ListInput
