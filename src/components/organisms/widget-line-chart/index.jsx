@@ -875,7 +875,6 @@ let LineChart = (props, ref) => {
             addStatisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current, statisticOptionId })
           }
         />
-        ;
         <div className="sensor-selector-wrapper">
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
