@@ -172,9 +172,9 @@ export const defaultSensors = [
     support_calib: true,
     data: [
       { id: "inno-013-light", name: "Độ sáng", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
-      { id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
-      { id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
-      { id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
     ],
   },
   {
