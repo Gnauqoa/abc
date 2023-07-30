@@ -75,7 +75,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       return false;
     }
 
-    const sampleCount = setting.interval * setting.duration;
+    const sampleCount = ~~((setting.duration*60)/setting.interval);
     if (sampleCount > MAX_SAMPLE_REMOTE_LOGGING) {
       f7.dialog.alert(
         `Số lượng mẫu vượt quá giới hạn ${MAX_SAMPLE_REMOTE_LOGGING}. Vui lòng giảm Tổng thời gian hoặc Tần suất.`
@@ -220,7 +220,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
         {formSetting.loggingMode !== OFF && (
           <ListItem
             title={`Tổng số lượng mẫu: ${
-              formSetting.interval * formSetting.duration
+              ~~((formSetting.duration*60)/formSetting.interval)
             } (tối đa ${MAX_SAMPLE_REMOTE_LOGGING})`}
           ></ListItem>
         )}
