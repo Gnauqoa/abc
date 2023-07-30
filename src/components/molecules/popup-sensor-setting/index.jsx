@@ -24,7 +24,7 @@ const defaultTab = 1;
 const defaultSettingTabs = {
   [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
-  [REMOTE_LOGGING_TAB]: "Remote logging",
+  [REMOTE_LOGGING_TAB]: "Lấy mẫu từ xa",
   [OTHER_SETTINGS_TAB]: "Chức năng khác",
 };
 
