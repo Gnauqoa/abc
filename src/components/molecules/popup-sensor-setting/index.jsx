@@ -135,7 +135,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             ";"
           )}}###`;
         } else if (loggingMode === OFF) {
-          cmdRemoteLogging = "$$$log,set,0,0";
+          cmdRemoteLogging = "$$$log,set,0,0###";
         }
 
         DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
