@@ -65,22 +65,24 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       return true;
     }
 
-    if (setting.duration === "" || isNaN(setting.duration) || setting.duration < 1) {
-      f7.dialog.alert("Tổng thời gian không hợp lệ");
-      return false;
-    }
-
     if (setting.interval === "" || isNaN(setting.interval) || setting.interval < 1) {
       f7.dialog.alert("Tần suất không hợp lệ");
       return false;
     }
 
-    const sampleCount = ~~((setting.duration*60)/setting.interval);
-    if (sampleCount > MAX_SAMPLE_REMOTE_LOGGING) {
-      f7.dialog.alert(
-        `Số lượng mẫu vượt quá giới hạn ${MAX_SAMPLE_REMOTE_LOGGING}. Vui lòng giảm Tổng thời gian hoặc Tần suất.`
-      );
-      return false;
+    if (setting.loggingMode === FLASH) {
+      if (setting.duration === "" || isNaN(setting.duration) || setting.duration < 1) {
+        f7.dialog.alert("Tổng thời gian không hợp lệ");
+        return false;
+      }
+
+      const sampleCount = ~~((setting.duration * 60) / setting.interval);
+      if (sampleCount > MAX_SAMPLE_REMOTE_LOGGING) {
+        f7.dialog.alert(
+          `Số lượng mẫu vượt quá giới hạn ${MAX_SAMPLE_REMOTE_LOGGING}. Vui lòng giảm Tổng thời gian hoặc Tần suất.`
+        );
+        return false;
+      }
     }
 
     if (setting.loggingMode === MQTT) {
@@ -106,8 +108,14 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
   };
 
   const onLoggingModeChange = (loggingMode) => {
+    let startMode = formSetting.startMode;
+    if (Number(loggingMode) === FLASH && formSetting.startMode === EVERY_STARTUP) {
+      startMode = IMMEDIATELY;
+    }
+
     setFormSetting({
       ...formSetting,
+      startMode,
       loggingMode: Number(loggingMode),
     });
     f7.popover.close();
@@ -185,7 +193,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             );
           })}
         </CustomDropdownInput>
-        {formSetting.loggingMode !== OFF && (
+        {formSetting.loggingMode === FLASH && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
@@ -217,11 +225,12 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             </div>
           </ListInput>
         )}
-        {formSetting.loggingMode !== OFF && (
+        {formSetting.loggingMode === FLASH && (
           <ListItem
-            title={`Tổng số lượng mẫu: ${
-              ~~((formSetting.duration*60)/formSetting.interval)
-            } (tối đa ${MAX_SAMPLE_REMOTE_LOGGING})`}
+            title={`Tổng số lượng mẫu: ${~~(
+              (formSetting.duration * 60) /
+              formSetting.interval
+            )} (tối đa ${MAX_SAMPLE_REMOTE_LOGGING})`}
           ></ListItem>
         )}
         {formSetting.loggingMode === MQTT && (

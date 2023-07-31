@@ -24,7 +24,7 @@ const defaultTab = 1;
 const defaultSettingTabs = {
   [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
-  [REMOTE_LOGGING_TAB]: "Lấy mẫu từ xa", 
+  [REMOTE_LOGGING_TAB]: "Lấy mẫu từ xa",
   [OTHER_SETTINGS_TAB]: "Chức năng khác",
 };
 
@@ -115,7 +115,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         break;
       }
       case SET_LOG_SETTING: {
-        const {
+        let {
           loggingMode,
           duration,
           interval,
@@ -131,6 +131,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         if (loggingMode === FLASH) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
         } else if (loggingMode === MQTT) {
+          duration = 0;
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},{${topics.join(
             ";"
           )}}###`;
