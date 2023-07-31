@@ -1,34 +1,34 @@
-@media (min-width: 630px) and (min-height: 630px) {
-  .sensor-selector-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 400px;
-    height: 500px;
-
-    left: calc(50% - 200px);
-    top: calc(50% - 250px);
-    border-radius: 20px;
-  }
-}
-
-@media only screen and (max-height: 630px) {
-  .sensor-selector-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 600px;
-    height: 400px;
-
-    left: calc(50% - 300px);
-    top: calc(50% - 200px);
-    border-radius: 15px;
-  }
-}
-
-// .sensor-selector-popup {
-//   @media only screen and (min-height: 600px) {
+// @media (min-width: 630px) and (min-height: 630px) {
+//   .sensor-selector-popup.popup:not(.popup-tablet-fullscreen) {
 //     width: 400px;
 //     height: 500px;
+
 //     left: calc(50% - 200px);
 //     top: calc(50% - 250px);
 //     border-radius: 20px;
 //   }
 // }
+
+// @media only screen and (max-height: 630px) {
+//   .sensor-selector-popup.popup:not(.popup-tablet-fullscreen) {
+//     width: 600px;
+//     height: 400px;
+
+//     left: calc(50% - 300px);
+//     top: calc(50% - 200px);
+//     border-radius: 15px;
+//   }
+// }
+
+.sensor-selector-popup {
+  @media only screen and (max-height: 630px) {
+    width: 400px;
+    height: 360px;
+    left: calc(50% - 200px);
+    top: calc(50% - 180px);
+    border-radius: 15px;
+  }
+}
 
 .sensor-selector {
   .button {
