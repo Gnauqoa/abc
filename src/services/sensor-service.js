@@ -11,6 +11,7 @@ import tempSensorIcon from "../img/sensor-info/sensor-icons/temp.png";
 import pressureSensorIcon from "../img/sensor-info/sensor-icons/pressure.png";
 import waterQualitySensorIcon from "../img/sensor-info/sensor-icons/water-quality.png";
 import voltageSensorIcon from "../img/sensor-info/sensor-icons/voltage.png";
+import lightSensorIcon from "../img/sensor-info/sensor-icons/light.png";
 import amperageSensorIcon from "../img/sensor-info/sensor-icons/amperage.png";
 import DeviceManagerIST from "./device-manager";
 import * as core from "../utils/core";
@@ -167,7 +168,7 @@ export const defaultSensors = [
     code: "inno-013",
     name: "Cảm biến ánh sáng",
     label: "Ánh sáng",
-    icon: voltageSensorIcon,
+    icon: lightSensorIcon,
     remote_logging: true,
     support_calib: false,
     data: [
