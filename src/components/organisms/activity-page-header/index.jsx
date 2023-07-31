@@ -107,7 +107,7 @@ const ActivityHeader = ({
       />,
       <ListItem
         key="activity-header-resource"
-        link="https://www.google.com.vn/"
+        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
         external
         target="_blank"
         back
@@ -133,7 +133,7 @@ const ActivityHeader = ({
       />,
       <ListItem
         key="activity-header-resource"
-        link="https://www.google.com.vn/"
+        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
         external
         target="_blank"
         back
