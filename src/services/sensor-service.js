@@ -169,7 +169,7 @@ export const defaultSensors = [
     label: "Ánh sáng",
     icon: voltageSensorIcon,
     remote_logging: true,
-    support_calib: true,
+    support_calib: false,
     data: [
       { id: "inno-013-light", name: "Độ sáng", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
       //{ id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
