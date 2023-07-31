@@ -171,6 +171,12 @@
       .__sensor-name {
         font-size: 12px;
       }
+
+      .__sensor-icon {
+        img {
+          width: 25px;
+        }
+      }
     }
     .__sensor-info {
       .__close-button {

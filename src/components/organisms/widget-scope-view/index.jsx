@@ -18,7 +18,7 @@ import { createSensorInfo } from "../../../utils/core";
 const MAX_DECIBEL = 140;
 const MIN_DECIBEL = 0;
 const GET_SAMPLES_INTERVAL = 200;
-const BUFFER_TIME_DOMAIN = 1024;
+const BUFFER_TIME_DOMAIN = 2048;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
 const MAX_FREQUENCY = 6000;
 const REF_VALUE = 1.0; // Reference value for SPL calculation

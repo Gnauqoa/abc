@@ -131,7 +131,7 @@ export default function SensorSelector({
         {displayButton}
       </Button>
       <Popup
-        className="edl-popup"
+        className="sensor-selector-popup"
         ref={sensorPopup}
         opened={sensorSelectPopupOpened}
         onPopupClosed={() => setSensorSelectPopupOpened(false)}
