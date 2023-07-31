@@ -7,7 +7,7 @@ const MIN_DECIBEL = -90;
 const MAX_DECIBEL = 0;
 const SCALE_DECIBEL = 150;
 const GET_SAMPLES_INTERVAL = 200;
-const BUFFER_LENGTH = 2048;
+export const BUFFER_LENGTH = 2048;
 
 // var filterNode;
 

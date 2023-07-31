@@ -11,14 +11,13 @@ import {
 import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID } from "../../../services/sensor-service";
-import MicrophoneServiceIST from "../../../services/microphone-service";
+import MicrophoneServiceIST, { BUFFER_LENGTH } from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
 import { createSensorInfo } from "../../../utils/core";
 
 const MAX_DECIBEL = 140;
 const MIN_DECIBEL = 0;
 const GET_SAMPLES_INTERVAL = 200;
-const BUFFER_TIME_DOMAIN = 2048;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
 const MAX_FREQUENCY = 6000;
 const REF_VALUE = 1.0; // Reference value for SPL calculation
@@ -95,7 +94,7 @@ const ScopeViewWidget = ({ widget }) => {
           const normalizedArray = [];
           const dataArray = MicrophoneServiceIST.getFloatTimeDomainData();
 
-          for (let i = 0; i < BUFFER_TIME_DOMAIN; i++) {
+          for (let i = 0; i < BUFFER_LENGTH; i++) {
             const y = dataArray[i];
             if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
             normalizedArray.push({ x: time, y: y });
@@ -113,7 +112,7 @@ const ScopeViewWidget = ({ widget }) => {
           updateChart({
             chartInstance: chartInstanceRef.current,
             data: chartDatas,
-            maxX: timePerSample * BUFFER_TIME_DOMAIN * 1000,
+            maxX: timePerSample * BUFFER_LENGTH * 1000,
             maxY: maxAmplitude,
             minY: maxAmplitude * -1,
             labelY: "amplitude",
