@@ -1,0 +1,14 @@
+.toast {
+  &.info {
+    background-color: #3498db;
+  }
+  &.success {
+    background-color: #07bc0c;
+  }
+  &.warning {
+    background-color: #f1c40f;
+  }
+  &.error {
+    background-color: #e74c3c;
+  }
+}

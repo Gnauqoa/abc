@@ -34,6 +34,7 @@ export const defaultSensors = [
     name: "Cảm biến nồng độ khí CO2",
     label: "CO2",
     icon: co2SensorIcon,
+    remote_logging: true,
     data: [
       {
         id: "inno-001-co2",
@@ -51,6 +52,8 @@ export const defaultSensors = [
     name: "Cảm biến Oxi hòa tan (Analog)",
     label: "DO",
     icon: doSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [
       { id: "inno-002-mg", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 20, formatFloatingPoint: 2 },
       { id: "inno-002-percent", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 100, formatFloatingPoint: 1 },
@@ -62,6 +65,8 @@ export const defaultSensors = [
     name: "Cảm biến nồng độ khí Oxy",
     label: "O2",
     icon: o2SensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-003-o2", name: "Nồng độ khí Oxy", unit: "%", min: 0, max: 30, formatFloatingPoint: 1 }],
   },
   {
@@ -70,6 +75,8 @@ export const defaultSensors = [
     name: "Cảm biến nhiệt độ",
     label: "Nhiệt độ",
     icon: tempSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-004-tem", name: "Nhiệt độ", unit: "°C", min: -40, max: 125, formatFloatingPoint: 1 }],
   },
   {
@@ -78,6 +85,8 @@ export const defaultSensors = [
     name: "Cảm biến độ ẩm không khí",
     label: "Độ ẩm Nhiệt độ",
     icon: tempHumiditySensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [
       { id: "inno-005-hum", name: "Độ ẩm", unit: "%", min: 0, max: 100, formatFloatingPoint: 0 },
       { id: "inno-005-tem", name: "Nhiệt độ", unit: "°C", min: 0, max: 80, formatFloatingPoint: 1 },
@@ -89,6 +98,8 @@ export const defaultSensors = [
     name: "Cảm biến độ mặn nước",
     label: "Nồng độ mặn",
     icon: salinitySensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [
       { id: "inno-006-sal-00", name: "Độ mặn", unit: "ppt", min: 0, max: 50, formatFloatingPoint: 1 },
       {
@@ -107,6 +118,8 @@ export const defaultSensors = [
     name: "Cảm biến PH",
     label: "PH",
     icon: phSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-007-ph", name: "Độ PH", unit: "", min: 0, max: 14, formatFloatingPoint: 1 }],
   },
   {
@@ -115,6 +128,8 @@ export const defaultSensors = [
     name: "Cảm biến áp suất khí",
     label: "Áp suất khí",
     icon: pressureSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-009-kpa", name: "Áp suất khí", unit: "kPa", min: -50, max: 250, formatFloatingPoint: 0 }],
   },
   {
@@ -123,6 +138,8 @@ export const defaultSensors = [
     name: "Cảm biến âm thanh",
     label: "Âm thanh",
     icon: soundSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-010-dba", name: "Cường độ âm thanh", unit: "dBA", min: 0, max: 140, formatFloatingPoint: 1 }],
   },
   {
@@ -131,6 +148,8 @@ export const defaultSensors = [
     name: "Cảm biến dòng điện",
     label: "Dòng điện",
     icon: amperageSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-011-amp", name: "Dòng điện", unit: "mA", min: 0, max: 5000, formatFloatingPoint: 1 }],
   },
   {
@@ -139,7 +158,24 @@ export const defaultSensors = [
     name: "Cảm biến điện áp",
     label: "Điện áp",
     icon: voltageSensorIcon,
+    remote_logging: true,
+    support_calib: true,
     data: [{ id: "inno-012-volt", name: "Điện áp", unit: "V", min: -10, max: 10, formatFloatingPoint: 1 }],
+  },
+  {
+    id: 13,
+    code: "inno-013",
+    name: "Cảm biến ánh sáng",
+    label: "Ánh sáng",
+    icon: voltageSensorIcon,
+    remote_logging: true,
+    support_calib: false,
+    data: [
+      { id: "inno-013-light", name: "Độ sáng", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      //{ id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+    ],
   },
   {
     id: 65,
@@ -147,6 +183,8 @@ export const defaultSensors = [
     name: "Cảm biến chất lượng nước (9909)",
     label: "Chất lượng nước",
     icon: waterQualitySensorIcon,
+    remote_logging: false,
+    support_calib: false,
     data: [
       { id: "BLE-9909-PH", name: "Độ PH", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
       { id: "BLE-9909-EC", name: "Độ dẫn điện", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
@@ -162,6 +200,8 @@ export const defaultSensors = [
     name: "Cảm biến chất lượng nước (C600)",
     label: "Chất lượng nước",
     icon: waterQualitySensorIcon,
+    remote_logging: false,
+    support_calib: false,
     data: [
       { id: "BLE-C600-PH", name: "Độ PH", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
       { id: "BLE-C600-EC", name: "Độ dẫn điện", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
@@ -177,6 +217,8 @@ export const defaultSensors = [
     name: "Cảm biến Oxi hòa tan (9100)",
     label: "DO",
     icon: doSensorIcon,
+    remote_logging: false,
+    support_calib: false,
     data: [
       { id: "BLE-9100-MG", name: "Nồng độ Oxy - mg/L", unit: "mg/L", min: 0, max: 30, formatFloatingPoint: 2 },
       { id: "BLE-9100-%", name: "Nồng độ Oxy - %", unit: "%", min: 0, max: 300, formatFloatingPoint: 1 },
@@ -190,6 +232,8 @@ export const defaultSensors = [
     label: "Microphone",
     icon: soundSensorIcon,
     isBuiltin: true,
+    remote_logging: false,
+    support_calib: false,
     data: [{ id: "inno-068-db", name: "Mức decibel", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
   },
   {
@@ -199,6 +243,8 @@ export const defaultSensors = [
     label: "Microphone",
     icon: soundSensorIcon,
     isBuiltin: true,
+    remote_logging: false,
+    support_calib: false,
     data: [
       { id: "inno-069-wave", name: "Sóng", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
       { id: "inno-069-frequency", name: "Tần số", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
@@ -344,19 +390,18 @@ export class SensorServices {
     return builtinSensors;
   }
 
-  async remoteLoggingSize(sensorId) {
+  async remoteLoggingInfo(sensorId) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###");
 
     const data = await core.timeoutEventData("log,chk");
 
-    return Number(data[0][1]);
+    return data.map((d) => Number(d));
   }
 
   async remoteLoggingData(sensorId, size) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###");
 
-    const data = await core.timeoutEventData("log,get", size);
-    return Promise.resolve(data);
+    return core.timeoutEventData("log,get", size, 2000, true);
   }
 }
 

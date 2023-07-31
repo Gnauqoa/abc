@@ -11,9 +11,9 @@ import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
-import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
-import { saveFile } from "../../../services/file-service";
-import { getCurrentTime } from "../../../utils/core";
+import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, DELETE_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
+import useToast from "../../atoms/toast";
+import DataManagerIST from "../../../services/data-manager";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -21,32 +21,44 @@ const REMOTE_LOGGING_TAB = 3;
 const OTHER_SETTINGS_TAB = 4;
 
 const defaultTab = 1;
-const settingTabs = {
+const defaultSettingTabs = {
   [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
   [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
-  [REMOTE_LOGGING_TAB]: "Remote logging",
+  [REMOTE_LOGGING_TAB]: "Lấy mẫu từ xa", 
   [OTHER_SETTINGS_TAB]: "Chức năng khác",
 };
 
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
-  const [sensorInfo, setSensorInfo] = useState({});
+  const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
+  const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
+  const settingTabs = getSettingTabs();
+  const toast = useToast();
 
   useEffect(() => {
-    getSensors();
     setCurrentTab(defaultTab);
   }, [sensorId]);
 
-  const getSensors = () => {
-    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    sensorInfo !== null && setSensorInfo(sensorInfo);
-  };
+  function getSettingTabs() {
+    return Object.keys(defaultSettingTabs)
+      .filter((key) => {
+        if (
+          (Number(key) === REMOTE_LOGGING_TAB && sensorInfo.remote_logging === false) ||
+          (Number(key) === SENSOR_CALIBRATING_TAB && sensorInfo.support_calib === false)
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .reduce((cur, key) => {
+        return Object.assign(cur, { [key]: defaultSettingTabs[key] });
+      }, {});
+  }
 
   const onSaveSensorSettingHandler = (newSensorUnitInfo) => {
     SensorServicesIST.updateSensorSetting(sensorId, newSensorUnitInfo);
     onSaveSetting(sensorId, newSensorUnitInfo);
-    getSensors();
     onClosePopup();
   };
 
@@ -55,6 +67,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     let strCalib = "$$$cal,set," + k + "," + offset + "###";
 
     DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
+    toast.notifyCmdDTO();
     onClosePopup();
   };
 
@@ -63,23 +76,42 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       const cmdZero = "$$$zer###";
 
       DeviceManagerIST.sendCmdDTO(sensorId, cmdZero);
+      toast.notifyCmdDTO();
     }
   };
 
   const onSaveRemoteLoggingHandler = async ({ sensorId, action, data }) => {
     switch (action) {
       case DOWNLOAD_LOG_ACTION: {
-        const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, data);
-        var csvData = sensorLog
-          .map(function (d) {
-            return d.join();
-          })
-          .join("\n");
-        const name = `${sensorInfo.name}-${getCurrentTime()}.log`;
-        saveFile("", csvData, {
-          ext: "log",
-          name,
-        });
+        try {
+          const interval = data[2];
+          const size = data[3];
+          const sensorLog = await SensorServicesIST.remoteLoggingData(sensorId, size);
+          let dataRunData = {};
+          dataRunData[sensorId] = [];
+          sensorLog.forEach((log, index) => {
+            const sensorData = {
+              time: (interval * index).toFixed(3),
+              values: log.slice(2),
+            };
+            dataRunData[sensorId].push(sensorData);
+          });
+
+          const dataRun = {
+            data: dataRunData,
+            interval,
+          };
+          DataManagerIST.addRemoteLoggingDataRun(dataRun);
+          toast.show("Tải dữ liệu thành công.");
+        } catch (err) {
+          console.error("Download remote logging error", err);
+          err !== "cancel" && toast.show("Tải dữ liệu bị lỗi timeout.", "error");
+        }
+        break;
+      }
+      case DELETE_LOG_ACTION: {
+        DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,del###");
+        toast.notifyCmdDTO();
         break;
       }
       case SET_LOG_SETTING: {
@@ -92,7 +124,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           mqttUri,
           mqttUsername,
           mqttPassword,
-          channel,
           topics,
           startMode,
         } = data;
@@ -100,28 +131,49 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         if (loggingMode === FLASH) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
         } else if (loggingMode === MQTT) {
-          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},${channel},{${topics.join(
+          cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},{${topics.join(
             ";"
           )}}###`;
         } else if (loggingMode === OFF) {
-          cmdRemoteLogging = "$$$log,set,0,0";
+          cmdRemoteLogging = "$$$log,set,0,0###";
         }
 
         DeviceManagerIST.sendCmdDTO(sensorId, cmdRemoteLogging);
+        toast.notifyCmdDTO();
         break;
       }
     }
   };
 
+  async function checkRemoteLogging() {
+    try {
+      const logInfo = SensorServicesIST.remoteLoggingInfo(sensorId);
+      toast.notifyCmdDTO("kiểm tra log");
+      setRemoteLoggingInfo(await logInfo);
+    } catch {
+      setRemoteLoggingInfo([0, 0, 0, 0]);
+    }
+  }
+
   const onChangeTab = async (event) => {
     const tabId = parseInt(event.target.id);
     setCurrentTab(tabId);
+    if (tabId === REMOTE_LOGGING_TAB) {
+      checkRemoteLogging();
+    }
+  };
+
+  const onOpenPopup = async () => {
+    if (currentTab === REMOTE_LOGGING_TAB) {
+      checkRemoteLogging();
+    }
   };
 
   return (
     <Popup
       opened={openedPopup}
       onPopupClosed={onClosePopup}
+      onPopupOpened={onOpenPopup}
       className="sensor-setting-popup"
       ref={sensorSettingPopupRef}
     >
@@ -174,6 +226,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             {currentTab === REMOTE_LOGGING_TAB && (
               <RemoteLoggingTab
                 sensorInfo={sensorInfo}
+                remoteLoggingInfo={remoteLoggingInfo}
                 sensorDataIndex={sensorDataIndex}
                 onSaveHandler={onSaveRemoteLoggingHandler}
               />

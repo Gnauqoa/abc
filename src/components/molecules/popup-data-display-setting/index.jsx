@@ -139,7 +139,6 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             label="Đơn vị đo:"
             type="text"
             onChange={formFieldHandler}
-            validateOnBlur
             value={formField.unitOfMeasure || ""}
           ></ListInput>
           <ListInput
@@ -152,7 +151,6 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             label="Format số lẻ:"
             type="text"
             onChange={formFieldHandler}
-            validateOnBlur
             value={formField.floatingPointPosition || ""}
           ></ListInput>
           <ListInput

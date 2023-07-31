@@ -56,7 +56,7 @@ const TextViewWidget = ({ widget }) => {
         <div className="text-view-view-mode" ref={containerRef}></div>
       )}
       <div className="toggle-button">
-        <RoundButton icon={mode === VIEW_MODE ? "edit" : "preview"} color="#0086ff" onClick={onToggleHandler} />
+        <RoundButton icon={mode === VIEW_MODE ? "edit" : "preview"} color="#91a7b5" onClick={onToggleHandler} />
       </div>
     </div>
   );

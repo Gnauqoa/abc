@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useReducer } from "react";
 import { Navbar, Button, Page, Popup, Block, NavTitle, NavRight, NavLeft, f7 } from "framework7-react";
 import DataManagerIST from "../../../services/data-manager";
 
@@ -8,6 +8,7 @@ import { useActivityContext } from "../../../context/ActivityContext";
 import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
 
 const DataRunManagementPopup = () => {
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
   const [dataRunNameEdited, setDataRunNameEdited] = useState({});
@@ -42,7 +43,12 @@ const DataRunManagementPopup = () => {
   };
 
   return (
-    <Popup className="data-run-management-popup" ref={dataRunManagementPopupRef} onPopupClose={onSaveDataRun}>
+    <Popup
+      className="data-run-management-popup"
+      ref={dataRunManagementPopupRef}
+      onPopupOpened={forceUpdate}
+      onPopupClose={onSaveDataRun}
+    >
       <Page className="data-run-management">
         <Navbar>
           <NavLeft>

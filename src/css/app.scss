@@ -39,18 +39,18 @@
   width: 100%;
 }
 
+.navbar {
+  .left i,
+  .title {
+    color: #ffffff;
+  }
+  .button--round i {
+    color: #91a7b5 !important;
+  }
+}
+
 .bg-color-regal-blue {
   --f7-theme-color-bg-color: #023a68;
-  .navbar {
-    .left i,
-    .title {
-      color: #ffffff;
-    }
-    .button--round i {
-      color: #91a7b5 !important;
-    }
-  }
-
   .page-content .block .row .col img {
     height: 130px;
   }
@@ -480,4 +480,9 @@
   color: white !important;
   width: fit-content;
   border-radius: 9999px;
+}
+
+.edl-cancel-preloader {
+  background: #b2b2b2 !important;
+  margin-top: 5px;
 }

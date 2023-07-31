@@ -107,9 +107,10 @@ const ActivityHeader = ({
       />,
       <ListItem
         key="activity-header-resource"
+        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
         external
+        target="_blank"
         back
-        href="https://www.google.com.vn/"
         popoverClose
         title="Tài nguyên"
       />,
@@ -132,9 +133,10 @@ const ActivityHeader = ({
       />,
       <ListItem
         key="activity-header-resource"
+        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
         external
+        target="_blank"
         back
-        href="https://www.google.com.vn/"
         popoverClose
         title="Tài nguyên"
       />,

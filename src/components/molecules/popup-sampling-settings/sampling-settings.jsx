@@ -70,9 +70,9 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
             <div className="text">Thời gian (giây): </div>
             <input
               className="input-sampling-time"
-              type="text"
+              type="number"
               // placeholder={timer === TIMER_NO_STOP ? "--" : timer}
-              value={timer === TIMER_NO_STOP ? "--" : timer}
+              value={timer === TIMER_NO_STOP ? "" : timer}
               onChange={onChangeTimer}
             />
           </div>
