@@ -70,7 +70,10 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       return false;
     }
 
-    if (setting.loggingMode === FLASH) {
+    if (
+      formSetting.loggingMode === FLASH ||
+      (formSetting.loggingMode === MQTT && formSetting.startMode !== EVERY_STARTUP)
+    ) {
       if (setting.duration === "" || isNaN(setting.duration) || setting.duration < 1) {
         f7.dialog.alert("Tổng thời gian không hợp lệ");
         return false;
@@ -193,7 +196,8 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             );
           })}
         </CustomDropdownInput>
-        {formSetting.loggingMode === FLASH && (
+        {(formSetting.loggingMode === FLASH ||
+          (formSetting.loggingMode === MQTT && formSetting.startMode !== EVERY_STARTUP)) && (
           <ListInput
             className="display-setting-input label-color-black"
             outline
@@ -225,7 +229,8 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             </div>
           </ListInput>
         )}
-        {formSetting.loggingMode === FLASH && (
+        {(formSetting.loggingMode === FLASH ||
+          (formSetting.loggingMode === MQTT && formSetting.startMode !== EVERY_STARTUP)) && (
           <ListItem
             title={`Tổng số lượng mẫu: ${~~(
               (formSetting.duration * 60) /

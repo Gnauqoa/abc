@@ -11,7 +11,15 @@ import "./index.scss";
 
 import SensorServicesIST from "../../../services/sensor-service";
 import DeviceManagerIST from "../../../services/device-manager";
-import { OFF, MQTT, FLASH, DOWNLOAD_LOG_ACTION, DELETE_LOG_ACTION, SET_LOG_SETTING } from "../../../js/constants";
+import {
+  OFF,
+  MQTT,
+  FLASH,
+  DOWNLOAD_LOG_ACTION,
+  DELETE_LOG_ACTION,
+  SET_LOG_SETTING,
+  EVERY_STARTUP,
+} from "../../../js/constants";
 import useToast from "../../atoms/toast";
 import DataManagerIST from "../../../services/data-manager";
 
@@ -131,7 +139,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
         if (loggingMode === FLASH) {
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval}###`;
         } else if (loggingMode === MQTT) {
-          duration = 0;
+          if (startMode === EVERY_STARTUP) duration = 0;
           cmdRemoteLogging = `$$$log,set,${startMode},${loggingMode},${duration},${interval},${wifiSSID},${wifiPassword},${mqttUri},${mqttUsername},${mqttPassword},{${topics.join(
             ";"
           )}}###`;
