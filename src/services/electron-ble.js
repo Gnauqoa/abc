@@ -182,7 +182,7 @@ export class WebBle {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           const value = event.target.value;
-          callback(Uint8Array.from(value.buffer), BLE_TYPE, device);
+          callback(new Uint8Array(value.buffer), BLE_TYPE, device);
         });
 
         let intervalId = setInterval(function () {
@@ -201,7 +201,7 @@ export class WebBle {
   }
 
   ble9100SensorReceiveDataCallback(device, callback) {
-    //YINMIK BLE-9909 type sensors
+    //YINMIK BLE-9100 type sensors
     this.servers[device.deviceId]
       .getPrimaryService(0xff01)
       .then((service) => service.getCharacteristic(0xff02))
@@ -210,7 +210,7 @@ export class WebBle {
         characteristic.removeEventListener("characteristicvaluechanged", () => {});
         characteristic.addEventListener("characteristicvaluechanged", (event) => {
           const value = event.target.value;
-          callback(Uint8Array.from(value.buffer), BLE_TYPE, device);
+          callback(new Uint8Array(value.buffer), BLE_TYPE, device);
         });
 
         let intervalId = setInterval(function () {
