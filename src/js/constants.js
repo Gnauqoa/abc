@@ -1,4 +1,4 @@
-export const APP_VERSION = "v1.0";
+export const APP_VERSION = "v1.0.3";
 
 // Layout
 export const LAYOUT_CHART = "chart";
