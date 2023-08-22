@@ -36,7 +36,7 @@ const NewPagePopup = ({ handleNewPage }) => {
   return (
     <Popup className="new-page-popup" ref={newPagePopupRef}>
       <Page className="bg-color-regal-blue">
-        <Navbar>
+        <Navbar className="header-nav">
           <NavLeft>
             <Button
               iconIos="material:arrow_back"

@@ -26,7 +26,7 @@ import scopeViewImg from "../img/layout/scope-view.png";
 
 export default () => (
   <Page className="bg-color-regal-blue">
-    <Navbar>
+    <Navbar className="header-nav">
       <NavLeft>
         <BackButton link="/" />
       </NavLeft>

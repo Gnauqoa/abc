@@ -145,7 +145,7 @@ const ActivityHeader = ({
 
   return (
     <div>
-      <Navbar>
+      <Navbar className="header-nav">
         <NavLeft>
           <BackButton disabled={isRunning} onClick={handleActivityBack} />
           <RoundButton

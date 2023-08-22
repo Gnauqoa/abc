@@ -74,7 +74,7 @@ export default ({ f7router }) => {
 
   return (
     <Page className="bg-color-regal-blue home">
-      <Navbar>
+      <Navbar className="header-nav">
         <NavLeft>
           <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
