@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Navbar, NavLeft, NavRight, Popover, List, ListItem, f7, AccordionContent } from "framework7-react";
+import { Navbar, NavLeft, NavRight, Popover, List, ListItem, f7 } from "framework7-react";
 import BackButton from "../../atoms/back-button";
 import RoundButton from "../../atoms/round-button";
 import NewPagePopup from "../../molecules/popup-new-page";
@@ -81,6 +81,18 @@ const ActivityHeader = ({
     }
   };
 
+  const openResource = (e) => {
+    const url = "https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link";
+    if (f7.device.android) {
+      navigator.app.loadUrl(url, {
+        openExternal: true,
+      });
+    } else {
+      window.open(url, "_system");
+    }
+    e.preventDefault();
+  };
+
   // Declare settings function for each device
   if (f7.device.android || f7.device.ios) {
     settings = [
@@ -105,15 +117,7 @@ const ActivityHeader = ({
         title="Chia sẻ dữ liệu"
         onClick={handleShareDataRuns}
       />,
-      <ListItem
-        key="activity-header-resource"
-        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
-        external
-        target="_blank"
-        back
-        popoverClose
-        title="Tài nguyên"
-      />,
+      <ListItem key="activity-header-resource" link="#" popoverClose title="Tài nguyên" onClick={openResource} />,
     ];
   } else {
     settings = [
@@ -131,15 +135,7 @@ const ActivityHeader = ({
         title="Xuất ra Excel"
         onClick={handleExportDataRuns}
       />,
-      <ListItem
-        key="activity-header-resource"
-        link="https://drive.google.com/drive/folders/1NH5JFB3NsujqjsI0qMUlwOeKWZP1OHYG?usp=drive_link"
-        external
-        target="_blank"
-        back
-        popoverClose
-        title="Tài nguyên"
-      />,
+      <ListItem key="activity-header-resource" link="#" popoverClose title="Tài nguyên" onClick={openResource} />,
     ];
   }
 
