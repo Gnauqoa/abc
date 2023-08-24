@@ -87,6 +87,8 @@ const ActivityHeader = ({
       navigator.app.loadUrl(url, {
         openExternal: true,
       });
+    } else if (f7.device.electron) {
+      window._cdvElectronIpc.openBrowser(url);
     } else {
       window.open(url, "_system");
     }

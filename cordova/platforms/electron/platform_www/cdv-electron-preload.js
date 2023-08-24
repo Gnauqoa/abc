@@ -40,6 +40,8 @@ contextBridge.exposeInMainWorld("_cdvElectronIpc", {
   },
 
   selectBleDevice: (deviceId) => ipcRenderer.send("webble-selected", deviceId),
+
+  openBrowser: (link) => ipcRenderer.invoke("openBrowser", link),
 });
 
 contextBridge.exposeInMainWorld("fileApi", {

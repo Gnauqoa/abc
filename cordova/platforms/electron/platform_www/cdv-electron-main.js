@@ -22,7 +22,7 @@ const path = require("path");
 
 const { cordova } = require("./package.json");
 // Module to control application life, browser window and tray.
-const { app, BrowserWindow, protocol, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, protocol, ipcMain, dialog, shell } = require("electron");
 // Electron settings from .json file.
 const cdvElectronSettings = require("./cdv-electron-settings.json");
 const reservedScheme = require("./cdv-reserved-scheme.json");
@@ -252,6 +252,10 @@ ipcMain.handle("setFullscreen", (_, isFullscreen) => {
   } else {
     mainWindow.setFullScreen(false);
   }
+});
+
+ipcMain.handle("openBrowser", (_, link) => {
+  shell.openExternal(link);
 });
 
 // In this file you can include the rest of your app's specific main process
