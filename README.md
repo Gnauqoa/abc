@@ -42,6 +42,15 @@ npm install
 * Build Android apk:  
 `npm run build-cordova-android`
 * Use Android studio to open existing project at ./cordova/platform/android
+* Android studio, click menu Build > Generated Signed Bundle / APK > APK.
+Key store path: browse to key file at project_path/google-play/ohstemapp.jks
+Key store password: Enter key store password
+Key alias: ohstemapp
+Key password: Enter key password
+
+Click Next. In next screen, set Build Variants: release and click Create.
+
+After file generated successfully, you can see apk file in project_path/cordova/platforms/android/app/release.
 
 ## PWA
 
