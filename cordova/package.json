@@ -1,7 +1,7 @@
 {
   "name": "vn.ohstem.edl_app",
   "displayName": "InnoLab",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "Ứng dụng thu nhận và phân tích dữ liệu thí nghiệm.",
   "homepage": "https://www.ohstem.vn",
   "license": "Apache-2.0",
