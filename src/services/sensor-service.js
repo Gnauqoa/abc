@@ -13,6 +13,7 @@ import waterQualitySensorIcon from "../img/sensor-info/sensor-icons/water-qualit
 import voltageSensorIcon from "../img/sensor-info/sensor-icons/voltage.png";
 import lightSensorIcon from "../img/sensor-info/sensor-icons/light.png";
 import forceSensorIcon from "../img/sensor-info/sensor-icons/force.png";
+import motionSensorIcon from "../img/sensor-info/sensor-icons/motion.png";
 import amperageSensorIcon from "../img/sensor-info/sensor-icons/amperage.png";
 import DeviceManagerIST from "./device-manager";
 import * as core from "../utils/core";
@@ -189,6 +190,18 @@ export const defaultSensors = [
     support_calib: true,
     data: [
       { id: "inno-014-force", name: "Lực kéo", unit: "N", min: 0, max: 50, formatFloatingPoint: 1 },
+    ],
+  },
+  {
+    id: 15,
+    code: "inno-014",
+    name: "Cảm biến khoảng cách",
+    label: "Khoảng cách",
+    icon: motionSensorIcon,
+    remote_logging: true,
+    support_calib: true,
+    data: [
+      { id: "inno-015-motion", name: "Khoảng cách", unit: "cm", min: 0, max: 400, formatFloatingPoint: 1 },
     ],
   },
   {
