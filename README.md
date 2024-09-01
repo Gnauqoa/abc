@@ -7,7 +7,7 @@
 * Prettier setting: Print Width = 120
 
 ## Install Dependencies
-* Node.js v14
+* Node.js v18.16.1
 * First of all we need to install dependencies, run in terminal
 ```
 npm install
