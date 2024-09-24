@@ -27,21 +27,23 @@ npm install
 * 🖥 `cordova-electron` - run dev build cordova Electron app
 
 ## Build Android apk 
-* Install JDK 11 https://drive.google.com/file/d/1mRpvL9SIM9LQhmEdvOR8zzo4FDJ0q_Kv/view?usp=share_link
 * Install Android Studio https://developer.android.com/studio
 * Install Cordova:  
 `npm install cordova -g`
 * Set ANDROID_SDK_ROOT (path can be found from Android Studio):  
 `setx ANDROID_SDK_ROOT "C:\Users\your-username\AppData\Local\Android\Sdk"`
-* Download Graddle at https://gradle.org/next-steps/?version=8.1.1&format=bin and extract and set path to the it's bin folder
 * Remove and add Android platform:  
   `cd cordova`  
   `cordova platform remove android`  
-  `cordova platform add android@10.1.2`  
+  `cordova platform add android`  
 * Run the app with usb cable: `npm run cordova-android`
 * Build Android apk:  
 `npm run build-cordova-android`
 * Use Android studio to open existing project at ./cordova/platform/android
+* Config Android Studio Settings: `File > Settings`
+
+    * `Languages & Frameworks > Android SDK > SDK Tools`: Check `Show Package Details`, select `Android SDK Build-Tools: 34.0.0` version
+    * `Build, Execution, Deployment > Build Tools > Gradle`: Select `Gradle SDK: GRADLE_LOCAL_JAVA_HOME`
 
 ## PWA
 
