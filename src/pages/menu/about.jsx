@@ -10,7 +10,7 @@ export default () => (
         <img src={logo} width={"25%"} />
       </div>
       <div className="project">InnoLab {APP_VERSION}</div>
-      <div className="copyright">Bản quyền thuộc sở hữu của AITT</div>
+      <div className="copyright">Bản quyền thuộc sở hữu của ADT</div>
       <div className="contact">
         <span>
           <Icon slot="media" ios="material:headset_mic" md="material:headset_mic" size="2vw"></Icon>08.6666.8168
@@ -21,7 +21,7 @@ export default () => (
         </span>
       </div>
       <div className="contact">
-        <Icon slot="media" ios="material:location_on" md="material:location_on" size="2vw"></Icon>22/15 Đường 440,
+        <Icon slot="media" ios="material:location_on" md="material:location_on" size="2vw"></Icon>42B Đường Hồ Bá Phấn,
         Phường Phước Long A, Thủ Đức, TP.HCM
       </div>
     </div>
