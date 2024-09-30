@@ -135,6 +135,19 @@ export class DeviceManager {
               }
             );
 
+            if (f7.device.android) {
+              ble.requestMtu(
+                deviceId,
+                517,
+                () => {
+                  console.log("MTU set to: " + mtu);
+                },
+                () => {
+                  console.error("Failed to request MTU.");
+                }
+              );
+            }
+
             this.receiveDataCallback(deviceId, this.onDataCallback);
             successCallback([...this.devices]);
           },
