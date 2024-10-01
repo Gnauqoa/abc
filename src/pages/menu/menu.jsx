@@ -1,18 +1,26 @@
 import React, { useState } from "react";
 import { View, Panel, Navbar, Page, NavLeft, Link, Block, Row, Col, List, ListItem, Icon, f7 } from "framework7-react";
 import store from "store";
+import { useTranslation } from "react-i18next";
 
 import SettingsMenu from "./settings";
 import AboutMenu from "./about";
 import aboutusImg from "../../img/menu/about-ohstem.png";
+import enFlag from "../../img/menu/en.png";
+import viFlag from "../../img/menu/vi.png";
 
 export default () => {
   const [activeMenu, setActiveMenu] = useState(store.get("active-menu") || "about");
+  const { t, i18n } = useTranslation();
 
   function handleChange(e) {
     const activeMenu = e.target.value;
     store.set("active-menu", activeMenu);
     setActiveMenu(activeMenu);
+  }
+
+  function handleChangeLanguage(lang) {
+    i18n.changeLanguage(lang);
   }
 
   return (
@@ -28,6 +36,14 @@ export default () => {
                       <Link iconIos="material:close" iconMd="material:close" iconAurora="material:close" panelClose />
                     </NavLeft>
                   </Navbar>
+                  <ListItem radio name="radio-menu" className="lang-selector">
+                    <div onClick={() => handleChangeLanguage("vi")}>
+                      <img src={viFlag} className="menu-icon" /> Tiếng Việt
+                    </div>
+                    <div onClick={() => handleChangeLanguage("en")}>
+                      <img src={enFlag} className="menu-icon" /> English
+                    </div>
+                  </ListItem>
                   {/* <ListItem
                     radio
                     title="Cài đặt"
@@ -40,7 +56,7 @@ export default () => {
                   </ListItem> */}
                   <ListItem
                     radio
-                    title="Về InnoLab"
+                    title={t("main_menu.about")}
                     value="about"
                     name="radio-menu"
                     onChange={handleChange}

@@ -1,0 +1,16 @@
+{
+  "common": {
+    "save": "Lưu",
+    "yes": "Có",
+    "cancel": "Bỏ qua",
+    "copy": "Sao chép",
+    "name": "Tên",
+    "ok": "OK",
+    "delete": "Xóa",
+    "rename": "Đổi tên",
+    "share": "Chia sẻ"
+  },
+  "main_menu": {
+    "about": "Về InnoLab"
+  }
+}

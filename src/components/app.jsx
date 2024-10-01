@@ -1,16 +1,43 @@
 import React from "react";
 import { getDevice } from "framework7/lite-bundle";
 import { f7, f7ready, App, View } from "framework7-react";
-import cordovaApp from "../js/cordova-app";
+import { I18nextProvider, initReactI18next } from "react-i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
+import i18n from "i18next";
+import store from "store";
 
+import cordovaApp from "../js/cordova-app";
 import routes from "../js/routes";
-import store from "../js/store";
 import MainMenu from "../pages/menu/menu";
 import Dialogs from "./molecules/dialog/dialogs";
-
 import dataManager from "../services/data-manager";
 import { ActivityContextProvider } from "../context/ActivityContext";
 import { TableContextProvider } from "../context/TableContext";
+import commonEn from "../translations/en/common.json";
+import commonVi from "../translations/vi/common.json";
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    detection: {
+      order: ["localStorage"],
+    },
+    lng: store.get("i18nextLng") || "vi",
+    interpolation: {
+      escapeValue: false,
+    },
+    react: { withRef: true },
+    resources: {
+      en: {
+        translation: commonEn,
+      },
+      vi: {
+        translation: commonVi,
+      },
+    },
+  })
+  .then((t) => {});
 
 const MyApp = () => {
   const device = getDevice();
@@ -20,8 +47,6 @@ const MyApp = () => {
     theme: "auto", // Automatic theme detection
 
     id: "vn.ohstem.edl_app", // App bundle ID
-    // App store
-    store: store,
     // App routes
     routes: routes,
     // Register service worker (only on production build)
@@ -82,16 +107,18 @@ const MyApp = () => {
   });
 
   return (
-    <ActivityContextProvider>
-      <TableContextProvider>
-        <App {...f7params}>
-          <Dialogs />
-          <MainMenu />
-          {/* Your main view, should have "view-main" class */}
-          <View main className="safe-areas" url="/" />
-        </App>
-      </TableContextProvider>
-    </ActivityContextProvider>
+    <I18nextProvider i18n={i18n}>
+      <ActivityContextProvider>
+        <TableContextProvider>
+          <App {...f7params}>
+            <Dialogs />
+            <MainMenu />
+            {/* Your main view, should have "view-main" class */}
+            <View main className="safe-areas" url="/" />
+          </App>
+        </TableContextProvider>
+      </ActivityContextProvider>
+    </I18nextProvider>
   );
 };
 export default MyApp;

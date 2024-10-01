@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
+import { withTranslation } from "react-i18next";
 
 import DataManagerIST from "../../../services/data-manager";
 import {
@@ -13,7 +14,7 @@ import {
 import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../../../js/constants";
 import * as core from "../../../utils/core";
 
-export default class extends Component {
+class Dialogs extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -129,6 +130,7 @@ export default class extends Component {
 
   render() {
     const { inputText } = this.state;
+    const t = this.props.t;
 
     return (
       <>
@@ -211,9 +213,9 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
                 <Button className="ok-button" disabled={!inputText.length}>
-                  Lưu
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -441,3 +443,5 @@ export default class extends Component {
     );
   }
 }
+
+export default withTranslation()(Dialogs);

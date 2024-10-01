@@ -235,6 +235,31 @@
     width: 36px;
     height: 36px;
   }
+
+  .lang-selector {
+    .item-content {
+      cursor: auto;
+    }
+
+    .menu-icon {
+      margin-right: 5px;
+    }
+
+    div {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    div:nth-child(2) {
+      margin-left: 20px;
+    }
+
+    .item-inner {
+      justify-content: flex-start;
+      cursor: auto;
+    }
+  }
 }
 
 /* Setup device */

@@ -1,0 +1,16 @@
+{
+  "common": {
+    "save": "Save",
+    "yes": "Yes",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "name": "Name",
+    "ok": "OK",
+    "delete": "Delete",
+    "rename": "Rename",
+    "share": "Share"
+  },
+  "main_menu": {
+    "about": "About InnoLab"
+  }
+}
