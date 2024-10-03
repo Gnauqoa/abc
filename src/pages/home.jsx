@@ -1,10 +1,8 @@
 import React, { useRef, useState } from "react";
-import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavRight, Button, Segmented, NavTitle, f7 } from "framework7-react";
+import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavTitle, f7 } from "framework7-react";
 
 import newImg from "../img/home/new-activity.png";
 import openImg from "../img/home/open-activity.png";
-import viFlagIcon from "../img/home/vi_flag.jpg";
-import enFlagIcon from "../img/home/en_flag.jpg"
 import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
@@ -84,9 +82,7 @@ export default ({ f7router }) => {
     });
   }
 
-  function handleChangeLanguage(lang) {
-    i18n.changeLanguage(lang);
-  }
+
 
   return (
     <Page className="bg-color-regal-blue home">
@@ -95,16 +91,6 @@ export default ({ f7router }) => {
           <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
         <NavTitle>InnoLab</NavTitle>
-        <NavRight>
-        <Segmented strong tag="p">
-          <Button active={i18n?.language === "vi"} onClick={() => handleChangeLanguage("vi")}>
-          <img src={viFlagIcon}  className="iconFlag"/>
-          </Button>
-          <Button active={i18n?.language === "en"} onClick={() => handleChangeLanguage("en")}>
-          <img src={enFlagIcon} className="iconFlag" />
-          </Button>
-        </Segmented>
-        </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-around">
         <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
