@@ -6,8 +6,11 @@ import "./index.scss";
 import dataManagementIcon from "../../../img/activity/data-management.png";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
+import { useTranslation } from "react-i18next";
 
 const DataRunManagementPopup = () => {
+  const { t, i18n } = useTranslation();
+
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const dataRunManagementPopupRef = useRef();
   const dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
@@ -38,7 +41,7 @@ const DataRunManagementPopup = () => {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
 
-    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    const activityName = name === "" ? t("modules.experimental_data") : name;
     shareFile(activityName + ".xlsx", blob);
   };
 
@@ -52,13 +55,13 @@ const DataRunManagementPopup = () => {
       <Page className="data-run-management">
         <Navbar>
           <NavLeft>
-            <NavTitle>Quản lý dữ liệu</NavTitle>
+            <NavTitle>{t("modules.data_management")}</NavTitle>
           </NavLeft>
         </Navbar>
         <div className="data-run-management-content">
           <div className="data-run-management-header ">
-            <div className="data-name-column">Dữ liệu</div>
-            <div className="data-time-column">Thời gian</div>
+            <div className="data-name-column">{t("modules.data")}</div>
+            <div className="data-time-column">{t("common.time")}</div>
           </div>
           <table>
             <tbody>
@@ -95,7 +98,7 @@ const DataRunManagementPopup = () => {
         {(f7.device.android || f7.device.ios) && (
           <div className="share-button">
             <Button raised fill onClick={handleShareDataRuns}>
-              Chia sẻ dữ liệu
+              {t("modules.share_data")}
             </Button>
           </div>
         )}

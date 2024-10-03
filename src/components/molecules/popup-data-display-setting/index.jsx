@@ -4,10 +4,13 @@ import { Page, Navbar, NavRight, List, ListInput, Button, f7, Popup } from "fram
 import _ from "lodash";
 import SensorServices from "../../../services/sensor-service";
 import { evaluate } from "mathjs";
+import { useTranslation } from "react-i18next";
 
 const sensorList = SensorServices.getSensors();
 
 const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) => {
+  const { t, i18n } = useTranslation();
+
   const [formField, setFormField] = React.useState({});
 
   const FormInitState = {
@@ -61,12 +64,12 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
 
   const validate = () => {
     if (formField.sensorDetailId === "") {
-      f7.dialog.alert("Không có cảm biến nào được chọn");
+      f7.dialog.alert(t("modules.no_sensors_selected"));
       return false;
     }
 
     if (formField.unitOfMeasure === "nan" || formField.unitOfMeasure === "") {
-      f7.dialog.alert(`Đơn vị đo không được phép để trống`);
+      f7.dialog.alert(t("modules.unit_of_measurement_cannot_be_left_blank"));
       return false;
     }
 
@@ -85,7 +88,7 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
       evaluate(trimmedFomular, scope);
       return true;
     } catch (err) {
-      f7.dialog.alert(`Công thức không hợp lệ, vui lòng kiểm tra lại. Chi tiết lỗi: ${err.message}`);
+      f7.dialog.alert(`${t("modules.invalid_formula_please_check_again_Error_details")} ${err.message}`);
       return false;
     }
   };
@@ -105,7 +108,7 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
   return (
     <Popup className="display-setting-popup" ref={ref}>
       <Page>
-        <Navbar className="sensor-select-title" title="Cài đặt hiển thị dữ liệu">
+        <Navbar className="sensor-select-title" title={t("modules.data_display_settings")}>
           <NavRight>{/* <Link iconIos="material:close" iconMd="material:close" popupClose></Link> */}</NavRight>
         </Navbar>
         <List form noHairlinesMd inlineLabels>
@@ -113,7 +116,7 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             outline
             className="label-color-black input-stack-position"
             name="sensorDetailId"
-            label="Chọn dữ liệu:"
+            label={t("modules.select_data")}
             defaultValue=""
             value={formField.sensorDetailId}
             type="select"
@@ -136,7 +139,7 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             outline
             size={5}
             name="unitOfMeasure"
-            label="Đơn vị đo:"
+            label={t("modules.select_data") + ":"}
             type="text"
             onChange={formFieldHandler}
             value={formField.unitOfMeasure || ""}
@@ -145,10 +148,10 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             className="display-setting-input label-color-black"
             outline
             size={1}
-            errorMessage="Chỉ nhập số"
+            errorMessage={t("modules.enter_numbers_only")}
             pattern="[0-9]*"
             name="floatingPointPosition"
-            label="Format số lẻ:"
+            label={t("modules.format_odd_number")}
             type="text"
             onChange={formFieldHandler}
             value={formField.floatingPointPosition || ""}
@@ -157,7 +160,7 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
             outline
             name="transformFormula"
             className="label-color-black input-stack-position"
-            label="Công thức tính toán: "
+            label={t("modules.calculation_formula")}
             type="textarea"
             onChange={formFieldHandler}
             value={formField.transformFormula}
@@ -165,10 +168,10 @@ const DataDisplaySettingPopup = ({ sensorSettings, onSubmit = () => {} }, ref) =
         </List>
         <div className="buttons">
           <Button className="cancel-button" popupClose onClick={resetSettings}>
-            Bỏ qua
+            {t("common.cancel")}
           </Button>
           <Button className="ok-button" type="reset" onClick={handleSubmit}>
-            Lưu
+            {t("common.save")}
           </Button>
         </div>
       </Page>

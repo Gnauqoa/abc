@@ -1,8 +1,10 @@
 import React, { useRef, useState } from "react";
-import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavTitle, f7 } from "framework7-react";
+import { Page, Swiper, SwiperSlide, Link, Navbar, NavLeft, NavRight, Button, Segmented, NavTitle, f7 } from "framework7-react";
 
 import newImg from "../img/home/new-activity.png";
 import openImg from "../img/home/open-activity.png";
+import viFlagIcon from "../img/home/vi_flag.jpg";
+import enFlagIcon from "../img/home/en_flag.jpg"
 import storeService from "../services/store-service";
 import { openFile } from "../services/file-service";
 import { fileReadAsTextAsync } from "../utils/core";
@@ -14,6 +16,7 @@ import {
   LINE_CHART_RANGE_SELECTION_TABLE,
 } from "../js/constants";
 import ProjectManagementPopup from "../components/molecules/popup-projects-management";
+import { useTranslation } from "react-i18next";
 
 const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
@@ -26,6 +29,7 @@ labelNotesStorage.deleteAll();
 rangeSelectionStorage.deleteAll();
 
 export default ({ f7router }) => {
+  const { t, i18n } = useTranslation();
   const files = recentFilesService.all();
   const inputFile = useRef(null);
   const [isProjectManagementOpened, setIsProjectManagementOpened] = useState(false);
@@ -46,7 +50,11 @@ export default ({ f7router }) => {
         }
       } catch (error) {
         console.error("Import failed", error.message);
-        dialog.alert("Lỗi không thể mở file", "Nội dung file không hợp lệ. Vui lòng tạo hoạt động mới.", () => {});
+        dialog.alert(
+          t("page.error_cannot_open_file"),
+          t("page.file_content_is_invalid_Please_create_a_new_activity"),
+          () => {}
+        );
       }
     } else if (f7.device.desktop) {
       inputFile.current.click();
@@ -67,9 +75,17 @@ export default ({ f7router }) => {
         });
       } catch (error) {
         console.error("Import failed", error.message);
-        dialog.alert("Lỗi không thể mở file", "Nội dung file không hợp lệ. Vui lòng tạo hoạt động mới.", () => {});
+        dialog.alert(
+          t("page.error_cannot_open_file"),
+          t("page.file_content_is_invalid_Please_create_a_new_activity"),
+          () => {}
+        );
       }
     });
+  }
+
+  function handleChangeLanguage(lang) {
+    i18n.changeLanguage(lang);
   }
 
   return (
@@ -79,6 +95,16 @@ export default ({ f7router }) => {
           <Link iconIos="material:menu" iconMd="material:menu" iconAurora="material:menu" panelOpen="left" />
         </NavLeft>
         <NavTitle>InnoLab</NavTitle>
+        <NavRight>
+        <Segmented strong tag="p">
+          <Button active={i18n?.language === "vi"} onClick={() => handleChangeLanguage("vi")}>
+          <img src={viFlagIcon}  className="iconFlag"/>
+          </Button>
+          <Button active={i18n?.language === "en"} onClick={() => handleChangeLanguage("en")}>
+          <img src={enFlagIcon} className="iconFlag" />
+          </Button>
+        </Segmented>
+        </NavRight>
       </Navbar>
       <div className="full-height display-flex flex-direction-column justify-content-space-around">
         <Swiper className="activity-actions" pagination speed={500} slidesPerView={"auto"} spaceBetween={20}>
@@ -95,7 +121,7 @@ export default ({ f7router }) => {
         </Swiper>
         {files.length > 0 && (
           <div className="activity-list">
-            <h2 className="text-color-white">HOẠT ĐỘNG GẦN ĐÂY</h2>
+            <h2 className="text-color-white">{t("page.recent_activity")}</h2>
             <Swiper className="recent-activities" navigation speed={500} slidesPerView={5}>
               {files.map((f) => {
                 return (

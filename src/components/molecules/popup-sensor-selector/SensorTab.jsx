@@ -2,9 +2,12 @@ import React from "react";
 import clsx from "clsx";
 import { AccordionContent, Block, List, ListItem, PageContent } from "framework7-react";
 import { SENSOR_STATUS_OFFLINE, SENSOR_STATUS_ONLINE } from "../../../js/constants";
+import { useTranslation } from "react-i18next";
 
 import "./index.scss";
 const SensorTab = ({ sensorListForDisplay, changeHandler }) => {
+  const { t, i18n } = useTranslation();
+
   return (
     <PageContent className="invisible-scrollbar zero-padding">
       <Block>
@@ -17,7 +20,7 @@ const SensorTab = ({ sensorListForDisplay, changeHandler }) => {
               })}
               accordionItem
               key={id}
-              title={name}
+              title={t(name)}
               accordionItemOpened={sensorStatus === SENSOR_STATUS_ONLINE ? true : false}
             >
               <AccordionContent>
@@ -31,7 +34,7 @@ const SensorTab = ({ sensorListForDisplay, changeHandler }) => {
                         __activeDevice: sensorStatus === SENSOR_STATUS_ONLINE,
                         __default: sensorStatus === SENSOR_STATUS_OFFLINE,
                       })}
-                      title={`${s.name} ${s.unit === "" ? "" : ` (${s.unit})`}`}
+                      title={`${t(s.name)} ${s.unit === "" ? "" : ` (${s.unit})`}`}
                       onClick={() => {
                         changeHandler(id + "|" + s.id);
                       }}

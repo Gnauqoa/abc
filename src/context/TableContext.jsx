@@ -23,7 +23,7 @@ export const TableContextProvider = ({ children }) => {
 
   const getFirstColumnOption = ({ tableId }) => {
     const option = firstColumnOptions[tableId];
-    if (!option) return TABLE_TIME_COLUMN;
+    if (!option) return TABLE_TIME_COLUMN();
     else return option;
   };
 

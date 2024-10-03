@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { List, ListInput, Button, f7 } from "framework7-react";
+import { useTranslation } from "react-i18next";
 
 import "./index.scss";
 import CustomDropdownInput from "./custom-list-input";
 
 const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
+  const { t, i18n } = useTranslation();
   const [formField, setFormField] = React.useState({});
 
   useEffect(() => {
@@ -44,27 +46,27 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
 
   const validateSensorSettingParams = (sensorUnitInfo) => {
     if (sensorUnitInfo.name === "") {
-      f7.dialog.alert("Thông tin hiển thị không được phép để trống");
+      f7.dialog.alert(t("modules.display_information_cannot_be_left_blank"));
       return false;
     }
 
     if (Number.isNaN(sensorUnitInfo.min)) {
-      f7.dialog.alert("Giá trị tối thiểu phải là số");
+      f7.dialog.alert(t("modules.minimum_value_must_be_numeric"));
       return false;
     }
 
     if (Number.isNaN(sensorUnitInfo.max)) {
-      f7.dialog.alert("Giá trị tối đa phải là số");
+      f7.dialog.alert(t("modules.maximum_value_must_be_numeric"));
       return false;
     }
 
     if (Number.isNaN(sensorUnitInfo.formatFloatingPoint)) {
-      f7.dialog.alert("Giá trị định dạng phải là số");
+      f7.dialog.alert(t("modules.the_format_value_must_be_numeric"));
       return false;
     }
 
     if (![0, 1, 2, 3].includes(sensorUnitInfo.formatFloatingPoint)) {
-      f7.dialog.alert("Giá trị định dạng phải là 0, 1, 2 hoặc 3");
+      f7.dialog.alert(t("modules.the_format_value_must_be_0_1_2_or_3"));
       return false;
     }
 
@@ -83,7 +85,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       unit: formField.unitOfMeasure,
       min: parsedMinValue,
       max: parsedMaxValue,
-       formatFloatingPoint: parsedFormatFloatingPoint,
+      formatFloatingPoint: parsedFormatFloatingPoint,
     };
 
     if (validateSensorSettingParams(newSensorUnitInfo)) {
@@ -96,7 +98,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       <List className="__setting" form noHairlinesMd inlineLabels>
         {sensorInfo?.data?.length > 1 && (
           <CustomDropdownInput
-            labelName="Thông tin cài đặt:"
+            labelName={t("modules.installation_information")}
             buttonName={formField.unitName}
             popOverName="popover-sensor-unit"
           >
@@ -117,7 +119,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           outline
           size={5}
           name="displayedNamed"
-          label="Thông tin hiển thị:"
+          label={t("modules.information_displayed")}
           type="text"
           value={formField.displayedNamed}
           onChange={formFieldHandler}
@@ -127,7 +129,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           outline
           size={5}
           name="unitOfMeasure"
-          label="Đơn vị đo:"
+          label={t("modules.measurement_unit") + ":"}
           type="text"
           value={formField.unitOfMeasure}
           onChange={formFieldHandler}
@@ -137,7 +139,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           outline
           size={5}
           name="minValue"
-          label="Giá trị min:"
+          label={t("modules.min_value") + ":"}
           type="number"
           value={formField.minValue}
           onChange={formFieldHandler}
@@ -147,7 +149,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           outline
           size={5}
           name="maxValue"
-          label="Giá trị max:"
+          label={t("modules.max_value") + ":"}
           type="number"
           value={formField.maxValue}
           onChange={formFieldHandler}
@@ -157,7 +159,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           outline
           size={5}
           name="formatFloatingPoint"
-          label="Format số lẻ:"
+          label={t("modules.format_odd_number")}
           type="text"
           value={formField.formatFloatingPoint}
           onChange={formFieldHandler}
@@ -165,7 +167,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
       </List>
       <div className="buttons">
         <Button className="save-button" onClick={onSubmitHandler}>
-          Lưu
+          {t("common.save")}
         </Button>
       </div>
     </>

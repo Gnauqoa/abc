@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Popup, Page, Navbar, Button } from "framework7-react";
+import { useTranslation } from "react-i18next";
 
 import "./index.scss";
 
 const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup, extraData }) => {
+  const { t, i18n } = useTranslation();
   const [input, setInput] = useState(defaultValue);
 
   const onChangeInput = (e) => {
@@ -31,10 +33,10 @@ const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup, extraData 
         </div>
         <div className="buttons">
           <Button className="cancel-button" onClick={() => onClose(defaultValue)}>
-            Bỏ qua
+            {t("common.cancel")}
           </Button>
           <Button className="ok-button" onClick={() => onClose(input)}>
-            OK
+            {t("common.ok")}
           </Button>
         </div>
       </div>

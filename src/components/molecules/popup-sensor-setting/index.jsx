@@ -22,6 +22,7 @@ import {
 } from "../../../js/constants";
 import useToast from "../../atoms/toast";
 import DataManagerIST from "../../../services/data-manager";
+import { useTranslation } from "react-i18next";
 
 const SENSOR_SETTING_TAB = 1;
 const SENSOR_CALIBRATING_TAB = 2;
@@ -37,6 +38,8 @@ const defaultSettingTabs = {
 };
 
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
+  const { t, i18n } = useTranslation();
+
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
@@ -110,10 +113,10 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
             interval,
           };
           DataManagerIST.addRemoteLoggingDataRun(dataRun);
-          toast.show("Tải dữ liệu thành công.");
+          toast.show(t("modules.download_data_successfully"));
         } catch (err) {
           console.error("Download remote logging error", err);
-          err !== "cancel" && toast.show("Tải dữ liệu bị lỗi timeout.", "error");
+          err !== "cancel" && toast.show(t("modules.downloading_data_had_a_timeout_error"), "error");
         }
         break;
       }
@@ -157,7 +160,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   async function checkRemoteLogging() {
     try {
       const logInfo = SensorServicesIST.remoteLoggingInfo(sensorId);
-      toast.notifyCmdDTO("kiểm tra log");
+      toast.notifyCmdDTO(t("modules.check_log"));
       setRemoteLoggingInfo(await logInfo);
     } catch {
       setRemoteLoggingInfo([0, 0, 0, 0]);

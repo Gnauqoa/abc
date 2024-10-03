@@ -55,55 +55,55 @@ export const IMG_SWITCH_SUGGESTIONS = [
     turn_on: "static/widgets/img-switch-on.png",
     turn_off: "static/widgets/img-switch-off.png",
     id: "default", // Alway keep one default suggestion
-    name: "Mặc định",
+    name: "const.default",
   },
   {
     turn_on: "static/widgets/img-switch-light-on.png",
     turn_off: "static/widgets/img-switch-light-off.png",
     id: "light",
-    name: "Bóng đèn",
+    name: "const.light_bulb",
   },
   {
     turn_on: "static/widgets/img-switch-audio-on.png",
     turn_off: "static/widgets/img-switch-audio-off.png",
     id: "audio",
-    name: "Âm thanh",
+    name: "const.sound",
   },
   {
     turn_on: "static/widgets/img-switch-wifi-on.png",
     turn_off: "static/widgets/img-switch-wifi-off.png",
     id: "wifi",
-    name: "Wifi",
+    name: "const.wifi",
   },
   {
     turn_on: "static/widgets/img-switch-micro-on.png",
     turn_off: "static/widgets/img-switch-micro-off.png",
     id: "micro",
-    name: "Ghi âm",
+    name: "const.record",
   },
   {
     turn_on: "static/widgets/img-switch-media-play.png",
     turn_off: "static/widgets/img-switch-media-stop.png",
     id: "media",
-    name: "Nút play/stop",
+    name: "const.play_stop_button",
   },
   {
     turn_on: "static/widgets/img-switch-camera-on.png",
     turn_off: "static/widgets/img-switch-camera-off.png",
     id: "camera",
-    name: "Camera",
+    name: "const.camera",
   },
   {
     turn_on: "static/widgets/img-switch-bell-on.png",
     turn_off: "static/widgets/img-switch-bell-off.png",
     id: "bell",
-    name: "Chuông",
+    name: "const.bell",
   },
   {
     turn_on: "static/widgets/img-switch-lock-on.png",
     turn_off: "static/widgets/img-switch-lock-off.png",
     id: "lock",
-    name: "Ổ khóa",
+    name: "const.lock",
   },
 ];
 export const IMG_SWITCH_DEFAULT_SUGGESTION = IMG_SWITCH_SUGGESTIONS.find((s) => s.id === "default");
@@ -173,7 +173,7 @@ export const STEP_MANUAL = "manual";
 
 // Generic
 export const DEFAULT_ID = "default";
-export const DEFAULT_CODE_NAME = "Cân chỉnh servo";
+export const DEFAULT_CODE_NAME = "const.servo_calibration";
 export const ROW = "row";
 export const COLUMN = "column";
 export const EVENT_RELEASED = "released";
@@ -184,11 +184,11 @@ export const ENTER_KEY = 13;
 export const SPACE_KEY = 32;
 
 // Frequency
-export const FREQUENCY_UNIT = "mẫu/giây";
-export const INVERSE_FREQUENCY_UNIT = "giây/mẫu";
+export const FREQUENCY_UNIT = "const.sample_second";
+export const INVERSE_FREQUENCY_UNIT = "const.seconds_sample";
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
 export const FREQUENCIES = [0.033, 0.1, 0.2, 1, 2, 5, 10, 50];
-export const SAMPLING_MANUAL_NAME = "Thủ công";
+export const SAMPLING_MANUAL_NAME = "const.manual";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
 export const EMIT_DATA_MANUAL_FREQUENCY = 1;

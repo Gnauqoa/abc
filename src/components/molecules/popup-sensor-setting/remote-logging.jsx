@@ -17,6 +17,7 @@ import {
   SET_LOG_SETTING,
   MAX_SAMPLE_REMOTE_LOGGING,
 } from "../../../js/constants";
+import { useTranslation } from "react-i18next";
 
 const storeSettingService = new storeService("remote-logging");
 
@@ -33,6 +34,7 @@ const START_MODE = {
 };
 
 const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSaveHandler }) => {
+  const { t, i18n } = useTranslation();
   const [formSetting, setFormSetting] = useState({});
   const sensorId = sensorInfo.id;
 
@@ -66,7 +68,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
     }
 
     if (setting.interval === "" || isNaN(setting.interval) || setting.interval < 1) {
-      f7.dialog.alert("Tần suất không hợp lệ");
+      f7.dialog.alert(t("modules.invalid_frequency"));
       return false;
     }
 
@@ -75,14 +77,16 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       (formSetting.loggingMode === MQTT && formSetting.startMode !== EVERY_STARTUP)
     ) {
       if (setting.duration === "" || isNaN(setting.duration) || setting.duration < 1) {
-        f7.dialog.alert("Tổng thời gian không hợp lệ");
+        f7.dialog.alert(t("modules.total_time_is_invalid"));
         return false;
       }
 
       const sampleCount = ~~((setting.duration * 60) / setting.interval);
       if (sampleCount > MAX_SAMPLE_REMOTE_LOGGING) {
         f7.dialog.alert(
-          `Số lượng mẫu vượt quá giới hạn ${MAX_SAMPLE_REMOTE_LOGGING}. Vui lòng giảm Tổng thời gian hoặc Tần suất.`
+          `${t("modules.the_number_of_samples_exceeds_the_limit")} ${MAX_SAMPLE_REMOTE_LOGGING}. ${t(
+            "modules.please_reduce_Total_Time_or_Frequency"
+          )}.`
         );
         return false;
       }
@@ -90,19 +94,19 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
 
     if (setting.loggingMode === MQTT) {
       if (setting.wifiSSID === "") {
-        f7.dialog.alert("Tên Wifi không hợp lệ");
+        f7.dialog.alert(t("modules.invalid_Wifi_name"));
         return false;
       }
       if (setting.mqttUri === "") {
-        f7.dialog.alert("Địa chỉ server không hợp lệ");
+        f7.dialog.alert(t("modules.invalid_server_address"));
         return false;
       }
       if (setting.mqttUsername === "") {
-        f7.dialog.alert("Username server không hợp lệ");
+        f7.dialog.alert(t("modules.invalid_server_username"));
         return false;
       }
       if (setting.mqttPassword === "") {
-        f7.dialog.alert("Mật khẩu server không hợp lệ");
+        f7.dialog.alert(t("modules.invalid_server_password"));
         return false;
       }
     }
@@ -166,7 +170,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
                     onSaveHandler({ sensorId: sensorInfo.id, action: DOWNLOAD_LOG_ACTION, data: remoteLoggingInfo })
                   }
                 >
-                  Download
+                  {t("modules.download")}
                 </Button>
                 <Button
                   className="edl-button"
@@ -175,7 +179,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
                     onSaveHandler({ sensorId: sensorInfo.id, action: DELETE_LOG_ACTION, data: remoteLoggingInfo })
                   }
                 >
-                  Xóa
+                  {t("common.delete")}
                 </Button>
               </div>
             </div>
@@ -184,7 +188,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       </List>
       <List className="__setting __remote-logging" form noHairlinesMd inlineLabels>
         <CustomDropdownInput
-          labelName="Chế độ:"
+          labelName={t("modules.regime")}
           buttonName={LOGGING_MODE[formSetting.loggingMode]}
           popOverName="popover-logging-mode"
         >
@@ -203,13 +207,13 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="duration"
-            label="Tổng thời gian:"
+            label={t("modules.total_time")}
             type="number"
             value={formSetting.duration}
             onChange={formSettingHandler}
           >
             <div slot="inner-end" className="margin-left">
-              phút
+              {t("common.minute")}
             </div>
           </ListInput>
         )}
@@ -219,23 +223,23 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="interval"
-            label="Tần suất:"
+            label={t("modules.frequency")}
             type="number"
             value={formSetting.interval}
             onChange={formSettingHandler}
           >
             <div slot="inner-end" className="margin-left">
-              giây/lần
+              {t("modules.seconds_time")}
             </div>
           </ListInput>
         )}
         {(formSetting.loggingMode === FLASH ||
           (formSetting.loggingMode === MQTT && formSetting.startMode !== EVERY_STARTUP)) && (
           <ListItem
-            title={`Tổng số lượng mẫu: ${~~(
+            title={`${t("modules.total_number_of_samples")}: ${~~(
               (formSetting.duration * 60) /
               formSetting.interval
-            )} (tối đa ${MAX_SAMPLE_REMOTE_LOGGING})`}
+            )} (${t("modules.max")} ${MAX_SAMPLE_REMOTE_LOGGING})`}
           ></ListItem>
         )}
         {formSetting.loggingMode === MQTT && (
@@ -244,7 +248,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="wifiSSID"
-            label="Tên Wifi:"
+            label={t("modules.wifi_name")}
             type="text"
             value={formSetting.wifiSSID}
             onChange={formSettingHandler}
@@ -256,7 +260,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="wifiPassword"
-            label="Mật khẩu Wifi:"
+            label={t("modules.wifi_password")}
             type="text"
             value={formSetting.wifiPassword}
             onChange={formSettingHandler}
@@ -269,7 +273,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="mqttUri"
-            label="Địa chỉ server:"
+            label={t("modules.server_address")}
             type="text"
             value={formSetting.mqttUri}
             onChange={formSettingHandler}
@@ -282,7 +286,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="mqttUsername"
-            label="Username server:"
+            label={t("modules.username_server")}
             type="text"
             value={formSetting.mqttUsername}
             onChange={formSettingHandler}
@@ -295,7 +299,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             outline
             size={5}
             name="mqttPassword"
-            label="Mật khẩu server:"
+            label={t("modules.server_password")}
             type="text"
             value={formSetting.mqttPassword}
             onChange={formSettingHandler}
@@ -304,7 +308,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
 
         {formSetting.loggingMode === MQTT && (
           <li>
-            <div className="item-content">Kênh thông tin:</div>
+            <div className="item-content">{t("modules.information_channel")}</div>
           </li>
         )}
 
@@ -326,7 +330,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
 
         {formSetting.loggingMode !== OFF && (
           <CustomDropdownInput
-            labelName="Thời gian bắt đầu:"
+            labelName={t("modules.start_time")}
             buttonName={START_MODE[formSetting.startMode]}
             popOverName="popover-start-on"
           >
@@ -345,7 +349,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       </List>
       <div className="buttons">
         <Button className="save-button" onClick={onSubmitHandler}>
-          Lưu
+          {t("common.save")}
         </Button>
       </div>
     </>

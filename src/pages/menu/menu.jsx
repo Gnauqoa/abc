@@ -38,10 +38,10 @@ export default () => {
                   </Navbar>
                   <ListItem radio name="radio-menu" className="lang-selector">
                     <div onClick={() => handleChangeLanguage("vi")}>
-                      <img src={viFlag} className="menu-icon" /> Tiếng Việt
+                      <img src={viFlag} className="menu-icon" /> {t("main_menu.vietnamese")}
                     </div>
                     <div onClick={() => handleChangeLanguage("en")}>
-                      <img src={enFlag} className="menu-icon" /> English
+                      <img src={enFlag} className="menu-icon" /> {t("main_menu.english")}
                     </div>
                   </ListItem>
                   {/* <ListItem

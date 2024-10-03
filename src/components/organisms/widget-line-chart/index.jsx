@@ -83,6 +83,8 @@ import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/comm
 import { f7 } from "framework7-react";
 import PopoverStatisticOptions from "./PopoverStatisticOptions";
 
+import { useTranslation } from "react-i18next";
+
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
 
@@ -359,6 +361,8 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
+  const { t, i18n } = useTranslation();
+
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
   const { widget, xAxis, pageId } = props;
@@ -412,7 +416,7 @@ let LineChart = (props, ref) => {
     xAxisRef.current = {
       id: xAxis?.id,
       unit: xAxis?.unit,
-      name: xAxis?.name,
+      name: t(xAxis?.name),
     };
     axisRef.current.xUnit = xAxis?.unit;
   }
@@ -674,8 +678,8 @@ let LineChart = (props, ref) => {
 
     showModal((onClose) => (
       <PromptPopup
-        title="Thêm chú giải"
-        inputLabel="Chú giải"
+        title={t("organisms.add_comments")}
+        inputLabel={t("organisms.commentary")}
         defaultValue={prevContent}
         onClosePopup={onClose}
         extraData={sensorInfo}
@@ -879,7 +883,7 @@ let LineChart = (props, ref) => {
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
               selectedSensor={sensor}
-              selectedUnit={`${xAxis?.name} (${xAxis?.unit})`}
+              selectedUnit={`${t(xAxis?.name)} (${xAxis?.unit})`}
               onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
               onSelectUserInit={onSelectUserUnit}
               defaultTab={SENSOR_SELECTOR_USER_TAB}

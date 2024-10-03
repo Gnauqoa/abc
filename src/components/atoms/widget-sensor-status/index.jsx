@@ -10,8 +10,10 @@ import uartIcon from "../../../img/sensor-info/connections/uart.png";
 import bleIcon from "../../../img/sensor-info/connections/ble.png";
 import { BLE_TYPE, WIDGET_SENSOR_INACTIVE } from "../../../js/constants";
 import "./index.scss";
+import { useTranslation } from "react-i18next";
 
 const SensorStatus = ({ sensorId, sensorData, sensorBattery, displayInfo, onDisconnect, type, status }) => {
+  const { t, i18n } = useTranslation();
   let batteryIcon = batteryIcon25;
   if (sensorBattery > 75) {
     batteryIcon = batteryIcon100;
@@ -31,7 +33,7 @@ const SensorStatus = ({ sensorId, sensorData, sensorBattery, displayInfo, onDisc
           <div className="__icon">
             <Icon material="error"></Icon>
           </div>
-          <div className="__text">Chưa kết nối cảm biến</div>
+          <div className="__text">{t("atoms.sensor_not_connected")}</div>
         </div>
       ) : (
         <div className="__active">

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page } from "framework7-react";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 import {
   LAYOUT_CHART,
@@ -61,6 +62,8 @@ const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
+  const { t, i18n } = useTranslation();
+
   const selectedLayout = f7route.params.layout;
   let activity;
   if (selectedLayout) {
@@ -222,8 +225,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       setPreviousActivity(_.cloneDeep(updatedActivity));
     } else {
       dialog.prompt(
-        "Bạn có muốn lưu lại những thay đổi này không?",
-        "Tên hoạt động",
+       t("page.do_you_want_to_save_these_changes"),
+        t("page.activity_name"),
         async (name) => {
           setName(name);
           const updatedActivityWithName = { ...updatedActivity, name };
@@ -246,8 +249,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       handleClearLocalStorage();
     } else {
       dialog.prompt(
-        "Bạn có muốn lưu lại những thay đổi này không?",
-        "Tên hoạt động",
+        t("page.do_you_want_to_save_these_changes"),
+        t("page.activity_name"),
         async (name) => {
           setName(name);
           const updatedActivityWithName = { ...updatedActivity, name };
@@ -308,8 +311,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handlePageDelete() {
     dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa trang này không?`,
+      t("page.confirm"),
+      t("page.are_you_sure_you_want_to_delete_this_page"),
       () => handleDeletePage(),
       () => {}
     );

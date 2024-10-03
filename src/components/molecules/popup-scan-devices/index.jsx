@@ -20,8 +20,10 @@ import signalStrengthIconFull from "../../../img/scan-devices/signal-strength-fu
 import DeviceManagerIST from "../../../services/device-manager";
 import dialog from "../dialog/dialog";
 import * as core from "../../../utils/core";
+import { useTranslation } from "react-i18next";
 
 export default function useDeviceManager() {
+  const { t, i18n } = useTranslation();
   const [devices, setDevices] = useImmer([]);
   const scanPopupRef = useRef(null);
   const timeoutScanId = useRef(null);
@@ -50,7 +52,11 @@ export default function useDeviceManager() {
   function handleConnectError(device) {
     f7.dialog.close();
     if (device) {
-      dialog.alert("Lỗi kết nối Bluetooth", `"${device.name}" bị mất kết nối`, () => {});
+      dialog.alert(
+        t("modules.bluetooth_connection_error"),
+        `"${device.name}" ${t("modules.lost_connection")}`,
+        () => {}
+      );
     }
   }
 
@@ -66,7 +72,7 @@ export default function useDeviceManager() {
   }
 
   function connect(deviceId) {
-    f7.dialog.preloader("Đang kết nối...");
+    f7.dialog.preloader(t("modules.connecting"));
     DeviceManagerIST.connect({ deviceId, successCallback: handleConnectSuccess, errorCallback: handleConnectError });
   }
 
@@ -79,14 +85,14 @@ export default function useDeviceManager() {
       <Popup ref={scanPopupRef} className="edl-popup scan-devices" onPopupOpened={scan}>
         <Page>
           <Navbar>
-            <NavTitle style={{ color: "#0086ff" }}>Kết nối Cảm biến không dây</NavTitle>
+            <NavTitle style={{ color: "#0086ff" }}>{t("modules.connect_the_Wireless_Sensor")}</NavTitle>
             <NavRight>
               <Link iconIos="material:close" iconMd="material:close" iconAurora="material:close" popupClose></Link>
             </NavRight>
           </Navbar>
 
           <Block className="scan-block text-align-center">
-            <span className="title">Tìm kiếm cảm biến</span>
+            <span className="title">{t("modules.search_for_sensors")}</span>
             {isScanning ? (
               <div onClick={stopScan}>
                 <Preloader color="blue" />

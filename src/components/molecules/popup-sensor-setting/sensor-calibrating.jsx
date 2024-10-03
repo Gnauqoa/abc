@@ -4,11 +4,13 @@ import { List, ListInput, Button, f7 } from "framework7-react";
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
 import CustomDropdownInput from "./custom-list-input";
+import { useTranslation } from "react-i18next";
 
 const CALIBRATING_1_POINT = 1;
 const CALIBRATING_2_POINTS = 2;
 
 const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
+  const { t, i18n } = useTranslation();
   const [formField, setFormField] = React.useState({});
 
   useEffect(() => {
@@ -79,12 +81,20 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
     const calibrationValueReadParsed = Number(calibrationValueRead);
 
     if (Number.isNaN(calibrationValueParsed) || calibrationValue === "") {
-      f7.dialog.alert(`Giá trị chuẩn ${calibratingType === CALIBRATING_1_POINT ? "điểm 1" : "điểm 2"} phải là số`);
+      f7.dialog.alert(
+        `${t("modules.standard_value")} ${
+          calibratingType === CALIBRATING_1_POINT ? t("modules.point_1") : t("modules.point_2")
+        } ${t("modules.must_be_a_number")}`
+      );
       return false;
     }
 
     if (Number.isNaN(calibrationValueReadParsed) || calibrationValueRead === "") {
-      f7.dialog.alert(`Giá trị đọc được ${calibratingType === CALIBRATING_1_POINT ? "điểm 1" : "điểm 2"} phải là số`);
+      f7.dialog.alert(
+        `${t("modules.readable_value")}c ${
+          calibratingType === CALIBRATING_1_POINT ? t("modules.point_1") : t("modules.point_2")
+        } ${t("modules.must_be_a_number")}`
+      );
       return false;
     }
     return { calibrationValue: calibrationValueParsed, calibrationValueRead: calibrationValueReadParsed };
@@ -128,7 +138,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
       <List className="__calibrating" form noHairlinesMd inlineLabels>
         {sensorInfo?.data?.length > 1 && (
           <CustomDropdownInput
-            labelName="Thông tin hiệu chỉnh:"
+            labelName={t("modules.calibration_information")}
             buttonName={formField.unitName}
             popOverName="popover-sensor-unit"
           >
@@ -143,14 +153,14 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
         )}
 
         <CustomDropdownInput
-          labelName="Kiểu hiệu chỉnh:"
-          buttonName={`${formField.calibratingType} điểm`}
+          labelName={t("modules.correction_type")}
+          buttonName={`${formField.calibratingType} ${t("modules.point")}`}
           popOverName="popover-sensor-calibrating-type"
         >
           {[CALIBRATING_1_POINT, CALIBRATING_2_POINTS].map((calibratingType) => {
             return (
               <Button key={calibratingType} onClick={() => onChangeCalibratingType(calibratingType)}>
-                <span style={{ textTransform: "none" }}>{`${calibratingType} điểm`}</span>
+                <span style={{ textTransform: "none" }}>{`${calibratingType} ${t("modules.point")}`}</span>
               </Button>
             );
           })}
@@ -159,12 +169,14 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
         {[...Array(formField.calibratingType).keys()].map((calibrateType) => {
           return (
             <List key={`calibrationType_${calibrateType}`} style={{ marginTop: "10px", marginBottom: "10px" }}>
-              <div className="__label-calibrating-type">Điểm {calibrateType + 1}</div>
+              <div className="__label-calibrating-type">
+                {t("modules.point")} {calibrateType + 1}
+              </div>
               <ListInput
                 className="display-setting-input label-color-black"
                 outline
                 size={5}
-                label="Giá trị chuẩn:"
+                label={t("modules.standard_value") + ":"}
                 type="number"
                 value={formField.calibrationValues?.[calibrateType]}
                 onChange={(e) =>
@@ -176,7 +188,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                 <li className="display-setting-input-button label-color-black input-color-blue">
                   <div className="item-content item-input item-input-outline item-input-with-value">
                     <div className="item-inner">
-                      <div className="item-title item-label">Giá trị đọc được:</div>
+                      <div className="item-title item-label">{t("modules.readable_value") + ":"}</div>
                       <div className="item-input-wrap">
                         <input
                           type="number"
@@ -199,7 +211,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
                           className="sampling-button"
                           onClick={onGetSampleHandler}
                         >
-                          Đọc cảm biến
+                          {t("modules.read_the_sensor")}
                         </Button>
                       </div>
                     </div>
@@ -211,7 +223,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
         })}
         <div className="buttons">
           <Button className="save-button" onClick={onSubmitHandler}>
-            Lưu
+            {t("common.save")}
           </Button>
         </div>
       </List>
