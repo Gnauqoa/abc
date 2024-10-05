@@ -47,6 +47,8 @@ const MyApp = () => {
     theme: "auto", // Automatic theme detection
 
     id: "vn.ohstem.edl_app", // App bundle ID
+    // App store
+    store: store,
     // App routes
     routes: routes,
     // Register service worker (only on production build)
