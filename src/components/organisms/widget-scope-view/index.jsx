@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import { useTranslation } from "react-i18next";
 
 import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
@@ -70,6 +71,8 @@ const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, te
 };
 
 const ScopeViewWidget = ({ widget }) => {
+  const { t, i18n } = useTranslation();
+
   const { currentDataRunId, isRunning, handleSensorChange } = useActivityContext();
   const canvasRef = useRef();
   const chartInstanceRef = useRef();
@@ -103,7 +106,7 @@ const ScopeViewWidget = ({ widget }) => {
 
           const chartData = [
             {
-              name: "Dao động chu kỳ theo thời gian",
+              name: t("organisms.cyclic_oscillations_over_time"),
               data: normalizedArray,
             },
           ];
@@ -143,7 +146,7 @@ const ScopeViewWidget = ({ widget }) => {
 
           const chartData = [
             {
-              name: "Dao động chu kỳ theo tần số",
+              name: t("organisms.periodic_oscillations_according_to_frequency"),
               data: normalizedArray,
             },
           ];
@@ -207,7 +210,7 @@ const ScopeViewWidget = ({ widget }) => {
       if (Array.isArray(data) && data.length === 1) {
         const chartData = [
           {
-            name: "Dao động chu kỳ theo tần số",
+            name: t("organisms.periodic_oscillations_according_to_frequency"),
             data: data[0],
           },
         ];

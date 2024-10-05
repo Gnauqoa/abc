@@ -1,12 +1,14 @@
 import React, { Component } from "react";
 import { Block, List, ListItem, Toggle } from "framework7-react";
+import { withTranslation } from "react-i18next";
+
 import storeService from "../../services/store-service";
 
 const defaulDataSetting = {
   auto_connect: true,
 };
 
-export default class extends Component {
+class Settings extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,7 +43,7 @@ export default class extends Component {
     return (
       <Block>
         <List>
-          <ListItem key="auto-connect" title="Tự động kết nối">
+          <ListItem key="auto-connect" title={t("page.automatic_connection")}>
             <Toggle checked={dataSetting.auto_connect} onChange={() => this.onChangeToogle("auto_connect")} />
           </ListItem>
         </List>
@@ -49,3 +51,4 @@ export default class extends Component {
     );
   }
 }
+export default withTranslation()(Settings);

@@ -8,6 +8,7 @@ import { createExcelWorkbookBuffer, shareFile } from "../../../utils/core";
 
 import DataManagerIST from "../../../services/data-manager";
 import { useActivityContext } from "../../../context/ActivityContext";
+import { useTranslation } from "react-i18next";
 
 const ActivityHeader = ({
   name,
@@ -20,6 +21,8 @@ const ActivityHeader = ({
   handlePageDelete,
   deviceManager,
 }) => {
+  const { t, i18n } = useTranslation();
+
   // If platform is android, then default is fullscreen
   const [isFullScreen, setIsFullScreen] = useState(f7.device.android);
   const { handleExportActivity } = useActivityContext();
@@ -32,7 +35,7 @@ const ActivityHeader = ({
       type: "application/json",
     });
 
-    shareFile((activity.name || "Hoạt động thí ngiệm") + ".edl", blob);
+    shareFile((activity.name || t("organisms.experimental_activities")) + ".edl", blob);
   };
 
   const handleShareDataRuns = () => {
@@ -42,12 +45,12 @@ const ActivityHeader = ({
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
     });
 
-    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    const activityName = name === "" ? t("organisms.experimental_data") : name;
     shareFile(activityName + ".xlsx", blob);
   };
 
   const handleExportDataRuns = () => {
-    const activityName = name === "" ? "Dữ liệu thí ngiệm" : name;
+    const activityName = name === "" ? t("organisms.experimental_data") : name;
     DataManagerIST.exportDataRunExcel({ fileName: activityName });
   };
 
@@ -103,20 +106,20 @@ const ActivityHeader = ({
         link="#"
         popupOpen=".data-run-management-popup"
         popoverClose
-        title="Quản lý dữ liệu"
+        title={t("modules.data_management")}
       />,
       <ListItem
         key="activity-header-share-project"
         link="#"
         popoverClose
-        title="Chia sẻ thí nghiệm"
+        title={t("organisms.share_experiments")}
         onClick={handleShareProject}
       />,
       <ListItem
         key="activity-header-share-data-run"
         link="#"
         popoverClose
-        title="Chia sẻ dữ liệu"
+        title={t("modules.share_data")}
         onClick={handleShareDataRuns}
       />,
       <ListItem key="activity-header-resource" link="#" popoverClose title="Tài nguyên" onClick={openResource} />,
@@ -128,16 +131,22 @@ const ActivityHeader = ({
         link="#"
         popupOpen=".data-run-management-popup"
         popoverClose
-        title="Quản lý dữ liệu"
+        title={t("modules.data_management")}
       />,
       <ListItem
         key="activity-header-export-excel"
         link="#"
         popoverClose
-        title="Xuất ra Excel"
+        title={t("organisms.export_to_Excel")}
         onClick={handleExportDataRuns}
       />,
-      <ListItem key="activity-header-resource" link="#" popoverClose title="Tài nguyên" onClick={openResource} />,
+      <ListItem
+        key="activity-header-resource"
+        link="#"
+        popoverClose
+        title={t("organisms.resources")}
+        onClick={openResource}
+      />,
     ];
   }
 
@@ -151,7 +160,7 @@ const ActivityHeader = ({
             icon="add_chart"
             popupOpen=".new-page-popup"
             popoverClose
-            title="Cài đặt dữ liệu hiển thị"
+            title={t("organisms.display_data_settings")}
           />
           <RoundButton disabled={isRunning || pageLength === 1} icon="delete_forever" onClick={handlePageDelete} />
         </NavLeft>

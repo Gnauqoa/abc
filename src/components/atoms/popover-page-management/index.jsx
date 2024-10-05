@@ -5,8 +5,11 @@ import "./index.scss";
 import { useActivityContext } from "../../../context/ActivityContext";
 import usePrompt from "../../../hooks/useModal";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
+import { useTranslation } from "react-i18next";
 
 const PageManagement = () => {
+  const { t, i18n } = useTranslation();
+
   const { pages, changePageName, currentPageIndex, handleNavigatePage } = useActivityContext();
 
   const onCloseChangeNamePopup = ({ newInput: newPageName }) => {
@@ -19,8 +22,8 @@ const PageManagement = () => {
     f7.popover.close();
     showModal((onClose) => (
       <PromptPopup
-        title="Đổi tên trang hiện tại"
-        inputLabel="Tên trang"
+        title={t("atoms.rename_current_page")}
+        inputLabel={t("atoms.page_name")}
         defaultValue={pages[currentPageIndex]?.name}
         onClosePopup={onClose}
       />
@@ -37,9 +40,9 @@ const PageManagement = () => {
       <Popover className="popover-page-management">
         <List>
           <ListItem className="rename-page-button" key="rename-page-button" onClick={handlePageChangeName}>
-            Đổi tên trang hiện tại
+            {t("atoms.rename_current_page")}
           </ListItem>
-          <ListItem>Danh sách các trang</ListItem>
+          <ListItem>{t("atoms.list_of_pages")}</ListItem>
           <List>
             {pages.map((page, index) => (
               <Button

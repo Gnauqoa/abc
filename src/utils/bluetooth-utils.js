@@ -1,3 +1,6 @@
+import React from "react";
+import { useTranslation } from "react-i18next";
+
 import { f7 } from "framework7-react";
 // import store from "store";
 import * as core from "./core";
@@ -118,10 +121,12 @@ export function autoConnectDeviceCordova(success, failure, disconnect) {
 }
 
 export function scanDevicesWeb(success, disconnect) {
+  const { t, i18n } = useTranslation();
+
   if (!navigator.bluetooth) {
     dialog.alert(
-      "Lỗi kết nối",
-      "Trình duyệt hiện tại không hỗ trợ kết nối Bluetooth. Vui lòng sử dụng trình duyệt Chrome phiên bản mới nhất.",
+      t("utils.connection_error"),
+      t("utils.current_browsers_do_not_support_Bluetooth_connections"),
       () => {}
     );
     return;
