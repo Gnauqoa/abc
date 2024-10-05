@@ -31,10 +31,10 @@ const OTHER_SETTINGS_TAB = 4;
 
 const defaultTab = 1;
 const defaultSettingTabs = {
-  [SENSOR_SETTING_TAB]: "Cài đặt hiển thị",
-  [SENSOR_CALIBRATING_TAB]: "Hiệu chỉnh cảm biến",
-  [REMOTE_LOGGING_TAB]: "Lấy mẫu từ xa",
-  [OTHER_SETTINGS_TAB]: "Chức năng khác",
+  [SENSOR_SETTING_TAB]: "key.display_settings",
+  [SENSOR_CALIBRATING_TAB]: "key.calibrate_the_sensor",
+  [REMOTE_LOGGING_TAB]: "key.remote_sampling",
+  [OTHER_SETTINGS_TAB]: "key.other_functions",
 };
 
 const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataIndex, onSaveSetting }) => {
@@ -200,7 +200,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
               popupClose
             ></Button>
           </NavLeft>
-          <NavTitle style={{ color: "#0086ff" }}>{sensorInfo?.name}</NavTitle>
+          <NavTitle style={{ color: "#0086ff" }}>{t(sensorInfo?.name)}</NavTitle>
         </Navbar>
         <div className="__content">
           <div className="__navbar">
@@ -214,7 +214,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
                   fill
                   onClick={onChangeTab}
                 >
-                  {settingTabs[tabId]}
+                  {t(settingTabs[tabId])}
                 </Button>
               );
             })}

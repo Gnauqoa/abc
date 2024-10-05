@@ -99,14 +99,14 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
         {sensorInfo?.data?.length > 1 && (
           <CustomDropdownInput
             labelName={t("modules.installation_information")}
-            buttonName={formField.unitName}
+            buttonName={t(formField.unitName)}
             popOverName="popover-sensor-unit"
           >
             <List className="list-frequency">
               {sensorInfo?.data?.map((sensorUnit) => {
                 return (
                   <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
-                    <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
+                    <span style={{ textTransform: "none" }}>{t(sensorUnit.name)}</span>
                   </Button>
                 );
               })}
@@ -121,7 +121,7 @@ const SensorSettingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
           name="displayedNamed"
           label={t("modules.information_displayed")}
           type="text"
-          value={formField.displayedNamed}
+          value={t(formField.displayedNamed)}
           onChange={formFieldHandler}
         ></ListInput>
         <ListInput

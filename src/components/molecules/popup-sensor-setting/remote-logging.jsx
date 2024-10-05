@@ -22,15 +22,15 @@ import { useTranslation } from "react-i18next";
 const storeSettingService = new storeService("remote-logging");
 
 const LOGGING_MODE = {
-  [OFF]: "Tắt",
-  [FLASH]: "Lưu vào bộ nhớ",
-  [MQTT]: "Gởi lên server",
+  [OFF]: "key.off",
+  [FLASH]: "key.save_to_memory",
+  [MQTT]: "key.send_to_server",
 };
 
 const START_MODE = {
-  [IMMEDIATELY]: "Ngay lập tức",
-  [NEXT_STARTUP]: "Sau khi reset",
-  [EVERY_STARTUP]: "Luôn luôn chạy",
+  [IMMEDIATELY]: "key.right_away",
+  [NEXT_STARTUP]: "key.after_reset",
+  [EVERY_STARTUP]: "key.always_running",
 };
 
 const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSaveHandler }) => {
@@ -189,13 +189,13 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       <List className="__setting __remote-logging" form noHairlinesMd inlineLabels>
         <CustomDropdownInput
           labelName={t("modules.regime")}
-          buttonName={LOGGING_MODE[formSetting.loggingMode]}
+          buttonName={t(LOGGING_MODE[formSetting.loggingMode])}
           popOverName="popover-logging-mode"
         >
           {Object.keys(LOGGING_MODE).map((loggingMode) => {
             return (
               <Button key={loggingMode} onClick={() => onLoggingModeChange(loggingMode)}>
-                <span style={{ textTransform: "none" }}>{LOGGING_MODE[loggingMode]}</span>
+                <span style={{ textTransform: "none" }}>{t(LOGGING_MODE[loggingMode])}</span>
               </Button>
             );
           })}
@@ -320,7 +320,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
                 outline
                 size={5}
                 key={sensorInfo?.id + "|" + unitInfo.id}
-                label={`● ${unitInfo.name} (${unitInfo.unit}):`}
+                label={`● ${t(unitInfo.name)} (${t(unitInfo.unit)}):`}
                 type="text"
                 value={formSetting.topics[index]}
                 onChange={(e) => handleTopicsChange(e, index)}
@@ -331,7 +331,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
         {formSetting.loggingMode !== OFF && (
           <CustomDropdownInput
             labelName={t("modules.start_time")}
-            buttonName={START_MODE[formSetting.startMode]}
+            buttonName={t(START_MODE[formSetting.startMode])}
             popOverName="popover-start-on"
           >
             {Object.keys(START_MODE).map((startMode) => {
@@ -340,7 +340,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
               }
               return (
                 <Button key={startMode} onClick={() => onStartModeChange(startMode)}>
-                  <span style={{ textTransform: "none" }}>{START_MODE[startMode]}</span>
+                  <span style={{ textTransform: "none" }}>{t(START_MODE[startMode])}</span>
                 </Button>
               );
             })}

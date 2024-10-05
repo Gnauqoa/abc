@@ -139,13 +139,13 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
         {sensorInfo?.data?.length > 1 && (
           <CustomDropdownInput
             labelName={t("modules.calibration_information")}
-            buttonName={formField.unitName}
+            buttonName={t(formField.unitName)}
             popOverName="popover-sensor-unit"
           >
             {sensorInfo?.data?.map((sensorUnit) => {
               return (
                 <Button key={sensorInfo?.id + "|" + sensorUnit.id} onClick={() => onChangeSensorUnit(sensorUnit)}>
-                  <span style={{ textTransform: "none" }}>{sensorUnit.name}</span>
+                  <span style={{ textTransform: "none" }}>{t(sensorUnit.name)}</span>
                 </Button>
               );
             })}

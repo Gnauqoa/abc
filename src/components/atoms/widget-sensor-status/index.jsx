@@ -39,10 +39,10 @@ const SensorStatus = ({ sensorId, sensorData, sensorBattery, displayInfo, onDisc
         <div className="__active">
           <div className="__icon">
             <div className="__sensor-icon">
-              <img src={displayInfo?.icon || ""} alt={displayInfo?.label} />
+              <img src={displayInfo?.icon || ""} alt={t(displayInfo?.label)} />
             </div>
             <div className="__sensor-name">
-              <span>{displayInfo?.label}</span>
+              <span>{t(displayInfo?.label)}</span>
             </div>
           </div>
           <div className="__sensor-info">
