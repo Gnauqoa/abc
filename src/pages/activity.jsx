@@ -93,7 +93,14 @@ export default ({ f7route, f7router, filePath, content }) => {
       frequency: 1,
       dataRuns: [],
       customXAxis: [],
-      sensors: defaultSensors,
+      sensors: defaultSensors.map((item) => ({
+        ...item,
+        name: t(item.name),
+        data: item.data.map((d) => ({
+          ...d,
+          name: t(d.name),
+        })),
+      })),
       customSensors: [],
       allLabelNotes: [],
       allStatisticNotes: [],
@@ -225,7 +232,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       setPreviousActivity(_.cloneDeep(updatedActivity));
     } else {
       dialog.prompt(
-       t("page.do_you_want_to_save_these_changes"),
+        t("page.do_you_want_to_save_these_changes"),
         t("page.activity_name"),
         async (name) => {
           setName(name);
@@ -371,7 +378,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         MicrophoneServicesIST.init();
       }
 
-      const dataRunId = DataManagerIST.startCollectingData({ unitId });
+      const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
       timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
