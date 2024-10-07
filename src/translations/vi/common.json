@@ -140,7 +140,8 @@
     "installation_information": "Thông tin cài đặt",
     "information_displayed": "Thông tin hiển thị:",
     "min_value": "Giá trị min",
-    "max_value": "Giá trị max"
+    "max_value": "Giá trị max",
+    "time": "Lần"
   },
   "organisms": {
     "experimental_activities": "Hoạt động thí ngiệm",

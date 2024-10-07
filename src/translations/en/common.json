@@ -140,7 +140,8 @@
     "installation_information": "Installation information",
     "information_displayed": "Information displayed:",
     "min_value": "Min value",
-    "max_value": "Max value"
+    "max_value": "Max value",
+    "time": "Time"
   },
   "organisms": {
     "experimental_activities": "Experimental activities",

@@ -290,13 +290,13 @@ export class DataManager {
    * Start collecting data
    * @returns {string} - Returns the curDataRunId.
    */
-  startCollectingData({ unitId }) {
+  startCollectingData({ unitId, unit = "Lần" }) {
     this.collectingDataTime = 0;
     this.timerCollectingTime = 0;
     this.isCollectingData = true;
     // Clear custom axis datas
     // this.clearCustomUnitDatas({ unitId });
-    const dataRunId = this.createDataRun(null);
+    const dataRunId = this.createDataRun(null, unit);
     this.emitSubscribersScheduler();
     return dataRunId;
   }
@@ -315,7 +315,7 @@ export class DataManager {
    * @param {string} [name] - The name of the data run. If not provided, a default name will be used.
    * @returns {string} The ID of the newly created data run.
    */
-  createDataRun(name) {
+  createDataRun(name, unit) {
     /**
      * A dictionary of data runs, where each key is a data run ID and the value is a `DataRun` object.
      * @typedef {Object.<string, DataRun>} DataRuns
@@ -328,11 +328,11 @@ export class DataManager {
      */
     // Find the max dataRun Name
     const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
-      const value = parseInt(dataRun.name.replace("Lần ", ""));
+      const value = parseInt(dataRun.name.replace(`${unit} `, ""));
       return !Number.isNaN(value) && Math.max(maxValue, value);
     }, 0);
 
-    const dataRunName = name || `Lần ${maxDataRunNum + 1}`;
+    const dataRunName = name || `${unit} ${maxDataRunNum + 1}`;
     const createdAt = getCurrentTime();
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {

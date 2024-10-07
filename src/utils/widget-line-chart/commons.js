@@ -12,7 +12,9 @@ import selectedSelectionIcon from "../../img/expandable-options/line-selection-s
 import showOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint.png";
 import selectedShowOffDataPointIcon from "../../img/expandable-options/line-show-off-datapoint-selected.png";
 import addColumnIcon from "../../img/expandable-options/add-column.png";
+import addRowIcon from "../../img/expandable-options/add-row.png";
 import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
+import deleteRowIcon from "../../img/expandable-options/delete-row.png";
 
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
@@ -31,6 +33,8 @@ export const SELECTION_OPTION = `${LAYOUT_CHART}-expandable-options-4`;
 export const SHOW_OFF_DATA_POINT_MARKER = `${LAYOUT_CHART}-expandable-options-5`;
 export const ADD_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-6`;
 export const DELETE_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-7`;
+export const ADD_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-8`;
+export const DELETE_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-9`;
 
 // Statistic Options
 export const STATISTIC_LINEAR = `${LAYOUT_CHART}-statistic-option-0`;
@@ -123,6 +127,16 @@ export const expandableOptions = [
   {
     id: DELETE_COLUMN_OPTION,
     icon: deleteColumnIcon,
+    selected: false,
+  },
+  {
+    id: ADD_ROW_OPTION,
+    icon: addRowIcon,
+    selected: false,
+  },
+  {
+    id: DELETE_ROW_OPTION,
+    icon: deleteRowIcon,
     selected: false,
   },
 ];
