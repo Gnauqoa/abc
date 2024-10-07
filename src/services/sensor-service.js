@@ -49,6 +49,7 @@ export const defaultSensors = [
       },
     ],
   },
+  /*
   {
     id: 2,
     code: "inno-002",
@@ -62,6 +63,7 @@ export const defaultSensors = [
       { id: "inno-002-percent", name: "list_sensor.oxygen_concentration_percent", unit: "%", min: 0, max: 100, formatFloatingPoint: 1 },
     ],
   },
+  */
   {
     id: 3,
     code: "inno-003",
@@ -95,6 +97,7 @@ export const defaultSensors = [
       { id: "inno-005-tem", name: "list_sensor.temperature", unit: "°C", min: 0, max: 80, formatFloatingPoint: 1 },
     ],
   },
+  /*
   {
     id: 6,
     code: "inno-006",
@@ -125,6 +128,7 @@ export const defaultSensors = [
     support_calib: true,
     data: [{ id: "inno-007-ph", name: "list_sensor.pH_level", unit: "", min: 0, max: 14, formatFloatingPoint: 1 }],
   },
+  */
   {
     id: 9,
     code: "inno-009",
@@ -261,7 +265,7 @@ export const defaultSensors = [
     isBuiltin: true,
     remote_logging: false,
     support_calib: false,
-    data: [{ id: "inno-068-db", name: "list_sensor.decibel_level", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dbA", min: -100, max: 100, formatFloatingPoint: 1 }],
   },
   {
     id: 69,
@@ -274,7 +278,7 @@ export const defaultSensors = [
     support_calib: false,
     data: [
       { id: "inno-069-wave", name: "list_sensor.wave", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
-      { id: "inno-069-frequency", name: "list_sensor.frequency", unit: "db", min: -100, max: 100, formatFloatingPoint: 1 },
+      { id: "inno-069-frequency", name: "list_sensor.frequency", unit: "dbA", min: -100, max: 100, formatFloatingPoint: 1 },
     ],
   },
 ];

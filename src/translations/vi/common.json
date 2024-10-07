@@ -18,7 +18,7 @@
   "main_menu": {
     "about": "Về InnoLab",
     "vietnamese": "Tiếng Việt",
-    "english": "Tiếng Anh"
+    "english": "English"
   },
   "page": {
     "copyright_is_owned_by_ADT": "Bản quyền thuộc sở hữu của ADT",
@@ -194,9 +194,6 @@
   "list_sensor": {
     "CO2_gas_concentration_sensor": "Cảm biến nồng độ khí CO2",
     "CO2_gas_concentration": "Nồng độ khí CO2",
-    "dissolved_Oxygen_Sensor_Analog": "Cảm biến Oxi hòa tan (Analog)",
-    "oxygen_concentration_mg": "Nồng độ Oxy - mg/L",
-    "oxygen_concentration_percent": "Nồng độ Oxy - %",
     "oxygen_concentration_sensor": "Cảm biến nồng độ khí Oxy",
     "oxygen_concentration": "Nồng độ khí Oxy",
     "temperature_sensor": "Cảm biến nhiệt độ",
@@ -204,12 +201,6 @@
     "air_humidity_sensor": "Cảm biến độ ẩm không khí",
     "humidity_Temperature": "Độ ẩm Nhiệt độ",
     "humidity": "Độ ẩm",
-    "water_salinity_sensor": "Cảm biến độ mặn nước",
-    "salinity_concentration": "Nồng độ mặn",
-    "salinity": "Độ mặn",
-    "electrical_conductivity": "Độ dẫn điện",
-    "pH_sensor": "Cảm biến PH",
-    "pH_level": "Độ PH",
     "gas_pressure_sensor": "Cảm biến áp suất khí",
     "gas_pressure": "Áp suất khí",
     "sound_sensor": "Cảm biến âm thanh",
@@ -229,15 +220,25 @@
     "distance": "Khoảng cách",
     "water_quality_sensor_9909": "Cảm biến chất lượng nước (9909)",
     "water_quality": "Chất lượng nước",
+    "salinity": "Độ mặn",
+    "electrical_conductivity": "Độ dẫn điện",
+    "pH_level": "Độ PH",
     "TDS_concentration": "Nồng độ TDS",
-    "salinity_concentration_percent": "Nồng độ mặn %",
-    "salinity_ppm": "Nồng độ mặn ppm",
+    "salinity_concentration_percent": "Nồng độ mặn",
+    "salinity_ppm": "Nồng độ mặn",
     "water_temperature": "Nhiệt độ nước",
     "water_quality_sensor_C600": "Cảm biến chất lượng nước (C600)",
     "dissolved_oxygen_sensor_9100": "Cảm biến Oxi hòa tan (9100)",
-    "built_in_microphone": "Micro tích hợp",
-    "decibel_level": "Mức decibel",
+    "built_in_microphone": "Cảm biến âm thanh (Micro tích hợp)",
+    "decibel_level": "Cường độ âm thanh",
     "wave": "Sóng",
-    "frequency": "Tần số"
+    "frequency": "Tần số",
+
+    "dissolved_Oxygen_Sensor_Analog": "Cảm biến Oxi hòa tan (Analog)",
+    "oxygen_concentration_mg": "Nồng độ Oxy - mg/L",
+    "oxygen_concentration_percent": "Nồng độ Oxy - %",
+    "water_salinity_sensor": "Cảm biến độ mặn nước",
+    "salinity_concentration": "Nồng độ mặn",
+    "pH_sensor": "Cảm biến PH"
   }
 }
