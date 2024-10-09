@@ -22,6 +22,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LAYOUT_BAR,
+  SENSOR_RENDER_OPTION,
 } from "../js/constants";
 
 // Import Molecules Components
@@ -88,6 +89,7 @@ export default ({ f7route, f7router, filePath, content }) => {
           xAxises: defaultXAxises,
           lastDataRunId: null,
           name: "1",
+          layoutRender: SENSOR_RENDER_OPTION.NONE,
         },
       ],
       frequency: 1,
@@ -311,6 +313,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
+      layoutRender: SENSOR_RENDER_OPTION.NONE,
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -550,6 +553,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
                     xAxis={pages[currentPageIndex].xAxises[1]}
+                    layoutRender={pages[currentPageIndex].layoutRender}
                   />
                 )}
                 {pages[currentPageIndex].layout === LAYOUT_NUMBER_TABLE && (
@@ -582,6 +586,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
                   xAxis={pages[currentPageIndex].xAxises[0]}
+                  layoutRender={pages[currentPageIndex].layoutRender}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TABLE && (

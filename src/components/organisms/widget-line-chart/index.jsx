@@ -51,6 +51,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
+  SENSOR_RENDER_OPTION,
   SENSOR_SELECTOR_USER_TAB,
 } from "../../../js/constants";
 
@@ -104,11 +105,6 @@ let startRangeElement = null;
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
-const SENSOR_RENDER_OPTION = {
-  NONE: "none",
-  VERTICAL: "vertical",
-  HORIZONTAL: "horizontal",
-};
 
 const handleDrag = function ({ event, chart, pageId }) {
   if (isRangeSelected) {
@@ -381,7 +377,7 @@ let LineChart = (props, ref) => {
 
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
-  const { widget, xAxis, pageId } = props;
+  const { widget, xAxis, pageId, layoutRender } = props;
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
 
@@ -398,7 +394,6 @@ let LineChart = (props, ref) => {
   const [isSelectRegion, setIsSelectRegion] = useState(isSelectRangeSelection);
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
   // Vertical chart or horizontal chart
-  const [sensorRenderType, setSensorRenderType] = useState(SENSOR_RENDER_OPTION.NONE);
   const defaultExpandOptions = expandableOptions.map((option) => {
     if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
 
@@ -420,17 +415,29 @@ let LineChart = (props, ref) => {
   //   xElRef: useRef({}),
   //   yElRef: useRef({}),
   // }
-  const [chartContainers, setChartContainers] = useState([
-    {
-      chartRef: useRef(),
-      sensorRef: useRef({}),
-      axisRef: useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 }),
-      xAxisRef: useRef({}),
-      valueContainerElRef: useRef({}),
-      xElRef: useRef({}),
-      yElRef: useRef({}),
-    },
-  ]);
+  const [chartContainers, setChartContainers] = useState(
+    layoutRender === SENSOR_RENDER_OPTION.VERTICAL
+      ? widget.sensors.map(() => ({
+          chartRef: { current: null },
+          sensorRef: { current: {} },
+          axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
+          xAxisRef: { current: {} },
+          valueContainerElRef: { current: {} },
+          xElRef: { current: {} },
+          yElRef: { current: {} },
+        }))
+      : [
+          {
+            chartRef: { current: null },
+            sensorRef: { current: {} },
+            axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
+            xAxisRef: { current: {} },
+            valueContainerElRef: { current: {} },
+            xElRef: { current: {} },
+            yElRef: { current: {} },
+          },
+        ]
+  );
 
   chartContainers.forEach((chartContainer, index) => {
     const sensor = widget.sensors[index] || DEFAULT_SENSOR_DATA;
@@ -560,7 +567,7 @@ let LineChart = (props, ref) => {
     setChartData: ({ chartDatas = [], isDefaultXAxis, sensors }) => {
       // const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
       // if (!isHasData) return;
-      if ([SENSOR_RENDER_OPTION.HORIZONTAL, SENSOR_RENDER_OPTION.NONE].includes(sensorRenderType)) {
+      if ([SENSOR_RENDER_OPTION.HORIZONTAL, SENSOR_RENDER_OPTION.NONE].includes(layoutRender)) {
         updateChart({
           chartInstance: chartContainers[0].chart,
           data: chartDatas,
@@ -865,9 +872,9 @@ let LineChart = (props, ref) => {
 
   const changeSelectedSensor = ({ sensor, sensorIndex }) => {
     // Check if the user select the same sensor or not
-    for (const selectedSensor of widget.sensors) {
-      if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
-    }
+    // for (const selectedSensor of widget.sensors) {
+    //   if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
+    // }
     handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor });
   };
 
@@ -876,20 +883,8 @@ let LineChart = (props, ref) => {
     const canvas = chartContainers[0].chartRef.current;
     canvas.style.width = 40 * (numSensor + 1) + "px";
 
-    handleAddExtraCollectingSensor(widget.id);
-    chartContainers[0].chart.destroy();
-    setChartContainers([
-      {
-        chartRef: { current: null },
-        sensorRef: { current: {} },
-        axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
-        xAxisRef: { current: {} },
-        valueContainerElRef: { current: {} },
-        xElRef: { current: {} },
-        yElRef: { current: {} },
-      },
-    ]);
-    setSensorRenderType(SENSOR_RENDER_OPTION.HORIZONTAL);
+    handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.HORIZONTAL });
+
     setExpandOptions(
       _.clone(defaultExpandOptions).filter((item) => ![ADD_ROW_OPTION, DELETE_ROW_OPTION].includes(item.id))
     );
@@ -913,7 +908,7 @@ let LineChart = (props, ref) => {
   const addRowHandler = () => {
     if (chartContainers.length >= 3) return;
     else {
-      handleAddExtraCollectingSensor(widget.id);
+      handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.VERTICAL });
 
       chartContainers.forEach((chartContainer) => {
         chartContainer.chart.destroy();
@@ -930,7 +925,6 @@ let LineChart = (props, ref) => {
           yElRef: { current: {} },
         },
       ]);
-      setSensorRenderType(SENSOR_RENDER_OPTION.VERTICAL);
       setExpandOptions(
         _.clone(defaultExpandOptions).filter((item) => ![ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION].includes(item.id))
       );
@@ -1018,7 +1012,7 @@ let LineChart = (props, ref) => {
 
   return (
     <div className="line-chart-wapper">
-      {(sensorRenderType === SENSOR_RENDER_OPTION.HORIZONTAL || sensorRenderType === SENSOR_RENDER_OPTION.NONE) && (
+      {(layoutRender === SENSOR_RENDER_OPTION.HORIZONTAL || layoutRender === SENSOR_RENDER_OPTION.NONE) && (
         <div className="line-chart">
           {widget.sensors.map((sensor, sensorIndex) => (
             <div
@@ -1057,7 +1051,7 @@ let LineChart = (props, ref) => {
         </div>
       )}
 
-      {sensorRenderType === SENSOR_RENDER_OPTION.VERTICAL &&
+      {layoutRender === SENSOR_RENDER_OPTION.VERTICAL &&
         chartContainers.map((chartContainer, index) => (
           <div className="line-chart" key={`line-sensor-selector-${pageId}-${index}`}>
             <div className="sensor-selector-wrapper" name={index}>
