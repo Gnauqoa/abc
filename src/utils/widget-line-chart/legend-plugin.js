@@ -52,13 +52,14 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
       ci.config.options.plugins.annotation.annotations[nodeId] = summaryNotes[nodeId];
     }
   });
-  Object.keys(linearRegNotes).forEach((nodeId) => {
+  linearRegNotes.forEach((regression) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element
-    const noteElement = ci.config.options.plugins.annotation.annotations[nodeId];
-    if (noteElement) noteElement.display = isShowNote;
-    else if (isShowNote) {
-      ci.config.options.plugins.annotation.annotations[nodeId] = linearRegNotes[nodeId];
+    const dataset = ci.data.datasets.find((ds) => ds.id === regression.id);
+    if (dataset && !isShowNote) {
+      ci.data.datasets = ci.data.datasets.filter((ds) => ds.id !== regression.id);
+    } else if (!dataset && isShowNote) {
+      ci.data.datasets.push(regression);
     }
   });
 
