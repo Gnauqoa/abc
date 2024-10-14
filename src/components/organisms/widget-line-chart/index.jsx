@@ -345,9 +345,12 @@ const updateChart = ({
       newChartAnnotations = {
         ...labelNoteAnnotations,
         ...summaryNotes,
-        ...linearRegNotes,
         ...rangeSelections,
       };
+
+      for (const regression of linearRegNotes) {
+        chartInstance.data.datasets.push(regression);
+      }
     } else {
       // const { rangeSelections } = getRangeSelections({ pageId: pageId });
       // newChartAnnotations = {
@@ -393,16 +396,20 @@ let LineChart = (props, ref) => {
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
   const [isSelectRegion, setIsSelectRegion] = useState(isSelectRangeSelection);
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
+  const [shouldShowRowOptions, setShouldShowRowOptions] = useState(true);
+  const [shouldShowColumnOptions, setShouldShowColumnOptions] = useState(true);
+
   // Vertical chart or horizontal chart
   const defaultExpandOptions = expandableOptions.map((option) => {
-    if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
-
     if (option.id === STATISTIC_OPTION) return { ...option, selected: isShowStatistic };
     else if (option.id === SELECTION_OPTION) return { ...option, selected: isSelectRegion };
     else if (option.id === SHOW_OFF_DATA_POINT_MARKER) return { ...option, selected: isOffDataPoint };
+    else if ([ADD_ROW_OPTION, DELETE_ROW_OPTION].includes(option.id))
+      return { ...option, visible: shouldShowRowOptions };
+    else if ([ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION].includes(option.id))
+      return { ...option, visible: shouldShowColumnOptions };
+    else return option;
   });
-
-  const [expandOptions, setExpandOptions] = useState(defaultExpandOptions);
 
   // Item data of chartContainers
   // {
@@ -704,6 +711,9 @@ let LineChart = (props, ref) => {
             legend: {
               display: true,
               onClick: (event, legendItem, legend) => onClickLegendHandler(event, legendItem, legend),
+              labels: {
+                filter: (item) => item.text !== "none",
+              },
             },
           },
         },
@@ -819,7 +829,6 @@ let LineChart = (props, ref) => {
       hiddenDataLineIds,
       isDefaultXAxis,
       statisticOptionId,
-      statisticNoteLabel: t("organisms.linear_line"),
     });
     result && setIsShowStatistic(!isShowStatistic);
   };
@@ -884,10 +893,7 @@ let LineChart = (props, ref) => {
     canvas.style.width = 40 * (numSensor + 1) + "px";
 
     handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.HORIZONTAL });
-
-    setExpandOptions(
-      _.clone(defaultExpandOptions).filter((item) => ![ADD_ROW_OPTION, DELETE_ROW_OPTION].includes(item.id))
-    );
+    setShouldShowRowOptions(false);
   };
 
   const deleteColumnHandler = (sensorDeletedId) => {
@@ -901,7 +907,7 @@ let LineChart = (props, ref) => {
 
     handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
     if (numSensor <= 2) {
-      setExpandOptions(defaultExpandOptions);
+      setShouldShowRowOptions(true);
     }
   };
 
@@ -925,9 +931,8 @@ let LineChart = (props, ref) => {
           yElRef: { current: {} },
         },
       ]);
-      setExpandOptions(
-        _.clone(defaultExpandOptions).filter((item) => ![ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION].includes(item.id))
-      );
+
+      setShouldShowColumnOptions(false);
     }
   };
 
@@ -944,7 +949,7 @@ let LineChart = (props, ref) => {
 
     handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
     if (numSensor <= 2) {
-      setExpandOptions(defaultExpandOptions);
+      setShouldShowColumnOptions(true);
     }
   };
 
@@ -1097,7 +1102,11 @@ let LineChart = (props, ref) => {
       {/* <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors> */}
 
       <div className="expandable-options">
-        <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
+        <ExpandableOptions
+          expandIcon={lineChartIcon}
+          options={defaultExpandOptions}
+          onChooseOption={onChooseOptionHandler}
+        />
         <PopoverStatisticOptions
           callback={({ statisticOptionId }) =>
             chartContainers.forEach((chartContainer) => {

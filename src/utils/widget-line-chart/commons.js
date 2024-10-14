@@ -38,6 +38,11 @@ export const DELETE_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-9`;
 
 // Statistic Options
 export const STATISTIC_LINEAR = `${LAYOUT_CHART}-statistic-option-0`;
+export const STATISTIC_QUADRATIC = `${LAYOUT_CHART}-statistic-option-1`;
+export const STATISTIC_POWER = `${LAYOUT_CHART}-statistic-option-2`;
+export const STATISTIC_INVERSE = `${LAYOUT_CHART}-statistic-option-3`;
+export const STATISTIC_INVERSE_SQUARE = `${LAYOUT_CHART}-statistic-option-4`;
+export const STATISTIC_SINUSOIDAL = `${LAYOUT_CHART}-statistic-option-5`;
 
 export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 
@@ -88,14 +93,17 @@ export const expandableOptions = [
   {
     id: SCALE_FIT_OPTION,
     icon: autoScaleIcon,
+    visible: true,
   },
   {
     id: NOTE_OPTION,
     icon: noteIcon,
+    visible: true,
   },
   {
     id: INTERPOLATE_OPTION,
     icon: interpolateIcon,
+    visible: true,
     size: "70%",
   },
   {
@@ -103,6 +111,7 @@ export const expandableOptions = [
     icon: showOffDataPointIcon,
     selectedIcon: selectedShowOffDataPointIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
@@ -110,6 +119,7 @@ export const expandableOptions = [
     icon: selectionIcon,
     selectedIcon: selectedSelectionIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
@@ -117,27 +127,32 @@ export const expandableOptions = [
     icon: statisticIcon,
     selectedIcon: selectedStatisticIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
     id: ADD_COLUMN_OPTION,
     icon: addColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_COLUMN_OPTION,
     icon: deleteColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: ADD_ROW_OPTION,
     icon: addRowIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_ROW_OPTION,
     icon: deleteRowIcon,
     selected: false,
+    visible: true,
   },
 ];
 
@@ -218,7 +233,7 @@ export const SAMPLE_RANGE_SELECTION_ANNOTATION = {
 export const hiddenDataLineIds = new Set();
 
 // ======================================= CHART UTILS =======================================
-const roundXValue = (value) => {
+export const roundXValue = (value) => {
   return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);
 };
 
@@ -355,6 +370,7 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
       yAxis: chartData.yAxis,
       yAxisID: yAxisID,
+      ...chartData,
     };
 
     if (tension) dataset.tension = tension;

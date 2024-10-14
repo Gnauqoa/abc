@@ -2,9 +2,13 @@ import {
   PREFIX_LINEAR_REGRESSION,
   PREFIX_STATISTIC_NOTE,
   SAMPLE_STATISTIC_NOTE,
-  LINEAR_REGRESSION_BACKGROUND,
   STATISTIC_NOTE_BACKGROUND,
-  SAMPLE_LINEAR_ANNOTATION,
+  STATISTIC_LINEAR,
+  STATISTIC_QUADRATIC,
+  STATISTIC_POWER,
+  STATISTIC_INVERSE,
+  STATISTIC_INVERSE_SQUARE,
+  STATISTIC_SINUSOIDAL,
 } from "./commons";
 import DataManagerIST from "../../services/data-manager";
 import { LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
@@ -13,31 +17,44 @@ import { getRangeSelections } from "./selection-plugin";
 import { max, mean, min, round, std } from "mathjs";
 import { createSensorInfo } from "../core";
 import { createHiddenDataLineId } from "./legend-plugin";
+import {
+  linearRegression,
+  quadraticRegression,
+  powerRegression,
+  inverseRegression,
+  inverseSquareRegression,
+  sinusoidalRegression,
+  createRegressionDataPoints,
+} from "./statistic-formula";
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
 // ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
-const calculateLinearRegression = ({ dataRunData }) => {
-  const n = dataRunData.length;
-  let sumX = 0;
-  let sumY = 0;
-  let sumXY = 0;
-  let sumX2 = 0;
 
-  for (let i = 0; i < n; i++) {
-    const x = i;
-    const y = dataRunData[i];
-
-    sumX += x;
-    sumY += y;
-    sumXY += x * y;
-    sumX2 += x * x;
+const createRegression = ({ statisticOptionId, datasetData, color }) => {
+  let regression;
+  switch (statisticOptionId) {
+    case STATISTIC_LINEAR:
+      regression = linearRegression(datasetData);
+      break;
+    case STATISTIC_QUADRATIC:
+      regression = quadraticRegression(datasetData);
+      break;
+    case STATISTIC_POWER:
+      regression = powerRegression(datasetData);
+      break;
+    case STATISTIC_INVERSE:
+      regression = inverseRegression(datasetData);
+      break;
+    case STATISTIC_INVERSE_SQUARE:
+      regression = inverseSquareRegression(datasetData);
+      break;
+    case STATISTIC_SINUSOIDAL:
+      regression = sinusoidalRegression(datasetData);
+    default:
+      break;
   }
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-
-  return { slope: round(slope, 2), intercept: round(intercept, 2) };
+  return { ...regression, color };
 };
 
 const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis, statisticOptionId }) => {
@@ -69,22 +86,13 @@ const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis, statisticOptionI
     const minValue = round(min(dataRunData), 2);
     const meanValue = round(mean(dataRunData), 2);
     const stdValue = round(std(dataRunData), 2);
-    const { slope, intercept } = calculateLinearRegression({ dataRunData: dataRunData });
 
     const lastDataIndex = datasetData.length - 1;
-    const middleDataIndex = parseInt(datasetData.length / 2);
 
     const x1 = isDefaultXAxis ? parseFloat(datasetData[0].x) : datasetData[0].x;
     const x2 = isDefaultXAxis ? parseFloat(datasetData[lastDataIndex].x) : datasetData[lastDataIndex].x;
-    const y1 = slope * 0 + intercept;
-    const y2 = slope * lastDataIndex + intercept;
 
-    const startPoint = { x: x1, y: y1 };
-    const midPoint = {
-      x: isDefaultXAxis ? parseFloat(datasetData[middleDataIndex].x) : datasetData[middleDataIndex].x,
-      y: parseFloat(datasetData[middleDataIndex].y),
-    };
-    const endPoint = { x: x2, y: y2 };
+    const regression = createRegression({ statisticOptionId, datasetData, color: dataset.borderColor });
 
     result.push({
       yAxisID: yAxisID,
@@ -93,10 +101,9 @@ const getDataStatistic = ({ datasets, boxRange, isDefaultXAxis, statisticOptionI
       max: maxValue,
       mean: meanValue,
       std: stdValue,
-      linearRegression: { slope, intercept },
-      startPoint,
-      midPoint,
-      endPoint,
+      regression,
+      x1,
+      x2,
     });
   }
   return result;
@@ -111,7 +118,6 @@ export const addStatisticNote = ({
   hiddenDataLineIds,
   isDefaultXAxis,
   statisticOptionId,
-  statisticNoteLabel,
 }) => {
   try {
     // Get Range Selection and extract bounding box
@@ -147,20 +153,26 @@ export const addStatisticNote = ({
       if (statisticsResult.length === 0) continue;
 
       for (const statisticResult of statisticsResult) {
-        const { yAxisID, sensorInfo, min, max, mean, std, linearRegression, startPoint, midPoint, endPoint } =
-          statisticResult;
+        const { yAxisID, sensorInfo, min, max, mean, std, regression, x1, x2 } = statisticResult;
         const hiddenDataLineId = createHiddenDataLineId({ dataRunId, sensorInfo });
 
-        const { slope: m, intercept: b } = linearRegression;
-        const linearRegFunction = `y = ${m}x + ${b}`;
-        const content = [statisticNoteLabel, "  y = mx + b"];
-        content.push(`  m = ${m}`);
-        content.push(`  b = ${b}`);
-        content.push("");
+        const { content } = regression;
         content.push(`Max = ${max}`);
         content.push(`Min = ${min}`);
         content.push(`Mean = ${mean}`);
         content.push(`Std = ${std}`);
+
+        // Add linear regression annotations
+        const linearRegNoteId = createLinearRegNoteId({ pageId, dataRunId, sensorInfo });
+        const regressionDataPoints = createRegressionDataPoints(
+          linearRegNoteId,
+          regression,
+          x1,
+          x2,
+          min,
+          max,
+          regression.midOriginalPoint
+        );
 
         // Add statistics notes annotations
         const statisticNoteId = createStatisticNoteId({ pageId, dataRunId, sensorInfo });
@@ -170,8 +182,8 @@ export const addStatisticNote = ({
           pageId: pageId,
           content: content,
           backgroundColor: STATISTIC_NOTE_BACKGROUND,
-          xValue: midPoint.x,
-          yValue: midPoint.y,
+          xValue: regressionDataPoints.midPoint.x,
+          yValue: regressionDataPoints.midPoint.y,
           xAdjust: -60,
           yAdjust: -60,
           yScaleID: yAxisID,
@@ -181,44 +193,29 @@ export const addStatisticNote = ({
           ...statisticNote,
         };
 
-        // Add linear regression annotations
-        const linearRegNoteId = createLinearRegNoteId({ pageId, dataRunId, sensorInfo });
-        const linearRegNote = {
-          id: linearRegNoteId,
-          xMax: endPoint.x,
-          xMin: startPoint.x,
-          yMax: endPoint.y,
-          yMin: startPoint.y,
-          label: {
-            display: true,
-            backgroundColor: LINEAR_REGRESSION_BACKGROUND,
-            content: linearRegFunction,
-          },
-          yScaleID: yAxisID,
-        };
-        const newLinearReg = {
-          ...SAMPLE_LINEAR_ANNOTATION,
-          ...linearRegNote,
-        };
-
         statisticNotesStorage.save({
           id: statisticNoteId,
           pageId: pageId,
           dataRunId: dataRunId,
           sensorInfo: sensorInfo,
           summary: statisticNote,
-          linearReg: linearRegNote,
+          linearReg: regressionDataPoints,
         });
 
         // If the current dataRun is hidden, skip update it in chart
         if (hiddenDataLineIds.has(hiddenDataLineId)) continue;
 
+        if (regression.fitSuccessful) {
+          chartInstance.data.datasets = [...chartInstance.data.datasets, regressionDataPoints];
+        }
+
         // Update chart annotations
         chartInstance.config.options.plugins.annotation.annotations = {
           ...chartInstance.config.options.plugins.annotation.annotations,
           [statisticNoteId]: newStatisticNote,
-          [linearRegNoteId]: newLinearReg,
         };
+
+        chartInstance.update();
       }
     }
 
@@ -235,7 +232,9 @@ export const removeStatisticNote = ({ chartInstance, pageId }) => {
     const currentStatisticNotes = statisticNotesStorage.query({ pageId });
     currentStatisticNotes.forEach((note) => {
       delete chartInstance.config.options.plugins.annotation.annotations[note.summary.id];
-      delete chartInstance.config.options.plugins.annotation.annotations[note.linearReg.id];
+      chartInstance.data.datasets = chartInstance.data.datasets.filter(
+        (dataset) => dataset.dataRunId !== note.linearReg.id
+      );
       statisticNotesStorage.delete(note.id);
     });
 
@@ -256,7 +255,7 @@ export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hid
   const allStatNotes = statisticNotesStorage.query(condition);
 
   const summaryNotes = {};
-  const linearRegNotes = {};
+  const linearRegNotes = [];
 
   allStatNotes.forEach((statNote) => {
     const dataRunId = statNote.dataRunId;
@@ -265,7 +264,7 @@ export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hid
     if (hiddenDataLineIds?.has(hiddenDataLineId)) return;
 
     const summaryNote = statNote.summary;
-    const linearRegNote = statNote.linearReg;
+    const linearReg = statNote.linearReg;
 
     const newSummaryNote = {
       ...SAMPLE_STATISTIC_NOTE,
@@ -278,18 +277,8 @@ export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hid
       yScaleID: summaryNote.yScaleID,
     };
 
-    const newLinearRegNote = {
-      ...SAMPLE_LINEAR_ANNOTATION,
-      label: linearRegNote.label,
-      xMax: linearRegNote.xMax,
-      xMin: linearRegNote.xMin,
-      yMax: linearRegNote.yMax,
-      yMin: linearRegNote.yMin,
-      yScaleID: linearRegNote.yScaleID,
-    };
-
     summaryNotes[summaryNote.id] = newSummaryNote;
-    linearRegNotes[linearRegNote.id] = newLinearRegNote;
+    linearRegNotes.push(linearReg);
   });
   return { summaryNotes, linearRegNotes };
 };
