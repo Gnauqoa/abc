@@ -18,7 +18,7 @@ import deleteRowIcon from "../../img/expandable-options/delete-row.png";
 
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
+import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../widget-table-chart/commons";
 import { createSensorInfo } from "../core";
 import { createHiddenDataLineId } from "./legend-plugin";
 import { LAYOUT_CHART } from "../../js/constants";
@@ -405,8 +405,6 @@ export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius,
 
     chartDataParam.datasets.push(dataset);
   });
-
-  console.log("chartDataParam: ", chartDataParam);
   return chartDataParam;
 };
 
@@ -668,6 +666,11 @@ export const getChartDatas = ({ sensors, unitId }) => {
   };
 
   const isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(unitId);
+  const isSensorXAxis = unitId.toString().startsWith(`${FIRST_COLUMN_SENSOR_OPT}:`);
+  let sensorXAxis = null;
+  if (isSensorXAxis) {
+    sensorXAxis = SensorServicesIST.getSensorInfo(unitId.split(":")[1]);
+  }
   const userInput = DataManagerIST.getUseInputCustomUnit({ unitId });
   let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
 
@@ -687,16 +690,22 @@ export const getChartDatas = ({ sensors, unitId }) => {
         sensorSubInfo = sensorInfo.data[sensorIndex];
         sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
         const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
-
+        const sensorXAxisChartData = sensorXAxis
+          ? DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorXAxis.id])[0] || []
+          : null;
         // If x axis is the time series, number of data points equals number of chartData points
         // Otherwise, get the min of the chartData points and user inputs
-        const numDataPoints = isDefaultXAxis ? chartData.length : Math.min(chartData.length, userInput.length);
+        const numDataPoints =
+          isDefaultXAxis || isSensorXAxis ? chartData.length : Math.min(chartData.length, userInput.length);
+        // console.log("numDataPoints", numDataPoints);
 
         for (let index = 0; index < numDataPoints; index++) {
           const d = chartData[index];
           let xValue;
           if (isDefaultXAxis) {
             xValue = d.time;
+          } else if (isSensorXAxis && sensorXAxisChartData) {
+            xValue = sensorXAxisChartData[index]?.values[0] || "";
           } else {
             // This code make the difference xValue when user inputs type ""
             const input = userInput[index] || "";

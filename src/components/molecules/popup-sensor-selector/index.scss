@@ -37,6 +37,9 @@
     background-color: #ffbb02;
     color: var(--f7-theme-color-text-color) !important;
     border-radius: 5px;
+    @media only screen and (max-width: 1440px) {
+      font-size: 11px;
+    }
   }
 }
 
