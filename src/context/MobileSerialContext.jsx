@@ -45,9 +45,9 @@ export const MobileSerialContextProvider = ({ children }) => {
 
   useEffect(() => {
     f7ready(() => {
-      if (f7.device.android) {
-        setIsScanning(true); // Set isScanning to true when starting
-        scanIntervalRef.current = setInterval(scan, SCAN_SERIAL_INTERVAL); // Start scanning interval
+      if (f7.device.android && !scanIntervalRef.current) {
+        setIsScanning(true);
+        scanIntervalRef.current = setInterval(scan, SCAN_SERIAL_INTERVAL);
       }
     });
 
@@ -60,7 +60,7 @@ export const MobileSerialContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (data.length) {
-      dataManager.onDataCallback(data, USB_TYPE, { deviceId: "as" });
+      dataManager.onDataCallback(data, USB_TYPE, { deviceId: "/dev-mobile" });
     }
   }, [data]);
 
