@@ -17,6 +17,7 @@
     "ecosystem:cordova"
   ],
   "devDependencies": {
+    "@red-mobile/cordova-plugin-usb-serial": "^2.0.0",
     "cordova-android": "^13.0.0",
     "cordova-plugin-audioinput": "github:AITT-VN/cordova-plugin-audioinput",
     "cordova-plugin-ble-central": "^1.7.5",
@@ -50,7 +51,7 @@
       "cordova-plugin-fullscreen": {},
       "cordova-plugin-audioinput": {},
       "cordova-plugin-x-socialsharing": {},
-      "cordova-plugin-inappbrowser": {}
+      "@red-mobile/cordova-plugin-usb-serial": {}
     },
     "platforms": [
       "android"
