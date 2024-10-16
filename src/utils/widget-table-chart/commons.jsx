@@ -1,7 +1,6 @@
 import React from "react";
 
 import { LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE, DEFAULT_SENSOR_ID } from "../../js/constants";
-import { useTranslation } from "react-i18next";
 
 import addColumnIcon from "../../img/expandable-options/add-column.png";
 import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
@@ -42,12 +41,10 @@ export const expandableOptions = [
 //   unit: <span className="header-unit">(giây)</span>,
 // };
 
-export const TABLE_TIME_COLUMN = () => {
-  const { t } = useTranslation();
-
+export const TABLE_TIME_COLUMN = (t) => {
   return {
     id: FIRST_COLUMN_DEFAULT_OPT,
-    name: "common.time",
+    name: t("common.time"),
     unit: <span className="header-unit">{"(" + t("common.second") + ")"}</span>,
   };
 };
@@ -64,9 +61,9 @@ export const X_AXIS_TIME_UNIT = {
   unit: "s",
 };
 
-export const getFirstColumnOptions = () => {
+export const getFirstColumnOptions = (t) => {
   const customMeasurements = DataManagerIST.getCustomUnits();
-  const result = [TABLE_TIME_COLUMN(), ...customMeasurements];
+  const result = [TABLE_TIME_COLUMN(t), ...customMeasurements];
   return result;
 };
 

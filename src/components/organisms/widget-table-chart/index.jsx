@@ -23,6 +23,7 @@ import TableHeader from "./TableHeader";
 import TableContent from "./TableContent";
 import { useTableContext } from "../../../context/TableContext";
 import { useActivityContext } from "../../../context/ActivityContext";
+import _ from "lodash";
 
 const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, samplingMode }, ref) => {
   const { getUserInputValue, getFirstColumnOption } = useTableContext();
@@ -146,22 +147,16 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
     if (!isRunning || samplingMode === SAMPLING_MANUAL) {
       const newRow = convertCurrentsValueToTableRow(currentValues);
 
-      if (!isRunning) {
-        // TODO: comment this out to not display when not isRunning
-        // transformedRows.push(newRow);
-      } else {
-        // Preventing loosing selection row when move from auto to manual.
-        // As the the selected rows is still the last row from auto
-        const isHasData = datas.reduce((acc, data) => acc || data.length > 0, false);
+      if (isRunning) {
+        const isHasData = datas.some((data) => data.length > 0);
         if (!isHasData) {
-          setSelectedElement({
-            ...selectedElement,
-            selectedRow: 0,
-          });
+          if (selectedElement.selectedRow !== 0) {
+            setSelectedElement({ ...selectedElement, selectedRow: 0 });
+          }
         }
 
         const lastRow = createLastRow({
-          firstColumnValue: getUserInputValue({ tableId: tableId, inputRow: numRows }),
+          firstColumnValue: getUserInputValue({ tableId, inputRow: numRows }),
           numColumns: numColumns,
           widget: widget,
         });
@@ -175,23 +170,27 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
       }
     }
 
-    setRows(
+    const newRows =
       transformedRows.length < DEFAULT_ROWS
         ? [...transformedRows, ...defaultRows.slice(transformedRows.length, DEFAULT_ROWS)]
-        : transformedRows
-    );
+        : transformedRows;
 
+    if (JSON.stringify(newRows) !== JSON.stringify(rows)) {
+      setRows(newRows);
+    }
+    // if (_.isEqual(rows, newRows)) setRows(newRows);
     if (samplingMode === SAMPLING_AUTO || !isRunning) {
       if (transformedRows.length === 0) return;
-      setSelectedElement({
-        ...selectedElement,
-        selectedRow: transformedRows.length - 1,
-      });
+      const newSelectedRow = transformedRows.length - 1;
+      if (selectedElement.selectedRow !== newSelectedRow) {
+        setSelectedElement({ ...selectedElement, selectedRow: newSelectedRow });
+      }
     }
 
-    // TODO: comment this out to not display when not isRunning
-    isRunning && samplingMode === SAMPLING_AUTO && scrollToRef(lastRowRef);
-  }, [datas, firstColumnOption]);
+    if (isRunning && samplingMode === SAMPLING_AUTO) {
+      scrollToRef(lastRowRef);
+    }
+  }, [datas, firstColumnOption, isRunning, samplingMode, currentValues, selectedElement]);
 
   // ========================== Utils functions ==========================
   const convertDataToTableRows = (datas) => {
