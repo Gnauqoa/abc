@@ -8,24 +8,23 @@ import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useTableContext } from "../../../context/TableContext";
 import { useTranslation } from "react-i18next";
 
-
 const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChange }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const { getFirstColumnOption, setFirstColumnOptions } = useTableContext();
 
-  const [firstColumnTables, setFirstColumnTables] = useState(getFirstColumnOptions());
+  const [firstColumnTables, setFirstColumnTables] = useState(getFirstColumnOptions(t));
   const firstColumnOption = getFirstColumnOption({ tableId: tableId });
 
   const handleAddUserUnit = (option) => {
-    setFirstColumnTables(getFirstColumnOptions());
+    setFirstColumnTables(getFirstColumnOptions(t));
     setFirstColumnOptions((prev) => {
       return { ...prev, [tableId]: { ...option } };
     });
   };
 
   const handleFirstColumSelector = ({ target: { value: optionId } }) => {
-    const option = getFirstColumnOptions().find((option) => option.id === optionId);
+    const option = getFirstColumnOptions(t).find((option) => option.id === optionId);
     setFirstColumnOptions((prev) => {
       return { ...prev, [tableId]: { ...option } };
     });
@@ -43,7 +42,7 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
             onChange={handleFirstColumSelector}
           >
             <option value={"defaultSensorSelectedValue"} disabled>
-            {t("organisms.select_information")}
+              {t("organisms.select_information")}
             </option>
             {firstColumnTables.map((option) => {
               return (

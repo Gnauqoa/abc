@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { TABLE_TIME_COLUMN } from "../utils/widget-table-chart/commons";
 import { createInputIdCustomUnit } from "../utils/core";
+import { useTranslation } from "react-i18next";
 
 export const TableContext = createContext({
   userInputs: {},
@@ -15,6 +16,7 @@ export const TableContext = createContext({
 export const TableContextProvider = ({ children }) => {
   const [userInputs, setUserInputs] = useState({});
   const [firstColumnOptions, setFirstColumnOptions] = useState({});
+  const { t } = useTranslation();
 
   const getUserInputValue = ({ unitId, inputRow }) => {
     const inputId = createInputIdCustomUnit({ unitId, index: inputRow });
@@ -23,7 +25,7 @@ export const TableContextProvider = ({ children }) => {
 
   const getFirstColumnOption = ({ tableId }) => {
     const option = firstColumnOptions[tableId];
-    if (!option) return TABLE_TIME_COLUMN();
+    if (!option) return TABLE_TIME_COLUMN(t);
     else return option;
   };
 
