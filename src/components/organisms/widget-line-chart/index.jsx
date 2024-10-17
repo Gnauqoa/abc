@@ -381,7 +381,8 @@ let LineChart = (props, ref) => {
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
   const { widget, xAxis, pageId, layoutRender } = props;
-
+  const defaultSensorIndex = 0;
+  const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   // const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
   // show icon delete chart
