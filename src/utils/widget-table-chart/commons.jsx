@@ -10,6 +10,7 @@ import DataManagerIST from "../../services/data-manager";
 
 export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";
+export const FIRST_COLUMN_SENSOR_OPT = "sensor";
 // export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
 export const ADD_COLUMN_OPTION = `${LAYOUT_TABLE}-expandable-options-0`;

@@ -82,7 +82,7 @@ import {
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createSensorInfo } from "../../../utils/core";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../../../utils/widget-table-chart/commons";
 import { f7 } from "framework7-react";
 import PopoverStatisticOptions from "./PopoverStatisticOptions";
 
@@ -415,7 +415,6 @@ let LineChart = (props, ref) => {
   //   chart: new ChartJs,
   //   sensorRef: useRef({}),
   //   axisRef: useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 }),
-  //   xAxisRef: useRef({}),
   //   valueContainerElRef: useRef({}),
   //   xElRef: useRef({}),
   //   yElRef: useRef({}),
@@ -426,7 +425,6 @@ let LineChart = (props, ref) => {
           chartRef: { current: null },
           sensorRef: { current: {} },
           axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
-          xAxisRef: { current: {} },
           valueContainerElRef: { current: {} },
           xElRef: { current: {} },
           yElRef: { current: {} },
@@ -436,7 +434,6 @@ let LineChart = (props, ref) => {
             chartRef: { current: null },
             sensorRef: { current: {} },
             axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
-            xAxisRef: { current: {} },
             valueContainerElRef: { current: {} },
             xElRef: { current: {} },
             yElRef: { current: {} },
@@ -463,14 +460,7 @@ let LineChart = (props, ref) => {
       }
     }
 
-    if (chartContainer.xAxisRef.current.id !== xAxis?.id) {
-      chartContainer.xAxisRef.current = {
-        id: xAxis?.id,
-        unit: xAxis?.unit,
-        name: t(xAxis?.name),
-      };
-      chartContainer.axisRef.current.xUnit = xAxis?.unit;
-    }
+    chartContainer.axisRef.current.xUnit = xAxis?.unit;
   });
 
   //=================================================================================
@@ -861,7 +851,7 @@ let LineChart = (props, ref) => {
 
   //========================= CUSTOM X AXIS FUNCTION =========================
   const onSelectUserUnit = ({ option }) => {
-    if (option.id === xAxis.id) return;
+    // if (option.id === xAxis.id) return;
 
     let chartDatas = [];
     let isDefaultXAxis = true;
@@ -923,7 +913,6 @@ let LineChart = (props, ref) => {
           chartRef: { current: null },
           sensorRef: { current: {} },
           axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
-          xAxisRef: { current: {} },
           valueContainerElRef: { current: {} },
           xElRef: { current: {} },
           yElRef: { current: {} },
@@ -1115,11 +1104,15 @@ let LineChart = (props, ref) => {
         <div className="sensor-selector-wrapper">
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
-              selectedSensor={sensor}
+              selectedSensor={xAxis?.id === FIRST_COLUMN_DEFAULT_OPT ? DEFAULT_SENSOR_DATA : xAxis}
               selectedUnit={`${t(xAxis?.name)} (${xAxis?.unit})`}
-              onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+              onChange={(sensor) =>
+                onSelectUserUnit({
+                  option: { id: `${FIRST_COLUMN_SENSOR_OPT}:${sensor.id}`, unit: sensor.unit, name: sensor.name },
+                })
+              }
               onSelectUserInit={onSelectUserUnit}
-              defaultTab={SENSOR_SELECTOR_USER_TAB}
+              defaultTab={null}
             />
           </div>
         </div>

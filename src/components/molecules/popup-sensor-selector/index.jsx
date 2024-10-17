@@ -74,6 +74,8 @@ export default function SensorSelector({
         onChange({
           id: sensorId,
           index: sensorIndex,
+          unit: sensorDetailData?.unit,
+          name: sensorDetailData?.name,
         });
       }
     }
@@ -141,13 +143,20 @@ export default function SensorSelector({
       >
         <Page>
           <Navbar className="sensor-select-title">
-            {/* <NavLeft className={`${tab === SENSOR_SELECTOR_SENSOR_TAB ? "selected" : ""}`}>
-              <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_SENSOR_TAB)}>Cảm biến</Button>
-            </NavLeft>
-            <NavRight className={`${tab === SENSOR_SELECTOR_USER_TAB ? "selected" : ""}`}>
-              <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_USER_TAB)}>Người dùng nhập</Button>
-            </NavRight> */}
-            {tab === SENSOR_SELECTOR_SENSOR_TAB ? t("modules.sensor") : t("modules.user_input")}
+            {defaultTab === SENSOR_SELECTOR_SENSOR_TAB ? (
+              t("modules.sensor")
+            ) : defaultTab === SENSOR_SELECTOR_USER_TAB ? (
+              t("modules.user_input")
+            ) : (
+              <>
+                <NavLeft className={`${tab === SENSOR_SELECTOR_SENSOR_TAB ? "selected" : ""}`}>
+                  <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_SENSOR_TAB)}>{t("modules.sensor")}</Button>
+                </NavLeft>
+                <NavRight className={`${tab === SENSOR_SELECTOR_USER_TAB ? "selected" : ""}`}>
+                  <Button onClick={() => handleChangeTab(SENSOR_SELECTOR_USER_TAB)}>{t("modules.user_input")}</Button>
+                </NavRight>
+              </>
+            )}
           </Navbar>
           {tab === SENSOR_SELECTOR_SENSOR_TAB ? (
             <SensorTab sensorListForDisplay={sensorListForDisplay} changeHandler={changeHandler}></SensorTab>
