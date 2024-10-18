@@ -16,7 +16,6 @@ export const MobileSerialContextProvider = ({ children }) => {
   const scanIntervalRef = useRef(null);
 
   const handleError = useCallback((message) => {
-    setError(message);
     console.error("Serial Error:", message);
 
     if (!message.includes("Already open")) setConnected(false);
@@ -60,6 +59,7 @@ export const MobileSerialContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (data.length) {
+      console.log({ data });
       dataManager.onDataCallback(data, USB_TYPE, { deviceId: "/dev-mobile" });
     }
   }, [data]);
