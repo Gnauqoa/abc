@@ -1336,4 +1336,88 @@ export class DataManager {
   }
 }
 
-export default DataManager.getInstance();
+const dataManager = DataManager.getInstance();
+
+let devices = [];
+let readingDevice = 0;
+let waitingRead = false;
+let flagScan = false;
+let readTimeOut = null;
+
+const handleError = (message) => {
+  console.error("Serial Error:", message);
+
+  if (!message.includes("No device found") && !message.includes("Already open")) {
+    // alert(`Error: ${message}`);
+  }
+};
+
+const callbackReadData = (newData) => {
+  clearTimeout(readTimeOut);
+  waitingRead = false;
+  console.log("Data received: ", newData.join(", "));
+
+  dataManager.onDataCallback(newData, USB_TYPE, newData[1]);
+};
+
+const scan = () => {
+  if (!window.serial || !flagScan) return;
+  flagScan = false;
+  serial.requestPermission(
+    () => getActiveDevices(),
+    (error) => {
+      getActiveDevices();
+      handleError(error);
+    }
+  );
+};
+
+const getActiveDevices = () => {
+  if (!window.serial) return;
+  serial.getActiveDevices(
+    (newDevices) => {
+      devices = newDevices;
+    },
+    (error) => {
+      if (error.includes("No USB devices found")) {
+        console.log("No USB devices found");
+        devices = [];
+        return;
+      }
+      handleError(error);
+    }
+  );
+};
+
+setInterval(() => {
+  flagScan = true;
+  scan();
+}, 1000);
+
+setInterval(() => {
+  if (devices.length && !waitingRead && !flagScan) {
+    console.log("Reading device data: ", JSON.stringify(devices[readingDevice]));
+
+    waitingRead = true;
+
+    readTimeOut = setTimeout(() => {
+      waitingRead = false;
+    }, 1000);
+
+    serial.close(
+      () =>
+        serial.readSerialByDeviceId(
+          { baudRate: 115200, deviceId: devices[readingDevice].deviceId },
+          (data) => callbackReadData(new Uint8Array(data)),
+          handleError
+        ),
+      (error) => {
+        waitingRead = false;
+        handleError(error);
+      }
+    );
+    readingDevice = (readingDevice + 1) % devices.length;
+  }
+}, 100);
+
+export default dataManager;
