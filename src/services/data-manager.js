@@ -1339,6 +1339,7 @@ export class DataManager {
 const dataManager = DataManager.getInstance();
 
 let devices = [];
+let activeDevices = [];
 let readingDevice = 0;
 let waitingRead = false;
 let flagScan = false;
@@ -1352,36 +1353,60 @@ const handleError = (message) => {
   }
 };
 
-const callbackReadData = (newData) => {
+const callbackReadData = (newData, deviceId) => {
   clearTimeout(readTimeOut);
   waitingRead = false;
   console.log("Data received: ", newData.join(", "));
 
-  dataManager.onDataCallback(newData, USB_TYPE, newData[1]);
+  dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
+};
+
+const updateActiveDevices = (device) => {
+  if (device && !devices.find((d) => d.deviceId === device.deviceId)) {
+    activeDevices.push(device);
+    console.log("New device connected: ", JSON.stringify(device));
+  }
+
+  getDevices(() => {
+    for (let i = 0; i < activeDevices.length; i++) {
+      console.log("devices: ", JSON.stringify(devices));
+      if (!devices.find((d) => d.deviceId === activeDevices[i].deviceId)) {
+        const dev = activeDevices.splice(i, 1);
+        console.log("Device disconnected: ", JSON.stringify(dev));
+        dataManager.callbackSensorDisconnected([dev[0].deviceId, USB_TYPE]);
+      }
+    }
+    activeDevices = activeDevices.filter((d) => devices.find((d2) => d2.deviceId === d.deviceId));
+  });
 };
 
 const scan = () => {
   if (!window.serial || !flagScan) return;
   flagScan = false;
   serial.requestPermission(
-    () => getActiveDevices(),
+    (device) => {
+      updateActiveDevices(device);
+    },
     (error) => {
-      getActiveDevices();
+      updateActiveDevices();
       handleError(error);
     }
   );
 };
 
-const getActiveDevices = () => {
+const getDevices = (callback) => {
   if (!window.serial) return;
   serial.getActiveDevices(
     (newDevices) => {
       devices = newDevices;
+      console.log("Devices found: ", JSON.stringify(devices));
+      if (callback) callback(devices);
     },
     (error) => {
       if (error.includes("No USB devices found")) {
         console.log("No USB devices found");
         devices = [];
+        if (callback) callback(devices);
         return;
       }
       handleError(error);
@@ -1395,8 +1420,8 @@ setInterval(() => {
 }, 1000);
 
 setInterval(() => {
-  if (devices.length && !waitingRead && !flagScan) {
-    console.log("Reading device data: ", JSON.stringify(devices[readingDevice]));
+  if (activeDevices.length && !waitingRead && !flagScan) {
+    console.log("Reading device data: ", JSON.stringify(activeDevices[readingDevice]));
 
     waitingRead = true;
 
@@ -1407,8 +1432,8 @@ setInterval(() => {
     serial.close(
       () =>
         serial.readSerialByDeviceId(
-          { baudRate: 115200, deviceId: devices[readingDevice].deviceId },
-          (data) => callbackReadData(new Uint8Array(data)),
+          { baudRate: 115200, deviceId: activeDevices[readingDevice].deviceId },
+          (data) => callbackReadData(new Uint8Array(data), activeDevices[readingDevice].deviceId),
           handleError
         ),
       (error) => {
@@ -1416,7 +1441,7 @@ setInterval(() => {
         handleError(error);
       }
     );
-    readingDevice = (readingDevice + 1) % devices.length;
+    readingDevice = (readingDevice + 1) % activeDevices.length;
   }
 }, 100);
 
