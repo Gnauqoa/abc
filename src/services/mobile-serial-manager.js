@@ -62,7 +62,7 @@ export class MobileSerialManager {
     // }
   }
 
-  callbackReadData(newData, deviceId) {
+  onReadDataSuccess(newData, deviceId) {
     console.log("Data received: ", newData.join(", "));
 
     clearTimeout(this.readTimeOut);
@@ -72,26 +72,39 @@ export class MobileSerialManager {
     dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
   }
 
+  disconnectAllDevices() {
+    if (!window.serial) return;
+
+    this.activeDevices.forEach((device) => dataManager.callbackSensorDisconnected([device.deviceId, USB_TYPE]));
+    this.activeDevices = [];
+  }
+
   async updateActiveDevices(device) {
     if (device && !this.devices.find((d) => d.deviceId === device.deviceId)) {
       this.activeDevices.push(device);
       console.log("New device connected: ", JSON.stringify(device));
     }
-    await this.getDevices();
+    try {
+      await this.getDevices();
 
-    for (let i = 0; i < this.activeDevices.length; i++) {
-      console.log("devices: ", JSON.stringify(this.devices));
-      if (!this.devices.find((d) => d.deviceId === this.activeDevices[i].deviceId)) {
-        const disconnectedDevice = this.activeDevices.splice(i, 1);
-        console.log("Device disconnected: ", JSON.stringify(disconnectedDevice));
-        dataManager.callbackSensorDisconnected([disconnectedDevice[0].deviceId, USB_TYPE]);
+      for (let i = 0; i < this.activeDevices.length; i++) {
+        console.log("devices: ", JSON.stringify(this.devices));
+        if (!this.devices.find((d) => d.deviceId === this.activeDevices[i].deviceId)) {
+          const disconnectedDevice = this.activeDevices.splice(i, 1);
+          console.log("Device disconnected: ", JSON.stringify(disconnectedDevice));
+          dataManager.callbackSensorDisconnected([disconnectedDevice[0].deviceId, USB_TYPE]);
+        }
       }
+    } catch (error) {
+      this.disconnectAllDevices();
+      this.handleError(error);
     }
   }
 
   scan() {
     if (!window.serial || !this.flagScan) return;
     this.flagScan = false;
+
     serial.requestPermission(
       (device) => {
         this.updateActiveDevices(device);
@@ -103,30 +116,41 @@ export class MobileSerialManager {
     );
   }
 
-  async getDevices(callback) {
-    if (!window.serial) return;
+  async getDevices() {
+    if (!window.serial) return [];
 
-    try {
-      const newDevices = await new Promise((resolve, reject) => {
-        serial.getActiveDevices(resolve, reject);
-      });
-
-      this.devices = newDevices;
-      console.log("Devices found: ", JSON.stringify(this.devices));
-
-      if (callback) callback(this.devices);
-    } catch (error) {
-      if (error.includes("No USB devices found")) {
-        console.log("No USB devices found");
-        this.devices = [];
-        if (callback) callback(this.devices);
-        return;
-      }
-      this.handleError(error);
-    }
+    return new Promise((resolve, reject) => {
+      serial.getActiveDevices(
+        (newDevices) => {
+          console.log("New devices: ", JSON.stringify(newDevices));
+          this.devices = newDevices;
+          resolve(newDevices);
+        },
+        (error) => {
+          this.devices = [];
+          reject(error);
+        }
+      );
+    });
   }
 
-  readDeviceData() {
+  async closeSerial() {
+    if (!window.serial) return;
+
+    return new Promise((resolve, reject) => {
+      serial.close(resolve, (error) => (error.includes("Already closed") ? resolve() : reject(error)));
+    });
+  }
+
+  async readSerialByDeviceId({ deviceId, baudRate }) {
+    if (!window.serial) return;
+
+    return new Promise((resolve, reject) => {
+      serial.readSerialByDeviceId({ deviceId, baudRate }, resolve, reject);
+    });
+  }
+
+  async readDeviceData() {
     console.log("Reading device data: ", JSON.stringify(this.activeDevices[this.readingDevice]));
 
     this.isReading = true;
@@ -135,19 +159,22 @@ export class MobileSerialManager {
       this.isReading = false;
     }, 1000);
 
-    serial.close(
-      () =>
-        serial.readSerialByDeviceId(
-          { baudRate: 115200, deviceId: this.activeDevices[this.readingDevice].deviceId },
-          (data) => this.callbackReadData(new Uint8Array(data), this.activeDevices[this.readingDevice].deviceId),
-          (error) => this.handleError(error)
-        ),
-      (error) => {
-        this.isReading = false;
-        this.handleError(error);
-      }
-    );
+    const deviceId = this.activeDevices[this.readingDevice].deviceId;
     this.readingDevice = (this.readingDevice + 1) % this.activeDevices.length;
+
+    try {
+      await this.closeSerial();
+
+      const newData = await this.readSerialByDeviceId({
+        baudRate: 115200,
+        deviceId,
+      });
+
+      this.onReadDataSuccess(new Uint8Array(newData), deviceId);
+    } catch (error) {
+      this.isReading = false;
+      this.handleError(error);
+    }
   }
 }
 
