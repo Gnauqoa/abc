@@ -120,7 +120,7 @@ export class MobileSerialManager {
     if (!window.serial) return [];
 
     return new Promise((resolve, reject) => {
-      serial.getActiveDevices(
+      serial.getDevices(
         (newDevices) => {
           console.log("New devices: ", JSON.stringify(newDevices));
           this.devices = newDevices;
