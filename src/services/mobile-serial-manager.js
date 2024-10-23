@@ -1,4 +1,4 @@
-import { READ_SERIAL_INTERVAL, RUNNER_TYPE, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
+import { READ_SERIAL_INTERVAL, RUNNER_INTERVAL, RUNNER_TYPE, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
 import dataManager from "./data-manager";
 
 export class MobileSerialManager {
@@ -73,7 +73,7 @@ export class MobileSerialManager {
         } finally {
           this.isRunning = false;
         }
-      }, 100);
+      }, RUNNER_INTERVAL);
     }
   }
 
