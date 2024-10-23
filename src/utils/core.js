@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import store from "store";
 import { f7 } from "framework7-react";
 import moment from "moment";
@@ -557,7 +557,7 @@ export function createExcelWorkbookBuffer({ sheets }) {
 }
 
 export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }) {
-  const { t, i18n } = useTranslation();
+
   
   const fileExt = "xlsx";
   const excelBuffer = createExcelWorkbookBuffer({ sheets: dataRunsInfo });
@@ -572,8 +572,8 @@ export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }
     } catch (error) {
       console.log("Save file error", error);
       dialog.alert(
-        t("utils.unable_to_save_error"),
-        t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
+        i18next.t("utils.unable_to_save_error"),
+        i18next.t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
         () => {}
       );
     }
@@ -583,13 +583,13 @@ export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }
   } else if (f7.device.cordova) {
     try {
       const savedPath = await exportFileAndroid(excelBuffer, fileName, fileExt);
-      dialog.alert(t("utils.saved_successfully"), `${t("utils.saved_run_data_successfully_at")} ${savedPath}`, () => {});
+      dialog.alert(i18next.t("utils.saved_successfully"), `${i18next.t("utils.saved_run_data_successfully_at")} ${savedPath}`, () => {});
       return;
     } catch (error) {
       console.log("Save file error", error);
       dialog.alert(
-        t("utils.unable_to_save_error"),
-        t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
+        i18next.t("utils.unable_to_save_error"),
+        i18next.t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
         () => {}
       );
     }
@@ -638,12 +638,10 @@ export function getPageName(listPageName) {
 }
 
 export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCancel = false) {
-  const { t, i18n } = useTranslation();
-  
-  f7.dialog.preloader(t("utils.loading")+"...");
+  f7.dialog.preloader(i18next.t("utils.loading")+"...");
   hasCancel &&
     $(".dialog-preloader .dialog-title").html(
-      `${t("utils.loading")+"..."} <span class="edl-cancel-preloader dialog-button">Hủy</span>`
+      `${i18next.t("utils.loading")+"..."} <span class="edl-cancel-preloader dialog-button">Hủy</span>`
     );
   return new Promise((resolve, reject) => {
     let timeoutHandler;
@@ -652,7 +650,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
       dataBuffer.push(e.detail);
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
-          `${t("utils.loading")} ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
+          `${i18next.t("utils.loading")} ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
             hasCancel ? '<span class="edl-cancel-preloader dialog-button">Hủy</span>' : ""
           }`
         );
@@ -713,8 +711,6 @@ export function createInputIdCustomUnit({ unitId, index }) {
 }
 
 export function shareFile(filename, blob) {
-  const { t, i18n } = useTranslation();
-  
   window.requestFileSystem(
     LocalFileSystem.PERSISTENT,
     0,
@@ -726,33 +722,30 @@ export function shareFile(filename, blob) {
           writeFile(fileEntry, blob);
         },
         function (error) {
-          dialog.alert(t("utils.error_reading_data"), error, () => {});
+          dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
         }
       );
     },
     function (error) {
-      dialog.alert(t("utils.error_reading_data"), error, () => {});
+      dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
     }
   );
 }
 
 function writeFile(fileEntry, blob) {
-  const { t, i18n } = useTranslation();
   fileEntry.createWriter(function (fileWriter) {
     fileWriter.onwriteend = function () {
       readFile(fileEntry);
     };
 
     fileWriter.onerror = function (error) {
-      dialog.alert(t("utils.error_recording_data"), error, () => {});
+      dialog.alert(i18next.t("utils.error_recording_data"), error, () => {});
     };
     fileWriter.write(blob);
   });
 }
 
 function readFile(fileEntry) {
-  const { t, i18n } = useTranslation();
-
   fileEntry.file(
     function (file) {
       var reader = new FileReader();
@@ -764,18 +757,16 @@ function readFile(fileEntry) {
       reader.readAsText(file);
     },
     function (error) {
-      dialog.alert(t("utils.error_reading_data"), error, () => {});
+      dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
     }
   );
 }
 
 function shareFileCordova(fullPath) {
-  const { t, i18n } = useTranslation();
-
   console.log(fullPath);
   var options = {
     files: [fullPath],
-    chooserTitle: t("utils.select_application"),
+    chooserTitle: i18next.t("utils.select_application"),
   };
   window.plugins.socialsharing.shareWithOptions(
     options,
@@ -783,7 +774,7 @@ function shareFileCordova(fullPath) {
       console.log(result);
     },
     (error) => {
-      dialog.alert(t("utils.sharing_error"), error, () => {});
+      dialog.alert(i18next.t("utils.sharing_error"), error, () => {});
     }
   );
 }
