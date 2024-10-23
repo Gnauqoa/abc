@@ -1,4 +1,4 @@
-import { READ_SERIAL_INTERVAL, SCAN_SERIAL_INTERVAL, USB_TYPE } from "../js/constants";
+import { READ_SERIAL_INTERVAL, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
 import dataManager from "./data-manager";
 
 export class MobileSerialManager {
@@ -166,7 +166,7 @@ export class MobileSerialManager {
       await this.closeSerial();
 
       const newData = await this.readSerialByDeviceId({
-        baudRate: 115200,
+        baudRate: SERIAL_BAUD_RATE,
         deviceId,
       });
 
