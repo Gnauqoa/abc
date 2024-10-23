@@ -71,7 +71,6 @@ export default ({ f7router }) => {
       }
     });
   }
-
   return (
     <Page className="bg-color-regal-blue home">
       <Navbar className="header-nav">

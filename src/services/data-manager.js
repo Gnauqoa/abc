@@ -1336,4 +1336,6 @@ export class DataManager {
   }
 }
 
-export default DataManager.getInstance();
+const dataManager = DataManager.getInstance();
+
+export default dataManager;

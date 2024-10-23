@@ -11,7 +11,7 @@ import Dialogs from "./molecules/dialog/dialogs";
 import dataManager from "../services/data-manager";
 import { ActivityContextProvider } from "../context/ActivityContext";
 import { TableContextProvider } from "../context/TableContext";
-import { MobileSerialContextProvider } from "../context/MobileSerialContext";
+import MobileSerialManagerIST from "../services/mobile-serial-manager";
 
 const MyApp = () => {
   const device = getDevice();
@@ -49,6 +49,7 @@ const MyApp = () => {
     if (f7.device.cordova) {
       cordovaApp.init(f7);
       if (f7.device.android) {
+        MobileSerialManagerIST.init();
         navigator.geolocation.getCurrentPosition(
           () => {},
           (err) => {
@@ -83,18 +84,16 @@ const MyApp = () => {
   });
 
   return (
-    <MobileSerialContextProvider>
-      <ActivityContextProvider>
-        <TableContextProvider>
-          <App {...f7params}>
-            <Dialogs />
-            <MainMenu />
-            {/* Your main view, should have "view-main" class */}
-            <View main className="safe-areas" url="/" />
-          </App>
-        </TableContextProvider>
-      </ActivityContextProvider>
-    </MobileSerialContextProvider>
+    <ActivityContextProvider>
+      <TableContextProvider>
+        <App {...f7params}>
+          <Dialogs />
+          <MainMenu />
+          {/* Your main view, should have "view-main" class */}
+          <View main className="safe-areas" url="/" />
+        </App>
+      </TableContextProvider>
+    </ActivityContextProvider>
   );
 };
 export default MyApp;
