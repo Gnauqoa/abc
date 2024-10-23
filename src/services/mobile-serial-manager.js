@@ -1,4 +1,4 @@
-import { READ_SERIAL_INTERVAL, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
+import { READ_SERIAL_INTERVAL, RUNNER_TYPE, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
 import dataManager from "./data-manager";
 
 export class MobileSerialManager {
@@ -21,26 +21,60 @@ export class MobileSerialManager {
     // Flag to track if a scan for new devices is ongoing
     this.flagScan = false;
     // Timeout handler for reading device data
+    this.flagSend = false;
     this.readTimeOut = null;
 
     this.scanInterval = null;
 
     this.readInterval = null;
+
+    this.sendInterval = null;
+
+    this.runnerQueue = [];
+
+    this.runnerInterval = null;
+
+    this.isRunning = false;
   }
 
   initInterval() {
     if (!this.scanInterval)
       this.scanInterval = setInterval(() => {
-        this.flagScan = true;
-        this.scan();
+        this.runnerQueue.push({ type: RUNNER_TYPE.SCAN, opts: {} });
       }, SCAN_SERIAL_INTERVAL);
 
     if (!this.readInterval)
       this.readInterval = setInterval(() => {
-        if (this.activeDevices.length && !this.isReading && !this.flagScan) {
-          this.readDeviceData();
-        }
+        if (this.activeDevices.length <= 0)
+          return;
+
+        const deviceId = this.activeDevices[this.readingDevice].deviceId;
+
+        this.readingDevice = (this.readingDevice + 1) % this.activeDevices.length;
+
+        this.runnerQueue.push({ type: RUNNER_TYPE.READ, opts: { deviceId } });
       }, READ_SERIAL_INTERVAL);
+
+    if (!this.runnerInterval) {
+      this.runnerInterval = setInterval(async () => {
+        if (this.runnerQueue.length <= 0 || this.isRunning) return;
+
+        this.isRunning = true;
+        const runner = this.runnerQueue.shift();
+
+        try {
+          if (runner.type === RUNNER_TYPE.SCAN) {
+            await this.scan();
+          } else if (runner.type === RUNNER_TYPE.READ) {
+            await this.readDeviceData(runner.opts.deviceId);
+          }
+        } catch (error) {
+          this.handleError(error);
+        } finally {
+          this.isRunning = false;
+        }
+      }, 100);
+    }
   }
 
   /**
@@ -101,19 +135,42 @@ export class MobileSerialManager {
     }
   }
 
-  scan() {
-    if (!window.serial || !this.flagScan) return;
-    this.flagScan = false;
+  async requestPermission() {
+    if (!window.serial) return;
 
-    serial.requestPermission(
-      (device) => {
-        this.updateActiveDevices(device);
-      },
-      (error) => {
-        this.updateActiveDevices();
-        this.handleError(error);
-      }
-    );
+    return new Promise((resolve, reject) => {
+      serial.requestPermission(
+        (device) => resolve(device),
+        (error) => reject(error)
+      );
+    });
+  }
+
+  async scan() {
+    if (!window.serial) return;
+
+    try {
+      const device = await this.requestPermission();
+      this.updateActiveDevices(device);
+    } catch (error) {
+      this.updateActiveDevices();
+      this.handleError(error);
+    }
+  }
+
+  async writeSerialByDeviceId(deviceId, data) {
+    if (!window.serial) return;
+
+    return new Promise((resolve, reject) => {
+      serial.writeSerialByDeviceId(
+        {
+          deviceId,
+          data,
+        },
+        resolve,
+        reject
+      );
+    });
   }
 
   async getDevices() {
@@ -146,21 +203,19 @@ export class MobileSerialManager {
     if (!window.serial) return;
 
     return new Promise((resolve, reject) => {
-      serial.readSerialByDeviceId({ deviceId, baudRate }, resolve, reject);
+      serial.readSerialByDeviceId(
+        { deviceId, baudRate },
+        (data) => {
+          console.log("Read success: ", new Uint8Array(data).join(", "));
+          resolve(data);
+        },
+        reject
+      );
     });
   }
 
-  async readDeviceData() {
-    console.log("Reading device data: ", JSON.stringify(this.activeDevices[this.readingDevice]));
-
-    this.isReading = true;
-
-    this.readTimeOut = setTimeout(() => {
-      this.isReading = false;
-    }, 1000);
-
-    const deviceId = this.activeDevices[this.readingDevice].deviceId;
-    this.readingDevice = (this.readingDevice + 1) % this.activeDevices.length;
+  async readDeviceData(deviceId) {
+    console.log("Reading device data: ", deviceId);
 
     try {
       await this.closeSerial();
@@ -171,9 +226,11 @@ export class MobileSerialManager {
       });
 
       this.onReadDataSuccess(new Uint8Array(newData), deviceId);
+      return newData;
     } catch (error) {
       this.isReading = false;
       this.handleError(error);
+      return [];
     }
   }
 }
