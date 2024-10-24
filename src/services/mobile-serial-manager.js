@@ -23,13 +23,6 @@ export class MobileSerialManager {
     this.activeDevices = [];
     // Index of the current device being read
     this.readingDevice = 0;
-    // Flag to track if the system is waiting for data from a device
-    this.isReading = false;
-    // Flag to track if a scan for new devices is ongoing
-    this.flagScan = false;
-    // Timeout handler for reading device data
-    this.flagSend = false;
-    this.readTimeOut = null;
 
     this.scanInterval = null;
 
@@ -106,10 +99,6 @@ export class MobileSerialManager {
 
   onReadDataSuccess(newData, deviceId) {
     console.log("Data received: ", newData.join(", "));
-
-    clearTimeout(this.readTimeOut);
-
-    this.isReading = false;
 
     dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
   }
@@ -240,7 +229,6 @@ export class MobileSerialManager {
       this.onReadDataSuccess(new Uint8Array(newData), deviceId);
       return newData;
     } catch (error) {
-      this.isReading = false;
       this.handleError(error);
       return [];
     }
