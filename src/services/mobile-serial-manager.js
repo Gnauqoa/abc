@@ -1,4 +1,11 @@
-import { READ_SERIAL_INTERVAL, RUNNER_INTERVAL, RUNNER_TYPE, SCAN_SERIAL_INTERVAL, SERIAL_BAUD_RATE, USB_TYPE } from "../js/constants";
+import {
+  READ_SERIAL_INTERVAL,
+  RUNNER_INTERVAL,
+  RUNNER_TYPE,
+  SCAN_SERIAL_INTERVAL,
+  SERIAL_BAUD_RATE,
+  USB_TYPE,
+} from "../js/constants";
 import dataManager from "./data-manager";
 
 export class MobileSerialManager {
@@ -45,8 +52,7 @@ export class MobileSerialManager {
 
     if (!this.readInterval)
       this.readInterval = setInterval(() => {
-        if (this.activeDevices.length <= 0)
-          return;
+        if (this.activeDevices.length <= 0) return;
 
         const deviceId = this.activeDevices[this.readingDevice].deviceId;
 
@@ -67,6 +73,8 @@ export class MobileSerialManager {
             await this.scan();
           } else if (runner.type === RUNNER_TYPE.READ) {
             await this.readDeviceData(runner.opts.deviceId);
+          } else if (runner.type === RUNNER_TYPE.SEND) {
+            await this.writeSerialByDeviceId(runner.opts.deviceId, runner.opts.data);
           }
         } catch (error) {
           this.handleError(error);
@@ -158,12 +166,25 @@ export class MobileSerialManager {
     }
   }
 
+  async writeUsbData(deviceId, data) {
+    const firstTask = this.runnerQueue[0];
+
+    this.runnerQueue = [
+      { type: RUNNER_TYPE.SEND, opts: { deviceId, data } },
+      { type: RUNNER_TYPE.READ, opts: { deviceId } },
+      ...this.runnerQueue.slice(1),
+    ];
+
+    if (firstTask) this.runnerQueue = [firstTask, ...this.runnerQueue];
+  }
+
   async writeSerialByDeviceId(deviceId, data) {
     if (!window.serial) return;
 
     return new Promise((resolve, reject) => {
       serial.writeSerialByDeviceId(
         {
+          baudRate: SERIAL_BAUD_RATE,
           deviceId,
           data,
         },
@@ -179,7 +200,6 @@ export class MobileSerialManager {
     return new Promise((resolve, reject) => {
       serial.getDevices(
         (newDevices) => {
-          console.log("New devices: ", JSON.stringify(newDevices));
           this.devices = newDevices;
           resolve(newDevices);
         },
@@ -203,14 +223,7 @@ export class MobileSerialManager {
     if (!window.serial) return;
 
     return new Promise((resolve, reject) => {
-      serial.readSerialByDeviceId(
-        { deviceId, baudRate },
-        (data) => {
-          console.log("Read success: ", new Uint8Array(data).join(", "));
-          resolve(data);
-        },
-        reject
-      );
+      serial.readSerialByDeviceId({ deviceId, baudRate }, resolve, reject);
     });
   }
 
@@ -218,7 +231,6 @@ export class MobileSerialManager {
     console.log("Reading device data: ", deviceId);
 
     try {
-      await this.closeSerial();
 
       const newData = await this.readSerialByDeviceId({
         baudRate: SERIAL_BAUD_RATE,
