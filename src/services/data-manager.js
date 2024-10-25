@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { exportDataRunsToExcel, getCurrentTime, getFromBetween } from "./../utils/core";
+import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import SensorServicesIST from "./sensor-service";
 import {
@@ -1332,6 +1332,23 @@ export class DataManager {
 
     const userInput = this.customUnits[unitIndex].userInput;
     return userInput || [];
+  }
+
+  deleteSensorDataInDataRun({ dataRunId, sensorInfo, selectedRange }) {
+    const sensorParse = parseSensorInfo(sensorInfo);
+    const newDataSensor = this.dataRuns[dataRunId].data[sensorParse.id].filter((item) => {
+      return !(
+        Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
+        Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
+        Number(item.values[0]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+        Number(item.values[0]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+      );
+    });
+
+    this.dataRuns[dataRunId].data[sensorParse.id] = newDataSensor.map((item, i) => ({
+      time: ((i * this.collectingDataInterval) / 1000).toFixed(3),
+      values: item.values,
+    }));
   }
 }
 

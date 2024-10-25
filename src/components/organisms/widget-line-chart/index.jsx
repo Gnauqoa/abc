@@ -7,6 +7,7 @@ import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServicesIST from "../../../services/sensor-service";
+import DataManagerIST from "../../../services/data-manager";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
@@ -42,6 +43,7 @@ import {
   DELETE_COLUMN_OPTION,
   ADD_ROW_OPTION,
   DELETE_ROW_OPTION,
+  DELETE_RANGE_SELECTION,
   createYAxisLineChart,
   createYAxisId,
   createXAxisLineChart,
@@ -79,6 +81,7 @@ import {
   getRangeSelections,
   handleAddSelection,
   handleDeleteSelection,
+  getListRangeSelections,
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { useActivityContext } from "../../../context/ActivityContext";
 import { createSensorInfo } from "../../../utils/core";
@@ -106,7 +109,7 @@ const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-const handleDrag = function ({ event, chart, pageId }) {
+const handleDrag = function ({ event, chart, pageId, chartIndexInPage }) {
   if (isRangeSelected) {
     switch (event.type) {
       case "mousemove":
@@ -116,6 +119,7 @@ const handleDrag = function ({ event, chart, pageId }) {
           startRangeElement: startRangeElement,
           endRangeElement: event,
           pageId,
+          chartIndexInPage,
         });
         return true;
       case "mouseup": // do not press the mouse
@@ -310,19 +314,27 @@ const updateChart = ({
       scales.y = yAxisInfo;
     }
 
-    if (isDefaultXAxis) {
-      scales.x.type = "linear";
-      scales.x.suggestedMin = 0;
-      scales.x.suggestedMax = suggestMaxX;
-      if (stepSize) {
-        scales.x.ticks.stepSize = stepSize;
-      }
-      chartInstance.options.plugins.zoom.zoom.mode = "xy";
-      chartInstance.options.plugins.zoom.pan.mode = "xy";
-    } else {
-      chartInstance.options.plugins.zoom.zoom.mode = "y";
-      chartInstance.options.plugins.zoom.pan.mode = "y";
+    scales.x.type = "linear";
+    scales.x.suggestedMin = 0;
+    scales.x.suggestedMax = suggestMaxX;
+    if (stepSize) {
+      scales.x.ticks.stepSize = stepSize;
     }
+    chartInstance.options.plugins.zoom.zoom.mode = "xy";
+    chartInstance.options.plugins.zoom.pan.mode = "xy";
+    // if (isDefaultXAxis) {
+    //   scales.x.type = "linear";
+    //   scales.x.suggestedMin = 0;
+    //   scales.x.suggestedMax = suggestMaxX;
+    //   if (stepSize) {
+    //     scales.x.ticks.stepSize = stepSize;
+    //   }
+    //   chartInstance.options.plugins.zoom.zoom.mode = "xy";
+    //   chartInstance.options.plugins.zoom.pan.mode = "xy";
+    // } else {
+    //   chartInstance.options.plugins.zoom.zoom.mode = "y";
+    //   chartInstance.options.plugins.zoom.pan.mode = "y";
+    // }
 
     // Check if the x-axis is time to custom unit to create appropriate chart
     if (isDefaultXAxis) {
@@ -341,7 +353,7 @@ const updateChart = ({
       // update chart notes
       const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataLineIds });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataLineIds });
-      const { rangeSelections } = getRangeSelections({ pageId: pageId });
+      const { rangeSelections } = getRangeSelections({ pageId: pageId, chartId: chartInstance.id });
       newChartAnnotations = {
         ...labelNoteAnnotations,
         ...summaryNotes,
@@ -711,7 +723,7 @@ let LineChart = (props, ref) => {
           {
             id: "annotation-dragger",
             beforeEvent(chart, args, options) {
-              if (handleDrag({ event: args.event, chart, pageId })) {
+              if (handleDrag({ event: args.event, chart, pageId, chartIndexInPage: i })) {
                 args.changed = true;
                 return;
               }
@@ -941,6 +953,28 @@ let LineChart = (props, ref) => {
     }
   };
 
+  //next add icon delete above range
+  const deleteDataInRangeSelection = () => {
+    const selectedRanges = getListRangeSelections({ pageId: pageId });
+    chartContainers.forEach((chartContainer) => {
+      const chart = chartContainer.chart;
+      const datasets = chart.config.data.datasets;
+      const selectedRange = selectedRanges.find((item) => item.chartId == chart.id);
+      if (selectedRange)
+        datasets.forEach((dataset) => {
+          const dataRunId = dataset.dataRunId;
+          const sensorInfo = dataset.yAxis.sensorInfo;
+          DataManagerIST.deleteSensorDataInDataRun({
+            dataRunId,
+            sensorInfo,
+            selectedRange,
+          });
+        });
+
+      handleDeleteSelection({ pageId, chartInstance: chart });
+    });
+  };
+
   //========================= OPTIONS FUNCTIONS =========================
   const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
@@ -986,6 +1020,9 @@ let LineChart = (props, ref) => {
       case DELETE_ROW_OPTION:
         deleteRowHandler();
         break;
+      case DELETE_RANGE_SELECTION:
+        deleteDataInRangeSelection();
+        break;
       default:
         break;
     }
@@ -1003,6 +1040,24 @@ let LineChart = (props, ref) => {
     }, 5000);
   };
 
+  const DeleteIcon = ({ size = 20, color = "red" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24">
+      <path
+        fill={color}
+        d="M6 19c0 1.1-.9 2-2 2h8a2 2 0 0 0 2-2V7H6v12zm12.41-1.41l-2-2-6.99 7h-4.21v-6.89l-2-2 7-7 2 2 6.99-7h4.21v6.89z"
+      />
+    </svg>
+  );
+  const addDeleteIconToAnnotation = (annotation, iconProps) => {
+    const { x, y, size, color } = iconProps || {};
+    annotation.x = x || annotation.xMax + 5; // Adjust position as needed
+    annotation.y = y || annotation.yMin - size - 5; // Adjust position as needed
+    annotation.content = `
+      <div class="delete-icon-container">
+        ${DeleteIcon({ size, color })}
+      </div>
+    `;
+  };
   return (
     <div className="line-chart-wapper">
       {(layoutRender === SENSOR_RENDER_OPTION.HORIZONTAL || layoutRender === SENSOR_RENDER_OPTION.NONE) && (
