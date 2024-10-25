@@ -322,19 +322,6 @@ const updateChart = ({
     }
     chartInstance.options.plugins.zoom.zoom.mode = "xy";
     chartInstance.options.plugins.zoom.pan.mode = "xy";
-    // if (isDefaultXAxis) {
-    //   scales.x.type = "linear";
-    //   scales.x.suggestedMin = 0;
-    //   scales.x.suggestedMax = suggestMaxX;
-    //   if (stepSize) {
-    //     scales.x.ticks.stepSize = stepSize;
-    //   }
-    //   chartInstance.options.plugins.zoom.zoom.mode = "xy";
-    //   chartInstance.options.plugins.zoom.pan.mode = "xy";
-    // } else {
-    //   chartInstance.options.plugins.zoom.zoom.mode = "y";
-    //   chartInstance.options.plugins.zoom.pan.mode = "y";
-    // }
 
     // Check if the x-axis is time to custom unit to create appropriate chart
     if (isDefaultXAxis) {
