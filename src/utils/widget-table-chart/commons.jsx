@@ -22,17 +22,20 @@ export const expandableOptions = [
     id: ADD_COLUMN_OPTION,
     icon: addColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_COLUMN_OPTION,
     icon: deleteColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: SUMMARIZE_OPTION,
     icon: summarizeTableIcon,
     selectedIcon: summarizeTableSelectedIcon,
     selected: false,
+    visible: true,
   },
 ];
 
