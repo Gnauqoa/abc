@@ -122,7 +122,7 @@ export const addStatisticNote = ({
   try {
     // Get Range Selection and extract bounding box
     let boxRange;
-    const { rangeSelections } = getRangeSelections({ pageId });
+    const { rangeSelections } = getRangeSelections({ pageId, chartId: chartInstance.id });
     const rangeSelectionIds = Object.keys(rangeSelections);
     if (rangeSelectionIds.length === 1) {
       const rangeSelection = rangeSelections[rangeSelectionIds[0]];

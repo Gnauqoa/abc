@@ -15,6 +15,7 @@ import addColumnIcon from "../../img/expandable-options/add-column.png";
 import addRowIcon from "../../img/expandable-options/add-row.png";
 import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
 import deleteRowIcon from "../../img/expandable-options/delete-row.png";
+import deleteRangeSelectionIcon from "../../img/expandable-options/trash-box.png";
 
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
@@ -35,6 +36,7 @@ export const ADD_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-6`;
 export const DELETE_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-7`;
 export const ADD_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-8`;
 export const DELETE_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-9`;
+export const DELETE_RANGE_SELECTION = `${LAYOUT_CHART}-expandable-options-10`;
 
 // Statistic Options
 export const STATISTIC_LINEAR = `${LAYOUT_CHART}-statistic-option-0`;
@@ -151,6 +153,12 @@ export const expandableOptions = [
   {
     id: DELETE_ROW_OPTION,
     icon: deleteRowIcon,
+    selected: false,
+    visible: true,
+  },
+  {
+    id: DELETE_RANGE_SELECTION,
+    icon: deleteRangeSelectionIcon,
     selected: false,
     visible: true,
   },
@@ -612,18 +620,33 @@ export const clearAllSelectedPoints = (chart) => {
 };
 
 // ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
-export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
-  const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
-  const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
-  const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
-  const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
+export const calculateBoxRange = ({ chartInstance, startElement, endElement, chartIndexInPage }) => {
+  if (chartIndexInPage > 0) {
+    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+    const startYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(startElement.y);
+    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+    const endYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(endElement.y);
 
-  return {
-    startXValue: round(startXValue, 1),
-    endXValue: round(endXValue, 1),
-    startYValue: round(startYValue, 1),
-    endYValue: round(endYValue, 1),
-  };
+    return {
+      startXValue: round(startXValue, 1),
+      endXValue: round(endXValue, 1),
+      startYValue: round(startYValue, 1),
+      endYValue: round(endYValue, 1),
+      yScaleID: `y${chartIndexInPage}`,
+    };
+  } else {
+    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+    const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
+    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+    const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
+
+    return {
+      startXValue: round(startXValue, 1),
+      endXValue: round(endXValue, 1),
+      startYValue: round(startYValue, 1),
+      endYValue: round(endYValue, 1),
+    };
+  }
 };
 
 // ======================================= CONVERT CHART DATA UTILS =======================================
