@@ -254,15 +254,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({
-  chartInstance,
-  data = [],
-  axisRef,
-  pageId,
-  isDefaultXAxis,
-  sensors,
-  beforeChartSensorLength = 0,
-}) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors, chartIndex = 0 }) => {
   try {
     const pageStep = 5;
     const firstPageStep = 10;
@@ -287,7 +279,7 @@ const updateChart = ({
       sensors.forEach((sensor, index) => {
         // Revert index to map with the order sensor selector button
         // y0 stay on the right most of the axises
-        const curIndex = sensors.length - 1 - index + beforeChartSensorLength;
+        const curIndex = sensors.length - 1 - index + chartIndex;
         const yAxisID = createYAxisId({ index: curIndex });
         const sensorId = sensor.id;
         const sensorIndex = sensor.index;
@@ -380,8 +372,6 @@ let LineChart = (props, ref) => {
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
   const { widget, xAxis, pageId, layoutRender } = props;
-  const defaultSensorIndex = 0;
-  const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
   // const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
 
   // show icon delete chart
@@ -416,8 +406,6 @@ let LineChart = (props, ref) => {
   //   sensorRef: useRef({}),
   //   axisRef: useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 }),
   //   valueContainerElRef: useRef({}),
-  //   xElRef: useRef({}),
-  //   yElRef: useRef({}),
   // }
   const [chartContainers, setChartContainers] = useState(
     layoutRender === SENSOR_RENDER_OPTION.VERTICAL
@@ -426,8 +414,6 @@ let LineChart = (props, ref) => {
           sensorRef: { current: {} },
           axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
           valueContainerElRef: { current: {} },
-          xElRef: { current: {} },
-          yElRef: { current: {} },
         }))
       : [
           {
@@ -435,8 +421,6 @@ let LineChart = (props, ref) => {
             sensorRef: { current: {} },
             axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
             valueContainerElRef: { current: {} },
-            xElRef: { current: {} },
-            yElRef: { current: {} },
           },
         ]
   );
@@ -468,13 +452,7 @@ let LineChart = (props, ref) => {
   //=================================================================================
   useImperativeHandle(ref, () => ({
     clearData: () => {},
-    setCurrentData: ({ data }) => {
-      const xValue = roundAndGetSignificantDigitString({ n: data.x });
-      chartContainers.forEach((chartContainer) => {
-        chartContainer.xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
-        chartContainer.yElRef.current.innerText = `${data.y}(${chartContainer.axisRef.current.yUnit || ""})`;
-      });
-    },
+    setCurrentData: () => {},
 
     /*
     This function is used to clear hiddenDataLineIds
@@ -582,7 +560,7 @@ let LineChart = (props, ref) => {
             pageId,
             isDefaultXAxis,
             sensors: sensorPerChart[i],
-            beforeChartSensorLength: i,
+            chartIndex: i,
           });
         });
       }
@@ -729,7 +707,7 @@ let LineChart = (props, ref) => {
         data: [],
         axisRef: chartContainer.axisRef,
         pageId,
-        beforeChartSensorLength: i,
+        chartIndex: i,
       });
     });
   }, [chartContainers]);
@@ -914,8 +892,6 @@ let LineChart = (props, ref) => {
           sensorRef: { current: {} },
           axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
           valueContainerElRef: { current: {} },
-          xElRef: { current: {} },
-          yElRef: { current: {} },
         },
       ]);
 
@@ -943,6 +919,8 @@ let LineChart = (props, ref) => {
   //next add icon delete above range
   const deleteDataInRangeSelection = () => {
     const selectedRanges = getListRangeSelections({ pageId: pageId });
+    let xAxisWillDeletes = [];
+    let xAxisSensorId = null;
     chartContainers.forEach((chartContainer) => {
       const chart = chartContainer.chart;
       const datasets = chart.config.data.datasets;
@@ -951,15 +929,36 @@ let LineChart = (props, ref) => {
         datasets.forEach((dataset) => {
           const dataRunId = dataset.dataRunId;
           const sensorInfo = dataset.yAxis.sensorInfo;
-          DataManagerIST.deleteSensorDataInDataRun({
+          const deletedResult = DataManagerIST.deleteSensorDataInDataRun({
             dataRunId,
             sensorInfo,
             selectedRange,
+            unitId: xAxis.id,
           });
+          if (deletedResult.unitType === FIRST_COLUMN_SENSOR_OPT) {
+            if (xAxisWillDeletes.find((item) => item.dataRunId == deletedResult.data.dataRunId)) {
+              const index = xAxisWillDeletes.indexOf((item) => item.dataRunId == deletedResult.data.dataRunId);
+              xAxisWillDeletes[index].indexes.push(deletedResult.data.indexes);
+            } else {
+              xAxisWillDeletes = xAxisWillDeletes.push(deletedResult.data);
+            }
+            xAxisSensorId = deletedResult.xAxisSensorId;
+          }
         });
 
       handleDeleteSelection({ pageId, chartInstance: chart });
     });
+
+    //handle delete xAxis if xAxis is sensor
+    if (xAxisWillDeletes.length > 0) {
+      xAxisWillDeletes.forEach((xAxisWillDelete) => {
+        DataManagerIST.deleteSensorDataInDataRunByIndexes({
+          dataRunId: xAxisWillDelete.dataRunId,
+          sensorId: xAxisSensorId,
+          indexes: xAxisWillDelete.indexes,
+        });
+      });
+    }
   };
 
   //========================= OPTIONS FUNCTIONS =========================
@@ -1027,24 +1026,6 @@ let LineChart = (props, ref) => {
     }, 5000);
   };
 
-  const DeleteIcon = ({ size = 20, color = "red" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24">
-      <path
-        fill={color}
-        d="M6 19c0 1.1-.9 2-2 2h8a2 2 0 0 0 2-2V7H6v12zm12.41-1.41l-2-2-6.99 7h-4.21v-6.89l-2-2 7-7 2 2 6.99-7h4.21v6.89z"
-      />
-    </svg>
-  );
-  const addDeleteIconToAnnotation = (annotation, iconProps) => {
-    const { x, y, size, color } = iconProps || {};
-    annotation.x = x || annotation.xMax + 5; // Adjust position as needed
-    annotation.y = y || annotation.yMin - size - 5; // Adjust position as needed
-    annotation.content = `
-      <div class="delete-icon-container">
-        ${DeleteIcon({ size, color })}
-      </div>
-    `;
-  };
   return (
     <div className="line-chart-wapper">
       {(layoutRender === SENSOR_RENDER_OPTION.HORIZONTAL || layoutRender === SENSOR_RENDER_OPTION.NONE) && (
@@ -1073,14 +1054,7 @@ let LineChart = (props, ref) => {
           ))}
 
           <div id="line-chart-canvas-container" className="canvas-container">
-            <div className="current-value-sec" ref={chartContainers[0].valueContainerElRef}>
-              <div className="value-container">
-                x=<span ref={chartContainers[0].xElRef}></span>
-              </div>
-              <div className="value-container">
-                y=<span ref={chartContainers[0].yElRef}></span>
-              </div>
-            </div>
+            <div className="current-value-sec" ref={chartContainers[0].valueContainerElRef}></div>
             <canvas ref={chartContainers[0].chartRef} />
           </div>
         </div>
@@ -1110,14 +1084,7 @@ let LineChart = (props, ref) => {
                 className="current-value-sec"
                 ref={chartContainer.valueContainerElRef}
                 style={{ opacity: `${index === 0 ? "1" : "0"}` }}
-              >
-                <div className="value-container">
-                  x=<span ref={chartContainer.xElRef}></span>
-                </div>
-                <div className="value-container">
-                  y=<span ref={chartContainer.yElRef}></span>
-                </div>
-              </div>
+              ></div>
 
               <canvas ref={chartContainer.chartRef} />
             </div>
