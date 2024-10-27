@@ -665,6 +665,7 @@ let LineChart = (props, ref) => {
                 },
 
                 mode: "xy",
+                scaleMode: "xy",
               },
             },
 
