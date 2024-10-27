@@ -884,6 +884,7 @@ let LineChart = (props, ref) => {
 
   const addColumnHandler = () => {
     const numSensor = widget.sensors?.length ?? 0;
+    if (numSensor >= 4) return;
     const canvas = chartContainers[0].chartRef.current;
     canvas.style.width = 40 * (numSensor + 1) + "px";
 
