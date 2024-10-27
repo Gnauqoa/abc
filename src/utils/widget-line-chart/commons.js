@@ -705,13 +705,11 @@ export const getChartDatas = ({ sensors, unitId }) => {
       const sensorIndex = sensor.index;
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       let sensorSubInfo = null,
-        sensorName = "",
         data = [],
         numEmptyInput = 0;
 
       if (sensorInfo) {
         sensorSubInfo = sensorInfo.data[sensorIndex];
-        sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
         const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
         const sensorXAxisChartData = sensorXAxis
           ? DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorXAxis.id])[0] || []
@@ -753,7 +751,7 @@ export const getChartDatas = ({ sensors, unitId }) => {
       allSelectedSensorsData.push(data);
 
       chartDatas.push({
-        name: `${dataRunPreview.name} - ${sensorName}`,
+        name: `${dataRunPreview.name}`,
         data: data,
         dataRunId: dataRunPreview.id,
         yAxis: {
