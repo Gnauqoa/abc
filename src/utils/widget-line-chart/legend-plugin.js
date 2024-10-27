@@ -3,7 +3,7 @@ import { getAllCurrentLabelNotes } from "./label-plugin";
 import { getAllCurrentStatisticNotes } from "./statistic-plugin";
 
 // ======================================= CHART LEGEND =======================================
-export const onClickLegendHandler = (event, legendItem, legend) => {
+export const onClickLegendHandler = ({ event, legendItem, legend, pageId, chartIndexInPage = 0 }) => {
   if (event.type !== "click") return;
 
   const datasetIndex = legendItem.datasetIndex;
@@ -27,7 +27,12 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
   }
 
   // Update show/off label note
-  const labelNotes = getAllCurrentLabelNotes({ dataRunId: dataRunId, sensorInfo: sensorInfo });
+  const labelNotes = getAllCurrentLabelNotes({
+    dataRunId: dataRunId,
+    sensorInfo: sensorInfo,
+    chartIndexInPage,
+    pageId,
+  });
   Object.keys(labelNotes).forEach((nodeId) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element

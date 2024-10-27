@@ -84,7 +84,7 @@ import {
   getListRangeSelections,
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createSensorInfo } from "../../../utils/core";
+import { createSensorInfo, parseSensorInfo } from "../../../utils/core";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../../../utils/widget-table-chart/commons";
 import { f7 } from "framework7-react";
 import PopoverStatisticOptions from "./PopoverStatisticOptions";
@@ -101,6 +101,7 @@ let lastNoteEvent;
 let isDragging = false;
 let selectedPointElement = null;
 let selectedNoteElement = null;
+let chartSelectedIndex = null;
 
 let isRangeSelected = false;
 let startRangeElement = null;
@@ -254,7 +255,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors, chartIndex = 0 }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors, chartIndexInPage = 0 }) => {
   try {
     const pageStep = 5;
     const firstPageStep = 10;
@@ -279,7 +280,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
       sensors.forEach((sensor, index) => {
         // Revert index to map with the order sensor selector button
         // y0 stay on the right most of the axises
-        const curIndex = sensors.length - 1 - index + chartIndex;
+        const curIndex = sensors.length - 1 - index + chartIndexInPage;
         const yAxisID = createYAxisId({ index: curIndex });
         const sensorId = sensor.id;
         const sensorIndex = sensor.index;
@@ -330,7 +331,11 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
     // Update the chart selection
     if (data?.length > 0) {
       // update chart notes
-      const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataLineIds });
+      const labelNoteAnnotations = getAllCurrentLabelNotes({
+        pageId,
+        chartIndexInPage,
+        hiddenDataLineIds,
+      });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataLineIds });
       const { rangeSelections } = getRangeSelections({ pageId: pageId, chartId: chartInstance.id });
       newChartAnnotations = {
@@ -473,10 +478,12 @@ let LineChart = (props, ref) => {
 
         for (const labelNote of allLabelNotes) {
           if (!dataRunIds.includes(labelNote.dataRunId)) {
-            labelNotesStorage.delete(labelNote.id);
-            chartContainers.forEach((chartContainer) => {
+            const chartContainer = chartContainers.find(
+              (chartContainer) => chartContainer.chart.id == labelNote.chartId
+            );
+            if (chartContainer) {
               delete chartContainer.chart.config.options.plugins.annotation.annotations[labelNote.id];
-            });
+            }
           }
         }
 
@@ -513,10 +520,12 @@ let LineChart = (props, ref) => {
 
         for (const labelNote of allLabelNotes) {
           if (!curSensorInfos.includes(labelNote.sensorInfo)) {
-            labelNotesStorage.delete(labelNote.id);
-            chartContainers.forEach((chartContainer) => {
+            const chartContainer = chartContainers.find(
+              (chartContainer) => chartContainer.chart.id == labelNote.chartId
+            );
+            if (chartContainer) {
               delete chartContainer.chart.config.options.plugins.annotation.annotations[labelNote.id];
-            });
+            }
           }
         }
 
@@ -560,7 +569,7 @@ let LineChart = (props, ref) => {
             pageId,
             isDefaultXAxis,
             sensors: sensorPerChart[i],
-            chartIndex: i,
+            chartIndexInPage: i,
           });
         });
       }
@@ -610,6 +619,7 @@ let LineChart = (props, ref) => {
             if (status) {
               selectedPointElement = newPointEl;
               selectedNoteElement = null;
+              chartSelectedIndex = i;
             }
             return true;
           },
@@ -668,7 +678,10 @@ let LineChart = (props, ref) => {
                 }
 
                 const { status, element: newElement } = onClickNoteElement({ element, selectedNoteElement });
-                if (status) selectedNoteElement = newElement;
+                if (status) {
+                  selectedNoteElement = newElement;
+                  chartSelectedIndex = i;
+                }
                 return true;
               },
               annotations: {},
@@ -676,7 +689,8 @@ let LineChart = (props, ref) => {
 
             legend: {
               display: true,
-              onClick: (event, legendItem, legend) => onClickLegendHandler(event, legendItem, legend),
+              onClick: (event, legendItem, legend) =>
+                onClickLegendHandler({ pageId, event, legendItem, legend, chartIndexInPage: i }),
               labels: {
                 filter: (item) => item.text !== "none",
               },
@@ -707,7 +721,7 @@ let LineChart = (props, ref) => {
         data: [],
         axisRef: chartContainer.axisRef,
         pageId,
-        chartIndex: i,
+        chartIndexInPage: i,
       });
     });
   }, [chartContainers]);
@@ -720,6 +734,7 @@ let LineChart = (props, ref) => {
 
     let noteId, sensorInfo;
     let prevContent = [""];
+    let yScaleId = chartSelectedIndex > 0 ? `y${chartSelectedIndex}` : "y";
 
     // Get NoteId to find whether the note is exist or not
     // for getting the old content of note
@@ -731,7 +746,18 @@ let LineChart = (props, ref) => {
       const dataset = chartInstance.data.datasets[datasetIndex];
       const dataRunId = dataset?.dataRunId;
       sensorInfo = dataset?.yAxis?.sensorInfo;
-      noteId = createLabelNoteId({ pageId, dataRunId, sensorInfo, dataPointIndex });
+      const sensorId = parseSensorInfo(sensorInfo).id;
+      if (layoutRender != SENSOR_RENDER_OPTION.VERTICAL) {
+        const sensorIndex = widget.sensors.findIndex((item) => item.id == sensorId);
+        yScaleId = sensorIndex > 0 ? `y${sensorIndex}` : "y";
+      }
+      noteId = createLabelNoteId({
+        pageId,
+        chartIndexInPage: chartSelectedIndex,
+        dataRunId,
+        sensorInfo,
+        dataPointIndex,
+      });
     } else return;
 
     const labelNote = labelNotesStorage.find(noteId);
@@ -747,25 +773,28 @@ let LineChart = (props, ref) => {
         inputLabel={t("organisms.commentary")}
         defaultValue={prevContent}
         onClosePopup={onClose}
-        extraData={sensorInfo}
+        extraData={{ sensorInfo, chartInstance, yScaleId }}
       />
     ));
   };
 
-  const callbackAddLabelNote = ({ newInput: newContent, extraData: sensorInfo }) => {
+  const callbackAddLabelNote = ({ newInput: newContent, extraData }) => {
     const result = addLabelNote({
-      chartInstance: chartContainers[0].chart,
+      chartInstance: extraData.chartInstance,
       pageId: pageId,
-      sensorInfo: sensorInfo,
+      sensorInfo: extraData.sensorInfo,
       newContent: newContent,
       selectedPointElement,
       selectedNoteElement,
+      chartIndexInPage: chartSelectedIndex,
+      yScaleId: extraData.yScaleId,
     });
 
     if (result) {
       // Clear selected point
       selectedPointElement = null;
       selectedNoteElement = null;
+      chartSelectedIndex = null;
     }
   };
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
@@ -881,10 +910,7 @@ let LineChart = (props, ref) => {
     if (chartContainers.length >= 3) return;
     else {
       handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.VERTICAL });
-
-      chartContainers.forEach((chartContainer) => {
-        chartContainer.chart.destroy();
-      });
+      destroyAllChart();
       setChartContainers((prev) => [
         ...prev,
         {
@@ -902,18 +928,23 @@ let LineChart = (props, ref) => {
   const deleteRowHandler = (sensorDeletedId) => {
     const numSensor = widget.sensors?.length ?? 1;
     if (numSensor <= 1) return;
-    const deletedColumn = sensorDeletedId || numSensor - 1;
-    chartContainers.forEach((chartContainer) => {
-      chartContainer.chart.destroy();
-    });
+    const deletedRow = sensorDeletedId || numSensor - 1;
+    destroyAllChart();
+
     const newChartContainer = _.clone(chartContainers);
-    newChartContainer.splice(deletedColumn, 1);
+    newChartContainer.splice(deletedRow, 1);
     setChartContainers(newChartContainer);
 
-    handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
+    handleDeleteExtraCollectingSensor(widget.id, deletedRow);
     if (numSensor <= 2) {
       setShouldShowColumnOptions(true);
     }
+  };
+
+  const destroyAllChart = () => {
+    chartContainers.forEach((chartContainer) => {
+      chartContainer.chart.destroy();
+    });
   };
 
   //next add icon delete above range
@@ -970,9 +1001,7 @@ let LineChart = (props, ref) => {
         });
         break;
       case NOTE_OPTION:
-        chartContainers.forEach((chartContainer) => {
-          addNoteHandler({ chartInstance: chartContainer.chart });
-        });
+        addNoteHandler({ chartInstance: chartContainers[chartSelectedIndex].chart });
         break;
       case INTERPOLATE_OPTION:
         chartContainers.forEach((chartContainer) => {
@@ -1038,7 +1067,7 @@ let LineChart = (props, ref) => {
             >
               <div className="sensor-select-vertical-mount-container">
                 {isShowIconDeleteChart && activeChart === sensorIndex && widget.sensors.length > 1 && (
-                  <div className="icon-delete-chart" onClick={() => deleteRowHandler(sensorIndex)}>
+                  <div className="icon-delete-chart" onClick={() => deleteColumnHandler(sensorIndex)}>
                     <img src={deleteIconChart} alt="delete" />
                   </div>
                 )}
