@@ -301,6 +301,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
+      layoutRender: SENSOR_RENDER_OPTION.NONE,
+      currentDataRunId: currentDataRunId,
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
