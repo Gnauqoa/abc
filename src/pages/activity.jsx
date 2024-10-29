@@ -301,6 +301,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
+      layoutRender: SENSOR_RENDER_OPTION.NONE,
+      currentDataRunId: currentDataRunId,
+      widgets: pages[currentPageIndex].widgets
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -414,7 +417,6 @@ export default ({ f7route, f7router, filePath, content }) => {
       const tableData = currentSensorValue ? { time: currentSensorValue.time, values: currentSensorValue.values } : {};
       tableDatas.push(tableData);
     });
-
     return tableDatas;
   }
 
