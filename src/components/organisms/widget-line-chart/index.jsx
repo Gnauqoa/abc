@@ -91,6 +91,9 @@ import PopoverStatisticOptions from "./PopoverStatisticOptions";
 
 import { useTranslation } from "react-i18next";
 import deleteIconChart from "../../../img/expandable-options/ico-tool-delete.png";
+import nextIcon from "../../../img/expandable-options/ico-tool-rightarrow.png";
+import previousIcon from "../../../img/expandable-options/ico-tool-leftarrow.png";
+import addNoteIcon from "../../../img/expandable-options/ico-tool-edit.png";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -614,7 +617,8 @@ let LineChart = (props, ref) => {
               elements,
               chart,
               selectedPointElement,
-              selectedNoteElement
+              selectedNoteElement,
+              addNoteHandler
             );
             if (status) {
               selectedPointElement = newPointEl;
@@ -729,6 +733,7 @@ let LineChart = (props, ref) => {
 
   //========================= ADD NOTE FUNCTIONS =========================
   const addNoteHandler = ({ chartInstance }) => {
+    console.log("selectedNoteElement", selectedNoteElement);
     const isValidPointElement = selectedPointElement?.element;
     const isValidNoteElement = selectedNoteElement?.options;
     if (!isValidPointElement && !isValidNoteElement) return;
@@ -1087,6 +1092,20 @@ let LineChart = (props, ref) => {
           <div id="line-chart-canvas-container" className="canvas-container">
             <div className="current-value-sec" ref={chartContainers[0].valueContainerElRef}></div>
             <canvas ref={chartContainers[0].chartRef} />
+            <div id="icon-container" style={{ position: "absolute", display: "none" }}>
+              <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
+                <img src={previousIcon} alt="previousIcon" />
+              </div>
+              <div id="icon2" style={{ cursor: "pointer", width: "20px", height: "20px", marginLeft: "5px" }}>
+                <img src={nextIcon} alt="nextIcon" />
+              </div>
+              <div
+                id="icon3"
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+              >
+                <img src={addNoteIcon} alt="addNoteIcon" />
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1118,6 +1137,14 @@ let LineChart = (props, ref) => {
               ></div>
 
               <canvas ref={chartContainer.chartRef} />
+              <div id="icon-container" style={{ position: "absolute", display: "none" }}>
+                <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
+                  <img src={previousIcon} alt="previousIcon" />
+                </div>
+                <div id="icon2" style={{ cursor: "pointer", width: "20px", height: "20px", marginLeft: "5px" }}>
+                  <img src={nextIcon} alt="nextIcon" />
+                </div>
+              </div>
             </div>
             {isShowIconDeleteChart && activeChart === index && chartContainers.length > 1 && (
               <div className="icon-delete-chart-vertical" onClick={() => deleteRowHandler(index)}>
