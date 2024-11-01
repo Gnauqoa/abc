@@ -309,11 +309,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     const newFileName = getPageName(listPageNames);
     const newPage = {
       layout: chartType,
-      widgets: defaultWidgets,
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
-      layoutRender: SENSOR_RENDER_OPTION.NONE,
       currentDataRunId: currentDataRunId,
       widgets: pages[currentPageIndex].widgets
     };

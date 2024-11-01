@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
+import _ from "lodash";
 import SensorServicesIST from "./sensor-service";
 import {
   FREQUENCIES,
@@ -1056,7 +1057,7 @@ export class DataManager {
       sensorIds.forEach((sensorId, i) => {
         const sensorValue = sensorValues[i].values;
 
-        if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+        if (curBuffer.hasOwnProperty(sensorId) && !_.isEmpty(sensorValue)) {
           curBuffer[sensorId] = sensorValue;
         }
       });
@@ -1071,7 +1072,7 @@ export class DataManager {
 
     sensorIds.forEach((sensorId, i) => {
       const sensorValue = sensorValues[i].values;
-      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && sensorValue !== {}) {
+      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && !_.isEmpty(sensorValue)) {
         dataRunData[sensorId][selectedIndex].values = sensorValue;
       }
     });
@@ -1394,4 +1395,6 @@ export class DataManager {
   }
 }
 
-export default DataManager.getInstance();
+const dataManager = DataManager.getInstance();
+
+export default dataManager;
