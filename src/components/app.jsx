@@ -38,6 +38,7 @@ i18n
     },
   })
   .then((t) => {});
+import MobileSerialManagerIST from "../services/mobile-serial-manager";
 
 const MyApp = () => {
   const device = getDevice();
@@ -75,6 +76,7 @@ const MyApp = () => {
     if (f7.device.cordova) {
       cordovaApp.init(f7);
       if (f7.device.android) {
+        MobileSerialManagerIST.init();
         navigator.geolocation.getCurrentPosition(
           () => {},
           (err) => {

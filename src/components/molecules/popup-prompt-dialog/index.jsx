@@ -23,7 +23,11 @@ const PromptPopup = ({ title, inputLabel, defaultValue, onClosePopup, extraData 
 
   return (
     <Page className="use-prompt-dialog">
-      <Navbar className="use-prompt-dialog-header" title={title}></Navbar>
+      <Navbar
+        className="use-prompt-dialog-header"
+        style={{ height: f7.device.android ? undefined : "25%" }}
+        title={title}
+      ></Navbar>
       <div className="use-prompt-dialog-content">
         <div className="items">
           <div className="item">
