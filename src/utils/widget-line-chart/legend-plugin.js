@@ -3,7 +3,7 @@ import { getAllCurrentLabelNotes } from "./label-plugin";
 import { getAllCurrentStatisticNotes } from "./statistic-plugin";
 
 // ======================================= CHART LEGEND =======================================
-export const onClickLegendHandler = (event, legendItem, legend) => {
+export const onClickLegendHandler = ({ event, legendItem, legend, pageId, chartIndexInPage = 0 }) => {
   if (event.type !== "click") return;
 
   const datasetIndex = legendItem.datasetIndex;
@@ -27,7 +27,12 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
   }
 
   // Update show/off label note
-  const labelNotes = getAllCurrentLabelNotes({ dataRunId: dataRunId, sensorInfo: sensorInfo });
+  const labelNotes = getAllCurrentLabelNotes({
+    dataRunId: dataRunId,
+    sensorInfo: sensorInfo,
+    chartIndexInPage,
+    pageId,
+  });
   Object.keys(labelNotes).forEach((nodeId) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element
@@ -52,13 +57,14 @@ export const onClickLegendHandler = (event, legendItem, legend) => {
       ci.config.options.plugins.annotation.annotations[nodeId] = summaryNotes[nodeId];
     }
   });
-  Object.keys(linearRegNotes).forEach((nodeId) => {
+  linearRegNotes.forEach((regression) => {
     // First, we have to check if the chart maintains the note element or not
     // if not, add to the chart, otherwise, update the note element
-    const noteElement = ci.config.options.plugins.annotation.annotations[nodeId];
-    if (noteElement) noteElement.display = isShowNote;
-    else if (isShowNote) {
-      ci.config.options.plugins.annotation.annotations[nodeId] = linearRegNotes[nodeId];
+    const dataset = ci.data.datasets.find((ds) => ds.id === regression.id);
+    if (dataset && !isShowNote) {
+      ci.data.datasets = ci.data.datasets.filter((ds) => ds.id !== regression.id);
+    } else if (!dataset && isShowNote) {
+      ci.data.datasets.push(regression);
     }
   });
 

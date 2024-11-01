@@ -11,9 +11,10 @@ import { createHiddenDataLineId } from "./legend-plugin";
 
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 
-export const getAllCurrentLabelNotes = ({ pageId, sensorInfo, dataRunId, hiddenDataLineIds }) => {
+export const getAllCurrentLabelNotes = ({ pageId, chartIndexInPage, sensorInfo, dataRunId, hiddenDataLineIds }) => {
   const condition = {};
   if (pageId) condition.pageId = pageId;
+  if (chartIndexInPage != undefined) condition.chartIndexInPage = chartIndexInPage;
   if (dataRunId) condition.dataRunId = dataRunId;
   if (sensorInfo) condition.sensorInfo = sensorInfo;
 
@@ -50,6 +51,8 @@ export const addLabelNote = ({
   newContent,
   selectedPointElement,
   selectedNoteElement,
+  chartIndexInPage = 0,
+  yScaleId = "y",
 }) => {
   const isValidPointElement = selectedPointElement?.element;
   const isValidNoteElement = selectedNoteElement?.options;
@@ -63,13 +66,12 @@ export const addLabelNote = ({
     const dataPointIndex = selectedPointElement.index;
     dataRunId = chartInstance.data.datasets[datasetIndex].dataRunId;
     yAxisID = chartInstance.data.datasets[datasetIndex].yAxis?.id;
-    noteId = createLabelNoteId({ pageId, dataRunId, sensorInfo, dataPointIndex });
+    noteId = createLabelNoteId({ pageId, chartIndexInPage, dataRunId, sensorInfo, dataPointIndex });
   } else return;
 
   const handleOpenPopup = (noteContent) => {
     const newNoteContent = !noteContent ? null : prepareContentNote(noteContent);
     const labelNote = labelNotesStorage.find(noteId);
-
     if (labelNote) {
       const note = labelNote.label;
       const updatedNote = { ...note, content: newNoteContent };
@@ -77,7 +79,7 @@ export const addLabelNote = ({
       chartInstance.config.options.plugins.annotation.annotations[noteId].content = newNoteContent;
     } else if (newNoteContent) {
       const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
-      const yValueNoteElement = chartInstance.scales.y.getValueForPixel(selectedPointElement.element.y);
+      const yValueNoteElement = chartInstance.scales[yScaleId].getValueForPixel(selectedPointElement.element.y);
       const newNote = {
         id: noteId,
         content: newNoteContent,
@@ -98,6 +100,7 @@ export const addLabelNote = ({
         id: noteId,
         label: newNote,
         pageId: pageId,
+        chartIndexInPage,
         sensorInfo: sensorInfo,
         dataRunId: dataRunId,
       });
@@ -114,7 +117,7 @@ export const addLabelNote = ({
   return true;
 };
 
-export const createLabelNoteId = ({ pageId, dataRunId, sensorInfo, dataPointIndex }) => {
-  const noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${dataRunId}_${sensorInfo}_${dataPointIndex}`;
+export const createLabelNoteId = ({ pageId, chartIndexInPage, dataRunId, sensorInfo, dataPointIndex }) => {
+  const noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${chartIndexInPage}_${dataRunId}_${sensorInfo}_${dataPointIndex}`;
   return noteId;
 };

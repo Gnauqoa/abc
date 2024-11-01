@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { exportDataRunsToExcel, getCurrentTime, getFromBetween } from "./../utils/core";
+import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import _ from "lodash";
 import SensorServicesIST from "./sensor-service";
@@ -13,6 +13,7 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
 } from "../js/constants";
+import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -30,7 +31,7 @@ export class DataManager {
 
     // calls two scheduler functions
     // this.runEmitSubscribersScheduler();
-    // this.dummySensorData();
+    //this.dummySensorData();
   }
 
   initializeVariables() {
@@ -1333,6 +1334,64 @@ export class DataManager {
 
     const userInput = this.customUnits[unitIndex].userInput;
     return userInput || [];
+  }
+
+  deleteSensorDataInDataRun({ dataRunId, sensorInfo, selectedRange, unitId = FIRST_COLUMN_DEFAULT_OPT }) {
+    const sensorParse = parseSensorInfo(sensorInfo);
+    if (unitId == FIRST_COLUMN_DEFAULT_OPT) {
+      const newDataSensor = this.dataRuns[dataRunId].data[sensorParse.id].filter((item) => {
+        return !(
+          Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
+          Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
+          Number(item.values[0]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+          Number(item.values[0]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+        );
+      });
+
+      this.dataRuns[dataRunId].data[sensorParse.id] = newDataSensor.map((item, i) => ({
+        time: ((i * this.collectingDataInterval) / 1000).toFixed(3),
+        values: item.values,
+      }));
+      return {
+        xAxisSensorId: FIRST_COLUMN_DEFAULT_OPT,
+        data: null,
+      };
+    } else if (unitId.startsWith(FIRST_COLUMN_SENSOR_OPT)) {
+      const xAxisSensorId = unitId.split(":")[1];
+      const sensorDataWithXAxis = this.dataRuns[dataRunId].data[sensorParse.id].map((item) => ({
+        time: this.dataRuns[dataRunId].data[xAxisSensorId].find((i) => i.time == item.time).values[0],
+        values: item.values,
+      }));
+      const willDeleteIndexes = [];
+      sensorDataWithXAxis.forEach((item, index) => {
+        if (
+          Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
+          Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
+          Number(item.values[0]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+          Number(item.values[0]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+        ) {
+          willDeleteIndexes.push(index);
+        }
+      });
+      this.dataRuns[dataRunId].data[sensorParse.id] = this.dataRuns[dataRunId].data[sensorParse.id].filter(
+        (item, index) => {
+          return !willDeleteIndexes.includes(index);
+        }
+      );
+      return {
+        xAxisSensorId,
+        data: {
+          dataRunId,
+          indexes: willDeleteIndexes,
+        },
+      };
+    }
+  }
+
+  deleteSensorDataInDataRunByIndexes({ dataRunId, sensorId, indexes }) {
+    this.dataRuns[dataRunId].data[sensorId] = this.dataRuns[dataRunId].data[sensorId].filter((item, index) => {
+      return !indexes.includes(index);
+    });
   }
 }
 

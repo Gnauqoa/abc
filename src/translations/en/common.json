@@ -141,7 +141,7 @@
     "information_displayed": "Information displayed:",
     "min_value": "Min value",
     "max_value": "Max value",
-    "time": "Time"
+    "time": "Run"
   },
   "organisms": {
     "experimental_activities": "Experiments",
@@ -237,7 +237,6 @@
     "salinity_concentration": "Salinity concentration",
     "salinity": "Salinity",
     "pH_sensor": "PH Sensor",
-    
     "dissolved_Oxygen_Sensor_Analog": "Dissolved Oxygen Sensor (Analog)",
     "oxygen_concentration_mg": "DO",
     "oxygen_concentration_percent": "DO"

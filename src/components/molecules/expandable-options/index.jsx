@@ -25,6 +25,8 @@ const ExpandableOptions = ({ expandIcon, options, onChooseOption }) => {
       <div className={`container options ${expanded ? "expanded" : ""}`}>
         {Array.isArray(options) &&
           options.map((option) => {
+            if (!option.visible) return null;
+
             const iconSize = option.size ? option.size : ICON_SIZE;
             return (
               <div

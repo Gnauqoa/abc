@@ -11,7 +11,7 @@ let timeoutDragSelection;
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
 const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
-  const selectionId = `${RANGE_SELECTION_ANNOTATION_ID}_${pageId}`;
+  const selectionId = `${RANGE_SELECTION_ANNOTATION_ID}_${pageId}_${chartInstance.id}`;
 
   const rangeSelection = {
     id: selectionId,
@@ -21,6 +21,9 @@ const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
     yMin: boxRange.startYValue,
     backgroundColor: RANGE_SELECTION_BACKGROUND,
   };
+  if (boxRange.yScaleID) {
+    rangeSelection.yScaleID = boxRange.yScaleID;
+  }
 
   const newRangeSelection = {
     ...SAMPLE_RANGE_SELECTION_ANNOTATION,
@@ -30,6 +33,7 @@ const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
   rangeSelectionStorage.save({
     id: selectionId,
     pageId: pageId,
+    chartId: chartInstance.id,
     selection: rangeSelection,
   });
 
@@ -42,7 +46,13 @@ const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
   return true;
 };
 
-export const handleAddSelection = ({ chartInstance, startRangeElement, endRangeElement, pageId }) => {
+export const handleAddSelection = ({
+  chartInstance,
+  startRangeElement,
+  endRangeElement,
+  pageId,
+  chartIndexInPage = 0,
+}) => {
   clearTimeout(timeoutDragSelection);
   timeoutDragSelection = setTimeout(() => {
     if (startRangeElement) {
@@ -50,8 +60,8 @@ export const handleAddSelection = ({ chartInstance, startRangeElement, endRangeE
         startElement: startRangeElement,
         endElement: endRangeElement,
         chartInstance,
+        chartIndexInPage,
       });
-
       const isUpdateSelection =
         boxRange.startXValue !== boxRange.endXValue && boxRange.startYValue !== boxRange.endYValue;
 
@@ -61,7 +71,9 @@ export const handleAddSelection = ({ chartInstance, startRangeElement, endRangeE
 };
 
 export const handleDeleteSelection = ({ pageId, chartInstance }) => {
-  const condition = {};
+  const condition = {
+    chartId: chartInstance.id,
+  };
   if (pageId) condition.pageId = pageId;
 
   const allRangeSelections = rangeSelectionStorage.query(condition);
@@ -74,10 +86,11 @@ export const handleDeleteSelection = ({ pageId, chartInstance }) => {
   chartInstance.update();
 };
 
-export const getRangeSelections = ({ pageId }) => {
+export const getRangeSelections = ({ pageId, chartId }) => {
   const condition = {};
   const rangeSelections = {};
   if (pageId) condition.pageId = pageId;
+  if (chartId) condition.chartId = chartId;
   const allRangeSelections = rangeSelectionStorage.query(condition);
 
   allRangeSelections.forEach((selectionNote) => {
@@ -93,4 +106,19 @@ export const getRangeSelections = ({ pageId }) => {
     rangeSelections[selectionNote.id] = newRangeSelection;
   });
   return { rangeSelections };
+};
+
+export const getListRangeSelections = ({ pageId }) => {
+  const condition = {};
+  if (pageId) condition.pageId = pageId;
+  const allRangeSelections = rangeSelectionStorage.query(condition);
+
+  return allRangeSelections.map((selectionNote) => ({
+    xMin: selectionNote.selection.xMin,
+    xMax: selectionNote.selection.xMax,
+    yMin: selectionNote.selection.yMin,
+    yMax: selectionNote.selection.yMax,
+    pageId: selectionNote.pageId,
+    chartId: selectionNote.chartId,
+  }));
 };

@@ -15,10 +15,11 @@ import addColumnIcon from "../../img/expandable-options/add-column.png";
 import addRowIcon from "../../img/expandable-options/add-row.png";
 import deleteColumnIcon from "../../img/expandable-options/delete-column.png";
 import deleteRowIcon from "../../img/expandable-options/delete-row.png";
+import deleteRangeSelectionIcon from "../../img/expandable-options/trash-box.png";
 
 import DataManagerIST from "../../services/data-manager";
 import SensorServicesIST from "../../services/sensor-service";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../widget-table-chart/commons";
+import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../widget-table-chart/commons";
 import { createSensorInfo } from "../core";
 import { createHiddenDataLineId } from "./legend-plugin";
 import { LAYOUT_CHART } from "../../js/constants";
@@ -35,9 +36,15 @@ export const ADD_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-6`;
 export const DELETE_COLUMN_OPTION = `${LAYOUT_CHART}-expandable-options-7`;
 export const ADD_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-8`;
 export const DELETE_ROW_OPTION = `${LAYOUT_CHART}-expandable-options-9`;
+export const DELETE_RANGE_SELECTION = `${LAYOUT_CHART}-expandable-options-10`;
 
 // Statistic Options
 export const STATISTIC_LINEAR = `${LAYOUT_CHART}-statistic-option-0`;
+export const STATISTIC_QUADRATIC = `${LAYOUT_CHART}-statistic-option-1`;
+export const STATISTIC_POWER = `${LAYOUT_CHART}-statistic-option-2`;
+export const STATISTIC_INVERSE = `${LAYOUT_CHART}-statistic-option-3`;
+export const STATISTIC_INVERSE_SQUARE = `${LAYOUT_CHART}-statistic-option-4`;
+export const STATISTIC_SINUSOIDAL = `${LAYOUT_CHART}-statistic-option-5`;
 
 export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 
@@ -88,14 +95,17 @@ export const expandableOptions = [
   {
     id: SCALE_FIT_OPTION,
     icon: autoScaleIcon,
+    visible: true,
   },
   {
     id: NOTE_OPTION,
     icon: noteIcon,
+    visible: true,
   },
   {
     id: INTERPOLATE_OPTION,
     icon: interpolateIcon,
+    visible: true,
     size: "70%",
   },
   {
@@ -103,6 +113,7 @@ export const expandableOptions = [
     icon: showOffDataPointIcon,
     selectedIcon: selectedShowOffDataPointIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
@@ -110,6 +121,7 @@ export const expandableOptions = [
     icon: selectionIcon,
     selectedIcon: selectedSelectionIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
@@ -117,27 +129,38 @@ export const expandableOptions = [
     icon: statisticIcon,
     selectedIcon: selectedStatisticIcon,
     selected: false,
+    visible: true,
     size: "70%",
   },
   {
     id: ADD_COLUMN_OPTION,
     icon: addColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_COLUMN_OPTION,
     icon: deleteColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: ADD_ROW_OPTION,
     icon: addRowIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_ROW_OPTION,
     icon: deleteRowIcon,
     selected: false,
+    visible: true,
+  },
+  {
+    id: DELETE_RANGE_SELECTION,
+    icon: deleteRangeSelectionIcon,
+    selected: false,
+    visible: true,
   },
 ];
 
@@ -218,7 +241,7 @@ export const SAMPLE_RANGE_SELECTION_ANNOTATION = {
 export const hiddenDataLineIds = new Set();
 
 // ======================================= CHART UTILS =======================================
-const roundXValue = (value) => {
+export const roundXValue = (value) => {
   return Math.round(value * Math.pow(10, X_FORMAT_FLOATING)) / Math.pow(10, X_FORMAT_FLOATING);
 };
 
@@ -355,6 +378,7 @@ export const createChartJsDatas = ({ chartDatas = [], pointRadius, tension, hidd
       backgroundColor: chartUtils.transparentize(chartUtils.namedColor(index), 0.5),
       yAxis: chartData.yAxis,
       yAxisID: yAxisID,
+      ...chartData,
     };
 
     if (tension) dataset.tension = tension;
@@ -389,8 +413,6 @@ export const createChartJsDatasForCustomXAxis = ({ chartDatas = [], pointRadius,
 
     chartDataParam.datasets.push(dataset);
   });
-
-  console.log("chartDataParam: ", chartDataParam);
   return chartDataParam;
 };
 
@@ -598,18 +620,33 @@ export const clearAllSelectedPoints = (chart) => {
 };
 
 // ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
-export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
-  const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
-  const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
-  const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
-  const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
+export const calculateBoxRange = ({ chartInstance, startElement, endElement, chartIndexInPage }) => {
+  if (chartIndexInPage > 0) {
+    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+    const startYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(startElement.y);
+    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+    const endYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(endElement.y);
 
-  return {
-    startXValue: round(startXValue, 1),
-    endXValue: round(endXValue, 1),
-    startYValue: round(startYValue, 1),
-    endYValue: round(endYValue, 1),
-  };
+    return {
+      startXValue: round(startXValue, 1),
+      endXValue: round(endXValue, 1),
+      startYValue: round(startYValue, 1),
+      endYValue: round(endYValue, 1),
+      yScaleID: `y${chartIndexInPage}`,
+    };
+  } else {
+    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+    const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
+    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+    const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
+
+    return {
+      startXValue: round(startXValue, 1),
+      endXValue: round(endXValue, 1),
+      startYValue: round(startYValue, 1),
+      endYValue: round(endYValue, 1),
+    };
+  }
 };
 
 // ======================================= CONVERT CHART DATA UTILS =======================================
@@ -652,6 +689,11 @@ export const getChartDatas = ({ sensors, unitId }) => {
   };
 
   const isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(unitId);
+  const isSensorXAxis = unitId.toString().startsWith(`${FIRST_COLUMN_SENSOR_OPT}:`);
+  let sensorXAxis = null;
+  if (isSensorXAxis) {
+    sensorXAxis = SensorServicesIST.getSensorInfo(unitId.split(":")[1]);
+  }
   const userInput = DataManagerIST.getUseInputCustomUnit({ unitId });
   let dataRunPreviews = DataManagerIST.getActivityDataRunPreview();
 
@@ -663,24 +705,28 @@ export const getChartDatas = ({ sensors, unitId }) => {
       const sensorIndex = sensor.index;
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       let sensorSubInfo = null,
-        sensorName = "",
         data = [],
         numEmptyInput = 0;
 
       if (sensorInfo) {
         sensorSubInfo = sensorInfo.data[sensorIndex];
-        sensorName = `${sensorSubInfo?.name} (${sensorSubInfo?.unit})`;
         const chartData = DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorId])[0] || [];
-
+        const sensorXAxisChartData = sensorXAxis
+          ? DataManagerIST.getWidgetDatasRunData(dataRunPreview.id, [sensorXAxis.id])[0] || []
+          : null;
         // If x axis is the time series, number of data points equals number of chartData points
         // Otherwise, get the min of the chartData points and user inputs
-        const numDataPoints = isDefaultXAxis ? chartData.length : Math.min(chartData.length, userInput.length);
+        const numDataPoints =
+          isDefaultXAxis || isSensorXAxis ? chartData.length : Math.min(chartData.length, userInput.length);
+        // console.log("numDataPoints", numDataPoints);
 
         for (let index = 0; index < numDataPoints; index++) {
           const d = chartData[index];
           let xValue;
           if (isDefaultXAxis) {
             xValue = d.time;
+          } else if (isSensorXAxis && sensorXAxisChartData) {
+            xValue = sensorXAxisChartData[index]?.values[0] || "";
           } else {
             // This code make the difference xValue when user inputs type ""
             const input = userInput[index] || "";
@@ -705,7 +751,7 @@ export const getChartDatas = ({ sensors, unitId }) => {
       allSelectedSensorsData.push(data);
 
       chartDatas.push({
-        name: `${dataRunPreview.name} - ${sensorName}`,
+        name: `${dataRunPreview.name}`,
         data: data,
         dataRunId: dataRunPreview.id,
         yAxis: {
