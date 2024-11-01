@@ -111,6 +111,7 @@ export const addStatisticNote = ({
   hiddenDataLineIds,
   isDefaultXAxis,
   statisticOptionId,
+  statisticNoteLabel,
 }) => {
   try {
     // Get Range Selection and extract bounding box
@@ -152,7 +153,7 @@ export const addStatisticNote = ({
 
         const { slope: m, intercept: b } = linearRegression;
         const linearRegFunction = `y = ${m}x + ${b}`;
-        const content = ["Đường tuyến tính", "  y = mx + b"];
+        const content = [statisticNoteLabel, "  y = mx + b"];
         content.push(`  m = ${m}`);
         content.push(`  b = ${b}`);
         content.push("");

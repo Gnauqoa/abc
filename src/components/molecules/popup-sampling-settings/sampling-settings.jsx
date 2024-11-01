@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Page, Navbar, Popover, List, f7 } from "framework7-react";
+import { useTranslation } from "react-i18next";
 
 import "./sampling-settings.scss";
 import {
@@ -12,6 +13,8 @@ import {
 } from "../../../js/constants";
 
 const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) => {
+  const { t, i18n } = useTranslation();
+
   const [frequency, setFrequency] = useState(defaultFrequency);
   const [timer, setTimer] = useState(defaultTimer);
 
@@ -28,12 +31,12 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
     let parsedTimer = Number(timer);
     const isOffTimer = timer === "" || timer === "--";
     if (isNaN(parsedTimer) && !isOffTimer) {
-      f7.dialog.alert("Thời gian phải là số");
+      f7.dialog.alert(t("modules.time_must_be_a_number"));
       return;
     }
 
     if (![...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].includes(frequency)) {
-      f7.dialog.alert("Chu kỳ không hợp lệ");
+      f7.dialog.alert(t("modules.invalid_cycle"));
       return;
     }
 
@@ -50,24 +53,24 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
 
   return (
     <Page className="sampling-settings">
-      <Navbar className="sampling-settings-header" title="Tùy chọn lấy mẫu"></Navbar>
+      <Navbar className="sampling-settings-header" title={t("modules.sampling_options")}></Navbar>
       <div className="sampling-settings-content">
         <div className="items">
           <div className="item">
-            <div className="text">Chu kỳ: </div>
+            <div className="text">{t("modules.cycle")}</div>
             <Button className="select-frequency-button" raised popoverOpen=".popover-frequency-advanced">
               <span id="input-sampling-frequency-data">
                 {frequency === SAMPLING_MANUAL_FREQUENCY
-                  ? SAMPLING_MANUAL_NAME
+                  ? t(SAMPLING_MANUAL_NAME)
                   : frequency >= 1
-                  ? `${frequency} ${FREQUENCY_UNIT}`
-                  : `${parseInt(1 / frequency)} ${INVERSE_FREQUENCY_UNIT}`}
+                  ? `${frequency} ${t(FREQUENCY_UNIT)}`
+                  : `${parseInt(1 / frequency)} ${t(INVERSE_FREQUENCY_UNIT)}`}
               </span>
             </Button>
           </div>
 
           <div className="item">
-            <div className="text">Thời gian (giây): </div>
+            <div className="text">{`${t("common.time")} (${t("common.second")}):`}</div>
             <input
               className="input-sampling-time"
               type="number"
@@ -80,39 +83,45 @@ const SamplingSettingPopup = ({ defaultFrequency, defaultTimer, onClosePopup }) 
 
         <div className="sampling-settings-buttons">
           <Button className="cancel-button" onClick={onClose}>
-            Bỏ qua
+            {t("common.cancel")}
           </Button>
           <Button className="ok-button" onClick={onSubmit}>
-            OK
+            {t("common.ok")}
           </Button>
         </div>
       </div>
 
       <Popover className="popover-frequency-advanced">
         <List className="list-frequency">
-          {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-            const displayedFrequency =
-              f === SAMPLING_MANUAL_FREQUENCY
-                ? SAMPLING_MANUAL_NAME
-                : f >= 1
-                ? `${f} ${FREQUENCY_UNIT}`
-                : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
-            return (
-              <Button
-                className={`button-frequency ${
-                  f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
-                }`}
-                key={f}
-                textColor="black"
-                onClick={() => {
-                  onChangeFrequency(f);
-                  f7.popover.close();
-                }}
-              >
-                <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
-              </Button>
-            );
-          })}
+          {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY]
+            .sort((x, y) => {
+              if (x === 0) return 1; // Đưa x (0) về cuối
+              if (y === 0) return -1; // Đưa y (0) về cuối
+              return Number.isInteger(y) - Number.isInteger(x) || y - x;
+            })
+            .map((f) => {
+              const displayedFrequency =
+                f === SAMPLING_MANUAL_FREQUENCY
+                  ? t(SAMPLING_MANUAL_NAME)
+                  : f >= 1
+                  ? `${f} ${t(FREQUENCY_UNIT)}`
+                  : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`;
+              return (
+                <Button
+                  className={`button-frequency ${
+                    f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
+                  }`}
+                  key={f}
+                  textColor="black"
+                  onClick={() => {
+                    onChangeFrequency(f);
+                    f7.popover.close();
+                  }}
+                >
+                  <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
+                </Button>
+              );
+            })}
         </List>
       </Popover>
     </Page>

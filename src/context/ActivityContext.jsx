@@ -5,6 +5,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
+  SENSOR_RENDER_OPTION,
   TIMER_NO_STOP,
 } from "../js/constants";
 
@@ -22,6 +23,7 @@ const defaultPages = [
     xAxises: defaultXAxises,
     lastDataRunId: null,
     name: "1",
+    layoutRender: SENSOR_RENDER_OPTION.NONE,
   },
 ];
 
@@ -175,7 +177,7 @@ export const ActivityContextProvider = ({ children }) => {
   };
 
   // =========================== Functions associate with Table ===========================
-  const handleAddExtraCollectingSensor = (widgetId) => {
+  const handleAddExtraCollectingSensor = ({ widgetId, layoutRender = SENSOR_RENDER_OPTION.NONE }) => {
     const currentWidget = pages[currentPageIndex].widgets[widgetId];
     if (!currentWidget) return;
 
@@ -190,7 +192,7 @@ export const ActivityContextProvider = ({ children }) => {
 
     const updatePages = pages.map((page, index) => {
       if (index === currentPageIndex) {
-        return { ...page, widgets: updatedWidgets };
+        return { ...page, widgets: updatedWidgets, layoutRender };
       }
       return page;
     });

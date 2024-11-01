@@ -1,12 +1,15 @@
 import clsx from "clsx";
 import { Block, List, ListItem, PageContent } from "framework7-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
 import { X_AXIS_TIME_UNIT } from "../../../utils/widget-table-chart/commons";
 
 const UserTab = ({ changeHandler = () => {} }) => {
+  const { t, i18n } = useTranslation();
+
   const userUnits = DataManagerIST.getCustomUnits();
 
   const handleSelect = ({ option }) => {
@@ -26,7 +29,7 @@ const UserTab = ({ changeHandler = () => {} }) => {
                 __activeDevice: true,
                 __default: false,
               })}
-              title={`${option.name} ${option.unit === "" ? "" : ` (${option.unit})`}`}
+              title={`${t(option.name)} ${option.unit === "" ? "" : ` (${option.unit})`}`}
               onClick={() => handleSelect({ option })}
             ></ListItem>
           ))}

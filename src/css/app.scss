@@ -10,7 +10,11 @@
   width: 100%;
   height: auto;
 }
-
+.iconFlag {
+  height: 90%;
+  width: 90%;
+  opacity: 0.8;
+}
 // // Mobile device
 // @media only screen and (max-height: 400px) {
 //   .responsive {
@@ -29,6 +33,9 @@
       height: 100px !important;
     }
   }
+  .boxFlag {
+    margin-right: unset;
+    }
 }
 
 .full-height {
@@ -234,6 +241,31 @@
   .menu-icon {
     width: 36px;
     height: 36px;
+  }
+
+  .lang-selector {
+    .item-content {
+      cursor: auto;
+    }
+
+    .menu-icon {
+      margin-right: 5px;
+    }
+
+    div {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    div:nth-child(2) {
+      margin-left: 20px;
+    }
+
+    .item-inner {
+      justify-content: flex-start;
+      cursor: auto;
+    }
   }
 }
 

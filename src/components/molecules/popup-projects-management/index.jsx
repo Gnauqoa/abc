@@ -3,8 +3,11 @@ import { Navbar, Button, Page, Popup } from "framework7-react";
 import { searchProjects, openProject, removeProject } from "../../../utils/cordova-file-utils";
 import "./index.scss";
 import { PROJECT_FOLDER } from "../../../js/constants";
+import { useTranslation } from "react-i18next";
 
 const ProjectManagementPopup = ({ f7router, opened, onClose }) => {
+  const { t, i18n } = useTranslation();
+
   const dataRunManagementPopupRef = useRef();
   const [projects, setProjects] = useState([]);
 
@@ -43,7 +46,7 @@ const ProjectManagementPopup = ({ f7router, opened, onClose }) => {
   return (
     <Popup className="project-management-popup" ref={dataRunManagementPopupRef} opened={opened} onPopupClose={onClose}>
       <Page className="project-management">
-        <Navbar className="project-management-header" title="Quản lý Projects"></Navbar>
+        <Navbar className="project-management-header" title={t("modules.project_management")}></Navbar>
         <div className="list-project">
           {projects.map((project) => (
             <div className="list-item" key={project.name}>

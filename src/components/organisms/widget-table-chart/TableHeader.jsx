@@ -6,8 +6,12 @@ import AddUserUnitPopup from "../../molecules/popup-add-user-unit";
 import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useTableContext } from "../../../context/TableContext";
+import { useTranslation } from "react-i18next";
+
 
 const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChange }) => {
+  const { t, i18n } = useTranslation();
+
   const { getFirstColumnOption, setFirstColumnOptions } = useTableContext();
 
   const [firstColumnTables, setFirstColumnTables] = useState(getFirstColumnOptions());
@@ -39,12 +43,12 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
             onChange={handleFirstColumSelector}
           >
             <option value={"defaultSensorSelectedValue"} disabled>
-              Chọn thông tin
+            {t("organisms.select_information")}
             </option>
             {firstColumnTables.map((option) => {
               return (
                 <option key={option.id} value={option.id}>
-                  {option.name}
+                  {t(option.name)}
                 </option>
               );
             })}

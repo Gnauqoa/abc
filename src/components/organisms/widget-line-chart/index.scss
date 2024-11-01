@@ -41,7 +41,7 @@
     .canvas-container {
       position: relative;
       // flex: 1 0 0;
-      height: 94%;
+      height: 92%;
       width: calc(100% - 40px); /* Width is calculated dynamically */
 
       > .current-value-sec {
@@ -94,7 +94,22 @@ body {
     border-radius: 4px;
   }
 }
-
+.icon-delete-chart {
+  width: fit-content;
+  position: absolute;
+  z-index: 2;
+  right: -25px;
+  top: 21%;
+  cursor: pointer;
+}
+.icon-delete-chart-vertical {
+  width: fit-content;
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  top: 0;
+  cursor: pointer;
+}
 @media only screen and (max-height: 630px) {
   .line-chart-wapper {
     .line-chart {

@@ -288,7 +288,7 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
   const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
       case ADD_COLUMN_OPTION:
-        handleAddExtraCollectingSensor(widget.id);
+        handleAddExtraCollectingSensor({ widgetId: widget.id });
         break;
       case DELETE_COLUMN_OPTION:
         deleteColumnHandler();
