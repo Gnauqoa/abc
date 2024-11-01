@@ -97,16 +97,35 @@ export class MobileSerialManager {
     // }
   }
 
+  isInnoLabSensor(data) {
+    let dataLength = data[4];
+    let checksum = data[5 + dataLength];
+    let calculatedChecksum = 0xff;
+    for (let i = 0; i < dataLength + 5; i++) {
+      calculatedChecksum = calculatedChecksum ^ data[i];
+    }
+
+    if (calculatedChecksum != checksum) {
+      return false;
+    }
+    return true;
+  }
+
   onReadDataSuccess(newData, deviceId) {
     console.log("Data received: ", newData.join(", "));
 
     dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
+
+    if (this.isInnoLabSensor(newData)) {
+      const index = this.activeDevices.findIndex((device) => device.deviceId === deviceId);
+      this.activeDevices[index] = { ...this.activeDevices[index], sensorId: newData[1] };
+    }
   }
 
   disconnectAllDevices() {
     if (!window.serial) return;
 
-    this.activeDevices.forEach((device) => dataManager.callbackSensorDisconnected([device.deviceId, USB_TYPE]));
+    this.activeDevices.forEach((device) => dataManager.callbackSensorDisconnected([device.sensorId, USB_TYPE]));
     this.activeDevices = [];
   }
 
@@ -119,11 +138,13 @@ export class MobileSerialManager {
       await this.getDevices();
 
       for (let i = 0; i < this.activeDevices.length; i++) {
-        console.log("devices: ", JSON.stringify(this.devices));
         if (!this.devices.find((d) => d.deviceId === this.activeDevices[i].deviceId)) {
           const disconnectedDevice = this.activeDevices.splice(i, 1);
-          console.log("Device disconnected: ", JSON.stringify(disconnectedDevice));
-          dataManager.callbackSensorDisconnected([disconnectedDevice[0].deviceId, USB_TYPE]);
+          console.log(
+            `Disconnect device ${disconnectedDevice[0].deviceId}, sensorId: ${disconnectedDevice[0].sensorId}`
+          );
+
+          dataManager.callbackSensorDisconnected([disconnectedDevice[0].sensorId, USB_TYPE]);
         }
       }
     } catch (error) {
@@ -220,7 +241,6 @@ export class MobileSerialManager {
     console.log("Reading device data: ", deviceId);
 
     try {
-
       const newData = await this.readSerialByDeviceId({
         baudRate: SERIAL_BAUD_RATE,
         deviceId,
