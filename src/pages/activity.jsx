@@ -309,13 +309,13 @@ export default ({ f7route, f7router, filePath, content }) => {
     const newFileName = getPageName(listPageNames);
     const newPage = {
       layout: chartType,
-      widgets: defaultWidgets,
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
       layoutRender: SENSOR_RENDER_OPTION.NONE,
-      currentDataRunId: currentDataRunId,
-      widgets: pages[currentPageIndex].widgets
+      currentDataRunId: currentDataRunId, 
+      widgets: defaultWidgets,
+
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -333,12 +333,17 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handlePagePrev() {
     if (currentPageIndex === 0) return;
     const prevPageIndex = currentPageIndex - 1;
+    setLastDataRunIdForCurrentPage(currentDataRunId);
+
     handleNavigatePage(prevPageIndex);
   }
 
   function handlePageNext() {
     if (currentPageIndex === pages.length - 1) return;
+
     const nextPageIndex = currentPageIndex + 1;
+    setLastDataRunIdForCurrentPage(currentDataRunId);
+
     handleNavigatePage(nextPageIndex);
   }
 
