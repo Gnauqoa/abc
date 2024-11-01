@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
+import { useTranslation } from "react-i18next";
+
 
 import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
@@ -15,6 +17,8 @@ const updateChart = ({ chartInstance, datas }) => {
 };
 
 const BarCharWidget = ({ widget, datas, xAxis }) => {
+  const { t, i18n } = useTranslation();
+
   const { isRunning, handleSensorChange, handleXAxisChange } = useActivityContext();
 
   const canvasRef = useRef();
@@ -111,7 +115,7 @@ const BarCharWidget = ({ widget, datas, xAxis }) => {
         <div className="sensor-selector-wrapper">
           <SensorSelector
             selectedSensor={sensor}
-            selectedUnit={`${xAxis?.name} (${xAxis?.unit})`}
+            selectedUnit={`${t(xAxis?.name)} (${xAxis?.unit})`}
             onSelectUserInit={onSelectUserUnit}
             defaultTab={SENSOR_SELECTOR_USER_TAB}
           ></SensorSelector>

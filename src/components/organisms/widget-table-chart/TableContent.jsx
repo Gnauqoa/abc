@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import { SAMPLING_AUTO, SAMPLING_MANUAL } from "../../../js/constants";
 import { useTableContext } from "../../../context/TableContext";
@@ -33,7 +33,7 @@ const TableContent = ({
   };
 
   return (
-    <div>
+    <>
       {[...rows, emptyRow, emptyRow].map((row, rowIndex) => {
         const { selectedRow, selectedColumn } = selectedElement;
 
@@ -91,7 +91,7 @@ const TableContent = ({
           </tr>
         );
       })}
-    </div>
+    </>
   );
 };
 

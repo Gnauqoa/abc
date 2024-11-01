@@ -7,6 +7,7 @@ import ExpandableOptions from "../../molecules/expandable-options";
 
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServicesIST from "../../../services/sensor-service";
+import DataManagerIST from "../../../services/data-manager";
 
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
@@ -40,6 +41,9 @@ import {
   createChartJsDatasForCustomXAxis,
   ADD_COLUMN_OPTION,
   DELETE_COLUMN_OPTION,
+  ADD_ROW_OPTION,
+  DELETE_ROW_OPTION,
+  DELETE_RANGE_SELECTION,
   createYAxisLineChart,
   createYAxisId,
   createXAxisLineChart,
@@ -49,6 +53,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
+  SENSOR_RENDER_OPTION,
   SENSOR_SELECTOR_USER_TAB,
 } from "../../../js/constants";
 
@@ -76,12 +81,19 @@ import {
   getRangeSelections,
   handleAddSelection,
   handleDeleteSelection,
+  getListRangeSelections,
 } from "../../../utils/widget-line-chart/selection-plugin";
 import { useActivityContext } from "../../../context/ActivityContext";
-import { createSensorInfo } from "../../../utils/core";
-import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { createSensorInfo, parseSensorInfo } from "../../../utils/core";
+import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../../../utils/widget-table-chart/commons";
 import { f7 } from "framework7-react";
 import PopoverStatisticOptions from "./PopoverStatisticOptions";
+
+import { useTranslation } from "react-i18next";
+import deleteIconChart from "../../../img/expandable-options/ico-tool-delete.png";
+import nextIcon from "../../../img/expandable-options/ico-tool-rightarrow.png";
+import previousIcon from "../../../img/expandable-options/ico-tool-leftarrow.png";
+import addNoteIcon from "../../../img/expandable-options/ico-tool-edit.png";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -92,6 +104,7 @@ let lastNoteEvent;
 let isDragging = false;
 let selectedPointElement = null;
 let selectedNoteElement = null;
+let chartSelectedIndex = null;
 
 let isRangeSelected = false;
 let startRangeElement = null;
@@ -100,7 +113,7 @@ const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-const handleDrag = function ({ event, chart, pageId }) {
+const handleDrag = function ({ event, chart, pageId, chartIndexInPage }) {
   if (isRangeSelected) {
     switch (event.type) {
       case "mousemove":
@@ -110,6 +123,7 @@ const handleDrag = function ({ event, chart, pageId }) {
           startRangeElement: startRangeElement,
           endRangeElement: event,
           pageId,
+          chartIndexInPage,
         });
         return true;
       case "mouseup": // do not press the mouse
@@ -244,7 +258,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
  *
  */
 // TODO: check axisRef does not change for first time change sensor value
-const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors }) => {
+const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis, sensors, chartIndexInPage = 0 }) => {
   try {
     const pageStep = 5;
     const firstPageStep = 10;
@@ -269,7 +283,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
       sensors.forEach((sensor, index) => {
         // Revert index to map with the order sensor selector button
         // y0 stay on the right most of the axises
-        const curIndex = sensors.length - 1 - index;
+        const curIndex = sensors.length - 1 - index + chartIndexInPage;
         const yAxisID = createYAxisId({ index: curIndex });
         const sensorId = sensor.id;
         const sensorIndex = sensor.index;
@@ -296,19 +310,14 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
       scales.y = yAxisInfo;
     }
 
-    if (isDefaultXAxis) {
-      scales.x.type = "linear";
-      scales.x.suggestedMin = 0;
-      scales.x.suggestedMax = suggestMaxX;
-      if (stepSize) {
-        scales.x.ticks.stepSize = stepSize;
-      }
-      chartInstance.options.plugins.zoom.zoom.mode = "xy";
-      chartInstance.options.plugins.zoom.pan.mode = "xy";
-    } else {
-      chartInstance.options.plugins.zoom.zoom.mode = "y";
-      chartInstance.options.plugins.zoom.pan.mode = "y";
+    scales.x.type = "linear";
+    scales.x.suggestedMin = 0;
+    scales.x.suggestedMax = suggestMaxX;
+    if (stepSize) {
+      scales.x.ticks.stepSize = stepSize;
     }
+    chartInstance.options.plugins.zoom.zoom.mode = "xy";
+    chartInstance.options.plugins.zoom.pan.mode = "xy";
 
     // Check if the x-axis is time to custom unit to create appropriate chart
     if (isDefaultXAxis) {
@@ -325,15 +334,22 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
     // Update the chart selection
     if (data?.length > 0) {
       // update chart notes
-      const labelNoteAnnotations = getAllCurrentLabelNotes({ pageId: pageId, hiddenDataLineIds });
+      const labelNoteAnnotations = getAllCurrentLabelNotes({
+        pageId,
+        chartIndexInPage,
+        hiddenDataLineIds,
+      });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({ pageId: pageId, hiddenDataLineIds });
-      const { rangeSelections } = getRangeSelections({ pageId: pageId });
+      const { rangeSelections } = getRangeSelections({ pageId: pageId, chartId: chartInstance.id });
       newChartAnnotations = {
         ...labelNoteAnnotations,
         ...summaryNotes,
-        ...linearRegNotes,
         ...rangeSelections,
       };
+
+      for (const regression of linearRegNotes) {
+        chartInstance.data.datasets.push(regression);
+      }
     } else {
       // const { rangeSelections } = getRangeSelections({ pageId: pageId });
       // newChartAnnotations = {
@@ -359,13 +375,16 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
 
 // ============================================= MAIN COMPONENT =============================================
 let LineChart = (props, ref) => {
+  const { t } = useTranslation();
+
   const { handleSensorChange, handleXAxisChange, handleAddExtraCollectingSensor, handleDeleteExtraCollectingSensor } =
     useActivityContext();
-  const { widget, xAxis, pageId } = props;
-  const defaultSensorIndex = 0;
-  const sensor = widget.sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
-
+  const { widget, xAxis, pageId, layoutRender } = props;
   // const definedSensors = DataManagerIST.getCustomUnitSensorInfos({ unitId: xAxis.id });
+
+  // show icon delete chart
+  const [isShowIconDeleteChart, setIsShowIconDeleteChart] = useState(false);
+  const [activeChart, setActiveChart] = useState(null);
 
   // Check whether the options are selected or not
   const isSelectStatistic = statisticNotesStorage.query({ pageId: pageId }).length > 0;
@@ -373,60 +392,75 @@ let LineChart = (props, ref) => {
   const [isShowStatistic, setIsShowStatistic] = useState(isSelectStatistic);
   const [isSelectRegion, setIsSelectRegion] = useState(isSelectRangeSelection);
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
-  const expandOptions = expandableOptions.map((option) => {
-    if (!OPTIONS_WITH_SELECTED.includes(option.id)) return option;
+  const [shouldShowRowOptions, setShouldShowRowOptions] = useState(true);
+  const [shouldShowColumnOptions, setShouldShowColumnOptions] = useState(true);
 
+  // Vertical chart or horizontal chart
+  const defaultExpandOptions = expandableOptions.map((option) => {
     if (option.id === STATISTIC_OPTION) return { ...option, selected: isShowStatistic };
     else if (option.id === SELECTION_OPTION) return { ...option, selected: isSelectRegion };
     else if (option.id === SHOW_OFF_DATA_POINT_MARKER) return { ...option, selected: isOffDataPoint };
+    else if ([ADD_ROW_OPTION, DELETE_ROW_OPTION].includes(option.id))
+      return { ...option, visible: shouldShowRowOptions };
+    else if ([ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION].includes(option.id))
+      return { ...option, visible: shouldShowColumnOptions };
+    else return option;
   });
 
-  const chartEl = useRef();
-  const chartInstanceRef = useRef();
-  const sensorRef = useRef({});
-  const xAxisRef = useRef({});
-  const axisRef = useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 });
+  // Item data of chartContainers
+  // {
+  //   chartRef: useRef(),
+  //   chart: new ChartJs,
+  //   sensorRef: useRef({}),
+  //   axisRef: useRef({ xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 }),
+  //   valueContainerElRef: useRef({}),
+  // }
+  const [chartContainers, setChartContainers] = useState(
+    layoutRender === SENSOR_RENDER_OPTION.VERTICAL
+      ? widget.sensors.map(() => ({
+          chartRef: { current: null },
+          sensorRef: { current: {} },
+          axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
+          valueContainerElRef: { current: {} },
+        }))
+      : [
+          {
+            chartRef: { current: null },
+            sensorRef: { current: {} },
+            axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
+            valueContainerElRef: { current: {} },
+          },
+        ]
+  );
 
-  let valueContainerElRef = useRef();
-  let xElRef = useRef();
-  let yElRef = useRef();
+  chartContainers.forEach((chartContainer, index) => {
+    const sensor = widget.sensors[index] || DEFAULT_SENSOR_DATA;
+    if (chartContainer.sensorRef.current.id != sensor?.id || chartContainer.sensorRef.current.index != sensor?.index) {
+      chartContainer.sensorRef.current = {
+        id: sensor?.id,
+        index: sensor?.index,
+      };
+      const sensorList = SensorServicesIST.getAllSensors();
+      const existingSensorData = sensorList.find((s) => s.id === chartContainer.sensorRef.current.id);
+      if (existingSensorData) {
+        const sensorDetailData = existingSensorData.data[chartContainer.sensorRef.current.index];
+        chartContainer.sensorRef.current.sensorDetailData = sensorDetailData;
 
-  if (sensorRef.current.id != sensor?.id || sensorRef.current.index != sensor?.index) {
-    sensorRef.current = {
-      id: sensor?.id,
-      index: sensor?.index,
-    };
-    const sensorList = SensorServicesIST.getAllSensors();
-    const existingSensorData = sensorList.find((s) => s.id === sensorRef.current.id);
-    if (existingSensorData) {
-      const sensorDetailData = existingSensorData.data[sensorRef.current.index];
-      sensorRef.current.sensorDetailData = sensorDetailData;
-
-      axisRef.current.yUnit = sensorDetailData.unit;
-      axisRef.current.yMin = sensorDetailData.min;
-      axisRef.current.yMax = sensorDetailData.max;
+        chartContainer.axisRef.current.yUnit = sensorDetailData.unit;
+        chartContainer.axisRef.current.yMin = sensorDetailData.min;
+        chartContainer.axisRef.current.yMax = sensorDetailData.max;
+      }
     }
-  }
 
-  if (xAxisRef.current.id !== xAxis?.id) {
-    xAxisRef.current = {
-      id: xAxis?.id,
-      unit: xAxis?.unit,
-      name: xAxis?.name,
-    };
-    axisRef.current.xUnit = xAxis?.unit;
-  }
+    chartContainer.axisRef.current.xUnit = xAxis?.unit;
+  });
 
   //=================================================================================
   //============================== useImperativeHandle ==============================
   //=================================================================================
   useImperativeHandle(ref, () => ({
     clearData: () => {},
-    setCurrentData: ({ data }) => {
-      const xValue = roundAndGetSignificantDigitString({ n: data.x });
-      xElRef.current.innerText = `${xValue}(${X_DEFAULT_UNIT})`;
-      yElRef.current.innerText = `${data.y}(${axisRef.current.yUnit || ""})`;
-    },
+    setCurrentData: () => {},
 
     /*
     This function is used to clear hiddenDataLineIds
@@ -447,8 +481,12 @@ let LineChart = (props, ref) => {
 
         for (const labelNote of allLabelNotes) {
           if (!dataRunIds.includes(labelNote.dataRunId)) {
-            labelNotesStorage.delete(labelNote.id);
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelNote.id];
+            const chartContainer = chartContainers.find(
+              (chartContainer) => chartContainer.chart.id == labelNote.chartId
+            );
+            if (chartContainer) {
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[labelNote.id];
+            }
           }
         }
 
@@ -458,8 +496,10 @@ let LineChart = (props, ref) => {
             const linearRegNoteId = statisticNote.linearReg.id;
 
             statisticNotesStorage.delete(statisticNote.id);
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[summaryNoteId];
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[linearRegNoteId];
+            chartContainers.forEach((chartContainer) => {
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[summaryNoteId];
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[linearRegNoteId];
+            });
           }
         }
 
@@ -483,8 +523,12 @@ let LineChart = (props, ref) => {
 
         for (const labelNote of allLabelNotes) {
           if (!curSensorInfos.includes(labelNote.sensorInfo)) {
-            labelNotesStorage.delete(labelNote.id);
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelNote.id];
+            const chartContainer = chartContainers.find(
+              (chartContainer) => chartContainer.chart.id == labelNote.chartId
+            );
+            if (chartContainer) {
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[labelNote.id];
+            }
           }
         }
 
@@ -494,8 +538,10 @@ let LineChart = (props, ref) => {
             const linearRegNoteId = statisticNote.linearReg.id;
 
             statisticNotesStorage.delete(statisticNote.id);
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[summaryNoteId];
-            delete chartInstanceRef.current.config.options.plugins.annotation.annotations[linearRegNoteId];
+            chartContainers.forEach((chartContainer) => {
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[summaryNoteId];
+              delete chartContainer.chart.config.options.plugins.annotation.annotations[linearRegNoteId];
+            });
           }
         }
       } catch (error) {
@@ -506,15 +552,30 @@ let LineChart = (props, ref) => {
     setChartData: ({ chartDatas = [], isDefaultXAxis, sensors }) => {
       // const isHasData = chartDatas.reduce((acc, chartData) => acc || chartData.data.length > 0, false);
       // if (!isHasData) return;
-
-      updateChart({
-        chartInstance: chartInstanceRef.current,
-        data: chartDatas,
-        axisRef,
-        pageId,
-        isDefaultXAxis,
-        sensors,
-      });
+      if ([SENSOR_RENDER_OPTION.HORIZONTAL, SENSOR_RENDER_OPTION.NONE].includes(layoutRender)) {
+        updateChart({
+          chartInstance: chartContainers[0].chart,
+          data: chartDatas,
+          axisRef: chartContainers[0].axisRef,
+          pageId,
+          isDefaultXAxis,
+          sensors,
+        });
+      } else {
+        const dataPerChart = _.zip(..._.chunk(chartDatas, chartContainers.length));
+        const sensorPerChart = _.zip(..._.chunk(sensors, chartContainers.length));
+        chartContainers.forEach((chartContainer, i) => {
+          updateChart({
+            chartInstance: chartContainer.chart,
+            data: dataPerChart[i],
+            axisRef: chartContainer.axisRef,
+            pageId,
+            isDefaultXAxis,
+            sensors: sensorPerChart[i],
+            chartIndexInPage: i,
+          });
+        });
+      }
     },
   }));
 
@@ -523,134 +584,163 @@ let LineChart = (props, ref) => {
     isRangeSelected = isSelectRegion;
 
     const minUnitValue = SensorServicesIST.getMinUnitValueAllSensors();
-    const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef });
-    chartInstanceRef.current = new Chart(chartEl.current, {
-      type: "line",
-      options: {
-        events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
-        elements: {
-          point: {
-            pointStyle: POINT_STYLE,
-            pointRadius: POINT_RADIUS,
-            pointHoverRadius: POINT_HOVER_RADIUS,
+
+    const canvasContainers = document.getElementsByClassName("canvas-container");
+    // console.log("canvasContainer", canvasContainer);
+    Array.from(canvasContainers).forEach((item) => {
+      item.style.height = 92 - chartContainers.length * 2 + "%";
+    });
+    const sensorContainers = document.getElementsByClassName("sensor-select-vertical-mount-container");
+    // console.log("canvasContainer", canvasContainer);
+    if (chartContainers.length > 1) {
+      Array.from(sensorContainers).forEach((item) => {
+        item.style.maxWidth = (document.documentElement.clientHeight - 300) / (chartContainers.length + 0.5) + "px";
+      });
+    }
+
+    chartContainers.forEach((chartContainer, i) => {
+      const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: chartContainer.valueContainerElRef });
+      chartContainer.chart = new Chart(chartContainer.chartRef.current, {
+        type: "line",
+        options: {
+          events: ["mousemove", "mouseout", "mousedown", "mouseup", "click", "touchstart", "touchmove"],
+          elements: {
+            point: {
+              pointStyle: POINT_STYLE,
+              pointRadius: POINT_RADIUS,
+              pointHoverRadius: POINT_HOVER_RADIUS,
+            },
           },
-        },
-        onClick: (event, elements, chart) => {
-          const { status, newPointEl } = onClickChartHandler(
-            event,
-            elements,
-            chart,
-            selectedPointElement,
-            selectedNoteElement
-          );
-          if (status) {
-            selectedPointElement = newPointEl;
-            selectedNoteElement = null;
-          }
-          return true;
-        },
-        animation: false,
-        maintainAspectRatio: false,
-        plugins: {
-          tooltip: {
-            usePointStyle: true,
-            enabled: false,
-            external: getCustomTooltipFunc({ axisRef }),
+          onClick: (event, elements, chart) => {
+            const { status, newPointEl } = onClickChartHandler(
+              event,
+              elements,
+              chart,
+              selectedPointElement,
+              selectedNoteElement,
+              addNoteHandler
+            );
+            if (status) {
+              selectedPointElement = newPointEl;
+              selectedNoteElement = null;
+              chartSelectedIndex = i;
+            }
+            return true;
+          },
+          animation: false,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              usePointStyle: true,
+              enabled: false,
+              external: getCustomTooltipFunc({ axisRef: chartContainer.axisRef }),
 
-            callbacks: {
-              label: function (context) {
-                const resultArr = [];
-                let label = context.dataset.label || "";
-                resultArr.push(label);
+              callbacks: {
+                label: function (context) {
+                  const resultArr = [];
+                  let label = context.dataset.label || "";
+                  resultArr.push(label);
 
-                if (context.parsed.x !== null && context.parsed.y != null) {
-                  resultArr.push(context.parsed.x);
-                  resultArr.push(context.parsed.y);
-                }
+                  if (context.parsed.x !== null && context.parsed.y != null) {
+                    resultArr.push(context.parsed.x);
+                    resultArr.push(context.parsed.y);
+                  }
 
-                return resultArr.join("|");
+                  return resultArr.join("|");
+                },
               },
-            },
-          },
-          zoom: {
-            pan: {
-              // pan options and/or events
-              enabled: true,
-              mode: "xy",
-            },
-            limits: {
-              x: { min: X_MIN_VALUE },
-              y: { min: minUnitValue - Y_MIN_VALUE },
             },
             zoom: {
-              wheel: {
+              pan: {
+                // pan options and/or events
                 enabled: true,
+                mode: "xy",
               },
-              pinch: {
-                enabled: true,
+              limits: {
+                x: { min: X_MIN_VALUE },
+                y: { min: minUnitValue - Y_MIN_VALUE },
               },
+              zoom: {
+                wheel: {
+                  enabled: true,
+                },
+                pinch: {
+                  enabled: true,
+                },
 
-              mode: "xy",
+                mode: "xy",
+                scaleMode: "xy",
+              },
+            },
+
+            annotation: {
+              enter: ({ chart, element }) => onEnterNoteElement({ chart, element }),
+              leave: ({ chart, element }) => onLeaveNoteElement({ chart, element }),
+              click: ({ element }) => {
+                if (isDragging) {
+                  isDragging = false;
+                  return false;
+                }
+
+                const { status, element: newElement } = onClickNoteElement({ element, selectedNoteElement });
+                if (status) {
+                  selectedNoteElement = newElement;
+                  chartSelectedIndex = i;
+                }
+                return true;
+              },
+              annotations: {},
+            },
+
+            legend: {
+              display: true,
+              onClick: (event, legendItem, legend) =>
+                onClickLegendHandler({ pageId, event, legendItem, legend, chartIndexInPage: i }),
+              labels: {
+                filter: (item) => item.text !== "none",
+              },
             },
           },
-
-          annotation: {
-            enter: ({ chart, element }) => onEnterNoteElement({ chart, element }),
-            leave: ({ chart, element }) => onLeaveNoteElement({ chart, element }),
-            click: ({ element }) => {
-              if (isDragging) {
-                isDragging = false;
-                return false;
+        },
+        plugins: [
+          chartJsPlugin,
+          {
+            id: "annotation-dragger",
+            beforeEvent(chart, args, options) {
+              if (handleDrag({ event: args.event, chart, pageId, chartIndexInPage: i })) {
+                args.changed = true;
+                return;
               }
-
-              const { status, element: newElement } = onClickNoteElement({ element, selectedNoteElement });
-              if (status) selectedNoteElement = newElement;
-              return true;
             },
-            annotations: {},
           },
+        ],
+      });
 
-          legend: {
-            display: true,
-            onClick: (event, legendItem, legend) => onClickLegendHandler(event, legendItem, legend),
-          },
-        },
-      },
-      plugins: [
-        chartJsPlugin,
-        {
-          id: "annotation-dragger",
-          beforeEvent(chart, args, options) {
-            if (handleDrag({ event: args.event, chart, pageId })) {
-              args.changed = true;
-              return;
-            }
-          },
-        },
-      ],
+      // Not need updated chart, as updateChart function will call update
+      chartContainer.chart.config.options.plugins.zoom.pan.enabled = !isSelectRangeSelection;
+      chartContainer.chart.config.options.plugins.zoom.zoom.pinch.enabled = !isSelectRangeSelection;
+      chartContainer.chart.config.options.plugins.zoom.zoom.wheel.enabled = !isSelectRangeSelection;
+
+      updateChart({
+        chartInstance: chartContainer.chart,
+        data: [],
+        axisRef: chartContainer.axisRef,
+        pageId,
+        chartIndexInPage: i,
+      });
     });
-
-    // Not need updated chart, as updateChart function will call update
-    chartInstanceRef.current.config.options.plugins.zoom.pan.enabled = !isSelectRangeSelection;
-    chartInstanceRef.current.config.options.plugins.zoom.zoom.pinch.enabled = !isSelectRangeSelection;
-    chartInstanceRef.current.config.options.plugins.zoom.zoom.wheel.enabled = !isSelectRangeSelection;
-
-    updateChart({
-      chartInstance: chartInstanceRef.current,
-      data: [],
-      axisRef,
-      pageId,
-    });
-  }, []);
+  }, [chartContainers]);
 
   //========================= ADD NOTE FUNCTIONS =========================
   const addNoteHandler = ({ chartInstance }) => {
+    console.log("selectedNoteElement", selectedNoteElement);
     const isValidPointElement = selectedPointElement?.element;
     const isValidNoteElement = selectedNoteElement?.options;
     if (!isValidPointElement && !isValidNoteElement) return;
 
     let noteId, sensorInfo;
     let prevContent = [""];
+    let yScaleId = chartSelectedIndex > 0 ? `y${chartSelectedIndex}` : "y";
 
     // Get NoteId to find whether the note is exist or not
     // for getting the old content of note
@@ -662,7 +752,18 @@ let LineChart = (props, ref) => {
       const dataset = chartInstance.data.datasets[datasetIndex];
       const dataRunId = dataset?.dataRunId;
       sensorInfo = dataset?.yAxis?.sensorInfo;
-      noteId = createLabelNoteId({ pageId, dataRunId, sensorInfo, dataPointIndex });
+      const sensorId = parseSensorInfo(sensorInfo).id;
+      if (layoutRender != SENSOR_RENDER_OPTION.VERTICAL) {
+        const sensorIndex = widget.sensors.findIndex((item) => item.id == sensorId);
+        yScaleId = sensorIndex > 0 ? `y${sensorIndex}` : "y";
+      }
+      noteId = createLabelNoteId({
+        pageId,
+        chartIndexInPage: chartSelectedIndex,
+        dataRunId,
+        sensorInfo,
+        dataPointIndex,
+      });
     } else return;
 
     const labelNote = labelNotesStorage.find(noteId);
@@ -674,42 +775,45 @@ let LineChart = (props, ref) => {
 
     showModal((onClose) => (
       <PromptPopup
-        title="Thêm chú giải"
-        inputLabel="Chú giải"
+        title={t("organisms.add_comments")}
+        inputLabel={t("organisms.commentary")}
         defaultValue={prevContent}
         onClosePopup={onClose}
-        extraData={sensorInfo}
+        extraData={{ sensorInfo, chartInstance, yScaleId }}
       />
     ));
   };
 
-  const callbackAddLabelNote = ({ newInput: newContent, extraData: sensorInfo }) => {
+  const callbackAddLabelNote = ({ newInput: newContent, extraData }) => {
     const result = addLabelNote({
-      chartInstance: chartInstanceRef.current,
+      chartInstance: extraData.chartInstance,
       pageId: pageId,
-      sensorInfo: sensorInfo,
+      sensorInfo: extraData.sensorInfo,
       newContent: newContent,
       selectedPointElement,
       selectedNoteElement,
+      chartIndexInPage: chartSelectedIndex,
+      yScaleId: extraData.yScaleId,
     });
 
     if (result) {
       // Clear selected point
       selectedPointElement = null;
       selectedNoteElement = null;
+      chartSelectedIndex = null;
     }
   };
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
-  const statisticHandler = ({ optionId }) => {
+  const statisticHandler = ({ optionId, chart }) => {
     if (_.isEqual(widget.sensors, DEFAULT_SENSOR_DATA)) return;
 
     if (!isShowStatistic) {
       f7.popover.open(".popover-statistic-options", `#${optionId}`);
     } else {
       const result = removeStatisticNote({
-        chartInstance: chartInstanceRef.current,
+        chartInstance: chart,
         pageId,
       });
       result && setIsShowStatistic(!isShowStatistic);
@@ -760,17 +864,17 @@ let LineChart = (props, ref) => {
 
   //========================= CUSTOM X AXIS FUNCTION =========================
   const onSelectUserUnit = ({ option }) => {
-    if (option.id === xAxis.id) return;
+    // if (option.id === xAxis.id) return;
 
     let chartDatas = [];
     let isDefaultXAxis = true;
 
-    axisRef.current.xUnit = option.unit;
+    chartContainers[0].axisRef.current.xUnit = option.unit;
     handleXAxisChange({ xAxisId: xAxis.id, option: option });
     updateChart({
-      chartInstance: chartInstanceRef.current,
+      chartInstance: chartContainers[0].chart,
       data: chartDatas,
-      axisRef,
+      axisRef: chartContainers[0].axisRef,
       pageId,
       isDefaultXAxis,
     });
@@ -778,53 +882,153 @@ let LineChart = (props, ref) => {
 
   const changeSelectedSensor = ({ sensor, sensorIndex }) => {
     // Check if the user select the same sensor or not
-    for (const selectedSensor of widget.sensors) {
-      if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
-    }
+    // for (const selectedSensor of widget.sensors) {
+    //   if (selectedSensor.id === sensor.id && selectedSensor.index === sensor.index) return;
+    // }
     handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor });
   };
 
   const addColumnHandler = () => {
     const numSensor = widget.sensors?.length ?? 0;
-    const container = document.getElementById("line-chart-canvas-container");
-    const canvas = container.querySelector("canvas");
+    if (numSensor >= 4) return;
+    const canvas = chartContainers[0].chartRef.current;
     canvas.style.width = 40 * (numSensor + 1) + "px";
 
-    handleAddExtraCollectingSensor(widget.id);
+    handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.HORIZONTAL });
+    setShouldShowRowOptions(false);
   };
 
-  const deleteColumnHandler = () => {
+  const deleteColumnHandler = (sensorDeletedId) => {
     const numSensor = widget.sensors?.length ?? 1;
     if (numSensor <= 1) return;
-    const deletedColumn = numSensor - 1;
+    const deletedColumn = sensorDeletedId || numSensor - 1;
 
     const container = document.getElementById("line-chart-canvas-container");
     const canvas = container.querySelector("canvas");
     canvas.style.width = 40 * (numSensor - 1) + "px";
 
     handleDeleteExtraCollectingSensor(widget.id, deletedColumn);
+    if (numSensor <= 2) {
+      setShouldShowRowOptions(true);
+    }
+  };
+
+  const addRowHandler = () => {
+    if (chartContainers.length >= 3) return;
+    else {
+      handleAddExtraCollectingSensor({ widgetId: widget.id, layoutRender: SENSOR_RENDER_OPTION.VERTICAL });
+      destroyAllChart();
+      setChartContainers((prev) => [
+        ...prev,
+        {
+          chartRef: { current: null },
+          sensorRef: { current: {} },
+          axisRef: { current: { xUnit: "", yUnit: "", yMin: 0, yMax: 1.0 } },
+          valueContainerElRef: { current: {} },
+        },
+      ]);
+
+      setShouldShowColumnOptions(false);
+    }
+  };
+
+  const deleteRowHandler = (sensorDeletedId) => {
+    const numSensor = widget.sensors?.length ?? 1;
+    if (numSensor <= 1) return;
+    const deletedRow = sensorDeletedId || numSensor - 1;
+    destroyAllChart();
+
+    const newChartContainer = _.clone(chartContainers);
+    newChartContainer.splice(deletedRow, 1);
+    setChartContainers(newChartContainer);
+
+    handleDeleteExtraCollectingSensor(widget.id, deletedRow);
+    if (numSensor <= 2) {
+      setShouldShowColumnOptions(true);
+    }
+  };
+
+  const destroyAllChart = () => {
+    chartContainers.forEach((chartContainer) => {
+      chartContainer.chart.destroy();
+    });
+  };
+
+  //next add icon delete above range
+  const deleteDataInRangeSelection = () => {
+    const selectedRanges = getListRangeSelections({ pageId: pageId });
+    let xAxisWillDeletes = [];
+    let xAxisSensorId = null;
+    chartContainers.forEach((chartContainer) => {
+      const chart = chartContainer.chart;
+      const datasets = chart.config.data.datasets;
+      const selectedRange = selectedRanges.find((item) => item.chartId == chart.id);
+      if (selectedRange)
+        datasets.forEach((dataset) => {
+          const dataRunId = dataset.dataRunId;
+          const sensorInfo = dataset.yAxis.sensorInfo;
+          const deletedResult = DataManagerIST.deleteSensorDataInDataRun({
+            dataRunId,
+            sensorInfo,
+            selectedRange,
+            unitId: xAxis.id,
+          });
+          if (deletedResult.unitType === FIRST_COLUMN_SENSOR_OPT) {
+            if (xAxisWillDeletes.find((item) => item.dataRunId == deletedResult.data.dataRunId)) {
+              const index = xAxisWillDeletes.indexOf((item) => item.dataRunId == deletedResult.data.dataRunId);
+              xAxisWillDeletes[index].indexes.push(deletedResult.data.indexes);
+            } else {
+              xAxisWillDeletes = xAxisWillDeletes.push(deletedResult.data);
+            }
+            xAxisSensorId = deletedResult.xAxisSensorId;
+          }
+        });
+
+      handleDeleteSelection({ pageId, chartInstance: chart });
+    });
+
+    //handle delete xAxis if xAxis is sensor
+    if (xAxisWillDeletes.length > 0) {
+      xAxisWillDeletes.forEach((xAxisWillDelete) => {
+        DataManagerIST.deleteSensorDataInDataRunByIndexes({
+          dataRunId: xAxisWillDelete.dataRunId,
+          sensorId: xAxisSensorId,
+          indexes: xAxisWillDelete.indexes,
+        });
+      });
+    }
   };
 
   //========================= OPTIONS FUNCTIONS =========================
   const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
       case SCALE_FIT_OPTION:
-        scaleToFixHandler(chartInstanceRef.current, axisRef, xAxis);
+        chartContainers.forEach((chartContainer) => {
+          scaleToFixHandler(chartContainer.chart, chartContainer.axisRef, xAxis);
+        });
         break;
       case NOTE_OPTION:
-        addNoteHandler({ chartInstance: chartInstanceRef.current });
+        addNoteHandler({ chartInstance: chartContainers[chartSelectedIndex].chart });
         break;
       case INTERPOLATE_OPTION:
-        interpolateHandler(chartInstanceRef.current, hiddenDataLineIds);
+        chartContainers.forEach((chartContainer) => {
+          interpolateHandler(chartContainer.chart, hiddenDataLineIds);
+        });
         break;
       case STATISTIC_OPTION:
-        statisticHandler({ optionId });
+        chartContainers.forEach((chartContainer) => {
+          statisticHandler({ optionId, chart: chartContainer.chart });
+        });
         break;
       case SELECTION_OPTION:
-        selectRegionHandler(chartInstanceRef.current);
+        chartContainers.forEach((chartContainer) => {
+          selectRegionHandler(chartContainer.chart);
+        });
         break;
       case SHOW_OFF_DATA_POINT_MARKER:
-        showOffDataPointHandler(chartInstanceRef.current);
+        chartContainers.forEach((chartContainer) => {
+          showOffDataPointHandler(chartContainer.chart);
+        });
         break;
       case ADD_COLUMN_OPTION:
         addColumnHandler();
@@ -832,57 +1036,151 @@ let LineChart = (props, ref) => {
       case DELETE_COLUMN_OPTION:
         deleteColumnHandler();
         break;
+      case ADD_ROW_OPTION:
+        addRowHandler();
+        break;
+      case DELETE_ROW_OPTION:
+        deleteRowHandler();
+        break;
+      case DELETE_RANGE_SELECTION:
+        deleteDataInRangeSelection();
+        break;
       default:
         break;
     }
   };
 
+  //==========================CLICK DELETE CHART========================
+  const handleChartOnclick = (card) => {
+    setActiveChart(card);
+    setIsShowIconDeleteChart(true);
+
+    // Ẩn icon sau 5 giây
+    setTimeout(() => {
+      setIsShowIconDeleteChart(false);
+      setActiveChart(null); // Reset active card
+    }, 5000);
+  };
+
   return (
     <div className="line-chart-wapper">
-      <div className="line-chart">
-        {widget.sensors.map((sensor, sensorIndex) => (
-          <div key={`line-sensor-selector-${pageId}-${sensorIndex}`} className="sensor-selector-wrapper">
-            <div className="sensor-select-vertical-mount-container">
-              <SensorSelector
-                selectedSensor={sensor}
-                onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
-                onSelectUserInit={onSelectUserUnit}
-                // definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
-              ></SensorSelector>
+      {(layoutRender === SENSOR_RENDER_OPTION.HORIZONTAL || layoutRender === SENSOR_RENDER_OPTION.NONE) && (
+        <div className="line-chart">
+          {widget.sensors.map((sensor, sensorIndex) => (
+            <div
+              key={`line-sensor-selector-${pageId}-${sensorIndex}`}
+              className="sensor-selector-wrapper"
+              onClick={() => handleChartOnclick(sensorIndex)}
+            >
+              <div className="sensor-select-vertical-mount-container">
+                {isShowIconDeleteChart && activeChart === sensorIndex && widget.sensors.length > 1 && (
+                  <div className="icon-delete-chart" onClick={() => deleteColumnHandler(sensorIndex)}>
+                    <img src={deleteIconChart} alt="delete" />
+                  </div>
+                )}
+
+                <SensorSelector
+                  selectedSensor={sensor}
+                  onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+                  onSelectUserInit={onSelectUserUnit}
+                  // definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
+                ></SensorSelector>
+              </div>
             </div>
+          ))}
+
+          <div id="line-chart-canvas-container" className="canvas-container">
+            <div className="current-value-sec" ref={chartContainers[0].valueContainerElRef}></div>
+            <canvas ref={chartContainers[0].chartRef} />
+            <div id="icon-container" style={{ position: "absolute", display: "none" }}>
+              <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
+                <img src={previousIcon} alt="previousIcon" />
+              </div>
+              <div id="icon2" style={{ cursor: "pointer", width: "20px", height: "20px", marginLeft: "5px" }}>
+                <img src={nextIcon} alt="nextIcon" />
+              </div>
+              <div
+                id="icon3"
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+              >
+                <img src={addNoteIcon} alt="addNoteIcon" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {layoutRender === SENSOR_RENDER_OPTION.VERTICAL &&
+        chartContainers.map((chartContainer, index) => (
+          <div className="line-chart" key={`line-sensor-selector-${pageId}-${index}`}>
+            <div className="sensor-selector-wrapper" name={index}>
+              <div className="sensor-select-vertical-mount-container">
+                <SensorSelector
+                  selectedSensor={widget.sensors[index]}
+                  onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex: index })}
+                  onSelectUserInit={onSelectUserUnit}
+                  // definedSensors={xAxis.id === FIRST_COLUMN_DEFAULT_OPT ? false : definedSensors}
+                ></SensorSelector>
+              </div>
+            </div>
+            <div
+              id="line-chart-canvas-container"
+              className="canvas-container"
+              onClick={() => handleChartOnclick(index)}
+            >
+              {/* cannot set current data for second or more sensor */}
+
+              <div
+                className="current-value-sec"
+                ref={chartContainer.valueContainerElRef}
+                style={{ opacity: `${index === 0 ? "1" : "0"}` }}
+              ></div>
+
+              <canvas ref={chartContainer.chartRef} />
+              <div id="icon-container" style={{ position: "absolute", display: "none" }}>
+                <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
+                  <img src={previousIcon} alt="previousIcon" />
+                </div>
+                <div id="icon2" style={{ cursor: "pointer", width: "20px", height: "20px", marginLeft: "5px" }}>
+                  <img src={nextIcon} alt="nextIcon" />
+                </div>
+              </div>
+            </div>
+            {isShowIconDeleteChart && activeChart === index && chartContainers.length > 1 && (
+              <div className="icon-delete-chart-vertical" onClick={() => deleteRowHandler(index)}>
+                <img src={deleteIconChart} alt="delete" />
+              </div>
+            )}
           </div>
         ))}
-
-        <div id="line-chart-canvas-container" className="canvas-container">
-          <div className="current-value-sec" ref={valueContainerElRef}>
-            <div className="value-container">
-              x=<span ref={xElRef}></span>
-            </div>
-            <div className="value-container">
-              y=<span ref={yElRef}></span>
-            </div>
-          </div>
-          <canvas ref={chartEl} />
-        </div>
-      </div>
 
       {/* <PopoverDataRunSensors unitId={xAxis.id}></PopoverDataRunSensors> */}
 
       <div className="expandable-options">
-        <ExpandableOptions expandIcon={lineChartIcon} options={expandOptions} onChooseOption={onChooseOptionHandler} />
+        <ExpandableOptions
+          expandIcon={lineChartIcon}
+          options={defaultExpandOptions}
+          onChooseOption={onChooseOptionHandler}
+        />
         <PopoverStatisticOptions
           callback={({ statisticOptionId }) =>
-            addStatisticHandler({ sensors: widget.sensors, chartInstance: chartInstanceRef.current, statisticOptionId })
+            chartContainers.forEach((chartContainer) => {
+              addStatisticHandler({ sensors: widget.sensors, chartInstance: chartContainer.chart, statisticOptionId });
+            })
           }
         />
         <div className="sensor-selector-wrapper">
           <div className="sensor-select-vertical-mount-container">
             <SensorSelector
-              selectedSensor={sensor}
-              selectedUnit={`${xAxis?.name} (${xAxis?.unit})`}
-              onChange={(sensor) => changeSelectedSensor({ sensor, sensorIndex })}
+              selectedSensor={xAxis?.id === FIRST_COLUMN_DEFAULT_OPT ? DEFAULT_SENSOR_DATA : xAxis}
+              selectedUnit={`${t(xAxis?.name)} (${xAxis?.unit})`}
+              onChange={(sensor) =>
+                onSelectUserUnit({
+                  option: { id: `${FIRST_COLUMN_SENSOR_OPT}:${sensor.id}`, unit: sensor.unit, name: sensor.name },
+                })
+              }
               onSelectUserInit={onSelectUserUnit}
-              defaultTab={SENSOR_SELECTOR_USER_TAB}
+              defaultTab={null}
             />
           </div>
         </div>

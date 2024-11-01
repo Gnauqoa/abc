@@ -1,9 +1,13 @@
 import { useRef } from "react";
 import { f7 } from "framework7-react";
+import { useTranslation } from "react-i18next";
+
 import { timeoutEventData } from "../../../utils/core";
 import "./index.scss";
 
 export default function useToast() {
+  const { t, i18n } = useTranslation();
+
   const toast = useRef(null);
 
   const show = (text, type = "info", position = "bottom", timeout = 3000) => {
@@ -31,14 +35,14 @@ export default function useToast() {
     try {
       const status = await timeoutEventData("statusCmdDTO");
       if (status === "OK") {
-        show(`Gởi lệnh ${cmdName} thành công.`, "success");
+        show(`${t("atoms.send_command")} ${cmdName} ${t("atoms.success")}`, "success");
         return true;
       } else {
-        show(`Gởi lệnh ${cmdName} bị lỗi.`, "error");
+        show(`${t("atoms.send_command")} ${cmdName} ${t("atoms.error")}`, "error");
         return false;
       }
     } catch (err) {
-      show(`Gởi lệnh ${cmdName} không nhận được tín hiệu phản hồi.`, "error");
+      show(`${t("atoms.send_command")} ${cmdName} ${t("atoms.no_response_received")}`, "error");
       return false;
     }
   };

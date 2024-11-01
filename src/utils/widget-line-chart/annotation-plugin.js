@@ -52,7 +52,14 @@ export const onClickNoteElement = ({ element, selectedNoteElement }) => {
   return { status: true, element: selectedNoteElement };
 };
 
-export const onClickChartHandler = (event, elements, chart, selectedPointElement) => {
+export const onClickChartHandler = (
+  event,
+  elements,
+  chart,
+  selectedPointElement,
+  selectedNoteElement,
+  addNoteHandler
+) => {
   let newPointEl;
 
   if (event.type === "click") {
@@ -65,9 +72,8 @@ export const onClickChartHandler = (event, elements, chart, selectedPointElement
 
         const selectedPoint = elements[0];
         const datasetIndex = selectedPoint.datasetIndex;
-        const dataPointIndex = selectedPoint.index;
+        let dataPointIndex = selectedPoint.index;
         const currentDataset = chart.data.datasets[datasetIndex];
-
         const newPointBackgroundColor = Array.from(
           { length: currentDataset.data.length },
           () => currentDataset.backgroundColor
@@ -78,21 +84,73 @@ export const onClickChartHandler = (event, elements, chart, selectedPointElement
         );
 
         newPointEl = selectedPoint;
-
         newPointBackgroundColor[dataPointIndex] = "red";
 
         currentDataset.pointBackgroundColor = newPointBackgroundColor;
         currentDataset.pointBorderColor = newPointBorderColor;
 
         chart.update();
+
+        // Tính toán vị trí của icons
+        const rect = chart.canvas.getBoundingClientRect();
+        // const x = selectedPoint.element.x + rect.left;
+        // const y = selectedPoint.element.y + rect.top - 20; // 20px phía trên
+        const x = selectedPoint.element.x - 30;
+        const y = selectedPoint.element.y - 50;
+
+        const iconContainer = document.getElementById("icon-container");
+        iconContainer.style.left = `${x}px`;
+        iconContainer.style.top = `${y}px`;
+        iconContainer.style.display = "flex"; // Hiện các icon
+
+        // Thêm sự kiện click cho các icon
+        document.getElementById("icon1").onclick = () => {
+          // Move to previous point (circular)
+
+          dataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
+          updateSelectedPoint(chart, datasetIndex, dataPointIndex);
+        };
+
+        document.getElementById("icon2").onclick = () => {
+          dataPointIndex = (dataPointIndex + 1) % currentDataset.data.length;
+          updateSelectedPoint(chart, datasetIndex, dataPointIndex);
+        };
+        document.getElementById("icon3").onclick = () => {
+          addNoteHandler({ chartInstance: chart });
+        };
+
+        return { status: true, newPointEl };
       } else if (selectedPointElement !== null) {
         newPointEl = null;
 
         clearAllSelectedPoints(chart);
         chart.update();
+
+        // Ẩn icon nếu không có điểm nào được chọn
+        const iconContainer = document.getElementById("icon-container");
+        iconContainer.style.display = "none";
       }
-      return { status: true, newPointEl };
+    } else {
+      // Ẩn icon nếu không có điểm nào được chọn
+      const iconContainer = document.getElementById("icon-container");
+      iconContainer.style.display = "none";
     }
   }
   return { status: false, newPointEl };
 };
+
+// Helper function to update selected point (assuming you have this)
+function updateSelectedPoint(chart, datasetIndex, dataPointIndex) {
+  const currentDataset = chart.data.datasets[datasetIndex];
+  const newPointBackgroundColor = Array.from(
+    { length: currentDataset.data.length },
+    () => currentDataset.backgroundColor
+  );
+  const newPointBorderColor = Array.from({ length: currentDataset.data.length }, () => currentDataset.borderColor);
+
+  newPointBackgroundColor[dataPointIndex] = "red"; // Highlight new point
+  currentDataset.pointBackgroundColor = newPointBackgroundColor;
+  currentDataset.pointBorderColor = newPointBorderColor;
+
+  chart.update();
+}

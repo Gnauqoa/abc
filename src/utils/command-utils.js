@@ -1,3 +1,5 @@
+import React from "react";
+import { useTranslation } from "react-i18next";
 import * as WebSerialUtil from "./webserial-utils";
 import * as BluetoothUtil from "./bluetooth-utils";
 import * as sharedDataUtils from "./shared-data-utils";
@@ -396,6 +398,8 @@ export async function execReplCode(
   isBeginReplMode = true,
   isEndReplMode = true
 ) {
+  const { t, i18n } = useTranslation();
+
   try {
     console.log("execReplCode:", code);
     sharedDataUtils.clearDataBatchFromDevice();
@@ -445,8 +449,10 @@ export async function execReplCode(
     console.log("execReplCode error", err);
     if (err.includes("Traceback received")) {
       dialog.alert(
-        "Đã phát sinh lỗi khi chạy chương trình",
-        "Bạn hãy kiểm tra lại hoặc xem chi tiết lỗi trong menu <b>Cài đặt > Nhập lệnh</b>",
+        t("utils.an_error_occurred_while_running_the_program"),
+        `${t("utils.please_check_again_or_view_error_details_in_the_menu")}  <b>${t(
+          "utils.settings_Command_input"
+        )}</b>`,
         () => {}
       );
     } else {

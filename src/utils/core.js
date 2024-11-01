@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import store from "store";
 import { f7 } from "framework7-react";
 import moment from "moment";
@@ -556,6 +557,8 @@ export function createExcelWorkbookBuffer({ sheets }) {
 }
 
 export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }) {
+
+  
   const fileExt = "xlsx";
   const excelBuffer = createExcelWorkbookBuffer({ sheets: dataRunsInfo });
 
@@ -569,8 +572,8 @@ export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }
     } catch (error) {
       console.log("Save file error", error);
       dialog.alert(
-        "Lỗi không thể lưu",
-        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        i18next.t("utils.unable_to_save_error"),
+        i18next.t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
         () => {}
       );
     }
@@ -580,13 +583,13 @@ export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }
   } else if (f7.device.cordova) {
     try {
       const savedPath = await exportFileAndroid(excelBuffer, fileName, fileExt);
-      dialog.alert("Lưu thành công", `Lưu data run thành công tại ${savedPath}`, () => {});
+      dialog.alert(i18next.t("utils.saved_successfully"), `${i18next.t("utils.saved_run_data_successfully_at")} ${savedPath}`, () => {});
       return;
     } catch (error) {
       console.log("Save file error", error);
       dialog.alert(
-        "Lỗi không thể lưu",
-        "File đang mở trong một chương trình khác hoặc không có quyền truy cập.",
+        i18next.t("utils.unable_to_save_error"),
+        i18next.t("utils.the_file_is_open_in_another_program_or_does_not_have_access_permissions"),
         () => {}
       );
     }
@@ -635,10 +638,10 @@ export function getPageName(listPageName) {
 }
 
 export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCancel = false) {
-  f7.dialog.preloader("Đang tải...");
+  f7.dialog.preloader(i18next.t("utils.loading")+"...");
   hasCancel &&
     $(".dialog-preloader .dialog-title").html(
-      `Đang tải... <span class="edl-cancel-preloader dialog-button">Hủy</span>`
+      `${i18next.t("utils.loading")+"..."} <span class="edl-cancel-preloader dialog-button">Hủy</span>`
     );
   return new Promise((resolve, reject) => {
     let timeoutHandler;
@@ -647,7 +650,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
       dataBuffer.push(e.detail);
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
-          `Đang tải ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
+          `${i18next.t("utils.loading")} ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
             hasCancel ? '<span class="edl-cancel-preloader dialog-button">Hủy</span>' : ""
           }`
         );
@@ -719,12 +722,12 @@ export function shareFile(filename, blob) {
           writeFile(fileEntry, blob);
         },
         function (error) {
-          dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+          dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
         }
       );
     },
     function (error) {
-      dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+      dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
     }
   );
 }
@@ -736,7 +739,7 @@ function writeFile(fileEntry, blob) {
     };
 
     fileWriter.onerror = function (error) {
-      dialog.alert("Lỗi ghi dữ liệu", error, () => {});
+      dialog.alert(i18next.t("utils.error_recording_data"), error, () => {});
     };
     fileWriter.write(blob);
   });
@@ -754,7 +757,7 @@ function readFile(fileEntry) {
       reader.readAsText(file);
     },
     function (error) {
-      dialog.alert("Lỗi đọc dữ liệu", error, () => {});
+      dialog.alert(i18next.t("utils.error_reading_data"), error, () => {});
     }
   );
 }
@@ -763,7 +766,7 @@ function shareFileCordova(fullPath) {
   console.log(fullPath);
   var options = {
     files: [fullPath],
-    chooserTitle: "Chọn ứng dụng",
+    chooserTitle: i18next.t("utils.select_application"),
   };
   window.plugins.socialsharing.shareWithOptions(
     options,
@@ -771,7 +774,7 @@ function shareFileCordova(fullPath) {
       console.log(result);
     },
     (error) => {
-      dialog.alert("Lỗi chia sẻ", error, () => {});
+      dialog.alert(i18next.t("utils.sharing_error"), error, () => {});
     }
   );
 }

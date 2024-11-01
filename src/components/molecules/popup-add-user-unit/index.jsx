@@ -4,8 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import "./index.scss";
 import DataManagerIST from "../../../services/data-manager";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { useTranslation } from "react-i18next";
 
 const AddUserUnitPopup = ({ onSubmit, unitId }) => {
+  const { t, i18n } = useTranslation();
   const addUserUnitPopupRef = useRef();
   const [unitName, setUnitName] = useState("");
   const [unit, setUnit] = useState("");
@@ -35,11 +37,11 @@ const AddUserUnitPopup = ({ onSubmit, unitId }) => {
   return (
     <Popup className="add-user-unit-popup" ref={addUserUnitPopupRef} onPopupClose={() => {}}>
       <Page className="add-user-unit">
-        <Navbar className="add-user-unit-header" title="Thông tin người dùng nhập"></Navbar>
+        <Navbar className="add-user-unit-header" title={t("modules.user_input_information")}></Navbar>
         <div className="add-user-unit-content">
           <div className="add-user-unit-content__items">
             <div className="add-user-unit-content__item">
-              <span>Tên thông tin</span>
+              <span>{t("modules.information_name")}</span>
               <input
                 type="text"
                 value={unitName}
@@ -49,7 +51,7 @@ const AddUserUnitPopup = ({ onSubmit, unitId }) => {
               />
             </div>
             <div className="add-user-unit-content__item">
-              <span>Đơn vị đo</span>
+              <span>{t("modules.measurement_unit")}</span>
               <input
                 type="text"
                 value={unit}
@@ -62,10 +64,10 @@ const AddUserUnitPopup = ({ onSubmit, unitId }) => {
 
           <div className="add-user-unit__buttons">
             <Button className="cancel-button" popupClose>
-              Bỏ qua
+              {t("common.cancel")}
             </Button>
             <Button className="ok-button" onClick={onSubmitHandler}>
-              OK
+              {t("common.ok")}
             </Button>
           </div>
         </div>

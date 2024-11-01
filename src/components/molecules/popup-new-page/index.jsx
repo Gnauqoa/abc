@@ -25,8 +25,11 @@ import tableImg from "../../../img/layout/table.png";
 import textImg from "../../../img/layout/text-view.png";
 import barChartImg from "../../../img/layout/bar-chart.png";
 import scopeViewImg from "../../../img/layout/scope-view.png";
+import { useTranslation } from "react-i18next";
 
 const NewPagePopup = ({ handleNewPage }) => {
+  const { t, i18n } = useTranslation();
+
   const newPagePopupRef = useRef();
   const conSelectHandler = (event) => {
     const chartType = event.currentTarget.id;
@@ -46,7 +49,7 @@ const NewPagePopup = ({ handleNewPage }) => {
               popupClose
             ></Button>
           </NavLeft>
-          <NavTitle>Tạo trang mới</NavTitle>
+          <NavTitle>{t("modules.create_a_new_page")}</NavTitle>
         </Navbar>
         <div className="full-height display-flex justify-content-center align-items-center">
           <Block>

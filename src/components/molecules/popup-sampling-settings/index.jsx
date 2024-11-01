@@ -12,6 +12,7 @@ import {
 import "./index.scss";
 import usePrompt from "../../../hooks/useModal";
 import SamplingSettingPopup from "./sampling-settings";
+import { useTranslation } from "react-i18next";
 
 const SamplingSetting = ({
   isRunning,
@@ -21,12 +22,13 @@ const SamplingSetting = ({
   handleSetTimer,
   handleGetManualSample,
 }) => {
+  const { t, i18n } = useTranslation();
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
   const displayedFrequency = isManualMode
-    ? SAMPLING_MANUAL_NAME
+    ? t(SAMPLING_MANUAL_NAME)
     : frequency >= 1
-    ? `Định kỳ: ${frequency} ${FREQUENCY_UNIT}`
-    : `Định kỳ: ${parseInt(1 / frequency)} ${INVERSE_FREQUENCY_UNIT}`;
+    ? `${t("modules.periodic")} ${frequency} ${t(FREQUENCY_UNIT)}`
+    : `${t("modules.periodic")} ${parseInt(1 / frequency)} ${t(INVERSE_FREQUENCY_UNIT)}`;
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
@@ -73,27 +75,33 @@ const SamplingSetting = ({
       </Button>
       <Popover className="popover-frequency">
         <List className="list-frequency">
-          {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].map((f) => {
-            const displayedFrequency =
-              f === SAMPLING_MANUAL_FREQUENCY
-                ? SAMPLING_MANUAL_NAME
-                : f >= 1
-                ? `${f} ${FREQUENCY_UNIT}`
-                : `${parseInt(1 / f)} ${INVERSE_FREQUENCY_UNIT}`;
+          {[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY]
+            .sort((x, y) => {
+              if (x === 0) return 1; // Đưa x (0) về cuối
+              if (y === 0) return -1; // Đưa y (0) về cuối
+              return Number.isInteger(y) - Number.isInteger(x) || y - x;
+            })
+            .map((f) => {
+              const displayedFrequency =
+                f === SAMPLING_MANUAL_FREQUENCY
+                  ? t(SAMPLING_MANUAL_NAME)
+                  : f >= 1
+                  ? `${f} ${t(FREQUENCY_UNIT)}`
+                  : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`;
 
-            return (
-              <Button
-                className={`button-frequency ${
-                  f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
-                }`}
-                key={displayedFrequency}
-                textColor="black"
-                onClick={() => handleGetSampleSettings({ frequency: f, timer: timerStopCollecting })}
-              >
-                <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
-              </Button>
-            );
-          })}
+              return (
+                <Button
+                  className={`button-frequency ${
+                    f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency"
+                  }`}
+                  key={displayedFrequency}
+                  textColor="black"
+                  onClick={() => handleGetSampleSettings({ frequency: f, timer: timerStopCollecting })}
+                >
+                  <span style={{ textTransform: "none" }}>{displayedFrequency}</span>
+                </Button>
+              );
+            })}
         </List>
       </Popover>
       {isManualMode && (

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Page } from "framework7-react";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 import {
   LAYOUT_CHART,
@@ -21,6 +22,7 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LAYOUT_BAR,
+  SENSOR_RENDER_OPTION,
 } from "../js/constants";
 
 // Import Molecules Components
@@ -61,6 +63,8 @@ const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
+  const { t, i18n } = useTranslation();
+
   const selectedLayout = f7route.params.layout;
   let activity;
   if (selectedLayout) {
@@ -85,12 +89,20 @@ export default ({ f7route, f7router, filePath, content }) => {
           xAxises: defaultXAxises,
           lastDataRunId: null,
           name: "1",
+          layoutRender: SENSOR_RENDER_OPTION.NONE,
         },
       ],
       frequency: 1,
       dataRuns: [],
       customXAxis: [],
-      sensors: defaultSensors,
+      sensors: defaultSensors.map((item) => ({
+        ...item,
+        name: t(item.name),
+        data: item.data.map((d) => ({
+          ...d,
+          name: t(d.name),
+        })),
+      })),
       customSensors: [],
       allLabelNotes: [],
       allStatisticNotes: [],
@@ -222,8 +234,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       setPreviousActivity(_.cloneDeep(updatedActivity));
     } else {
       dialog.prompt(
-        "Bạn có muốn lưu lại những thay đổi này không?",
-        "Tên hoạt động",
+        t("page.do_you_want_to_save_these_changes"),
+        t("page.activity_name"),
         async (name) => {
           setName(name);
           const updatedActivityWithName = { ...updatedActivity, name };
@@ -246,8 +258,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       handleClearLocalStorage();
     } else {
       dialog.prompt(
-        "Bạn có muốn lưu lại những thay đổi này không?",
-        "Tên hoạt động",
+        t("page.do_you_want_to_save_these_changes"),
+        t("page.activity_name"),
         async (name) => {
           setName(name);
           const updatedActivityWithName = { ...updatedActivity, name };
@@ -309,8 +321,8 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handlePageDelete() {
     dialog.question(
-      "Xác nhận",
-      `Bạn có chắc chắn muốn xóa trang này không?`,
+      t("page.confirm"),
+      t("page.are_you_sure_you_want_to_delete_this_page"),
       () => handleDeletePage(),
       () => {}
     );
@@ -369,7 +381,7 @@ export default ({ f7route, f7router, filePath, content }) => {
         MicrophoneServicesIST.init();
       }
 
-      const dataRunId = DataManagerIST.startCollectingData({ unitId });
+      const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
       timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
       setCurrentDataRunId(dataRunId);
       setLastDataRunIdForCurrentPage(dataRunId);
@@ -540,6 +552,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                     widget={pages[currentPageIndex].widgets[1]}
                     xAxis={pages[currentPageIndex].xAxises[1]}
+                    layoutRender={pages[currentPageIndex].layoutRender}
                   />
                 )}
                 {pages[currentPageIndex].layout === LAYOUT_NUMBER_TABLE && (
@@ -572,6 +585,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
                   widget={pages[currentPageIndex].widgets[0]}
                   xAxis={pages[currentPageIndex].xAxises[0]}
+                  layoutRender={pages[currentPageIndex].layoutRender}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TABLE && (

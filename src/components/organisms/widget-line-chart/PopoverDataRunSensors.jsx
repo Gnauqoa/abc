@@ -6,8 +6,11 @@ import SensorServicesIST from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import { useActivityContext } from "../../../context/ActivityContext";
+import { useTranslation } from "react-i18next";
 
 const PopoverDataRunSensors = ({ unitId }) => {
+  const { t, i18n } = useTranslation();
+
   const { handleToggleExtraYAxis } = useActivityContext();
 
   let dataRuns = [];
@@ -50,7 +53,7 @@ const PopoverDataRunSensors = ({ unitId }) => {
 
   return (
     <Popover className="popover-data-run-sensors">
-      <Navbar title="Các lần chạy"></Navbar>
+      <Navbar title={t("organisms.runs")}></Navbar>
       <List strongIos outlineIos dividersIos>
         {dataRuns.map((dataRun, dataRunIndex) => (
           <ListItem key={`dataRun-${dataRunIndex}`} title={dataRun.name} name="demo-checkbox">

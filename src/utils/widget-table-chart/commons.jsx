@@ -10,6 +10,7 @@ import DataManagerIST from "../../services/data-manager";
 
 export const DEFAULT_ROWS = 18;
 export const FIRST_COLUMN_DEFAULT_OPT = "time";
+export const FIRST_COLUMN_SENSOR_OPT = "sensor";
 // export const FIRST_COLUMN_CUSTOM_OPT = "custom";
 
 export const ADD_COLUMN_OPTION = `${LAYOUT_TABLE}-expandable-options-0`;
@@ -21,24 +22,35 @@ export const expandableOptions = [
     id: ADD_COLUMN_OPTION,
     icon: addColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: DELETE_COLUMN_OPTION,
     icon: deleteColumnIcon,
     selected: false,
+    visible: true,
   },
   {
     id: SUMMARIZE_OPTION,
     icon: summarizeTableIcon,
     selectedIcon: summarizeTableSelectedIcon,
     selected: false,
+    visible: true,
   },
 ];
 
-export const TABLE_TIME_COLUMN = {
-  id: FIRST_COLUMN_DEFAULT_OPT,
-  name: "Thời gian",
-  unit: <span className="header-unit">(giây)</span>,
+// export const TABLE_TIME_COLUMN = {
+//   id: FIRST_COLUMN_DEFAULT_OPT,
+//   name: "Thời gian",
+//   unit: <span className="header-unit">(giây)</span>,
+// };
+
+export const TABLE_TIME_COLUMN = (t) => {
+  return {
+    id: FIRST_COLUMN_DEFAULT_OPT,
+    name: t("common.time"),
+    unit: <span className="header-unit">{"(" + t("common.second") + ")"}</span>,
+  };
 };
 
 // export const TABLE_CUSTOM_COLUMN = {
@@ -49,13 +61,13 @@ export const TABLE_TIME_COLUMN = {
 
 export const X_AXIS_TIME_UNIT = {
   id: FIRST_COLUMN_DEFAULT_OPT,
-  name: "Thời gian",
+  name: "common.time",
   unit: "s",
 };
 
-export const getFirstColumnOptions = () => {
+export const getFirstColumnOptions = (t) => {
   const customMeasurements = DataManagerIST.getCustomUnits();
-  const result = [TABLE_TIME_COLUMN, ...customMeasurements];
+  const result = [TABLE_TIME_COLUMN(t), ...customMeasurements];
   return result;
 };
 

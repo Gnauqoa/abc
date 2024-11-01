@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { std, mean, max, min } from "mathjs";
 import "./index.scss";
+import { useTranslation } from "react-i18next";
 
 const SUMMARIZE_COUNT_TYPE = 0;
 const SUMMARIZE_MIN_TYPE = 1;
@@ -18,7 +19,7 @@ const SUMMARIZE_OPTIONS = [
 
 const SUMMARIZE_OPTIONS_CONFIG = {
   [SUMMARIZE_COUNT_TYPE]: {
-    label: "Đếm",
+    label: "organisms.count",
     formula: (datas, sensors) => {
       const result = datas.map((dataRuns, dataRunIndex) => {
         if (!Array.isArray(dataRuns) || dataRuns.length === 0) return 0;
@@ -143,11 +144,13 @@ const SUMMARIZE_OPTIONS_CONFIG = {
 };
 
 const SummarizedTable = ({ chartLayout, datas, sensors }) => {
+  const { t, i18n } = useTranslation();
+
   const [summarizeRows, setSummarizeRows] = useState([[]]);
   useEffect(() => {
     const summarizeRows = [];
     for (const type of SUMMARIZE_OPTIONS) {
-      const label = SUMMARIZE_OPTIONS_CONFIG[type]?.label;
+      const label = t(SUMMARIZE_OPTIONS_CONFIG[type]?.label);
 
       let result;
       if (!Array.isArray(datas) || datas.length === 0) result = [0];

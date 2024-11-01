@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Button, Row, Col, Icon, f7, Popover, List } from "framework7-react";
 import $ from "jquery";
+import { withTranslation } from "react-i18next";
 
 import DataManagerIST from "../../../services/data-manager";
 import {
@@ -13,7 +14,7 @@ import {
 import { DEFAULT_CODE_NAME, FREQUENCY_UNIT } from "../../../js/constants";
 import * as core from "../../../utils/core";
 
-export default class extends Component {
+class Dialogs extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -108,7 +109,7 @@ export default class extends Component {
       },
       (error) => {
         if (error === "Illegal access") {
-          alert("Vui lòng cho phép quyền truy cập camera để tiếp tục.");
+          alert(t("modules.please_allow_camera_access_to_continue"));
         }
       },
       {
@@ -117,7 +118,7 @@ export default class extends Component {
         showTorchButton: true, // iOS and Android
         torchOn: false, // Android
         saveHistory: true, // Android
-        prompt: "Canh QR Code chính giữa trong khung",
+        prompt: t("modules.align_the_QR_Code_to_the_center_of_the_frame"),
         resultDisplayDuration: 200,
         formats: "QR_CODE",
         orientation: "landscape", // Android only (portrait|landscape)
@@ -129,6 +130,7 @@ export default class extends Component {
 
   render() {
     const { inputText } = this.state;
+    const t = this.props.t;
 
     return (
       <>
@@ -138,7 +140,7 @@ export default class extends Component {
               <div className="title"></div>
               <div className="text"></div>
               <div className="buttons">
-                <Button className="ok-button">OK</Button>
+                <Button className="ok-button">{t("common.ok")}</Button>
               </div>
             </div>
           </div>
@@ -150,8 +152,8 @@ export default class extends Component {
               <div className="title"></div>
               <div className="text"></div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
-                <Button className="ok-button">OK</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
+                <Button className="ok-button">{t("common.ok")}</Button>
               </div>
             </div>
           </div>
@@ -163,8 +165,8 @@ export default class extends Component {
               <div className="title"></div>
               <div className="text"></div>
               <div className="buttons">
-                <Button className="cancel-button">Không xoá</Button>
-                <Button className="ok-button delete-mode">Xoá</Button>
+                <Button className="cancel-button">{t("common.do_not_delete")}</Button>
+                <Button className="ok-button delete-mode">{t("common.delete")}</Button>
               </div>
             </div>
           </div>
@@ -176,8 +178,8 @@ export default class extends Component {
               <div className="title"></div>
               <div className="text"></div>
               <div className="buttons">
-                <Button className="ok-button">Có</Button>
-                <Button className="cancel-button">Không</Button>
+                <Button className="ok-button">{t("common.yes")}</Button>
+                <Button className="cancel-button">{t("common.no")}</Button>
               </div>
             </div>
           </div>
@@ -211,9 +213,9 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
                 <Button className="ok-button" disabled={!inputText.length}>
-                  Lưu
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -237,8 +239,8 @@ export default class extends Component {
                 />
               </div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
-                <Button className="ok-button">Lưu</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
+                <Button className="ok-button">{t("common.save")}</Button>
               </div>
             </div>
           </div>
@@ -267,13 +269,13 @@ export default class extends Component {
               {f7.device.cordova == true && (
                 <div style={{ width: "160px", marginLeft: "auto", marginRight: "auto" }}>
                   <Button large iconF7={"qrcode"} onClick={this.scanQRCode}>
-                    Scan QR Code
+                    {t("modules.scan_QR_Code")}
                   </Button>
                 </div>
               )}
 
               <div className="text-1">
-                <div>Hoặc địa chỉ của project được chia sẻ</div>
+                <div>{t("modules.or_the_address_of_the_shared_project")}</div>
                 <div className="form-group">
                   <input
                     id="import-project-input"
@@ -285,8 +287,8 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
-                <Button className="ok-button">Lưu</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
+                <Button className="ok-button">{t("common.save")}</Button>
               </div>
             </div>
           </div>
@@ -372,7 +374,7 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="ok-button">OK</Button>
+                <Button className="ok-button">{t("common.ok")}</Button>
               </div>
             </div>
           </div>
@@ -381,22 +383,22 @@ export default class extends Component {
         <div id="dialog-firmware" className="dialog-component">
           <div className="dialog-content">
             <div className="content">
-              <div className="title">Nâng cấp firmware</div>
+              <div className="title">{t("modules.firmware_upgrade")}</div>
               <div className="text">
-                Đã có bản cập nhật firmware mới cho robot của bạn.{" "}
+                {t("modules.a_new_firmware_update_is_available_for_your_robot")}{" "}
                 <a href="https://fw.ohstem.vn" target="_blank" className="link external">
-                  Nhấn vào đây
+                  {t("modules.click_here")}
                 </a>{" "}
-                để đến trang web cập nhật firmware (yêu cầu máy tính và kết nối qua dây cáp USB)
+                {t("modules.to_go_to_the_firmware_update_website_requires_computer_and_connection_via_USB_cable")}
               </div>
               <div className="checkboxs">
                 <label className="remind">
                   <input id="remind-checkbox" className="remind-checkbox" type="checkbox" />
-                  Không nhắc lại nữa
+                  {t("modules.do_not_mention_it_again")}
                 </label>
               </div>
               <div className="buttons">
-                <Button className="ok-button">OK</Button>
+                <Button className="ok-button">{t("common.ok")}</Button>
               </div>
             </div>
           </div>
@@ -405,7 +407,7 @@ export default class extends Component {
         <div id="dialog-devicename" className="dialog-component">
           <div className="dialog-content">
             <div className="content">
-              <div className="title">Đổi tên thiết bị</div>
+              <div className="title"> {t("modules.rename_the_device")}</div>
               <div className="text-1">
                 <div className="form-group">
                   <input
@@ -417,9 +419,9 @@ export default class extends Component {
                 </div>
               </div>
               <div className="buttons">
-                <Button className="cancel-button">Hủy</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
                 <Button className="ok-button" disabled={!inputText.length || inputText.trim().length === 0}>
-                  Lưu
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -429,10 +431,10 @@ export default class extends Component {
         <div id="dialog-error-instruction" className="dialog-component">
           <div className="dialog-content">
             <div className="content">
-              <div className="title">Có lỗi xảy ra</div>
+              <div className="title">{t("modules.an_error_occurred")}</div>
               <div className="error-content"></div>
               <div className="buttons">
-                <Button className="cancel-button">Bỏ qua</Button>
+                <Button className="cancel-button">{t("common.cancel")}</Button>
               </div>
             </div>
           </div>
@@ -441,3 +443,5 @@ export default class extends Component {
     );
   }
 }
+
+export default withTranslation()(Dialogs);
