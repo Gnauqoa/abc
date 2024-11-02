@@ -1,5 +1,7 @@
 import React, { useContext, useState, useRef } from "react";
 import {
+  CONDITION,
+  CONDITION_TYPE,
   DEFAULT_SENSOR_DATA,
   LAYOUT_NUMBER,
   LINE_CHART_LABEL_NOTE_TABLE,
@@ -27,6 +29,22 @@ const defaultPages = [
   },
 ];
 
+const defaultStartSampleCondition = {
+  active: false,
+  conditionType: CONDITION_TYPE.TIME,
+  sensor: DEFAULT_SENSOR_DATA,
+  conditionTime: -1,
+  condition: CONDITION.GREATER_OR_EQUAL,
+  delayTime: -1,
+};
+
+const defaultStopSampleCondition = {
+  active: false,
+  conditionType: CONDITION_TYPE.TIME,
+  sensor: DEFAULT_SENSOR_DATA,
+  condition: CONDITION_TYPE.GREATER_OR_EQUAL,
+};
+
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
@@ -38,6 +56,12 @@ export const ActivityContext = React.createContext({
   setPages: () => {},
   frequency: null,
   setFrequency: () => {},
+  startSampleCondition: null,
+  setStartSampleCondition: () => {},
+  stopSampleCondition: null,
+  setStopSampleCondition: () => {},
+  sampleSetting: null,
+  setSampleSetting: () => {},
   timerStopCollecting: null,
   setTimerStopCollecting: () => {},
   isRunning: false,
@@ -71,6 +95,8 @@ export const ActivityContextProvider = ({ children }) => {
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
   const [timerStopCollecting, setTimerStopCollecting] = useState(TIMER_NO_STOP);
+  const [startSampleCondition, setStartSampleCondition] = useState(defaultStartSampleCondition);
+  const [stopSampleCondition, setStopSampleCondition] = useState(defaultStopSampleCondition);
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
@@ -304,6 +330,8 @@ export const ActivityContextProvider = ({ children }) => {
       name,
       pages: updatedPage,
       frequency: frequency,
+      startSampleCondition: startSampleCondition,
+      stopSampleCondition: stopSampleCondition,
       dataRuns: updatedDataRuns,
       customXAxis: customXAxis,
       sensors: sensors,
@@ -347,6 +375,10 @@ export const ActivityContextProvider = ({ children }) => {
         setPages,
         frequency,
         setFrequency,
+        startSampleCondition,
+        setStartSampleCondition,
+        stopSampleCondition,
+        setStopSampleCondition,
         timerStopCollecting,
         setTimerStopCollecting,
         isRunning,
