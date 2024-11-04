@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Page, Navbar, Popover, List, f7 } from "framework7-react";
+import { Button, Page, Navbar, f7 } from "framework7-react";
 import { useTranslation } from "react-i18next";
 
 import "./sampling-settings.scss";
 import {
-  CONDITION,
-  CONDITION_TYPE,
   FREQUENCIES,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
@@ -13,36 +11,9 @@ import {
   SAMPLING_MANUAL_NAME,
   TIMER_NO_STOP,
 } from "../../../js/constants";
-
-const PopoverButton = ({ options, onChange, display, name }) => {
-  return (
-    <>
-      <Button className="open-popover-button" raised popoverOpen={`.popover-${name}-advanced`}>
-        <span id={`input-sampling-${name}-data`}>{display}</span>
-      </Button>
-
-      <Popover className={`popover-${name}-advanced popover-advanced`}>
-        <List className={`popover-list`}>
-          {options.map((option) => {
-            return (
-              <Button
-                className={`popover-button ${option.className}`}
-                key={option.value}
-                textColor="black"
-                onClick={() => {
-                  onChange(option.value);
-                  f7.popover.close();
-                }}
-              >
-                <span style={{ textTransform: "none" }}>{option.display}</span>
-              </Button>
-            );
-          })}
-        </List>
-      </Popover>
-    </>
-  );
-};
+import StartSampleSettings from "./start-sample-settings";
+import StopSampleSettings from "./stop-sample-settings";
+import PopoverButton from "./popover-button";
 
 const SamplingSettingPopup = ({
   defaultStartSampleCondition,
@@ -53,21 +24,18 @@ const SamplingSettingPopup = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [startSampleCondition, setStartSampleCondition] = useState(defaultStartSampleCondition);
-  const [stopSampleCondition, setStopSampleCondition] = useState(defaultStopSampleCondition);
+  const [stopSampleCondition, setStopSampleCondition] = useState({
+    ...defaultStopSampleCondition,
+    timer: defaultTimer,
+  });
   const [frequency, setFrequency] = useState(defaultFrequency);
-  const [timer, setTimer] = useState(defaultTimer);
 
   const onChangeStartCondition = (name, value) => setStartSampleCondition((prev) => ({ ...prev, [name]: value }));
   const onChangeStopCondition = (name, value) => setStopSampleCondition((prev) => ({ ...prev, [name]: value }));
 
-  const onChangeTimer = (e) => {
-    const value = e.target.value;
-    setTimer(value);
-  };
-
   const onSubmit = () => {
-    let parsedTimer = Number(timer);
-    const isOffTimer = timer === "" || timer === "--";
+    let parsedTimer = Number(stopSampleCondition.timer);
+    const isOffTimer = stopSampleCondition.timer === "" || stopSampleCondition.timer === "--";
     if (isNaN(parsedTimer) && !isOffTimer) {
       f7.dialog.alert(t("modules.time_must_be_a_number"));
       return;
@@ -78,16 +46,31 @@ const SamplingSettingPopup = ({
       return;
     }
 
-    onClosePopup({ timer: isOffTimer ? TIMER_NO_STOP : parsedTimer, frequency: frequency });
+    onClosePopup({
+      startSampleCondition,
+      stopSampleCondition,
+      timer: isOffTimer ? TIMER_NO_STOP : parsedTimer,
+      frequency: frequency,
+    });
   };
 
   const onClose = () => {
-    onClosePopup({ timer: defaultTimer, frequency: defaultFrequency });
+    onClosePopup({
+      timer: defaultTimer,
+      frequency: defaultFrequency,
+      startSampleCondition: defaultStartSampleCondition,
+      stopSampleCondition: defaultStopSampleCondition,
+    });
   };
 
   useEffect(() => {
     setFrequency(defaultFrequency);
-  }, [defaultFrequency]);
+    setStartSampleCondition(defaultStartSampleCondition);
+    setStopSampleCondition({ ...defaultStopSampleCondition, timer: defaultTimer });
+
+
+  }, [defaultFrequency, defaultTimer, defaultStartSampleCondition, defaultStopSampleCondition]);
+
 
   return (
     <Page className="sampling-settings">
@@ -96,7 +79,6 @@ const SamplingSettingPopup = ({
         <div className="items">
           <div className="item">
             <div className="text">{t("modules.cycle")}</div>
-
             <PopoverButton
               name={"frequency"}
               display={
@@ -126,98 +108,8 @@ const SamplingSettingPopup = ({
             />
           </div>
 
-          <div className="item">
-            <div className="text">{t("modules.start_condition")}</div>
-
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                checked={startSampleCondition.active}
-                onChange={(e) => onChangeStartCondition("active", e.target.checked)}
-              />
-              <i class="icon-checkbox"></i>
-            </label>
-          </div>
-
-          {startSampleCondition.active && (
-            <>
-              <div className="sub-item">
-                <div className="text">{t("modules.condition_type")}</div>
-                <PopoverButton
-                  name={"conditionType"}
-                  display={t(`modules.${startSampleCondition.conditionType}_condition_type`)}
-                  onChange={(value) => onChangeStartCondition("conditionType", value)}
-                  options={Object.values(CONDITION_TYPE).map((val) => ({
-                    display: t(`modules.${val}_condition_type`),
-                    value: val,
-                  }))}
-                />
-              </div>
-              <div className="sub-item">
-                {startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE ? (
-                  <>
-                    <div className="text">{`${t("modules.input_value")} (${t("modules.sensor")})`}</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text">{`${t("modules.input_value")} (${t("modules.second")})`}</div>
-                    <input
-                      className="input-sampling-time"
-                      type="number"
-                      value={
-                        startSampleCondition.conditionTime === TIMER_NO_STOP ? "" : startSampleCondition.conditionTime
-                      }
-                      onChange={(e) => onChangeStartCondition("conditionTime", e.target.value)}
-                    />
-                  </>
-                )}
-              </div>
-              <div className="sub-item">
-                <div className="text">{t("modules.condition")}</div>
-                <PopoverButton
-                  name={"condition"}
-                  display={t(`modules.${startSampleCondition.condition}_condition`)}
-                  onChange={(value) => onChangeStartCondition("condition", value)}
-                  options={Object.values(CONDITION).map((val) => ({
-                    display: t(`modules.${val}_condition`),
-                    value: val,
-                  }))}
-                />
-              </div>
-              <div className="sub-item">
-                <div className="text">{`${t("modules.delay_time")} (${t("common.second")}):`}</div>
-                <input
-                  className="input-sampling-time"
-                  type="number"
-                  value={startSampleCondition.delayTime === TIMER_NO_STOP ? "" : startSampleCondition.delayTime}
-                  onChange={(e) => onChangeStartCondition("delayTime", e.target.value)}
-                />
-              </div>
-            </>
-          )}
-
-          <div className="item">
-            <div className="text">{t("modules.stop_condition")}</div>
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                onChange={(e) => onChangeStopCondition("active", e.target.checked)}
-                checked={startSampleCondition.active}
-              />
-              <i class="icon-checkbox"></i>
-            </label>
-          </div>
-
-          <div className="item">
-            <div className="text">{`${t("common.time")} (${t("common.second")}):`}</div>
-            <input
-              className="input-sampling-time"
-              type="number"
-              // placeholder={timer === TIMER_NO_STOP ? "--" : timer}
-              value={timer === TIMER_NO_STOP ? "" : timer}
-              onChange={onChangeTimer}
-            />
-          </div>
+          <StartSampleSettings onChange={onChangeStartCondition} startSampleCondition={startSampleCondition} />
+          <StopSampleSettings onChange={onChangeStopCondition} stopSampleCondition={stopSampleCondition} />
         </div>
 
         <div className="sampling-settings-buttons">

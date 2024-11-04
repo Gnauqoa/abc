@@ -1,10 +1,10 @@
 @media (min-width: 630px) and (min-height: 630px) {
   .sampling-settings-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 400px;
-    height: 300px;
+    width: 450px;
+    height: 400px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 150px);
+    top: calc(50% - 200px);
     margin-top: 0px;
     margin-left: 0px;
     border-radius: 25px;
@@ -15,6 +15,7 @@
   .sampling-settings-header {
     display: flex;
     justify-content: space-between;
+    background-color: var(--f7-page-bg-color);
     align-items: center;
     .navbar-inner {
       color: #0086ff;
@@ -26,11 +27,10 @@
 
   .sampling-settings-content {
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-
+    overflow: hidden;
     .title {
       color: #0086ff;
     }
@@ -39,9 +39,10 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 0 20px 0 20px;
-      margin-top: 20px;
+      margin: 20px;
       gap: 10px;
+      overflow: auto;
+      height: 100%;
 
       .sub-item {
         padding-left: 12px;

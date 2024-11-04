@@ -19,6 +19,8 @@ const ActivityFooter = ({
     startSampleCondition,
     stopSampleCondition,
     timerStopCollecting,
+    setStartSampleCondition,
+    setStopSampleCondition,
     setTimerStopCollecting,
   } = useActivityContext();
   return (
@@ -28,7 +30,9 @@ const ActivityFooter = ({
           isRunning={isRunning}
           frequency={frequency}
           startSampleCondition={startSampleCondition}
+          handleStartSampleConditionChange={setStartSampleCondition}
           stopSampleCondition={stopSampleCondition}
+          handleStopSampleConditionChange={setStopSampleCondition}
           handleFrequencySelect={handleFrequencySelect}
           timerStopCollecting={timerStopCollecting}
           handleSetTimer={setTimerStopCollecting}

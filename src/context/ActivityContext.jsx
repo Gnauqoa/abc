@@ -41,8 +41,8 @@ const defaultStartSampleCondition = {
 const defaultStopSampleCondition = {
   active: false,
   conditionType: CONDITION_TYPE.TIME,
+  condition: CONDITION.GREATER_OR_EQUAL,
   sensor: DEFAULT_SENSOR_DATA,
-  condition: CONDITION_TYPE.GREATER_OR_EQUAL,
 };
 
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);

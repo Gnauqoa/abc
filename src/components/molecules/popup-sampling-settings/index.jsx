@@ -18,6 +18,8 @@ const SamplingSetting = ({
   isRunning,
   frequency,
   startSampleCondition,
+  handleStartSampleConditionChange,
+  handleStopSampleConditionChange,
   stopSampleCondition,
   handleFrequencySelect,
   timerStopCollecting,
@@ -32,12 +34,19 @@ const SamplingSetting = ({
     ? `${t("modules.periodic")} ${frequency} ${t(FREQUENCY_UNIT)}`
     : `${t("modules.periodic")} ${parseInt(1 / frequency)} ${t(INVERSE_FREQUENCY_UNIT)}`;
 
-
   const handleGetSampleSettings = (samplingSettings) => {
     try {
-      const { frequency: newFrequency, timer: newTimer } = samplingSettings;
+      console.log("Sampling-settings: ", samplingSettings);
+      const {
+        frequency: newFrequency,
+        timer: newTimer,
+        startSampleCondition: newStartSampleCondition,
+        stopSampleCondition: newStopSampleCondition,
+      } = samplingSettings;
       if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
       if (newTimer !== timerStopCollecting) handleSetTimer(newTimer);
+      if (newStartSampleCondition !== startSampleCondition) handleStartSampleConditionChange(newStartSampleCondition);
+      if (newStopSampleCondition !== stopSampleCondition) handleStopSampleConditionChange(newStopSampleCondition);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
