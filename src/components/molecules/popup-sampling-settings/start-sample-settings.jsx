@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 
 import "./sampling-settings.scss";
-import { CONDITION, CONDITION_TYPE, TIMER_NO_STOP } from "../../../js/constants";
+import { CONDITION, CONDITION_TYPE, SENSOR_NONE_VALUE, TIMER_NO_STOP } from "../../../js/constants";
 import PopoverButton from "./popover-button";
 import { useTranslation } from "react-i18next";
+import SensorSelector from "../popup-sensor-selector";
+import { useActivityContext } from "../../../context/ActivityContext";
 
 const StartSampleSettings = ({ startSampleCondition, onChange }) => {
   const { t } = useTranslation();
+  const { isRunning } = useActivityContext();
 
   return (
     <>
@@ -29,19 +32,52 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
               name={"start-conditionType"}
               display={t(`modules.${startSampleCondition.conditionType}_condition_type`)}
               onChange={(value) => onChange("conditionType", value)}
-              options={Object.values(CONDITION_TYPE).map((val) => ({
-                display: t(`modules.${val}_condition_type`),
-                value: val,
-              }))}
+              options={Object.values(CONDITION_TYPE)
+                .filter((val) => val !== CONDITION_TYPE.TIME)
+                .map((val) => ({
+                  display: t(`modules.${val}_condition_type`),
+                  value: val,
+                }))}
             />
           </div>
-          <div className="sub-item">
-            {startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE ? (
-              <>
+          {startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE ? (
+            <>
+              <div className="sub-item">
                 <div className="text">{`${t("modules.input_value")} (${t("modules.sensor")})`}</div>
-              </>
-            ) : (
-              <>
+                <SensorSelector
+                  disabled={isRunning}
+                  selectedSensor={startSampleCondition.sensor}
+                  onChange={(sensor) => onChange("sensor", sensor)}
+                />
+              </div>
+
+              <div className="sub-item">
+                <div className="text">{t("modules.condition")}</div>
+                <PopoverButton
+                  name={"start-condition"}
+                  display={t(`modules.${startSampleCondition.condition}_condition`)}
+                  onChange={(value) => onChange("condition", value)}
+                  options={Object.values(CONDITION).map((val) => ({
+                    display: t(`modules.${val}_condition`),
+                    value: val,
+                  }))}
+                />
+              </div>
+              <div className="sub-item">
+                <div className="text">{`${t("modules.condition_value")}`}</div>
+                <input
+                  className="input-sampling-time"
+                  type="number"
+                  value={
+                    startSampleCondition.conditionValue === SENSOR_NONE_VALUE ? "" : startSampleCondition.conditionValue
+                  }
+                  onChange={(e) => onChange("conditionValue", e.target.value)}
+                />
+              </div>
+            </>
+          ) : startSampleCondition.conditionType === CONDITION_TYPE.TIME ? (
+            <>
+              <div className="sub-item">
                 <div className="text">{`${t("modules.input_value")} (${t("common.second")})`}</div>
                 <input
                   className="input-sampling-time"
@@ -49,21 +85,12 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
                   value={startSampleCondition.conditionTime === TIMER_NO_STOP ? "" : startSampleCondition.conditionTime}
                   onChange={(e) => onChange("conditionTime", e.target.value)}
                 />
-              </>
-            )}
-          </div>
-          <div className="sub-item">
-            <div className="text">{t("modules.condition")}</div>
-            <PopoverButton
-              name={"start-condition"}
-              display={t(`modules.${startSampleCondition.condition}_condition`)}
-              onChange={(value) => onChange("condition", value)}
-              options={Object.values(CONDITION).map((val) => ({
-                display: t(`modules.${val}_condition`),
-                value: val,
-              }))}
-            />
-          </div>
+              </div>
+            </>
+          ) : (
+            <></>
+          )}
+
           <div className="sub-item">
             <div className="text">{`${t("modules.delay_time")} (${t("common.second")}):`}</div>
             <input

@@ -31,8 +31,9 @@ const defaultPages = [
 
 const defaultStartSampleCondition = {
   active: false,
-  conditionType: CONDITION_TYPE.TIME,
+  conditionType: CONDITION_TYPE.NONE,
   sensor: DEFAULT_SENSOR_DATA,
+  conditionValue: 0,
   conditionTime: -1,
   condition: CONDITION.GREATER_OR_EQUAL,
   delayTime: -1,
@@ -40,9 +41,10 @@ const defaultStartSampleCondition = {
 
 const defaultStopSampleCondition = {
   active: false,
-  conditionType: CONDITION_TYPE.TIME,
+  conditionType: CONDITION_TYPE.NONE,
   condition: CONDITION.GREATER_OR_EQUAL,
   sensor: DEFAULT_SENSOR_DATA,
+  conditionValue: 0,
 };
 
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);

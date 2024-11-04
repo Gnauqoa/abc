@@ -190,6 +190,7 @@ export const INVERSE_FREQUENCY_UNIT = "const.seconds_sample";
 export const CONDITION_TYPE = {
   TIME: "time",
   SENSOR_VALUE: "sensor_value",
+  NONE: "none",
 };
 
 export const CONDITION = {
@@ -228,6 +229,8 @@ export const WIDGET_SENSOR_ID_INACTIVE = -1;
 
 export const BLE_TYPE = "ble";
 export const USB_TYPE = "usb";
+
+export const SENSOR_NONE_VALUE = 0;
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
