@@ -13,13 +13,22 @@ const ActivityFooter = ({
   handleGetManualSample,
   handleSampleClick,
 }) => {
-  const { isRunning, frequency, timerStopCollecting, setTimerStopCollecting } = useActivityContext();
+  const {
+    isRunning,
+    frequency,
+    startSampleCondition,
+    stopSampleCondition,
+    timerStopCollecting,
+    setTimerStopCollecting,
+  } = useActivityContext();
   return (
     <div className="activity-footer display-flex justify-content-space-between">
       <div className="__toolbar-left">
         <SamplingSetting
           isRunning={isRunning}
           frequency={frequency}
+          startSampleCondition={startSampleCondition}
+          stopSampleCondition={stopSampleCondition}
           handleFrequencySelect={handleFrequencySelect}
           timerStopCollecting={timerStopCollecting}
           handleSetTimer={setTimerStopCollecting}

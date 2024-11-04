@@ -17,6 +17,8 @@ import { useTranslation } from "react-i18next";
 const SamplingSetting = ({
   isRunning,
   frequency,
+  startSampleCondition,
+  stopSampleCondition,
   handleFrequencySelect,
   timerStopCollecting,
   handleSetTimer,
@@ -29,6 +31,7 @@ const SamplingSetting = ({
     : frequency >= 1
     ? `${t("modules.periodic")} ${frequency} ${t(FREQUENCY_UNIT)}`
     : `${t("modules.periodic")} ${parseInt(1 / frequency)} ${t(INVERSE_FREQUENCY_UNIT)}`;
+
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
@@ -49,7 +52,13 @@ const SamplingSetting = ({
   const handleOpenSamplingSettings = () => {
     if (!isRunning) {
       showModal((onClose) => (
-        <SamplingSettingPopup defaultFrequency={frequency} defaultTimer={timerStopCollecting} onClosePopup={onClose} />
+        <SamplingSettingPopup
+          defaultStartSampleCondition={startSampleCondition}
+          defaultStopSampleCondition={stopSampleCondition}
+          defaultFrequency={frequency}
+          defaultTimer={timerStopCollecting}
+          onClosePopup={onClose}
+        />
       ));
     }
   };

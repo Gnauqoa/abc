@@ -43,6 +43,36 @@
       margin-top: 20px;
       gap: 10px;
 
+      .sub-item {
+        padding-left: 12px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .input-sampling-time,
+        .open-popover-button {
+          padding: 0px;
+          width: 60%;
+          height: 25px;
+          color: #000000;
+          background-color: rgba(0, 134, 255, 0.3);
+          border: 1px solid #000000;
+          border-radius: 10px;
+          text-align: center;
+          cursor: pointer;
+          text-transform: none;
+        }
+
+        .text {
+          width: 60%;
+          color: #0086ff;
+          font-size: 12px;
+          font-weight: 500;
+          align-self: center;
+        }
+      }
+
       .item {
         height: 50px;
         display: flex;
@@ -50,7 +80,7 @@
         justify-content: space-between;
 
         .input-sampling-time,
-        .select-frequency-button {
+        .open-popover-button {
           padding: 0px;
           width: 60%;
           height: 45px;
@@ -110,24 +140,24 @@
   }
 }
 
-.popover-frequency-advanced {
+.popover-advanced {
   width: 160px;
   border-radius: 10px;
 
-  .list-frequency {
-    .button-frequency {
+  .popover-list {
+    .popover-button {
       border-radius: 0px;
     }
 
-    .button-frequency.inverse-frequency {
+    .popover-button.popover-inverse {
       background-color: antiquewhite;
     }
 
-    .button-frequency:first-child {
+    .popover-button:first-child {
       border-radius: 15px 15px 0px 0px;
     }
 
-    .button-frequency:last-child {
+    .popover-button:last-child {
       border-radius: 0px 0px 15px 15px;
     }
   }
@@ -168,7 +198,7 @@
         }
 
         .input-sampling-time,
-        .select-frequency-button {
+        .open-popover-button {
           height: 40px !important;
         }
       }
