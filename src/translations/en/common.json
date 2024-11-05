@@ -159,7 +159,10 @@
     "cyclic_oscillations_over_time": "Cyclic oscillations over time",
     "periodic_oscillations_according_to_frequency": "Periodic oscillations according to frequency",
     "count": "Count",
-    "select_information": "Select information"
+    "select_information": "Select information",
+    "sound_amplitude": "Sound amplitude",
+    "sound_level": "Sound Level (dBA)",
+    "sound_frequency": "Frequency (Hz)"
   },
   "const": {
     "default": "Default",
@@ -231,8 +234,8 @@
     "dissolved_oxygen_sensor_9100": "Dissolved Oxygen Sensor (9100)",
     "built_in_microphone": "Sound Sensor (built-in microphone)",
     "decibel_level": "Sound level",
-    "wave": "Wave",
-    "frequency": "Frequency",
+    "wave": "Sound wave",
+    "frequency": "Sound frequency",
 
     "water_salinity_sensor": "Water salinity Sensor",
     "salinity_concentration": "Salinity concentration",
