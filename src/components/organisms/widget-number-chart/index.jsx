@@ -9,6 +9,7 @@ const NumberWidget = ({ value, widget }) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
   const [currentValue, setCurrentData] = useState(value);
+  const [changeSensor, setChangeSensor] = useState(false);
   const { isRunning, handleSensorChange } = useActivityContext();
 
   useEffect(() => {
@@ -26,6 +27,13 @@ const NumberWidget = ({ value, widget }) => {
     if (isRunning) setCurrentData(value);
   }, [value, isRunning]);
 
+  useEffect(() => {
+    if (changeSensor) {
+      setCurrentData(value);
+      setChangeSensor(false);
+    }
+  }, [changeSensor,value]);
+
   return (
     <div className="number-widget">
       <div className="__value">
@@ -35,9 +43,10 @@ const NumberWidget = ({ value, widget }) => {
       <div className="sensor-select-container">
         <SensorSelector
           selectedSensor={sensor}
-          onChange={(sensor) =>
-            handleSensorChange({ widgetId: widget.id, sensorIndex: defaultSensorIndex, sensor: sensor })
-          }
+          onChange={(sensor) => {
+            handleSensorChange({ widgetId: widget.id, sensorIndex: defaultSensorIndex, sensor: sensor });
+            setChangeSensor(true);
+          }}
         ></SensorSelector>
       </div>
     </div>
