@@ -21,6 +21,16 @@ export const BLE_SERVICE_ID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 export const BLE_RX_ID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 export const BLE_TX_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
+// Mobile Serial
+export const SCAN_SERIAL_INTERVAL = 1000; // millisecond
+export const READ_SERIAL_INTERVAL = 100; // millisecond
+export const RUNNER_INTERVAL = 50; // millisecond
+export const SERIAL_BAUD_RATE = 115200;
+export const RUNNER_TYPE = {
+  SCAN: "scan",
+  READ: "read",
+  SEND: "send",
+};
 // API
 export const GITHUB_ACCESS_TOKEN = "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";
 // MQTT
