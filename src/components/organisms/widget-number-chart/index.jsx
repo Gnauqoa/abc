@@ -4,8 +4,10 @@ import SensorServices from "../../../services/sensor-service";
 import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useActivityContext } from "../../../context/ActivityContext";
+import DataManagerIST from "../../../services/data-manager";
 
 const NumberWidget = ({ value, widget }) => {
+  const { pages, currentPageIndex } = useActivityContext();
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
   const [currentValue, setCurrentData] = useState(value);
@@ -29,10 +31,16 @@ const NumberWidget = ({ value, widget }) => {
 
   useEffect(() => {
     if (changeSensor) {
-      setCurrentData(value);
+      const dataRunData = DataManagerIST.getDataRunData({
+        dataRunId: pages[currentPageIndex].currentDataRunId,
+        sensorId: sensor.id,
+        sensorIndex: sensor.index,
+      });
+      if (!dataRunData) return;
+      setCurrentData(dataRunData[dataRunData.length - 1]);
       setChangeSensor(false);
     }
-  }, [changeSensor,value]);
+  }, [changeSensor, value]);
 
   return (
     <div className="number-widget">
