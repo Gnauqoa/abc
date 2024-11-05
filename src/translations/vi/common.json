@@ -18,7 +18,8 @@
   "main_menu": {
     "about": "Về InnoLab",
     "vietnamese": "Tiếng Việt",
-    "english": "English"
+    "english": "English",
+    "exit": "Thoát"
   },
   "page": {
     "copyright_is_owned_by_ADT": "Bản quyền thuộc sở hữu của ADT",

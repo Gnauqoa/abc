@@ -18,7 +18,8 @@
   "main_menu": {
     "about": "About InnoLab",
     "vietnamese": "Tiếng Việt",
-    "english": "English"
+    "english": "English",
+    "exit": "Exit"
   },
   "page": {
     "copyright_is_owned_by_ADT": "© ADT EDTECH 2024. All rights reserved.",
