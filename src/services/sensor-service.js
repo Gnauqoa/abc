@@ -147,7 +147,7 @@ export const defaultSensors = [
     icon: soundSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-010-dba", name: "list_sensor.sound_intensity", unit: "dBA", min: 0, max: 140, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-010-dba", name: "list_sensor.sound_intensity", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 }],
   },
   {
     id: 11,
@@ -265,7 +265,7 @@ export const defaultSensors = [
     isBuiltin: true,
     remote_logging: false,
     support_calib: false,
-    data: [{ id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dbA", min: -100, max: 100, formatFloatingPoint: 1 }],
+    data: [{ id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 }],
   },
   {
     id: 69,
@@ -277,8 +277,8 @@ export const defaultSensors = [
     remote_logging: false,
     support_calib: false,
     data: [
-      { id: "inno-069-wave", name: "list_sensor.wave", unit: "A", min: -1, max: 1, formatFloatingPoint: 1 },
-      { id: "inno-069-frequency", name: "list_sensor.frequency", unit: "dbA", min: -100, max: 100, formatFloatingPoint: 1 },
+      { id: "inno-069-wave", name: "list_sensor.wave", unit: "", min: -1, max: 1, formatFloatingPoint: 1 },
+      { id: "inno-069-frequency", name: "list_sensor.frequency", unit: "", min: -100, max: 100, formatFloatingPoint: 1 },
     ],
   },
 ];

@@ -617,7 +617,6 @@ let LineChart = (props, ref) => {
               elements,
               chart,
               selectedPointElement,
-              selectedNoteElement,
               addNoteHandler
             );
             if (status) {
@@ -1096,7 +1095,10 @@ let LineChart = (props, ref) => {
               <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
                 <img src={previousIcon} alt="previousIcon" />
               </div>
-              <div id="icon2" style={{ cursor: "pointer", width: "20px", height: "20px", marginLeft: "5px" }}>
+              <div
+                id="icon2"
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+              >
                 <img src={nextIcon} alt="nextIcon" />
               </div>
               <div

@@ -16,8 +16,8 @@ import MicrophoneServiceIST, { BUFFER_LENGTH } from "../../../services/microphon
 import DataManagerIST from "../../../services/data-manager";
 import { createSensorInfo } from "../../../utils/core";
 
-const MAX_DECIBEL = 140;
-const MIN_DECIBEL = 0;
+const MAX_DECIBEL = 120;
+const MIN_DECIBEL = 30;
 const GET_SAMPLES_INTERVAL = 200;
 const DEFAULT_MIN_AMPLITUDE = 0.3;
 const MAX_FREQUENCY = 6000;
@@ -106,7 +106,7 @@ const ScopeViewWidget = ({ widget }) => {
 
           const chartData = [
             {
-              name: t("organisms.cyclic_oscillations_over_time"),
+              name: t("organisms.sound_amplitude"),
               data: normalizedArray,
             },
           ];
@@ -118,9 +118,9 @@ const ScopeViewWidget = ({ widget }) => {
             maxX: timePerSample * BUFFER_LENGTH * 1000,
             maxY: maxAmplitude,
             minY: maxAmplitude * -1,
-            labelY: "amplitude",
-            labelX: "ms",
-            tension: 0.6,
+            labelY: t("organisms.sound_amplitude"),
+            labelX: t("common.time") + " (ms)",
+            tension: 0.2,
           });
 
           if (isRunning) drawChartTimerId = setTimeout(drawSineWave, GET_SAMPLES_INTERVAL);
@@ -146,7 +146,7 @@ const ScopeViewWidget = ({ widget }) => {
 
           const chartData = [
             {
-              name: t("organisms.periodic_oscillations_according_to_frequency"),
+              name: t("organisms.sound_level"),
               data: normalizedArray,
             },
           ];
@@ -158,8 +158,8 @@ const ScopeViewWidget = ({ widget }) => {
             maxX: MAX_FREQUENCY,
             maxY: MAX_DECIBEL,
             minY: MIN_DECIBEL,
-            labelY: "decibels",
-            labelX: "frequency",
+            labelY: t("organisms.sound_level"),
+            labelX: t("organisms.sound_frequency"),
             tension: 0.2,
           });
 
