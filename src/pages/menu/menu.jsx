@@ -65,7 +65,7 @@ export default () => {
                     <img slot="media" src={aboutusImg} className="menu-icon" />
                   </ListItem>
                   {f7.device.electron && (
-                    <ListItem radio title="Thoát" name="radio-menu" onClick={() => window._cdvElectronIpc.quitApp()}>
+                    <ListItem radio title={t("main_menu.exit")} name="radio-menu" onClick={() => window._cdvElectronIpc.quitApp()}>
                       <Icon
                         slot="media"
                         ios="material:exit_to_app"

@@ -52,14 +52,7 @@ export const onClickNoteElement = ({ element, selectedNoteElement }) => {
   return { status: true, element: selectedNoteElement };
 };
 
-export const onClickChartHandler = (
-  event,
-  elements,
-  chart,
-  selectedPointElement,
-  selectedNoteElement,
-  addNoteHandler
-) => {
+export const onClickChartHandler = (event, elements, chart, selectedPointElement, addNoteHandler) => {
   let newPointEl;
 
   if (event.type === "click") {
@@ -92,11 +85,10 @@ export const onClickChartHandler = (
         chart.update();
 
         // Tính toán vị trí của icons
-        const rect = chart.canvas.getBoundingClientRect();
         // const x = selectedPoint.element.x + rect.left;
         // const y = selectedPoint.element.y + rect.top - 20; // 20px phía trên
         const x = selectedPoint.element.x - 30;
-        const y = selectedPoint.element.y - 50;
+        const y = selectedPoint.element.y - 70;
 
         const iconContainer = document.getElementById("icon-container");
         iconContainer.style.left = `${x}px`;
@@ -152,5 +144,12 @@ function updateSelectedPoint(chart, datasetIndex, dataPointIndex) {
   currentDataset.pointBackgroundColor = newPointBackgroundColor;
   currentDataset.pointBorderColor = newPointBorderColor;
 
+  const tooltip = chart.tooltip;
+  tooltip.setActiveElements([
+    {
+      datasetIndex,
+      index: dataPointIndex,
+    },
+  ]);
   chart.update();
 }
