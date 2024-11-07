@@ -20,6 +20,7 @@
   "devDependencies": {
     "@red-mobile/cordova-plugin-usb-serial": "git+https://github.com/Gnauqoa/cordova-plugin-usb-serial.git",
     "cordova-android": "^13.0.0",
+    "cordova-electron": "^4.0.0",
     "cordova-plugin-audioinput": "github:AITT-VN/cordova-plugin-audioinput",
     "cordova-plugin-ble-central": "^1.7.5",
     "cordova-plugin-file": "^8.1.0",
