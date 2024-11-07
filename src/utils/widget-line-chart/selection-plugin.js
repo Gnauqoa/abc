@@ -6,12 +6,13 @@ import {
   SAMPLE_RANGE_SELECTION_ANNOTATION,
   calculateBoxRange,
 } from "./commons";
+import _ from "lodash";
 
 let timeoutDragSelection;
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
-  const selectionId = `${RANGE_SELECTION_ANNOTATION_ID}_${pageId}_${chartInstance.id}`;
+const addRangeSelection = ({ chartInstance, boxRange, pageId, widgetId }) => {
+  const selectionId = `${RANGE_SELECTION_ANNOTATION_ID}_${pageId}_${widgetId}_${chartInstance.id}`;
 
   const rangeSelection = {
     id: selectionId,
@@ -35,6 +36,7 @@ const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
     pageId: pageId,
     chartId: chartInstance.id,
     selection: rangeSelection,
+    widgetId,
   });
 
   chartInstance.config.options.plugins.annotation.annotations = {
@@ -46,13 +48,7 @@ const addRangeSelection = ({ chartInstance, boxRange, pageId }) => {
   return true;
 };
 
-export const handleAddSelection = ({
-  chartInstance,
-  startRangeElement,
-  endRangeElement,
-  pageId,
-  chartIndexInPage = 0,
-}) => {
+export const handleAddSelection = ({ chartInstance, startRangeElement, endRangeElement, pageId, widgetId }) => {
   clearTimeout(timeoutDragSelection);
   timeoutDragSelection = setTimeout(() => {
     if (startRangeElement) {
@@ -60,21 +56,21 @@ export const handleAddSelection = ({
         startElement: startRangeElement,
         endElement: endRangeElement,
         chartInstance,
-        chartIndexInPage,
       });
       const isUpdateSelection =
         boxRange.startXValue !== boxRange.endXValue && boxRange.startYValue !== boxRange.endYValue;
 
-      if (isUpdateSelection) addRangeSelection({ chartInstance, boxRange: boxRange, pageId });
+      if (isUpdateSelection) addRangeSelection({ chartInstance, boxRange: boxRange, pageId, widgetId });
     }
   }, 5);
 };
 
-export const handleDeleteSelection = ({ pageId, chartInstance }) => {
+export const handleDeleteSelection = ({ pageId, chartInstance, widgetId }) => {
   const condition = {
     chartId: chartInstance.id,
   };
   if (pageId) condition.pageId = pageId;
+  if (!_.isNil(widgetId)) condition.widgetId = widgetId;
 
   const allRangeSelections = rangeSelectionStorage.query(condition);
   allRangeSelections.forEach((selectionNote) => {
