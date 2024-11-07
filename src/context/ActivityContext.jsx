@@ -1,5 +1,7 @@
 import React, { useContext, useState, useRef } from "react";
 import {
+  CONDITION,
+  CONDITION_TYPE,
   DEFAULT_SENSOR_DATA,
   LAYOUT_NUMBER,
   LINE_CHART_LABEL_NOTE_TABLE,
@@ -26,6 +28,23 @@ const defaultPages = [
   },
 ];
 
+const defaultStartSampleCondition = {
+  active: false,
+  conditionType: CONDITION_TYPE.NONE,
+  sensor: DEFAULT_SENSOR_DATA,
+  condition: CONDITION.GREATER_OR_EQUAL,
+  conditionValue: 0,
+  delayTime: -1,
+};
+
+const defaultStopSampleCondition = {
+  active: false,
+  conditionType: CONDITION_TYPE.NONE,
+  sensor: DEFAULT_SENSOR_DATA,
+  condition: CONDITION.GREATER_OR_EQUAL,
+  conditionValue: 0,
+};
+
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
@@ -33,10 +52,20 @@ const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE)
 export const ActivityContext = React.createContext({
   name: [],
   setName: () => {},
+  isCheckingSensor: false,
+  setIsCheckingSensor: () => {},
+  isDelay: false,
+  setIsDelay: () => {},
   pages: [],
   setPages: () => {},
   frequency: null,
   setFrequency: () => {},
+  startSampleCondition: null,
+  setStartSampleCondition: () => {},
+  stopSampleCondition: null,
+  setStopSampleCondition: () => {},
+  sampleSetting: null,
+  setSampleSetting: () => {},
   timerStopCollecting: null,
   setTimerStopCollecting: () => {},
   isRunning: false,
@@ -68,10 +97,14 @@ export const ActivityContext = React.createContext({
 });
 
 export const ActivityContextProvider = ({ children }) => {
+  const [isDelay, setIsDelay] = useState(false);
+  const [isCheckingSensor, setIsCheckingSensor] = useState(false);
   const [name, setName] = useState("");
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
   const [timerStopCollecting, setTimerStopCollecting] = useState(TIMER_NO_STOP);
+  const [startSampleCondition, setStartSampleCondition] = useState(defaultStartSampleCondition);
+  const [stopSampleCondition, setStopSampleCondition] = useState(defaultStopSampleCondition);
   const [isRunning, setIsRunning] = useState(false);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
@@ -330,6 +363,8 @@ export const ActivityContextProvider = ({ children }) => {
       name,
       pages: updatedPage,
       frequency: frequency,
+      startSampleCondition: startSampleCondition,
+      stopSampleCondition: stopSampleCondition,
       dataRuns: updatedDataRuns,
       customXAxis: customXAxis,
       sensors: sensors,
@@ -367,10 +402,18 @@ export const ActivityContextProvider = ({ children }) => {
       value={{
         name,
         setName,
+        isCheckingSensor,
+        setIsCheckingSensor,
+        isDelay,
+        setIsDelay,
         pages,
         setPages,
         frequency,
         setFrequency,
+        startSampleCondition,
+        setStartSampleCondition,
+        stopSampleCondition,
+        setStopSampleCondition,
         timerStopCollecting,
         setTimerStopCollecting,
         isRunning,

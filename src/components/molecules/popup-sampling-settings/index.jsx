@@ -16,7 +16,13 @@ import { useTranslation } from "react-i18next";
 
 const SamplingSetting = ({
   isRunning,
+  isDelay,
+  isCheckingSensor,
   frequency,
+  startSampleCondition,
+  handleStartSampleConditionChange,
+  handleStopSampleConditionChange,
+  stopSampleCondition,
   handleFrequencySelect,
   timerStopCollecting,
   handleSetTimer,
@@ -32,9 +38,17 @@ const SamplingSetting = ({
 
   const handleGetSampleSettings = (samplingSettings) => {
     try {
-      const { frequency: newFrequency, timer: newTimer } = samplingSettings;
+      console.log("Sampling-settings: ", samplingSettings);
+      const {
+        frequency: newFrequency,
+        timer: newTimer,
+        startSampleCondition: newStartSampleCondition,
+        stopSampleCondition: newStopSampleCondition,
+      } = samplingSettings;
       if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
       if (newTimer !== timerStopCollecting) handleSetTimer(newTimer);
+      if (newStartSampleCondition !== startSampleCondition) handleStartSampleConditionChange(newStartSampleCondition);
+      if (newStopSampleCondition !== stopSampleCondition) handleStopSampleConditionChange(newStopSampleCondition);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
@@ -47,9 +61,15 @@ const SamplingSetting = ({
     callbackFn: handleGetSampleSettings,
   });
   const handleOpenSamplingSettings = () => {
-    if (!isRunning) {
+    if (!isRunning && !isDelay && !isCheckingSensor) {
       showModal((onClose) => (
-        <SamplingSettingPopup defaultFrequency={frequency} defaultTimer={timerStopCollecting} onClosePopup={onClose} />
+        <SamplingSettingPopup
+          defaultStartSampleCondition={startSampleCondition}
+          defaultStopSampleCondition={stopSampleCondition}
+          defaultFrequency={frequency}
+          defaultTimer={timerStopCollecting}
+          onClosePopup={onClose}
+        />
       ));
     }
   };
@@ -61,7 +81,7 @@ const SamplingSetting = ({
       </div>
 
       <Button
-        disabled={isRunning}
+        disabled={isRunning || isDelay || isCheckingSensor}
         className="button"
         textColor="black"
         bgColor="white"

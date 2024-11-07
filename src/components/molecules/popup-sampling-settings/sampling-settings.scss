@@ -1,10 +1,10 @@
 @media (min-width: 630px) and (min-height: 630px) {
   .sampling-settings-popup.popup:not(.popup-tablet-fullscreen) {
-    width: 400px;
-    height: 300px;
+    width: 450px;
+    height: 400px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 150px);
+    top: calc(50% - 200px);
     margin-top: 0px;
     margin-left: 0px;
     border-radius: 25px;
@@ -15,6 +15,7 @@
   .sampling-settings-header {
     display: flex;
     justify-content: space-between;
+    background-color: var(--f7-page-bg-color);
     align-items: center;
     .navbar-inner {
       color: #0086ff;
@@ -26,11 +27,10 @@
 
   .sampling-settings-content {
     width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-
+    overflow: hidden;
     .title {
       color: #0086ff;
     }
@@ -39,9 +39,40 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 0 20px 0 20px;
-      margin-top: 20px;
+      margin: 20px;
       gap: 10px;
+      overflow: auto;
+      height: 100%;
+
+      .sub-item {
+        padding-left: 12px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .input-sampling-time,
+        .open-popover-button {
+          padding: 0px;
+          width: 60%;
+          height: 25px;
+          color: #000000;
+          background-color: rgba(0, 134, 255, 0.3);
+          border: 1px solid #000000;
+          border-radius: 10px;
+          text-align: center;
+          cursor: pointer;
+          text-transform: none;
+        }
+
+        .text {
+          width: 60%;
+          color: #0086ff;
+          font-size: 12px;
+          font-weight: 500;
+          align-self: center;
+        }
+      }
 
       .item {
         height: 50px;
@@ -50,7 +81,7 @@
         justify-content: space-between;
 
         .input-sampling-time,
-        .select-frequency-button {
+        .open-popover-button {
           padding: 0px;
           width: 60%;
           height: 45px;
@@ -110,24 +141,24 @@
   }
 }
 
-.popover-frequency-advanced {
+.popover-advanced {
   width: 160px;
   border-radius: 10px;
 
-  .list-frequency {
-    .button-frequency {
+  .popover-list {
+    .popover-button {
       border-radius: 0px;
     }
 
-    .button-frequency.inverse-frequency {
+    .popover-button.popover-inverse {
       background-color: antiquewhite;
     }
 
-    .button-frequency:first-child {
+    .popover-button:first-child {
       border-radius: 15px 15px 0px 0px;
     }
 
-    .button-frequency:last-child {
+    .popover-button:last-child {
       border-radius: 0px 0px 15px 15px;
     }
   }
@@ -168,7 +199,7 @@
         }
 
         .input-sampling-time,
-        .select-frequency-button {
+        .open-popover-button {
           height: 40px !important;
         }
       }

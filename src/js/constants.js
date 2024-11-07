@@ -196,6 +196,18 @@ export const SPACE_KEY = 32;
 // Frequency
 export const FREQUENCY_UNIT = "const.sample_second";
 export const INVERSE_FREQUENCY_UNIT = "const.seconds_sample";
+// Sample setting
+export const CONDITION_TYPE = {
+  TIME: "time",
+  SENSOR_VALUE: "sensor_value",
+  NONE: "none",
+};
+
+export const CONDITION = {
+  GREATER_OR_EQUAL: "greater_or_equal",
+  LESS_OR_EQUAL: "less_or_equal",
+}
+
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
 export const FREQUENCIES = [0.033, 0.1, 0.2, 1, 2, 5, 10, 50];
 export const SAMPLING_MANUAL_NAME = "const.manual";
@@ -227,6 +239,8 @@ export const WIDGET_SENSOR_ID_INACTIVE = -1;
 
 export const BLE_TYPE = "ble";
 export const USB_TYPE = "usb";
+
+export const SENSOR_NONE_VALUE = 0;
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
