@@ -11,6 +11,7 @@ import {
   BLE_TYPE,
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
+  CONDITION,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
 
@@ -58,6 +59,9 @@ export class DataManager {
      */
     this.emitSubscribersIntervalId = null;
 
+    this.delayStartCollectingDataIntervalId = null;
+
+    this.checkingSensorSubscriber = {};
     /**
      * ID for the current data run.
      * @type {?string}
@@ -87,6 +91,7 @@ export class DataManager {
      * @type {number}
      */
     this.collectingDataInterval = 1000;
+    this.delayStartCollectingDataInterval = 1000;
     this.selectedInterval = 1000;
 
     this.samplingMode = SAMPLING_AUTO;
@@ -95,6 +100,7 @@ export class DataManager {
     // Parameters for Timer
     this.timerCollectingTime = 0;
     this.timerSubscriber = {};
+    this.delayStartCollectingDataTimer = 0;
 
     this.uartConnections = new Set();
     this.sensorsQueue = [];
@@ -286,6 +292,76 @@ export class DataManager {
     return this.samplingMode;
   }
 
+  startDelayStartCollectingDataTimer(delayTime, callback) {
+    const isValidDelay = Number.isInteger(delayTime) && delayTime >= 0;
+
+    if (!isValidDelay) {
+      console.error(`DATA_MANAGER-startDelayStartCollectingDataTimer-INVALID_${delayTime}`);
+      return false;
+    }
+
+    console.log(
+      `DATA_MANAGER-startDelayStartCollectingDataTimer-DELAY_TIME_${delayTime}Hz-INTERVAL_${this.delayStartCollectingDataInterval}`
+    );
+
+    this.delayStartCollectingDataTimer = 0;
+    this.stopDelayStartCollectingDataTimer();
+    this.runDelayStartCollectingDataTimer(delayTime, callback);
+
+    return true;
+  }
+
+  runDelayStartCollectingDataTimer(delayTime, callback) {
+    this.delayStartCollectingDataIntervalId = setInterval(() => {
+      this.delayStartCollectingDataTimer += this.delayStartCollectingDataInterval;
+      if (this.delayStartCollectingDataTimer >= delayTime * 1000) {
+        this.stopDelayStartCollectingDataTimer();
+        callback();
+      }
+    }, this.delayStartCollectingDataInterval);
+  }
+
+  stopDelayStartCollectingDataTimer() {
+    clearInterval(this.delayStartCollectingDataIntervalId);
+  }
+
+  handleCheckingSensor(emitData) {
+    const { checkingSensorSubscriber, sensorId, sensorsData } = emitData;
+    const { sampleCondition, onCheckingSuccess } = checkingSensorSubscriber;
+
+    if (sensorId !== sampleCondition.sensor.id) return;
+    if (
+      sampleCondition.condition === CONDITION.GREATER_OR_EQUAL &&
+      sensorsData[sampleCondition.sensor.index] >= sampleCondition.conditionValue
+    ) {
+      onCheckingSuccess();
+    } else if (
+      sampleCondition.condition === CONDITION.LESS_OR_EQUAL &&
+      sensorsData[sampleCondition.sensor.index] <= sampleCondition.conditionValue
+    ) {
+      onCheckingSuccess();
+    }
+  }
+
+  startCheckingSensor(sampleCondition, onCheckingSuccess) {
+    const subscriberId = uuidv4();
+    const subscription = this.emitter.addListener(subscriberId, this.handleCheckingSensor);
+
+    this.checkingSensorSubscriber = {
+      subscriberId,
+      sampleCondition,
+      onCheckingSuccess,
+      subscription,
+    };
+
+    return subscriberId;
+  }
+
+  stopCheckingSensor() {
+    console.log("stopCheckingSensor");
+    this.unsubscribe(this.checkingSensorSubscriber.subscriberId);
+    this.checkingSensorSubscriber = {};
+  }
   // -------------------------------- START/STOP -------------------------------- //
   /**
    * Start collecting data
@@ -1003,6 +1079,13 @@ export class DataManager {
       if (source !== BLE_TYPE) {
         this.uartConnections.add(sensorId);
       }
+
+      if (this.checkingSensorSubscriber)
+        this.emitter.emit(this.checkingSensorSubscriber.subscriberId, {
+          sensorsData,
+          sensorId,
+          checkingSensorSubscriber: this.checkingSensorSubscriber,
+        });
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }
@@ -1130,6 +1213,10 @@ export class DataManager {
 
   getTimerCollectingTime() {
     return this.timerCollectingTime;
+  }
+
+  getTimerDelayStartCollectingDataTime() {
+    return this.delayStartCollectingDataTimer;
   }
 
   // -------------------------------- SCHEDULERS -------------------------------- //

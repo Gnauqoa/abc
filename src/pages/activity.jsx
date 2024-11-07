@@ -23,6 +23,7 @@ import {
   LINE_CHART_RANGE_SELECTION_TABLE,
   LAYOUT_BAR,
   SENSOR_RENDER_OPTION,
+  CONDITION_TYPE,
 } from "../js/constants";
 
 // Import Molecules Components
@@ -118,9 +119,15 @@ export default ({ f7route, f7router, filePath, content }) => {
   const {
     name,
     setName,
+    isDelay,
+    setIsDelay,
     pages,
     setPages,
+    isCheckingSensor,
+    setIsCheckingSensor,
     timerStopCollecting,
+    startSampleCondition,
+    stopSampleCondition,
     setFrequency,
     isRunning,
     setIsRunning,
@@ -313,9 +320,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       lastDataRunId: null,
       name: newFileName,
       layoutRender: SENSOR_RENDER_OPTION.NONE,
-      currentDataRunId: currentDataRunId, 
+      currentDataRunId: currentDataRunId,
       widgets: defaultWidgets,
-
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -369,39 +375,83 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
+  function handleStartCollectData() {
+    if (isRunning) return;
+    let unitId = FIRST_COLUMN_DEFAULT_OPT;
+    if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
+      const tableId = `${currentPageIndex}_table`;
+      unitId = getFirstColumnOption({ tableId }).id;
+    }
+
+    // MicrophoneServicesIST.init() if the current widget is scope view
+    const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
+    if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
+      MicrophoneServicesIST.init();
+    }
+
+    const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
+    timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
+    setCurrentDataRunId(dataRunId);
+    setLastDataRunIdForCurrentPage(dataRunId);
+
+    setIsRunning(!isRunning);
+  }
+
+  function handleStopCollectData() {
+    if (!isRunning) return;
+    DataManagerIST.unsubscribeTimer();
+    DataManagerIST.stopCollectingData();
+
+    const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
+    if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
+      MicrophoneServicesIST.stop();
+    }
+    setIsRunning((prev) => !prev);
+  }
+
+  function stopCollectData() {
+    if (isRunning) {
+      handleStopCollectData();
+    } else if (isDelay) {
+      DataManagerIST.stopDelayStartCollectingDataTimer();
+      setIsDelay(false);
+    } else if (isCheckingSensor) {
+      DataManagerIST.stopCheckingSensor();
+      setIsCheckingSensor(false);
+    }
+  }
+
+  function startCollectData() {
+    if (startSampleCondition.active && startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
+      setIsCheckingSensor(true);
+      console.log(">>>>> AUTO - startCollectData - startSampleCondition:", startSampleCondition);
+      // DataManagerIST.stopCheckingSensor();
+      DataManagerIST.startCheckingSensor(startSampleCondition, () => {
+        console.log(">>>>> AUTO - startCollectData - startSampleCondition - callback");
+        DataManagerIST.stopCheckingSensor();
+        setIsCheckingSensor(false);
+        handleStartCollectData();
+      });
+    } else handleStartCollectData();
+  }
+
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
-    if (!isRunning) {
+    if (!isRunning && !isDelay && !isCheckingSensor) {
       /* For user input collecting data
         - Check if the current page is table of not.
         - If yes, clear Custom X Axis Datas with use input id
       */
-      let unitId = FIRST_COLUMN_DEFAULT_OPT;
-      if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
-        const tableId = `${currentPageIndex}_table`;
-        unitId = getFirstColumnOption({ tableId }).id;
-      }
-
-      // MicrophoneServicesIST.init() if the current widget is scope view
-      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
-      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
-        MicrophoneServicesIST.init();
-      }
-
-      const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
-      timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
-      setCurrentDataRunId(dataRunId);
-      setLastDataRunIdForCurrentPage(dataRunId);
-    } else {
-      DataManagerIST.unsubscribeTimer();
-      DataManagerIST.stopCollectingData();
-
-      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
-      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
-        MicrophoneServicesIST.stop();
-      }
+      if (startSampleCondition.active && startSampleCondition.delayTime > 0) {
+        setIsDelay(true);
+        DataManagerIST.startDelayStartCollectingDataTimer(Number(startSampleCondition.delayTime), () => {
+          setIsDelay(false);
+          startCollectData();
+        });
+      } else startCollectData();
+      return;
     }
-    setIsRunning(!isRunning);
+    stopCollectData();
   }
 
   function handleDataManagerCallback(emittedDatas) {
