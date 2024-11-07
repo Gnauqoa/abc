@@ -52,6 +52,11 @@ Click Next. In next screen, set Build Variants: release and click Create.
 
 After file generated successfully, you can see apk file in project_path/cordova/platforms/android/app/release.
 
+## Fix issue with microphone on Android
+For Android app to be bable to record sound using builtin microphone, need to add following permission:
+`<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />`
+in file cordova/platform/app/src/main/AndroidManifest.xml
+
 ## PWA
 
 This is a PWA. Don't forget to check what is inside of your `service-worker.js`. It is also recommended that you disable service worker (or enable "Update on reload") in browser dev tools during development.
