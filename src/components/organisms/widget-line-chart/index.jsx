@@ -480,6 +480,7 @@ let LineChart = (props, ref) => {
           curSensorInfos.push(sensorInfo);
         }
         chartInstanceRefs.current.forEach((chartInstanceRef, index) => {
+          if (!chartInstanceRef.attached) return;
           const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widgets[index].id });
           const allStatisticNotes = getAllCurrentStatisticNotes({ pageId, widgetId: widgets[index].id });
 
@@ -533,11 +534,9 @@ let LineChart = (props, ref) => {
     const minUnitValue = SensorServicesIST.getMinUnitValueAllSensors();
 
     const sensorContainers = document.getElementsByClassName("sensor-select-vertical-mount-container");
-    if (widgets.length > 1) {
-      Array.from(sensorContainers).forEach((item) => {
-        item.style.maxWidth = (document.documentElement.clientHeight - 300) / (widgets.length + 0.5) + "px";
-      });
-    }
+    Array.from(sensorContainers).forEach((item) => {
+      item.style.maxWidth = (document.documentElement.clientHeight - 300) / (widgets.length + 0.5) + "px";
+    });
 
     widgets.forEach((widget, i) => {
       const chartJsPlugin = getChartJsPlugin({ valueLabelContainerRef: valueContainerElRef.current[i] });
@@ -870,7 +869,7 @@ let LineChart = (props, ref) => {
     const numWidget = widgets?.length ?? 1;
     if (numWidget <= 1) return;
     handleDeleteWidget(widgetId);
-    if (numSensor <= 2) {
+    if (numWidget <= 2) {
       setShouldShowColumnOptions(true);
     }
   };
