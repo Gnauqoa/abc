@@ -1,0 +1,29 @@
+directories:
+  output: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\build
+  buildResources: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\build-res
+  app: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\www
+extraFiles: []
+appId: vn.ohstem.edl_app
+nsis:
+  perMachine: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+squirrelWindows: {}
+appx:
+  identityName: InnoLab
+  publisherDisplayName: OhStem Education
+  applicationId: vn.ohstem.edl_app
+  displayName: InnoLab
+win:
+  icon: res/icon/electron/installer.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+nodeGypRebuild: false
+npmRebuild: false
+productName: InnoLab
+electronVersion: 14.2.9
+electronDownload:
+  version: 14.2.9
+files: []

@@ -29,4 +29,4 @@ node_modules/
 !/platforms/electron/build
 !/platforms/electron/build-res
 !/platforms/electron/platform_www
-/platforms/electron/platform_www/plugins
+!/platforms/electron/platform_www/plugins
