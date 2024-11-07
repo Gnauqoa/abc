@@ -11,10 +11,10 @@ import { createHiddenDataLineId } from "./legend-plugin";
 
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 
-export const getAllCurrentLabelNotes = ({ pageId, chartIndexInPage, sensorInfo, dataRunId, hiddenDataLineIds }) => {
+export const getAllCurrentLabelNotes = ({ pageId, widgetId, sensorInfo, dataRunId, hiddenDataLineIds }) => {
   const condition = {};
   if (pageId) condition.pageId = pageId;
-  if (chartIndexInPage != undefined) condition.chartIndexInPage = chartIndexInPage;
+  if (widgetId != undefined) condition.widgetId = widgetId;
   if (dataRunId) condition.dataRunId = dataRunId;
   if (sensorInfo) condition.sensorInfo = sensorInfo;
 
@@ -51,7 +51,7 @@ export const addLabelNote = ({
   newContent,
   selectedPointElement,
   selectedNoteElement,
-  chartIndexInPage = 0,
+  widgetId = 0,
   yScaleId = "y",
 }) => {
   const isValidPointElement = selectedPointElement?.element;
@@ -66,7 +66,7 @@ export const addLabelNote = ({
     const dataPointIndex = selectedPointElement.index;
     dataRunId = chartInstance.data.datasets[datasetIndex].dataRunId;
     yAxisID = chartInstance.data.datasets[datasetIndex].yAxis?.id;
-    noteId = createLabelNoteId({ pageId, chartIndexInPage, dataRunId, sensorInfo, dataPointIndex });
+    noteId = createLabelNoteId({ pageId, widgetId, dataRunId, sensorInfo, dataPointIndex });
   } else return;
 
   const handleOpenPopup = (noteContent) => {
@@ -100,7 +100,7 @@ export const addLabelNote = ({
         id: noteId,
         label: newNote,
         pageId: pageId,
-        chartIndexInPage,
+        widgetId,
         sensorInfo: sensorInfo,
         dataRunId: dataRunId,
       });
@@ -117,7 +117,7 @@ export const addLabelNote = ({
   return true;
 };
 
-export const createLabelNoteId = ({ pageId, chartIndexInPage, dataRunId, sensorInfo, dataPointIndex }) => {
-  const noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${chartIndexInPage}_${dataRunId}_${sensorInfo}_${dataPointIndex}`;
+export const createLabelNoteId = ({ pageId, widgetId, dataRunId, sensorInfo, dataPointIndex }) => {
+  const noteId = `${PREFIX_LABEL_NOTE}_${pageId}_${widgetId}_${dataRunId}_${sensorInfo}_${dataPointIndex}`;
   return noteId;
 };

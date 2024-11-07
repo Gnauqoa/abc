@@ -18,7 +18,8 @@
   "main_menu": {
     "about": "Về InnoLab",
     "vietnamese": "Tiếng Việt",
-    "english": "English"
+    "english": "English",
+    "exit": "Thoát"
   },
   "page": {
     "copyright_is_owned_by_ADT": "Bản quyền thuộc sở hữu của ADT",
@@ -167,10 +168,13 @@
     "runs": "Các lần chạy",
     "select_calculation_function": "Chọn hàm tính toán",
     "linear_line": "Đường tuyến tính",
-    "cyclic_oscillations_over_time": "Dao động chu kỳ theo thời gian",
-    "periodic_oscillations_according_to_frequency": "Dao động chu kỳ theo tần số",
+    "cyclic_oscillations_over_time": "Y",
+    "periodic_oscillations_according_to_frequency": "Y",
     "count": "Đếm",
-    "select_information": "Chọn thông tin"
+    "select_information": "Chọn thông tin",
+    "sound_amplitude": "Dao động âm thanh",
+    "sound_level": "Cường độ âm thanh (dBA)",
+    "sound_frequency": "Tần số âm thanh (Hz)"
   },
   "const": {
     "default": "Mặc định",
@@ -182,7 +186,7 @@
     "camera": "Camera",
     "bell": "Chuông",
     "lock": "Ổ khóa",
-    "sample_second": "mẫu/giây",
+    "sample_second": "Hz",
     "seconds_sample": "giây/mẫu",
     "manual": "Thủ công",
     "servo_calibration": "Cân chỉnh servo"
@@ -243,8 +247,8 @@
     "dissolved_oxygen_sensor_9100": "Cảm biến Oxi hòa tan (9100)",
     "built_in_microphone": "Cảm biến âm thanh (Micro tích hợp)",
     "decibel_level": "Cường độ âm thanh",
-    "wave": "Sóng",
-    "frequency": "Tần số",
+    "wave": "Sóng âm",
+    "frequency": "Tần số âm thanh",
 
     "dissolved_Oxygen_Sensor_Analog": "Cảm biến Oxi hòa tan (Analog)",
     "oxygen_concentration_mg": "Nồng độ Oxy - mg/L",

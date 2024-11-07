@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
+import _ from "lodash";
 import SensorServicesIST from "./sensor-service";
 import {
   FREQUENCIES,
@@ -31,7 +32,7 @@ export class DataManager {
 
     // calls two scheduler functions
     // this.runEmitSubscribersScheduler();
-    //this.dummySensorData();
+    // this.dummySensorData();
   }
 
   initializeVariables() {
@@ -1138,7 +1139,7 @@ export class DataManager {
       sensorIds.forEach((sensorId, i) => {
         const sensorValue = sensorValues[i].values;
 
-        if (curBuffer.hasOwnProperty(sensorId) && sensorValue !== {}) {
+        if (curBuffer.hasOwnProperty(sensorId) && !_.isEmpty(sensorValue)) {
           curBuffer[sensorId] = sensorValue;
         }
       });
@@ -1153,7 +1154,7 @@ export class DataManager {
 
     sensorIds.forEach((sensorId, i) => {
       const sensorValue = sensorValues[i].values;
-      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && sensorValue !== {}) {
+      if (dataRunData[sensorId] && dataRunData[sensorId][selectedIndex] && !_.isEmpty(sensorValue)) {
         dataRunData[sensorId][selectedIndex].values = sensorValue;
       }
     });
@@ -1428,8 +1429,8 @@ export class DataManager {
         return !(
           Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
           Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
-          Number(item.values[0]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
-          Number(item.values[0]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+          Number(item.values[sensorParse.index]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+          Number(item.values[sensorParse.index]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
         );
       });
 
@@ -1444,7 +1445,7 @@ export class DataManager {
     } else if (unitId.startsWith(FIRST_COLUMN_SENSOR_OPT)) {
       const xAxisSensorId = unitId.split(":")[1];
       const sensorDataWithXAxis = this.dataRuns[dataRunId].data[sensorParse.id].map((item) => ({
-        time: this.dataRuns[dataRunId].data[xAxisSensorId].find((i) => i.time == item.time).values[0],
+        time: this.dataRuns[dataRunId].data[xAxisSensorId].find((i) => i.time == item.time).values[sensorParse.index],
         values: item.values,
       }));
       const willDeleteIndexes = [];
@@ -1452,8 +1453,8 @@ export class DataManager {
         if (
           Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
           Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
-          Number(item.values[0]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
-          Number(item.values[0]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+          Number(item.values[sensorParse.index]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+          Number(item.values[sensorParse.index]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
         ) {
           willDeleteIndexes.push(index);
         }
@@ -1480,4 +1481,6 @@ export class DataManager {
   }
 }
 
-export default DataManager.getInstance();
+const dataManager = DataManager.getInstance();
+
+export default dataManager;

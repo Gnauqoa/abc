@@ -7,7 +7,6 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
-  SENSOR_RENDER_OPTION,
   TIMER_NO_STOP,
 } from "../js/constants";
 
@@ -15,6 +14,7 @@ import DataManagerIST from "../services/data-manager";
 import SensorServicesIST from "../services/sensor-service";
 import { X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
 import storeService from "../services/store-service";
+import _ from "lodash";
 
 const defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
 const defaultXAxises = [X_AXIS_TIME_UNIT];
@@ -25,7 +25,6 @@ const defaultPages = [
     xAxises: defaultXAxises,
     lastDataRunId: null,
     name: "1",
-    layoutRender: SENSOR_RENDER_OPTION.NONE,
   },
 ];
 
@@ -93,6 +92,8 @@ export const ActivityContext = React.createContext({
   setIsChangePage: () => {},
   handleExportActivity: () => {},
   handleClearLocalStorage: () => {},
+  handleAddWidget: () => {},
+  handleDeleteWidget: () => {},
 });
 
 export const ActivityContextProvider = ({ children }) => {
@@ -108,7 +109,7 @@ export const ActivityContextProvider = ({ children }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [currentDataRunId, setCurrentDataRunId] = useState(defaultPages[0].lastDataRunId);
   const [isChangePage, setIsChangePage] = useState(false);
-  let prevChartDataRef = useRef({ data: [], dataRunIds: [], sensors: [], unitId: null });
+  let prevChartDataRef = useRef({ widgets: [{ data: [], dataRunIds: [], sensors: [] }], unitId: null });
 
   // Support multiple Y-Axises
   const [extraYAxises, setExtraYAxises] = useState([]);
@@ -116,9 +117,7 @@ export const ActivityContextProvider = ({ children }) => {
   // ======================= Pages functions =======================
   const handleNavigatePage = (newPageIndex) => {
     prevChartDataRef.current.unitId = null;
-    prevChartDataRef.current.data[currentPageIndex] = [];
-    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
-    prevChartDataRef.current.sensors[currentPageIndex] = [];
+    prevChartDataRef.current.widgets[newPageIndex] = [{ sensors: [], data: [], dataRunIds: [] }];
 
     setIsChangePage(true);
     setCurrentPageIndex(newPageIndex);
@@ -136,20 +135,17 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentDataRunId(newPages[newPageIndex].lastDataRunId);
 
     prevChartDataRef.current.unitId = null;
-    prevChartDataRef.current.data[currentPageIndex] = [];
-    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
-    prevChartDataRef.current.sensors[currentPageIndex] = [];
+    prevChartDataRef.current.widgets.splice(deletedPageIndex, 1);
   };
 
   const handleNewPage = (newPages) => {
     const newPageIndex = newPages.length - 1;
     prevChartDataRef.current.unitId = null;
-    prevChartDataRef.current.data[currentPageIndex] = [];
-    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
-    prevChartDataRef.current.sensors[currentPageIndex] = [];
+    prevChartDataRef.current.widgets[newPageIndex] = [{ sensors: [], data: [], dataRunIds: [] }];
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
+    console.log("newPages", newPages);
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newCurDataRunId);
@@ -192,7 +188,6 @@ export const ActivityContextProvider = ({ children }) => {
   };
 
   const handleToggleExtraYAxis = ({ sensorInfo }) => {
-    console.log("handleToggleExtraYAxis: ", extraYAxises);
     if (sensorInfo.id === undefined || sensorInfo.index === undefined) return;
 
     const newExtraYAxises = [...extraYAxises];
@@ -210,7 +205,7 @@ export const ActivityContextProvider = ({ children }) => {
   };
 
   // =========================== Functions associate with Table ===========================
-  const handleAddExtraCollectingSensor = ({ widgetId, layoutRender = SENSOR_RENDER_OPTION.NONE }) => {
+  const handleAddExtraCollectingSensor = ({ widgetId }) => {
     const currentWidget = pages[currentPageIndex].widgets[widgetId];
     if (!currentWidget) return;
 
@@ -225,7 +220,7 @@ export const ActivityContextProvider = ({ children }) => {
 
     const updatePages = pages.map((page, index) => {
       if (index === currentPageIndex) {
-        return { ...page, widgets: updatedWidgets, layoutRender };
+        return { ...page, widgets: updatedWidgets };
       }
       return page;
     });
@@ -251,6 +246,37 @@ export const ActivityContextProvider = ({ children }) => {
     });
 
     setPages(updatePages);
+  };
+
+  const handleAddWidget = () => {
+    const updatedPages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        const newWidgetId = _.max(page.widgets.map((widget) => Number(widget.id))) + 1;
+        return {
+          ...page,
+          widgets: [
+            ...page.widgets,
+            {
+              id: newWidgetId,
+              sensors: [DEFAULT_SENSOR_DATA],
+            },
+          ],
+        };
+      }
+      return page;
+    });
+    setPages(updatedPages);
+  };
+
+  const handleDeleteWidget = (widgetId) => {
+    const updatedWidgets = pages[currentPageIndex].widgets.filter((w) => w.id !== widgetId);
+    const updatedPages = pages.map((page, index) => {
+      if (index === currentPageIndex) {
+        return { ...page, widgets: updatedWidgets };
+      }
+      return page;
+    });
+    setPages(updatedPages);
   };
 
   // =========================== Functions associate with Axises ===========================
@@ -367,9 +393,7 @@ export const ActivityContextProvider = ({ children }) => {
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
     setIsChangePage(false);
     prevChartDataRef.current.unitId = null;
-    prevChartDataRef.current.data[currentPageIndex] = [];
-    prevChartDataRef.current.dataRunIds[currentPageIndex] = [];
-    prevChartDataRef.current.sensors[currentPageIndex] = [];
+    prevChartDataRef.current.widgets[currentPageIndex] = [{ sensors: [], data: [], dataRunIds: [] }];
   };
 
   // ======================= Datarun functions =======================
@@ -417,6 +441,8 @@ export const ActivityContextProvider = ({ children }) => {
         setIsChangePage,
         handleExportActivity,
         handleClearLocalStorage,
+        handleAddWidget,
+        handleDeleteWidget,
       }}
     >
       {children}

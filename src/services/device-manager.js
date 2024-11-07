@@ -13,6 +13,7 @@ import {
 import DataManagerIST from "./data-manager";
 import SensorServices from "./sensor-service";
 import { WebBle } from "./electron-ble";
+import MobileSerialManagerIST from "./mobile-serial-manager";
 
 const CHECKING_CONNECTION_INTERVAL = 1000;
 const webBle = new WebBle();
@@ -389,7 +390,9 @@ export class DeviceManager {
       const usbDevices = DataManagerIST.getUsbDevices();
       const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
 
-      this.writeUsbData(usbDevice.deviceId, cmd);
+      if (f7.device.android) {
+        MobileSerialManagerIST.writeUsbData(usbDevice.deviceId, cmd);
+      } else this.writeUsbData(usbDevice.deviceId, cmd);
     }
   }
 }

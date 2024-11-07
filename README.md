@@ -7,7 +7,7 @@
 * Prettier setting: Print Width = 120
 
 ## Install Dependencies
-* Node.js v14
+* Node.js v18.16.1
 * First of all we need to install dependencies, run in terminal
 ```
 npm install
@@ -27,30 +27,41 @@ npm install
 * 🖥 `cordova-electron` - run dev build cordova Electron app
 
 ## Build Android apk 
-* Install JDK 11 https://drive.google.com/file/d/1mRpvL9SIM9LQhmEdvOR8zzo4FDJ0q_Kv/view?usp=share_link
 * Install Android Studio https://developer.android.com/studio
 * Install Cordova:  
 `npm install cordova -g`
 * Set ANDROID_SDK_ROOT (path can be found from Android Studio):  
 `setx ANDROID_SDK_ROOT "C:\Users\your-username\AppData\Local\Android\Sdk"`
-* Download Graddle at https://gradle.org/next-steps/?version=8.1.1&format=bin and extract and set path to the it's bin folder
 * Remove and add Android platform:  
   `cd cordova`  
   `cordova platform remove android`  
-  `cordova platform add android@10.1.2`  
+  `cordova platform add android`  
 * Run the app with usb cable: `npm run cordova-android`
 * Build Android apk:  
 `npm run build-cordova-android`
 * Use Android studio to open existing project at ./cordova/platform/android
+* Config Android Studio Settings: `File > Settings`
+    * `Languages & Frameworks > Android SDK > SDK Tools`: Check `Show Package Details`, select `Android SDK Build-Tools: 34.0.0` version
+    * `Build, Execution, Deployment > Build Tools > Gradle`: Select `Gradle SDK: GRADLE_LOCAL_JAVA_HOME`
 * Android studio, click menu Build > Generated Signed Bundle / APK > APK.
-Key store path: browse to key file at project_path/google-play/ohstemapp.jks
-Key store password: Enter key store password
-Key alias: ohstemapp
-Key password: Enter key password
+    * Key store path: browse to key file at project_path/google-play/ohstemapp.jks
+    * Key store password: Enter key store password
+    * Key alias: ohstemapp
+    * Key password: Enter key password
 
-Click Next. In next screen, set Build Variants: release and click Create.
+    * Click Next. In next screen, set Build Variants: release and click Create.
 
-After file generated successfully, you can see apk file in project_path/cordova/platforms/android/app/release.
+    * After file generated successfully, you can see apk file in project_path/cordova/platforms/android/app/release.
+
+## Fix issue with microphone on Android
+For Android app to be bable to record sound using builtin microphone, need to add following permission:
+`<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />`
+in file cordova/platform/app/src/main/AndroidManifest.xml
+
+## Fix issue with microphone on Android
+For Android app to be bable to record sound using builtin microphone, need to add following permission:
+`<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />`
+in file cordova/platform/app/src/main/AndroidManifest.xml
 
 ## PWA
 
