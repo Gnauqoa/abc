@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Popup, Page, Navbar, Button } from "framework7-react";
 import { useTranslation } from "react-i18next";
+import { f7 } from "framework7-react";
 
 import "./index.scss";
 
