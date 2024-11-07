@@ -22,7 +22,6 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LAYOUT_BAR,
-  SENSOR_RENDER_OPTION,
 } from "../js/constants";
 
 // Import Molecules Components
@@ -89,7 +88,6 @@ export default ({ f7route, f7router, filePath, content }) => {
           xAxises: defaultXAxises,
           lastDataRunId: null,
           name: "1",
-          layoutRender: SENSOR_RENDER_OPTION.NONE,
         },
       ],
       frequency: 1,
@@ -292,6 +290,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   // =========================== Functions associate with Page ===========================
   // =====================================================================================
   function handlePageNew(chartType) {
+    console.log("1111");
     if (!chartType) return;
     let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     let defaultXAxises = [X_AXIS_TIME_UNIT];
@@ -312,10 +311,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       xAxises: defaultXAxises,
       lastDataRunId: null,
       name: newFileName,
-      layoutRender: SENSOR_RENDER_OPTION.NONE,
-      currentDataRunId: currentDataRunId, 
+      currentDataRunId: currentDataRunId,
       widgets: defaultWidgets,
-
     };
     const newPages = [...pages, newPage];
     handleNewPage(newPages);
@@ -454,57 +451,54 @@ export default ({ f7route, f7router, filePath, content }) => {
     return data;
   }
 
-  function getDataForChart({ sensors, unitId }) {
+  function getDataForChart({ widgets, unitId }) {
     if (!lineChartRef.current[currentPageIndex]) return;
-    const defaultSensorIndex = 0;
-    const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
-
-    // Update current value for Line Chart
-    if (isRunning) {
-      const sensorValue = currentSensorValues[sensor.id];
-      if (sensorValue) {
-        let currentData = { x: sensorValue.time, y: sensorValue.values[sensor.index] || "" };
-        if (!isRunning) {
-          currentData = { ...currentData, x: 0 };
-        }
-        lineChartRef.current[currentPageIndex].setCurrentData({
-          data: currentData,
-        });
-      }
-    }
 
     let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(unitId);
-    const { chartDatas, dataRunIds } = getChartDatas({ sensors, unitId });
-    const parsedChartDatas = isDefaultXAxis ? createChartDataAndParseXAxis({ chartDatas }) : chartDatas;
+    widgets.forEach((widget, index) => {
+      const { sensors } = widget;
+      const { chartDatas, dataRunIds } = getChartDatas({ sensors, unitId });
+      const parsedChartDatas = isDefaultXAxis ? createChartDataAndParseXAxis({ chartDatas }) : chartDatas;
+      if (!prevChartDataRef.current.widgets[currentPageIndex][index])
+        prevChartDataRef.current.widgets[currentPageIndex][index] = [{ sensors: [], data: [], dataRunIds: [] }];
 
-    // Check the condition for re-render chart. The chart is re-render whenever:
-    // 1. isModifyData: The data off all chart is modifying by running collecting data
-    // 2. isModifyDataRunIds: User add or remove dataRunId
-    // 3. isModifySensors: User add or delete number of Y-Axis
-    // 4. isChangeUnit: User change the unit for displaying
-    // 5. isChangePage: User navigate between page
-    const isModifyData = !_.isEqual(parsedChartDatas, prevChartDataRef.current.data[currentPageIndex]);
-    const isModifyDataRunIds = !_.isEqual(dataRunIds, prevChartDataRef.current.dataRunIds[currentPageIndex]);
-    const isModifySensors = !_.isEqual(sensors, prevChartDataRef.current.sensors[currentPageIndex]);
-    const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
+      // Check the condition for re-render chart. The chart is re-render whenever:
+      // 1. isModifyData: The data off all chart is modifying by running collecting data
+      // 2. isModifyDataRunIds: User add or remove dataRunId
+      // 3. isModifySensors: User add or delete number of Y-Axis
+      // 4. isChangeUnit: User change the unit for displaying
+      // 5. isChangePage: User navigate between page
+      const isModifyData = !_.isEqual(
+        parsedChartDatas,
+        prevChartDataRef.current.widgets[currentPageIndex][index]?.data
+      );
+      const isModifyDataRunIds = !_.isEqual(
+        dataRunIds,
+        prevChartDataRef.current.widgets[currentPageIndex][index]?.dataRunIds
+      );
+      const isModifySensors = !_.isEqual(sensors, prevChartDataRef.current.widgets[currentPageIndex][index]?.sensors);
+      const isChangeUnit = prevChartDataRef.current.unitId !== unitId;
 
-    // Call this function to clear hiddenDataLineIds in the LineChart
-    if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
-    if (isModifySensors) lineChartRef.current[currentPageIndex].modifySensors({ sensors });
+      // Call this function to clear hiddenDataLineIds in the LineChart
+      if (isModifyDataRunIds) lineChartRef.current[currentPageIndex].modifyDataRunIds({ dataRunIds });
+      if (isModifySensors) lineChartRef.current[currentPageIndex].modifySensors({ sensors });
 
-    if (isModifyData || isModifyDataRunIds || isModifySensors || isChangeUnit || isChangePage) {
-      lineChartRef.current[currentPageIndex].setChartData({
-        chartDatas: parsedChartDatas,
-        sensors,
-        isDefaultXAxis: isDefaultXAxis,
-      });
+      if (isModifyData || isModifyDataRunIds || isModifySensors || isChangeUnit || isChangePage) {
+        lineChartRef.current[currentPageIndex].setChartData({
+          widgetIndex: index,
+          widgetId: widget.id,
+          chartDatas: parsedChartDatas,
+          sensors,
+          isDefaultXAxis: isDefaultXAxis,
+        });
 
-      if (isModifyData) prevChartDataRef.current.data[currentPageIndex] = parsedChartDatas;
-      if (isModifyDataRunIds) prevChartDataRef.current.dataRunIds[currentPageIndex] = dataRunIds;
-      if (isModifySensors) prevChartDataRef.current.sensors[currentPageIndex] = sensors;
-      if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
-      if (isChangePage) setIsChangePage(false);
-    }
+        if (isModifyData) prevChartDataRef.current.widgets[currentPageIndex][index].data = parsedChartDatas;
+        if (isModifyDataRunIds) prevChartDataRef.current.widgets[currentPageIndex][index].dataRunIds = dataRunIds;
+        if (isModifySensors) prevChartDataRef.current.widgets[currentPageIndex][index].sensors = sensors;
+        if (isChangeUnit) prevChartDataRef.current.unitId = unitId;
+        if (isChangePage) setIsChangePage(false);
+      }
+    });
   }
 
   return (
@@ -553,13 +547,12 @@ export default ({ f7route, f7router, filePath, content }) => {
                     pageId={`${currentPageIndex}_chart`}
                     isRunning={isRunning}
                     data={getDataForChart({
-                      sensors: pages[currentPageIndex].widgets[1].sensors,
+                      widgets: pages[currentPageIndex].widgets.slice(1),
                       unitId: pages[currentPageIndex].xAxises[1].id,
                     })}
                     ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
-                    widget={pages[currentPageIndex].widgets[1]}
+                    widgets={pages[currentPageIndex].widgets.slice(1)}
                     xAxis={pages[currentPageIndex].xAxises[1]}
-                    layoutRender={pages[currentPageIndex].layoutRender}
                   />
                 )}
                 {pages[currentPageIndex].layout === LAYOUT_NUMBER_TABLE && (
@@ -586,13 +579,12 @@ export default ({ f7route, f7router, filePath, content }) => {
                   key={`${currentPageIndex}_chart`}
                   pageId={`${currentPageIndex}_chart`}
                   data={getDataForChart({
-                    sensors: pages[currentPageIndex].widgets[0].sensors,
+                    widgets: pages[currentPageIndex].widgets,
                     unitId: pages[currentPageIndex].xAxises[0].id,
                   })}
                   ref={(el) => (lineChartRef.current[currentPageIndex] = el)}
-                  widget={pages[currentPageIndex].widgets[0]}
+                  widgets={pages[currentPageIndex].widgets}
                   xAxis={pages[currentPageIndex].xAxises[0]}
-                  layoutRender={pages[currentPageIndex].layoutRender}
                 />
               )}
               {pages[currentPageIndex].layout === LAYOUT_TABLE && (

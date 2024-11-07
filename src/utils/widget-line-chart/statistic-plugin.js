@@ -26,6 +26,7 @@ import {
   sinusoidalRegression,
   createRegressionDataPoints,
 } from "./statistic-formula";
+import _ from "lodash";
 
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 
@@ -118,6 +119,7 @@ export const addStatisticNote = ({
   hiddenDataLineIds,
   isDefaultXAxis,
   statisticOptionId,
+  widgetId,
 }) => {
   try {
     // Get Range Selection and extract bounding box
@@ -175,7 +177,7 @@ export const addStatisticNote = ({
         );
 
         // Add statistics notes annotations
-        const statisticNoteId = createStatisticNoteId({ pageId, dataRunId, sensorInfo });
+        const statisticNoteId = createStatisticNoteId({ pageId, widgetId, dataRunId, sensorInfo });
         const statisticNote = {
           id: statisticNoteId,
           dataRunId: dataRunId,
@@ -200,6 +202,7 @@ export const addStatisticNote = ({
           sensorInfo: sensorInfo,
           summary: statisticNote,
           linearReg: regressionDataPoints,
+          widgetId,
         });
 
         // If the current dataRun is hidden, skip update it in chart
@@ -227,9 +230,9 @@ export const addStatisticNote = ({
   }
 };
 
-export const removeStatisticNote = ({ chartInstance, pageId }) => {
+export const removeStatisticNote = ({ chartInstance, pageId, widgetId }) => {
   try {
-    const currentStatisticNotes = statisticNotesStorage.query({ pageId });
+    const currentStatisticNotes = statisticNotesStorage.query({ pageId, widgetId });
     currentStatisticNotes.forEach((note) => {
       delete chartInstance.config.options.plugins.annotation.annotations[note.summary.id];
       chartInstance.data.datasets = chartInstance.data.datasets.filter(
@@ -246,10 +249,11 @@ export const removeStatisticNote = ({ chartInstance, pageId }) => {
   }
 };
 
-export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hiddenDataLineIds }) => {
+export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hiddenDataLineIds, widgetId }) => {
   const condition = {};
   if (pageId) condition.pageId = pageId;
   if (dataRunId) condition.dataRunId = dataRunId;
+  if (!_.isNil(widgetId)) condition.widgetId = widgetId;
   if (sensorInfo) condition.sensorInfo = sensorInfo;
 
   const allStatNotes = statisticNotesStorage.query(condition);
@@ -283,8 +287,8 @@ export const getAllCurrentStatisticNotes = ({ pageId, dataRunId, sensorInfo, hid
   return { summaryNotes, linearRegNotes };
 };
 
-const createStatisticNoteId = ({ pageId, dataRunId, sensorInfo }) => {
-  return `${PREFIX_STATISTIC_NOTE}_${pageId}_${dataRunId}_${sensorInfo}`;
+const createStatisticNoteId = ({ pageId, widgetId, dataRunId, sensorInfo }) => {
+  return `${PREFIX_STATISTIC_NOTE}_${pageId}_${widgetId}_${dataRunId}_${sensorInfo}`;
 };
 
 const createLinearRegNoteId = ({ pageId, dataRunId, sensorInfo }) => {

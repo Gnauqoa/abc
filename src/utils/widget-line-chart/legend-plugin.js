@@ -3,7 +3,7 @@ import { getAllCurrentLabelNotes } from "./label-plugin";
 import { getAllCurrentStatisticNotes } from "./statistic-plugin";
 
 // ======================================= CHART LEGEND =======================================
-export const onClickLegendHandler = ({ event, legendItem, legend, pageId, chartIndexInPage = 0 }) => {
+export const onClickLegendHandler = ({ event, legendItem, legend, pageId, widgetId = 0 }) => {
   if (event.type !== "click") return;
 
   const datasetIndex = legendItem.datasetIndex;
@@ -30,7 +30,7 @@ export const onClickLegendHandler = ({ event, legendItem, legend, pageId, chartI
   const labelNotes = getAllCurrentLabelNotes({
     dataRunId: dataRunId,
     sensorInfo: sensorInfo,
-    chartIndexInPage,
+    widgetId,
     pageId,
   });
   Object.keys(labelNotes).forEach((nodeId) => {

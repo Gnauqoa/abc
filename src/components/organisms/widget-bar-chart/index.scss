@@ -31,7 +31,7 @@
         width: 25vw;
         top: 50%;
         left: 6.5%;
-        transform: rotate(-90deg) translate(-50%, 0%);
+        transform: rotate(-90deg) translate(calc(-50% + 25px), 0%);
         transform-origin: 0% 0%;
         text-align: center;
         text-align-last: center;
