@@ -620,33 +620,18 @@ export const clearAllSelectedPoints = (chart) => {
 };
 
 // ======================================= START RANGE SELECTION OPTIONS FUNCTIONS =======================================
-export const calculateBoxRange = ({ chartInstance, startElement, endElement, chartIndexInPage }) => {
-  if (chartIndexInPage > 0) {
-    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
-    const startYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(startElement.y);
-    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
-    const endYValue = chartInstance.scales[`y${chartIndexInPage}`].getValueForPixel(endElement.y);
+export const calculateBoxRange = ({ chartInstance, startElement, endElement }) => {
+  const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
+  const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
+  const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
+  const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
 
-    return {
-      startXValue: round(startXValue, 1),
-      endXValue: round(endXValue, 1),
-      startYValue: round(startYValue, 1),
-      endYValue: round(endYValue, 1),
-      yScaleID: `y${chartIndexInPage}`,
-    };
-  } else {
-    const startXValue = chartInstance.scales.x.getValueForPixel(startElement.x);
-    const startYValue = chartInstance.scales.y.getValueForPixel(startElement.y);
-    const endXValue = chartInstance.scales.x.getValueForPixel(endElement.x);
-    const endYValue = chartInstance.scales.y.getValueForPixel(endElement.y);
-
-    return {
-      startXValue: round(startXValue, 1),
-      endXValue: round(endXValue, 1),
-      startYValue: round(startYValue, 1),
-      endYValue: round(endYValue, 1),
-    };
-  }
+  return {
+    startXValue: round(startXValue, 1),
+    endXValue: round(endXValue, 1),
+    startYValue: round(startYValue, 1),
+    endYValue: round(endYValue, 1),
+  };
 };
 
 // ======================================= CONVERT CHART DATA UTILS =======================================

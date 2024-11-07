@@ -108,7 +108,7 @@ export const onClickChartHandler = (event, elements, chart, selectedPointElement
           updateSelectedPoint(chart, datasetIndex, dataPointIndex);
         };
         document.getElementById("icon3").onclick = () => {
-          addNoteHandler({ chartInstance: chart });
+          addNoteHandler();
         };
 
         return { status: true, newPointEl };
