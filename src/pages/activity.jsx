@@ -22,7 +22,6 @@ import {
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LAYOUT_BAR,
-  SENSOR_RENDER_OPTION,
   CONDITION_TYPE,
 } from "../js/constants";
 
@@ -311,7 +310,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     } else if (chartType === LAYOUT_TEXT) {
       defaultWidgets = [{ id: 0, text: "" }];
     }
-
+N
     const listPageNames = pages.map((page) => page.name);
     const newFileName = getPageName(listPageNames);
     const newPage = {
