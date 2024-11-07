@@ -377,6 +377,16 @@ export default ({ f7route, f7router, filePath, content }) => {
 
   function handleStartCollectData() {
     if (isRunning) return;
+
+    if (stopSampleCondition.active && stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
+      console.log(">>>>> AUTO - startCollectData - stopSampleCondition:", stopSampleCondition);
+      DataManagerIST.startCheckingSensor(stopSampleCondition, () => {
+        console.log(">>>>> AUTO - startCollectData - stopSampleCondition - callback");
+        DataManagerIST.stopCheckingSensor();
+        handleStopCollectData();
+      });
+    }
+
     let unitId = FIRST_COLUMN_DEFAULT_OPT;
     if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
       const tableId = `${currentPageIndex}_table`;
@@ -412,6 +422,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   function stopCollectData() {
     if (isRunning) {
       handleStopCollectData();
+      DataManagerIST.stopCheckingSensor();
     } else if (isDelay) {
       DataManagerIST.stopDelayStartCollectingDataTimer();
       setIsDelay(false);
