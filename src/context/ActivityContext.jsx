@@ -33,17 +33,16 @@ const defaultStartSampleCondition = {
   active: false,
   conditionType: CONDITION_TYPE.NONE,
   sensor: DEFAULT_SENSOR_DATA,
-  conditionValue: 0,
-  conditionTime: -1,
   condition: CONDITION.GREATER_OR_EQUAL,
+  conditionValue: 0,
   delayTime: -1,
 };
 
 const defaultStopSampleCondition = {
   active: false,
   conditionType: CONDITION_TYPE.NONE,
-  condition: CONDITION.GREATER_OR_EQUAL,
   sensor: DEFAULT_SENSOR_DATA,
+  condition: CONDITION.GREATER_OR_EQUAL,
   conditionValue: 0,
 };
 
@@ -54,6 +53,10 @@ const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE)
 export const ActivityContext = React.createContext({
   name: [],
   setName: () => {},
+  isCheckingSensor: false,
+  setIsCheckingSensor: () => {},
+  isDelay: false,
+  setIsDelay: () => {},
   pages: [],
   setPages: () => {},
   frequency: null,
@@ -93,6 +96,8 @@ export const ActivityContext = React.createContext({
 });
 
 export const ActivityContextProvider = ({ children }) => {
+  const [isDelay, setIsDelay] = useState(false);
+  const [isCheckingSensor, setIsCheckingSensor] = useState(false);
   const [name, setName] = useState("");
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
@@ -373,6 +378,10 @@ export const ActivityContextProvider = ({ children }) => {
       value={{
         name,
         setName,
+        isCheckingSensor,
+        setIsCheckingSensor,
+        isDelay,
+        setIsDelay,
         pages,
         setPages,
         frequency,

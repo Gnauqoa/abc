@@ -3,7 +3,7 @@ import moment from "moment";
 import DataManagerIST from "../../../services/data-manager";
 import { TIMER_INTERVAL } from "../../../js/constants";
 
-const Timer = ({ isRunning }) => {
+const Timer = ({ isRunning, type }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -11,7 +11,11 @@ const Timer = ({ isRunning }) => {
     if (isRunning) {
       setCount(0);
       id = setInterval(() => {
-        setCount(DataManagerIST.getTimerCollectingTime());
+        setCount(
+          type === "delayTimer"
+            ? DataManagerIST.getTimerDelayStartCollectingDataTime()
+            : DataManagerIST.getTimerCollectingTime()
+        );
       }, TIMER_INTERVAL);
     } else {
       clearInterval(id);

@@ -9,7 +9,7 @@ import { useActivityContext } from "../../../context/ActivityContext";
 
 const StartSampleSettings = ({ startSampleCondition, onChange }) => {
   const { t } = useTranslation();
-  const { isRunning } = useActivityContext();
+  const { isRunning, isDelay, isCheckingSensor } = useActivityContext();
 
   return (
     <>
@@ -45,7 +45,7 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
               <div className="sub-item">
                 <div className="text">{`${t("modules.input_value")} (${t("modules.sensor")})`}</div>
                 <SensorSelector
-                  disabled={isRunning}
+                  disabled={isRunning || isDelay || isCheckingSensor}
                   selectedSensor={startSampleCondition.sensor}
                   onChange={(sensor) => onChange("sensor", sensor)}
                 />

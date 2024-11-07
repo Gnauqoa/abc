@@ -9,7 +9,7 @@ import SensorSelector from "../popup-sensor-selector";
 
 const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
   const { t } = useTranslation();
-  const { isRunning } = useActivityContext();
+  const { isRunning, isDelay, isCheckingSensor } = useActivityContext();
   return (
     <>
       <div className="item">
@@ -54,7 +54,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
               <div className="sub-item">
                 <div className="text">{`${t("modules.input_value")} (${t("modules.sensor")})`}</div>
                 <SensorSelector
-                  disabled={isRunning}
+                  disabled={isRunning || isDelay || isCheckingSensor}
                   selectedSensor={stopSampleCondition.sensor}
                   onChange={(sensor) => onChange("sensor", sensor)}
                 />
