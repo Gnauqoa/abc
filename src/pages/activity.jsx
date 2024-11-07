@@ -378,15 +378,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   function handleStartCollectData() {
     if (isRunning) return;
 
-    if (stopSampleCondition.active && stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
-      console.log(">>>>> AUTO - startCollectData - stopSampleCondition:", stopSampleCondition);
-      DataManagerIST.startCheckingSensor(stopSampleCondition, () => {
-        console.log(">>>>> AUTO - startCollectData - stopSampleCondition - callback");
-        DataManagerIST.stopCheckingSensor();
-        handleStopCollectData();
-      });
-    }
-
     let unitId = FIRST_COLUMN_DEFAULT_OPT;
     if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
       const tableId = `${currentPageIndex}_table`;
@@ -400,15 +391,26 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
 
     const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
-    timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
+    if (stopSampleCondition.active)
+      if (stopSampleCondition.conditionType === CONDITION_TYPE.TIME)
+        timerStopCollecting !== TIMER_NO_STOP &&
+          DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
+      else if (stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
+        console.log(">>>>> AUTO - startCollectData - stopSampleCondition:", stopSampleCondition);
+        DataManagerIST.startCheckingSensor(stopSampleCondition, () => {
+          console.log(">>>>> AUTO - startCollectData - stopSampleCondition - callback");
+          handleStopCollectData(true);
+          DataManagerIST.stopCheckingSensor();
+        });
+      }
     setCurrentDataRunId(dataRunId);
     setLastDataRunIdForCurrentPage(dataRunId);
 
-    setIsRunning(!isRunning);
+    setIsRunning(true);
   }
 
-  function handleStopCollectData() {
-    if (!isRunning) return;
+  function handleStopCollectData(flag) {
+    if (!isRunning && !flag) return;
     DataManagerIST.unsubscribeTimer();
     DataManagerIST.stopCollectingData();
 
@@ -422,7 +424,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   function stopCollectData() {
     if (isRunning) {
       handleStopCollectData();
-      DataManagerIST.stopCheckingSensor();
+      if (stopSampleCondition.active && stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE)
+        DataManagerIST.stopCheckingSensor();
     } else if (isDelay) {
       DataManagerIST.stopDelayStartCollectingDataTimer();
       setIsDelay(false);
@@ -435,10 +438,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   function startCollectData() {
     if (startSampleCondition.active && startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
       setIsCheckingSensor(true);
-      console.log(">>>>> AUTO - startCollectData - startSampleCondition:", startSampleCondition);
-      // DataManagerIST.stopCheckingSensor();
       DataManagerIST.startCheckingSensor(startSampleCondition, () => {
-        console.log(">>>>> AUTO - startCollectData - startSampleCondition - callback");
         DataManagerIST.stopCheckingSensor();
         setIsCheckingSensor(false);
         handleStartCollectData();

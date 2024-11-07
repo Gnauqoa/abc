@@ -358,7 +358,6 @@ export class DataManager {
   }
 
   stopCheckingSensor() {
-    console.log("stopCheckingSensor");
     this.unsubscribe(this.checkingSensorSubscriber.subscriberId);
     this.checkingSensorSubscriber = {};
   }
