@@ -97,6 +97,8 @@
     "none_condition_type": "Không có",
     "greater_or_equal_condition": ">=",
     "less_or_equal_condition": "<=",
+    "over_threshold_condition": "Vượt qua ngưỡng",
+    "under_threshold_condition": "Tuột xuống ngưỡng",
     "input_value": "Đầu vào:",
     "condition_value": "Giá trị:",
     "condition": "Điều kiện:",
