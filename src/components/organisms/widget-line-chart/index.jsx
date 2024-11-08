@@ -553,13 +553,13 @@ let LineChart = (props, ref) => {
               },
             },
             onClick: (event, elements, chart) => {
-              const { status, newPointEl } = onClickChartHandler(
+              const { status, newPointEl } = onClickChartHandler({
                 event,
                 elements,
                 chart,
                 selectedPointElement,
-                addNoteHandler
-              );
+                widgetIndex: i,
+              });
               if (status) {
                 selectedPointElement = newPointEl;
                 selectedNoteElement = null;
@@ -742,6 +742,10 @@ let LineChart = (props, ref) => {
       selectedPointElement = null;
       selectedNoteElement = null;
       chartSelectedIndex = null;
+      const iconContainers = document.getElementsByClassName("icon-container-widget");
+      Array.from(iconContainers).forEach((iconContainer) => {
+        iconContainer.style.display = "none";
+      });
     }
   };
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
@@ -918,6 +922,39 @@ let LineChart = (props, ref) => {
     }
   };
 
+  const handleChangeSelectedNote = ({ type }) => {
+    if (!selectedPointElement) return;
+    const { datasetIndex, index: dataPointIndex } = selectedPointElement;
+    const chartInstance = chartInstanceRefs.current[chartSelectedIndex];
+    const { tooltip } = chartInstance;
+    const currentDataset = chartInstance.data.datasets[datasetIndex];
+    // const newDataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
+    const newDataPointIndex =
+      type == "next"
+        ? (dataPointIndex + 1) % currentDataset.data.length
+        : (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
+
+    const newPointBackgroundColor = Array.from(
+      { length: currentDataset.data.length },
+      () => currentDataset.backgroundColor
+    );
+    const newPointBorderColor = Array.from({ length: currentDataset.data.length }, () => currentDataset.borderColor);
+
+    newPointBackgroundColor[newDataPointIndex] = "red"; // Highlight new point
+    currentDataset.pointBackgroundColor = newPointBackgroundColor;
+    currentDataset.pointBorderColor = newPointBorderColor;
+
+    tooltip.setActiveElements([
+      {
+        datasetIndex,
+        index: newDataPointIndex,
+      },
+    ]);
+    const newSelectedPointElement = tooltip.getActiveElements()[0];
+    selectedPointElement = newSelectedPointElement;
+    chartInstance.update();
+  };
+
   //========================= OPTIONS FUNCTIONS =========================
   const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
@@ -1015,19 +1052,29 @@ let LineChart = (props, ref) => {
             ></div>
 
             <canvas ref={(el) => (chartRefs.current[index] = el)} />
-            <div id="icon-container" style={{ position: "absolute", display: "none" }}>
-              <div id="icon1" style={{ cursor: "pointer", width: "20px", height: "20px" }}>
+            <div
+              id={`icon-container-widget-${index}`}
+              className="icon-container-widget"
+              style={{ position: "absolute", display: "none" }}
+            >
+              <div
+                id="icon1"
+                style={{ cursor: "pointer", width: "20px", height: "20px" }}
+                onClick={() => handleChangeSelectedNote({ type: "prev" })}
+              >
                 <img src={previousIcon} alt="previousIcon" />
               </div>
               <div
                 id="icon2"
                 style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                onClick={() => handleChangeSelectedNote({ type: "next" })}
               >
                 <img src={nextIcon} alt="nextIcon" />
               </div>
               <div
                 id="icon3"
                 style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                onClick={() => addNoteHandler()}
               >
                 <img src={addNoteIcon} alt="addNoteIcon" />
               </div>
