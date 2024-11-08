@@ -206,7 +206,7 @@ export const ActivityContextProvider = ({ children }) => {
 
   // =========================== Functions associate with Table ===========================
   const handleAddExtraCollectingSensor = ({ widgetId }) => {
-    const currentWidget = pages[currentPageIndex].widgets[widgetId];
+    const currentWidget = pages[currentPageIndex].widgets[0];
     if (!currentWidget) return;
 
     const updatedWidgets = pages[currentPageIndex].widgets.map((w) => {
