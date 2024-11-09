@@ -327,18 +327,35 @@ export class DataManager {
   }
 
   handleCheckingSensor(emitData) {
-    const { checkingSensorSubscriber, sensorId, sensorsData } = emitData;
+    const { checkingSensorSubscriber, sensorsData, previousSensorsData } = emitData;
     const { sampleCondition, onCheckingSuccess } = checkingSensorSubscriber;
 
-    if (sensorId !== sampleCondition.sensor.id) return;
+    const currentData = sensorsData.length ? sensorsData[sampleCondition.sensor.index] : null;
+    const previousData = previousSensorsData.length ? previousSensorsData[sampleCondition.sensor.index] : null;
+
+    if (!currentData) return;
+
+    if (sampleCondition.condition === CONDITION.GREATER_OR_EQUAL && currentData >= sampleCondition.conditionValue) {
+      return onCheckingSuccess();
+    }
+
+    if (sampleCondition.condition === CONDITION.LESS_OR_EQUAL && currentData <= sampleCondition.conditionValue) {
+      return onCheckingSuccess();
+    }
+
+    if (!previousData) return;
+
     if (
-      sampleCondition.condition === CONDITION.GREATER_OR_EQUAL &&
-      sensorsData[sampleCondition.sensor.index] >= sampleCondition.conditionValue
+      sampleCondition.condition === CONDITION.OVER_THRESHOLD &&
+      previousData < sampleCondition.conditionValue &&
+      currentData >= sampleCondition.conditionValue
     ) {
-      onCheckingSuccess();
-    } else if (
-      sampleCondition.condition === CONDITION.LESS_OR_EQUAL &&
-      sensorsData[sampleCondition.sensor.index] <= sampleCondition.conditionValue
+      return onCheckingSuccess();
+    }
+    if (
+      sampleCondition.condition === CONDITION.UNDER_THRESHOLD &&
+      previousData > sampleCondition.conditionValue &&
+      currentData <= sampleCondition.conditionValue
     ) {
       onCheckingSuccess();
     }
@@ -350,9 +367,10 @@ export class DataManager {
 
     this.checkingSensorSubscriber = {
       subscriberId,
+      subscription,
       sampleCondition,
       onCheckingSuccess,
-      subscription,
+      previousSensorsData: [],
     };
 
     return subscriberId;
@@ -1080,12 +1098,18 @@ export class DataManager {
         this.uartConnections.add(sensorId);
       }
 
-      if (this.checkingSensorSubscriber)
+      if (
+        this.checkingSensorSubscriber.sampleCondition &&
+        this.checkingSensorSubscriber.sampleCondition.sensor.id === sensorId
+      ) {
         this.emitter.emit(this.checkingSensorSubscriber.subscriberId, {
-          sensorsData,
-          sensorId,
+          sensorsData: sensorsData,
+          previousSensorsData: this.checkingSensorSubscriber.previousSensorsData,
           checkingSensorSubscriber: this.checkingSensorSubscriber,
         });
+
+        this.checkingSensorSubscriber.previousSensorsData = sensorsData;
+      }
     } catch (e) {
       console.error(`callbackReadSensor: ${e.message}`);
     }

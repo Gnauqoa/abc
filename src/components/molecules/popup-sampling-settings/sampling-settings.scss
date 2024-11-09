@@ -4,7 +4,7 @@
     height: 400px;
 
     left: calc(50% - 200px);
-    top: calc(50% - 200px);
+    top: calc(50% - 250px);
     margin-top: 0px;
     margin-left: 0px;
     border-radius: 25px;
@@ -46,32 +46,32 @@
 
       .sub-item {
         padding-left: 12px;
-        height: 30px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
 
-        .input-sampling-time,
-        .open-popover-button {
-          padding: 0px;
-          width: 60%;
-          height: 25px;
-          color: #000000;
-          background-color: rgba(0, 134, 255, 0.3);
-          border: 1px solid #000000;
-          border-radius: 10px;
-          text-align: center;
-          cursor: pointer;
-          text-transform: none;
-        }
+      .text {
+        width: 60%;
+        color: #0086ff;
+        font-size: 18px;
+        font-weight: 500;
+        align-self: center;
+      }
 
-        .text {
-          width: 60%;
-          color: #0086ff;
-          font-size: 12px;
-          font-weight: 500;
-          align-self: center;
-        }
+      .input-sampling-time,
+      .open-popover-button {
+        padding: 0px;
+        width: 60%;
+        height: 45px;
+        color: #000000;
+        background-color: rgba(0, 134, 255, 0.3);
+        border: 1px solid #000000;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        text-transform: none;
       }
 
       .item {
@@ -79,28 +79,6 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-
-        .input-sampling-time,
-        .open-popover-button {
-          padding: 0px;
-          width: 60%;
-          height: 45px;
-          color: #000000;
-          background-color: rgba(0, 134, 255, 0.3);
-          border: 1px solid #000000;
-          border-radius: 10px;
-          text-align: center;
-          cursor: pointer;
-          text-transform: none;
-        }
-
-        .text {
-          width: 60%;
-          color: #0086ff;
-          font-size: 18px;
-          font-weight: 500;
-          align-self: center;
-        }
       }
     }
 

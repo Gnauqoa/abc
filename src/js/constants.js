@@ -206,7 +206,9 @@ export const CONDITION_TYPE = {
 export const CONDITION = {
   GREATER_OR_EQUAL: "greater_or_equal",
   LESS_OR_EQUAL: "less_or_equal",
-}
+  OVER_THRESHOLD: "over_threshold",
+  UNDER_THRESHOLD: "under_threshold",
+};
 
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
 export const FREQUENCIES = [0.033, 0.1, 0.2, 1, 2, 5, 10, 50];
