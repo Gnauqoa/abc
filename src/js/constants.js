@@ -250,6 +250,9 @@ export const LINE_CHART_STATISTIC_NOTE_TABLE = "line-chart-statistic-notes";
 export const LINE_CHART_LABEL_NOTE_TABLE = "line-chart-label-notes";
 export const LINE_CHART_RANGE_SELECTION_TABLE = "line-chart-range-selection";
 
+// DELTA
+export const LINE_CHART_DELTA_TABLE = "line-chart-delta";
+
 // ANDROID SAVE EXPORT PROJECTS VARIABLES
 export const PROJECT_FOLDER = "InnoLabProject";
 export const PROJECT_FILE_EXT = ".edl";

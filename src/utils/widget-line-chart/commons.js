@@ -66,6 +66,13 @@ export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_
 export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
 export const LABEL_NOTE_BORDER = "#C12553";
 
+// LABEL DELTA FEATURES
+export const PREFIX_DELTA = "delta";
+export const DELTA_POINT_BACKGROUND = "transparent";
+export const DELTA_POINT_BORDER = "blue";
+export const DELTA_BOX_BORDER = "blue";
+export const DELTA_BOX_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.5);
+
 // STATISTIC NOTE FEATURES
 export const PREFIX_STATISTIC_NOTE = "statistic-note";
 export const STATISTIC_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.8);
@@ -184,6 +191,34 @@ export const SAMPLE_LABEL_NOTE = {
   xValue: 0,
   yValue: 0,
   display: true,
+};
+
+export const SAMPLE_DELTA_POINT = {
+  type: "point",
+  backgroundColor: DELTA_POINT_BACKGROUND,
+  borderColor: DELTA_POINT_BORDER,
+  pointStyle: "rectRounded",
+  radius: 10,
+  // xValue: 0,
+  // yValue: 0,
+  display: true,
+};
+
+export const SAMPLE_DELTA_BOX = {
+  type: "box",
+  borderColor: DELTA_BOX_BORDER,
+  backgroundColor: DELTA_BOX_BACKGROUND,
+  borderWidth: 2,
+  label: {
+    display: true,
+  },
+  xScaleID: "x",
+  yScaleID: "y",
+  display: true,
+  // xMax: "April",
+  // xMin: "February",
+  // yMax: 90,
+  // yMin: 10,
 };
 
 export const SAMPLE_STATISTIC_NOTE = {

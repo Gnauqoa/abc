@@ -21,6 +21,7 @@ import {
   LINE_CHART_STATISTIC_NOTE_TABLE,
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
+  LINE_CHART_DELTA_TABLE,
   LAYOUT_BAR,
   CONDITION_TYPE,
 } from "../js/constants";
@@ -61,6 +62,7 @@ const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
+const deltasStorage = new storeService(LINE_CHART_DELTA_TABLE);
 
 export default ({ f7route, f7router, filePath, content }) => {
   const { t, i18n } = useTranslation();
@@ -106,6 +108,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       allLabelNotes: [],
       allStatisticNotes: [],
       rangeSelections: [],
+      allDeltas: [],
     };
   } else if (content) {
     activity = content;
@@ -177,6 +180,7 @@ export default ({ f7route, f7router, filePath, content }) => {
       for (const labelNote of activity.allLabelNotes) labelNotesStorage.save(labelNote);
       for (const statisticNote of activity.allStatisticNotes) statisticNotesStorage.save(statisticNote);
       for (const rangeSelection of activity.rangeSelections) rangeSelectionStorage.save(rangeSelection);
+      if (activity.allDeltas) for (const delta of activity.allDeltas) deltasStorage.save(delta);
     }
 
     // Init activity states
