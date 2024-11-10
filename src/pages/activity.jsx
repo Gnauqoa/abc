@@ -297,7 +297,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   // =========================== Functions associate with Page ===========================
   // =====================================================================================
   function handlePageNew(chartType) {
-    console.log("1111");
     if (!chartType) return;
     let defaultWidgets = [{ id: 0, sensors: [DEFAULT_SENSOR_DATA] }];
     let defaultXAxises = [X_AXIS_TIME_UNIT];
@@ -310,7 +309,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     } else if (chartType === LAYOUT_TEXT) {
       defaultWidgets = [{ id: 0, text: "" }];
     }
-N
+
     const listPageNames = pages.map((page) => page.name);
     const newFileName = getPageName(listPageNames);
     const newPage = {
