@@ -12,6 +12,7 @@ import {
   LINE_CHART_STATISTIC_NOTE_TABLE,
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
+  LINE_CHART_DELTA_TABLE,
 } from "../js/constants";
 import ProjectManagementPopup from "../components/molecules/popup-projects-management";
 import { useTranslation } from "react-i18next";
@@ -20,11 +21,13 @@ const recentFilesService = new storeService("recent-files");
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
+const deltasStorage = new storeService(LINE_CHART_DELTA_TABLE);
 
 // Clear all Previous Tables
 statisticNotesStorage.deleteAll();
 labelNotesStorage.deleteAll();
 rangeSelectionStorage.deleteAll();
+deltasStorage.deleteAll();
 
 export default ({ f7router }) => {
   const { t, i18n } = useTranslation();

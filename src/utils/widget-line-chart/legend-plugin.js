@@ -1,4 +1,5 @@
 import { hiddenDataLineIds } from "./commons";
+import { getAllCurrentDeltas } from "./delta-plugin";
 import { getAllCurrentLabelNotes } from "./label-plugin";
 import { getAllCurrentStatisticNotes } from "./statistic-plugin";
 
@@ -40,6 +41,24 @@ export const onClickLegendHandler = ({ event, legendItem, legend, pageId, widget
     if (noteElement) noteElement.display = isShowNote;
     else {
       ci.config.options.plugins.annotation.annotations[nodeId] = labelNotes[nodeId];
+    }
+  });
+
+  // Update show/off delta
+  const deltas = getAllCurrentDeltas({
+    dataRunId: dataRunId,
+    sensorInfo: sensorInfo,
+    widgetId,
+    pageId,
+  });
+
+  Object.keys(deltas).forEach((nodeId) => {
+    // First, we have to check if the chart maintains the note element or not
+    // if not, add to the chart, otherwise, update the note element
+    const noteElement = ci.config.options.plugins.annotation.annotations[nodeId];
+    if (noteElement) noteElement.display = isShowNote;
+    else {
+      ci.config.options.plugins.annotation.annotations[nodeId] = deltas[nodeId];
     }
   });
 

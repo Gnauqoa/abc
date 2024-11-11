@@ -49,6 +49,7 @@ import {
 } from "../../../utils/widget-line-chart/commons";
 import {
   DEFAULT_SENSOR_DATA,
+  LINE_CHART_DELTA_TABLE,
   LINE_CHART_LABEL_NOTE_TABLE,
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
@@ -68,6 +69,12 @@ import {
   createLabelNoteId,
   getAllCurrentLabelNotes,
 } from "../../../utils/widget-line-chart/label-plugin";
+import {
+  addDelta,
+  findFirstDeltaByValue,
+  getAllCurrentDeltas,
+  getChartAnnotationByDelta,
+} from "../../../utils/widget-line-chart/delta-plugin";
 import { onClickChartHandler, onClickNoteElement } from "../../../utils/widget-line-chart/annotation-plugin";
 import {
   createHiddenDataLineId,
@@ -91,6 +98,7 @@ import deleteIconChart from "../../../img/expandable-options/ico-tool-delete.png
 import nextIcon from "../../../img/expandable-options/ico-tool-rightarrow.png";
 import previousIcon from "../../../img/expandable-options/ico-tool-leftarrow.png";
 import addNoteIcon from "../../../img/expandable-options/ico-tool-edit.png";
+import deltaIcon from "../../../img/expandable-options/ico-tool-delta.png";
 
 Chart.register(zoomPlugin);
 Chart.register(annotationPlugin);
@@ -109,6 +117,7 @@ let startRangeElement = null;
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
+const deltasStorage = new StoreService(LINE_CHART_DELTA_TABLE);
 
 const handleDrag = function ({ event, chart, pageId, widgetId }) {
   if (isRangeSelected) {
@@ -336,6 +345,11 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
         widgetId,
         hiddenDataLineIds,
       });
+      const labelDeltaAnnotations = getAllCurrentDeltas({
+        pageId,
+        widgetId,
+        hiddenDataLineIds,
+      });
       const { summaryNotes, linearRegNotes } = getAllCurrentStatisticNotes({
         pageId: pageId,
         hiddenDataLineIds,
@@ -344,6 +358,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
       const { rangeSelections } = getRangeSelections({ pageId: pageId, chartId: chartInstance.id });
       newChartAnnotations = {
         ...labelNoteAnnotations,
+        ...labelDeltaAnnotations,
         ...summaryNotes,
         ...rangeSelections,
       };
@@ -401,6 +416,7 @@ let LineChart = (props, ref) => {
   const [isOffDataPoint, setIsOffDataPoint] = useState(false);
   const [shouldShowRowOptions, setShouldShowRowOptions] = useState(true);
   const [shouldShowColumnOptions, setShouldShowColumnOptions] = useState(true);
+  const [deltaSelected, setDeltaSelected] = useState(); // {delta, isMax}
 
   // Vertical chart or horizontal chart
   const defaultExpandOptions = expandableOptions.map((option) => {
@@ -441,11 +457,17 @@ let LineChart = (props, ref) => {
         chartInstanceRefs.current.forEach((chartInstanceRef, index) => {
           // Delete all the label + statistic notes of the deleted dataRunIds
           const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widgets[index].id });
+          const allLabelDeltas = getAllCurrentDeltas({ pageId, widgetId: widgets[index].id });
           const allStatisticNotes = getAllCurrentStatisticNotes({ pageId, widgetId: widgets[index].id });
 
           Object.keys(allLabelNotes).forEach((labelNodeKey) => {
-            if (_.has(chartInstanceRef, "config.options.plugins.annotation.annotations[labelNodeKey]"))
+            if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelNodeKey}]`))
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelNodeKey];
+          });
+          Object.keys(allLabelDeltas).forEach((labelDeltaKey) => {
+            if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelDeltaKey}]`)) {
+              delete chartInstanceRef.config.options.plugins.annotation.annotations[labelDeltaKey];
+            }
           });
 
           for (const statisticNote of allStatisticNotes.linearRegNotes) {
@@ -453,19 +475,17 @@ let LineChart = (props, ref) => {
               const linearRegNoteId = statisticNote.id;
 
               statisticNotesStorage.delete(statisticNote.id);
-              if (_.has(chartInstanceRef, "config.options.plugins.annotation.annotations[linearRegNoteId]"))
+              if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${linearRegNoteId}]`))
                 delete chartInstanceRef.config.options.plugins.annotation.annotations[linearRegNoteId];
             }
           }
           Object.keys(allStatisticNotes.summaryNotes).forEach((summaryNoteId, index) => {
             if (!dataRunIds.includes(allStatisticNotes.linearRegNotes[index].dataRunId)) {
-              if (_.has(chartInstanceRef, "config.options.plugins.annotation.annotations[summaryNoteId]"))
+              if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${summaryNoteId}]`))
                 delete chartInstanceRef.config.options.plugins.annotation.annotations[summaryNoteId];
             }
           });
         });
-
-        console.log("LineChart_Clear_Deleted_DataRunId_hiddenDataLineIds: ", hiddenDataLineIds);
       } catch (error) {
         console.error("LineChart_modifyDataRunIds: ", error);
       }
@@ -482,14 +502,24 @@ let LineChart = (props, ref) => {
         chartInstanceRefs.current.forEach((chartInstanceRef, index) => {
           if (!chartInstanceRef.attached) return;
           const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widgets[index].id });
+          const allLabelDeltas = getAllCurrentDeltas({ pageId, widgetId: widgets[index].id });
+
           const allStatisticNotes = getAllCurrentStatisticNotes({ pageId, widgetId: widgets[index].id });
 
           Object.keys(allLabelNotes).forEach((labelNodeKey) => {
             if (
               !curSensorInfos.includes(allLabelNotes[labelNodeKey].sensorInfo) &&
-              _.has(chartInstanceRef, "config.options.plugins.annotation.annotations[labelNodeKey]")
+              _.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelNodeKey}]`)
             )
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelNodeKey];
+          });
+          Object.keys(allLabelDeltas).forEach((labelDeltaKey) => {
+            if (
+              !curSensorInfos.includes(allLabelDeltas[labelDeltaKey].sensorInfo) &&
+              _.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelDeltaKey}]`)
+            ) {
+              delete chartInstanceRef.config.options.plugins.annotation.annotations[labelDeltaKey];
+            }
           });
 
           for (const statisticNote of allStatisticNotes.linearRegNotes) {
@@ -497,13 +527,13 @@ let LineChart = (props, ref) => {
               const linearRegNoteId = statisticNote.id;
 
               statisticNotesStorage.delete(statisticNote.id);
-              if (_.has(chartInstanceRef, "config.options.plugins.annotation.annotations[linearRegNoteId]"))
+              if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${linearRegNoteId}]`))
                 delete chartInstanceRef.config.options.plugins.annotation.annotations[linearRegNoteId];
             }
           }
           Object.keys(allStatisticNotes.summaryNotes).forEach((summaryNoteId, index) => {
             if (!curSensorInfos.includes(allStatisticNotes.linearRegNotes[index].sensorInfo)) {
-              if (_.has(chartInstanceRef, "config.options.plugins.annotation.annotations[summaryNoteId]"))
+              if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${summaryNoteId}]`))
                 delete chartInstanceRef.config.options.plugins.annotation.annotations[summaryNoteId];
             }
           });
@@ -561,6 +591,24 @@ let LineChart = (props, ref) => {
                 widgetIndex: i,
               });
               if (status) {
+                const { datasetIndex, index: dataPointIndex } = newPointEl;
+                const currentDataset = chart.data.datasets[datasetIndex];
+                const xValue = currentDataset.data[dataPointIndex].x;
+                const yValue = currentDataset.data[dataPointIndex].y;
+                const dataRunId = currentDataset?.dataRunId;
+                const sensorInfo = currentDataset?.yAxis?.sensorInfo;
+
+                const deltaResult = findFirstDeltaByValue({
+                  pageId,
+                  widgetId: widget.id,
+                  dataRunId,
+                  sensorInfo,
+                  xValue,
+                  yValue,
+                });
+
+                setDeltaSelected(deltaResult);
+
                 selectedPointElement = newPointEl;
                 selectedNoteElement = null;
                 chartSelectedIndex = i;
@@ -926,13 +974,36 @@ let LineChart = (props, ref) => {
     if (!selectedPointElement) return;
     const { datasetIndex, index: dataPointIndex } = selectedPointElement;
     const chartInstance = chartInstanceRefs.current[chartSelectedIndex];
-    const { tooltip } = chartInstance;
     const currentDataset = chartInstance.data.datasets[datasetIndex];
-    // const newDataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
+
     const newDataPointIndex =
       type == "next"
         ? (dataPointIndex + 1) % currentDataset.data.length
         : (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
+
+    if (deltaSelected) {
+      const newXValue = currentDataset.data[newDataPointIndex].x;
+      const newYValue = currentDataset.data[newDataPointIndex].y;
+      const { delta, isMax } = deltaSelected;
+      if (isMax) {
+        delta.xMax = newXValue;
+        delta.yMax = newYValue;
+      } else {
+        delta.xMin = newXValue;
+        delta.yMin = newYValue;
+      }
+      setDeltaSelected({ delta, isMax });
+      deltasStorage.save(delta);
+      const annotation = getChartAnnotationByDelta(delta);
+      Object.keys(annotation).forEach((key) => {
+        if (_.get(chartInstance, `config.options.plugins.annotation.annotations[${key}]`)) {
+          delete chartInstance.config.options.plugins.annotation.annotations[key];
+        }
+        chartInstance.config.options.plugins.annotation.annotations[key] = annotation[key];
+      });
+    }
+    const { tooltip } = chartInstance;
+    // const newDataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
 
     const newPointBackgroundColor = Array.from(
       { length: currentDataset.data.length },
@@ -952,6 +1023,49 @@ let LineChart = (props, ref) => {
     ]);
     const newSelectedPointElement = tooltip.getActiveElements()[0];
     selectedPointElement = newSelectedPointElement;
+
+    chartInstance.update();
+  };
+
+  //========================= DELTA FUNCTIONS =========================
+
+  const handleAddDelta = () => {
+    if (!selectedPointElement) return;
+    const { datasetIndex, index: dataPointIndex } = selectedPointElement;
+    const chartInstance = chartInstanceRefs.current[chartSelectedIndex];
+    const currentDataset = chartInstance.data.datasets[datasetIndex];
+    const dataRunId = currentDataset?.dataRunId;
+    const sensorInfo = currentDataset?.yAxis?.sensorInfo;
+    let pointDeltaMaxIndex = dataPointIndex + Math.round(currentDataset.data.length / 3);
+    if (pointDeltaMaxIndex >= currentDataset.data.length) pointDeltaMaxIndex = currentDataset.data.length - 1;
+
+    const result = addDelta({
+      pageId,
+      widgetId: widgets[chartSelectedIndex].id,
+      dataRunId,
+      sensorInfo,
+      xMin: currentDataset.data[dataPointIndex].x,
+      yMin: currentDataset.data[dataPointIndex].y,
+      xMax: currentDataset.data[pointDeltaMaxIndex].x,
+      yMax: currentDataset.data[pointDeltaMaxIndex].y,
+      chartInstance,
+    });
+
+    setDeltaSelected({ delta: result, isMax: false });
+  };
+
+  const deleteDeltaHandler = () => {
+    if (!deltaSelected) return;
+    const chartInstance = chartInstanceRefs.current[chartSelectedIndex];
+    const deltaId = deltaSelected.delta.id;
+    const annotation = getChartAnnotationByDelta(deltaSelected.delta);
+    Object.keys(annotation).forEach((key) => {
+      if (_.get(chartInstance, `config.options.plugins.annotation.annotations[${key}]`)) {
+        delete chartInstance.config.options.plugins.annotation.annotations[key];
+      }
+    });
+    deltasStorage.delete(deltaId);
+    setDeltaSelected(null);
     chartInstance.update();
   };
 
@@ -1057,27 +1171,38 @@ let LineChart = (props, ref) => {
               className="icon-container-widget"
               style={{ position: "absolute", display: "none" }}
             >
+              <div style={{ cursor: "pointer", width: "20px", height: "20px" }} onClick={() => handleAddDelta()}>
+                <img src={deltaIcon} alt="deltaIcon" />
+              </div>
               <div
-                id="icon1"
-                style={{ cursor: "pointer", width: "20px", height: "20px" }}
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
                 onClick={() => handleChangeSelectedNote({ type: "prev" })}
               >
                 <img src={previousIcon} alt="previousIcon" />
               </div>
               <div
-                id="icon2"
                 style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
                 onClick={() => handleChangeSelectedNote({ type: "next" })}
               >
                 <img src={nextIcon} alt="nextIcon" />
               </div>
-              <div
-                id="icon3"
-                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
-                onClick={() => addNoteHandler()}
-              >
-                <img src={addNoteIcon} alt="addNoteIcon" />
-              </div>
+              {!deltaSelected && (
+                <div
+                  style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                  onClick={() => addNoteHandler()}
+                >
+                  <img src={addNoteIcon} alt="addNoteIcon" />
+                </div>
+              )}
+
+              {deltaSelected && (
+                <div
+                  style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                  onClick={() => deleteDeltaHandler()}
+                >
+                  <img src={deleteIconChart} alt="deleteIconChart" />
+                </div>
+              )}
             </div>
           </div>
           {isShowIconDeleteChart && activeChart === index && widgets.length > 1 && (
