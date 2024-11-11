@@ -47,8 +47,10 @@ const SamplingSetting = ({
       } = samplingSettings;
       if (newFrequency !== frequency) handleFrequencySelect(newFrequency);
       if (newTimer !== timerStopCollecting) handleSetTimer(newTimer);
-      if (newStartSampleCondition !== startSampleCondition) handleStartSampleConditionChange(newStartSampleCondition);
-      if (newStopSampleCondition !== stopSampleCondition) handleStopSampleConditionChange(newStopSampleCondition);
+      if (newStartSampleCondition && newStartSampleCondition !== startSampleCondition)
+        handleStartSampleConditionChange(newStartSampleCondition);
+      if (newStopSampleCondition && newStopSampleCondition !== stopSampleCondition)
+        handleStopSampleConditionChange(newStopSampleCondition);
     } catch (error) {
       console.log("Sampling-settings: ", error);
     }
