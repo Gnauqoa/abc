@@ -8,6 +8,7 @@ import {
   LINE_CHART_RANGE_SELECTION_TABLE,
   LINE_CHART_STATISTIC_NOTE_TABLE,
   TIMER_NO_STOP,
+  LINE_CHART_DELTA_TABLE,
 } from "../js/constants";
 
 import DataManagerIST from "../services/data-manager";
@@ -48,6 +49,7 @@ const defaultStopSampleCondition = {
 const statisticNotesStorage = new storeService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const labelNotesStorage = new storeService(LINE_CHART_LABEL_NOTE_TABLE);
 const rangeSelectionStorage = new storeService(LINE_CHART_RANGE_SELECTION_TABLE);
+const deltasStorage = new storeService(LINE_CHART_DELTA_TABLE);
 
 export const ActivityContext = React.createContext({
   name: [],
@@ -358,6 +360,7 @@ export const ActivityContextProvider = ({ children }) => {
     const allLabelNotes = labelNotesStorage.all();
     const allStatisticNotes = statisticNotesStorage.all();
     const rangeSelections = rangeSelectionStorage.all();
+    const allDeltas = deltasStorage.all();
 
     const activity = {
       name,
@@ -372,6 +375,7 @@ export const ActivityContextProvider = ({ children }) => {
       allLabelNotes: allLabelNotes,
       allStatisticNotes: allStatisticNotes,
       rangeSelections: rangeSelections,
+      allDeltas,
     };
 
     return activity;
@@ -382,6 +386,7 @@ export const ActivityContextProvider = ({ children }) => {
     statisticNotesStorage.deleteAll();
     labelNotesStorage.deleteAll();
     rangeSelectionStorage.deleteAll();
+    deltasStorage.deleteAll();
   }
 
   const initContext = () => {
