@@ -33,7 +33,7 @@ const defaultStartSampleCondition = {
   active: false,
   conditionType: CONDITION_TYPE.NONE,
   sensor: DEFAULT_SENSOR_DATA,
-  condition: CONDITION.GREATER_OR_EQUAL,
+  condition: CONDITION.GREATER_THAN,
   conditionValue: 0,
   delayTime: -1,
 };
@@ -42,7 +42,7 @@ const defaultStopSampleCondition = {
   active: false,
   conditionType: CONDITION_TYPE.NONE,
   sensor: DEFAULT_SENSOR_DATA,
-  condition: CONDITION.GREATER_OR_EQUAL,
+  condition: CONDITION.GREATER_THAN,
   conditionValue: 0,
 };
 
