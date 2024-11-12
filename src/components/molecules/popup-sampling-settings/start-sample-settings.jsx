@@ -70,7 +70,7 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
                 className="display-setting-input label-color-black"
                 outline
                 size={5}
-                name="startSampleCdt.cdtType"
+                name="startSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
                 type="text"
                 value={
@@ -78,19 +78,6 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
                 }
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
-            </>
-          ) : startSampleCondition.conditionType === CONDITION_TYPE.TIME ? (
-            <>
-              <ListInput
-                className="display-setting-input label-color-black"
-                outline
-                size={5}
-                name="startSampleCdt.cdtTime"
-                label={`${t("modules.input_value")} (${t("common.second")}):`}
-                type="text"
-                value={startSampleCondition.conditionTime === TIMER_NO_STOP ? "" : startSampleCondition.conditionTime}
-                onChange={(e) => onChange("conditionTime", e.target.value)}
-              ></ListInput>
             </>
           ) : (
             <></>

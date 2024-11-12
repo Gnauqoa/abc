@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import "./sampling-settings.scss";
 import {
+  CONDITION_TYPE,
   FREQUENCIES,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
@@ -33,6 +34,35 @@ const SamplingSettingPopup = ({
   const onChangeStartCondition = (name, value) => setStartSampleCondition((prev) => ({ ...prev, [name]: value }));
   const onChangeStopCondition = (name, value) => setStopSampleCondition((prev) => ({ ...prev, [name]: value }));
 
+  const validateSampleCondition = (sampleCondition) => {
+    if (!sampleCondition.active) return true;
+    if (sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE && sampleCondition.sensor === null) {
+      return false;
+    }
+
+    if (sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE && sampleCondition.sensor.id === -1) {
+      f7.dialog.alert(`${t("modules.sensor_can_not_be_blank")}`);
+      return false;
+    }
+
+    if (sampleCondition.delayTime !== "" && Number.isNaN(sampleCondition.delayTime)) {
+      f7.dialog.alert(`${t("modules.delay_time") + t("modules.must_be_a_number")}`);
+      return false;
+    }
+
+    if (
+      sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE &&
+      (Number.isNaN(sampleCondition.conditionValue) ||
+        Number(sampleCondition.conditionValue) <= 0 ||
+        sampleCondition.conditionValue === "")
+    ) {
+      f7.dialog.alert(`${t("modules.condition_value_must_be_numeric_and_greater_than_0")}`);
+      return false;
+    }
+
+    return true;
+  };
+
   const onSubmit = () => {
     let parsedTimer = Number(stopSampleCondition.timer);
     const isOffTimer = stopSampleCondition.timer === "" || stopSampleCondition.timer === "--";
@@ -43,6 +73,9 @@ const SamplingSettingPopup = ({
 
     if (![...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].includes(frequency)) {
       f7.dialog.alert(t("modules.invalid_cycle"));
+      return;
+    }
+    if (!validateSampleCondition(startSampleCondition) || !validateSampleCondition(stopSampleCondition)) {
       return;
     }
 

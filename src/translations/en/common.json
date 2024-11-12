@@ -134,6 +134,8 @@
     "point": "Point",
     "read_the_sensor": "Read the sensor",
     "display_information_cannot_be_left_blank": "Display information cannot be left blank",
+    "sensor_can_not_be_blank": "Sensor cannot be left blank",
+    "condition_value_must_be_numeric_and_greater_than_0": "Condition value must be numeric and greater than 0",
     "minimum_value_must_be_numeric": "Minimum value must be numeric",
     "maximum_value_must_be_numeric": "Maximum value must be numeric",
     "the_format_value_must_be_numeric": "The format value must be numeric",
@@ -236,7 +238,6 @@
     "decibel_level": "Sound level",
     "wave": "Sound wave",
     "frequency": "Sound frequency",
-
     "water_salinity_sensor": "Water salinity Sensor",
     "salinity_concentration": "Salinity concentration",
     "salinity": "Salinity",
