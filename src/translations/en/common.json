@@ -129,6 +129,7 @@
     "point_2": "point 2",
     "must_be_a_number": "must be a number",
     "readable_value": "Readable value",
+    "reset_calibrate": "Reset calibrate",
     "calibration_information": "Calibration information:",
     "correction_type": "Correction type:",
     "point": "Point",

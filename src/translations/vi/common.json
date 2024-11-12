@@ -141,6 +141,7 @@
     "point_2": "điểm 2",
     "must_be_a_number": "phải là số",
     "readable_value": "Giá trị đọc được",
+    "reset_calibrate": "Khôi phục hiệu chỉnh gốc",
     "calibration_information": "Thông tin hiệu chỉnh:",
     "correction_type": "Kiểu hiệu chỉnh:",
     "point": "Điểm",
@@ -249,7 +250,6 @@
     "decibel_level": "Cường độ âm thanh",
     "wave": "Sóng âm",
     "frequency": "Tần số âm thanh",
-
     "dissolved_Oxygen_Sensor_Analog": "Cảm biến Oxi hòa tan (Analog)",
     "oxygen_concentration_mg": "Nồng độ Oxy - mg/L",
     "oxygen_concentration_percent": "Nồng độ Oxy - %",
