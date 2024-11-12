@@ -1175,34 +1175,31 @@ let LineChart = (props, ref) => {
                 <img src={deltaIcon} alt="deltaIcon" />
               </div>
               <div
-                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "10px", marginLeft: "5px" }}
                 onClick={() => handleChangeSelectedNote({ type: "prev" })}
               >
                 <img src={previousIcon} alt="previousIcon" />
               </div>
               <div
-                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "10px", marginLeft: "5px" }}
                 onClick={() => handleChangeSelectedNote({ type: "next" })}
               >
                 <img src={nextIcon} alt="nextIcon" />
               </div>
-              {!deltaSelected && (
-                <div
-                  style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
-                  onClick={() => addNoteHandler()}
-                >
-                  <img src={addNoteIcon} alt="addNoteIcon" />
-                </div>
-              )}
-
               {deltaSelected && (
                 <div
-                  style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "5px", marginLeft: "5px" }}
+                  style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "10px", marginLeft: "5px" }}
                   onClick={() => deleteDeltaHandler()}
                 >
                   <img src={deleteIconChart} alt="deleteIconChart" />
                 </div>
               )}
+              <div
+                style={{ cursor: "pointer", width: "20px", height: "20px", paddingLeft: "10px", marginLeft: "5px" }}
+                onClick={() => addNoteHandler()}
+              >
+                <img src={addNoteIcon} alt="addNoteIcon" />
+              </div>
             </div>
           </div>
           {isShowIconDeleteChart && activeChart === index && widgets.length > 1 && (
