@@ -78,7 +78,7 @@ const SamplingSetting = ({
 
   return (
     <div className="frequency">
-      <div className={`image ${isRunning ? "disabled" : ""}`} onClick={handleOpenSamplingSettings}>
+      <div className={`clock-button image ${isRunning ? "disabled" : ""}`} onClick={handleOpenSamplingSettings}>
         <img src={clockFreImg} alt="frequency" />
       </div>
 
