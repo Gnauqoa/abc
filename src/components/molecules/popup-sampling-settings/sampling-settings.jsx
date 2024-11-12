@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Page, Navbar, f7 } from "framework7-react";
+import { Button, Page, Navbar, f7, NavLeft, NavTitle, List } from "framework7-react";
 import { useTranslation } from "react-i18next";
 
 import "./sampling-settings.scss";
@@ -67,19 +67,27 @@ const SamplingSettingPopup = ({
     setFrequency(defaultFrequency);
     setStartSampleCondition(defaultStartSampleCondition);
     setStopSampleCondition({ ...defaultStopSampleCondition, timer: defaultTimer });
-
-
   }, [defaultFrequency, defaultTimer, defaultStartSampleCondition, defaultStopSampleCondition]);
-
 
   return (
     <Page className="sampling-settings">
-      <Navbar className="sampling-settings-header" title={t("modules.sampling_options")}></Navbar>
-      <div className="sampling-settings-content">
-        <div className="items">
-          <div className="item">
-            <div className="text">{t("modules.cycle")}</div>
+      <Navbar className="sampling-settings-header">
+        <NavLeft>
+          <Button
+            iconIos="material:arrow_back"
+            iconMd="material:arrow_back"
+            iconAurora="material:arrow_back"
+            className="back-icon margin-right"
+            popupClose
+          ></Button>
+        </NavLeft>
+        <NavTitle style={{ color: "#0086ff" }}>{t("modules.sampling_options")}</NavTitle>
+      </Navbar>
+      <div className="__content">
+        <div className="__setting-content">
+          <List className="__setting" form noHairlinesMd inlineLabels>
             <PopoverButton
+              label={t("modules.cycle")}
               name={"frequency"}
               display={
                 frequency === SAMPLING_MANUAL_FREQUENCY
@@ -106,19 +114,18 @@ const SamplingSettingPopup = ({
                   className: f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency",
                 }))}
             />
+            <StartSampleSettings onChange={onChangeStartCondition} startSampleCondition={startSampleCondition} />
+            <StopSampleSettings onChange={onChangeStopCondition} stopSampleCondition={stopSampleCondition} />
+          </List>
+
+          <div className="sampling-settings-buttons">
+            <Button className="cancel-button" onClick={onClose}>
+              {t("common.cancel")}
+            </Button>
+            <Button className="ok-button" onClick={onSubmit}>
+              {t("common.ok")}
+            </Button>
           </div>
-
-          <StartSampleSettings onChange={onChangeStartCondition} startSampleCondition={startSampleCondition} />
-          <StopSampleSettings onChange={onChangeStopCondition} stopSampleCondition={stopSampleCondition} />
-        </div>
-
-        <div className="sampling-settings-buttons">
-          <Button className="cancel-button" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button className="ok-button" onClick={onSubmit}>
-            {t("common.ok")}
-          </Button>
         </div>
       </div>
     </Page>
