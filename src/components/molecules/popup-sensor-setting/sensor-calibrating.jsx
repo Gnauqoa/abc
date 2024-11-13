@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { List, ListInput, Button, f7 } from "framework7-react";
 
 import "./index.scss";
@@ -9,10 +9,10 @@ import { useTranslation } from "react-i18next";
 const CALIBRATING_1_POINT = 1;
 const CALIBRATING_2_POINTS = 2;
 
-const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) => {
+const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onResetHandler }) => {
   const { t, i18n } = useTranslation();
   const [formField, setFormField] = React.useState({});
-
+  const [test, setTest] = useState("");
   useEffect(() => {
     const unitInfos = sensorInfo.data;
     if (Array.isArray(unitInfos) && unitInfos.length > 0) {
@@ -98,6 +98,23 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
       return false;
     }
     return { calibrationValue: calibrationValueParsed, calibrationValueRead: calibrationValueReadParsed };
+  };
+
+  const onSubmitResetHandler = () => {
+    const unitInfos = sensorInfo.data;
+    if (Array.isArray(unitInfos) && unitInfos.length > 0) {
+      const unitInfo = unitInfos[sensorDataIndex || 0];
+      const calibrationType = unitInfo.calibrationType;
+      const calibrationValues = unitInfo.calibrationValues;
+      setFormField({
+        unitId: unitInfo.id,
+        unitName: unitInfo.name || "",
+        calibratingType: CALIBRATING_1_POINT,
+        calibrationValues: [], // { a: 1, b: 0 } y = a * x + b
+        calibrationValuesRead: [], // { a: 1, b: 0 }
+      });
+    }
+    onResetHandler();
   };
 
   const onSubmitHandler = (event) => {
@@ -222,6 +239,9 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler }) =>
           );
         })}
         <div className="buttons">
+          <Button className="save-button" onClick={onSubmitResetHandler}>
+            {t("modules.reset_calibrate")}
+          </Button>
           <Button className="save-button" onClick={onSubmitHandler}>
             {t("common.save")}
           </Button>
