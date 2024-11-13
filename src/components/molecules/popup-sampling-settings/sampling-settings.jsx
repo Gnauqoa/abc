@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Button, Page, Navbar, f7 } from "framework7-react";
+import { Button, Page, Navbar, f7, NavLeft, NavTitle, List } from "framework7-react";
 import { useTranslation } from "react-i18next";
 
 import "./sampling-settings.scss";
 import {
+  CONDITION_TYPE,
   FREQUENCIES,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
@@ -33,6 +34,35 @@ const SamplingSettingPopup = ({
   const onChangeStartCondition = (name, value) => setStartSampleCondition((prev) => ({ ...prev, [name]: value }));
   const onChangeStopCondition = (name, value) => setStopSampleCondition((prev) => ({ ...prev, [name]: value }));
 
+  const validateSampleCondition = (sampleCondition) => {
+    if (!sampleCondition.active) return true;
+    if (sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE && sampleCondition.sensor === null) {
+      return false;
+    }
+
+    if (sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE && sampleCondition.sensor.id === -1) {
+      f7.dialog.alert(`${t("modules.sensor_can_not_be_blank")}`);
+      return false;
+    }
+
+    if (sampleCondition.delayTime !== "" && Number.isNaN(sampleCondition.delayTime)) {
+      f7.dialog.alert(`${t("modules.delay_time") + t("modules.must_be_a_number")}`);
+      return false;
+    }
+
+    if (
+      sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE &&
+      (Number.isNaN(sampleCondition.conditionValue) ||
+        Number(sampleCondition.conditionValue) <= 0 ||
+        sampleCondition.conditionValue === "")
+    ) {
+      f7.dialog.alert(`${t("modules.condition_value_must_be_numeric_and_greater_than_0")}`);
+      return false;
+    }
+
+    return true;
+  };
+
   const onSubmit = () => {
     let parsedTimer = Number(stopSampleCondition.timer);
     const isOffTimer = stopSampleCondition.timer === "" || stopSampleCondition.timer === "--";
@@ -43,6 +73,9 @@ const SamplingSettingPopup = ({
 
     if (![...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY].includes(frequency)) {
       f7.dialog.alert(t("modules.invalid_cycle"));
+      return;
+    }
+    if (!validateSampleCondition(startSampleCondition) || !validateSampleCondition(stopSampleCondition)) {
       return;
     }
 
@@ -67,19 +100,27 @@ const SamplingSettingPopup = ({
     setFrequency(defaultFrequency);
     setStartSampleCondition(defaultStartSampleCondition);
     setStopSampleCondition({ ...defaultStopSampleCondition, timer: defaultTimer });
-
-
   }, [defaultFrequency, defaultTimer, defaultStartSampleCondition, defaultStopSampleCondition]);
-
 
   return (
     <Page className="sampling-settings">
-      <Navbar className="sampling-settings-header" title={t("modules.sampling_options")}></Navbar>
-      <div className="sampling-settings-content">
-        <div className="items">
-          <div className="item">
-            <div className="text">{t("modules.cycle")}</div>
+      <Navbar className="sampling-settings-header">
+        <NavLeft>
+          <Button
+            iconIos="material:arrow_back"
+            iconMd="material:arrow_back"
+            iconAurora="material:arrow_back"
+            className="back-icon margin-right"
+            popupClose
+          ></Button>
+        </NavLeft>
+        <NavTitle style={{ color: "#0086ff" }}>{t("modules.sampling_options")}</NavTitle>
+      </Navbar>
+      <div className="__content">
+        <div className="__setting-content">
+          <List className="__setting" form noHairlinesMd inlineLabels>
             <PopoverButton
+              label={t("modules.cycle")}
               name={"frequency"}
               display={
                 frequency === SAMPLING_MANUAL_FREQUENCY
@@ -106,19 +147,18 @@ const SamplingSettingPopup = ({
                   className: f === SAMPLING_MANUAL_FREQUENCY || f >= 1 ? "frequency" : "inverse-frequency",
                 }))}
             />
+            <StartSampleSettings onChange={onChangeStartCondition} startSampleCondition={startSampleCondition} />
+            <StopSampleSettings onChange={onChangeStopCondition} stopSampleCondition={stopSampleCondition} />
+          </List>
+
+          <div className="sampling-settings-buttons">
+            <Button className="cancel-button" onClick={onClose}>
+              {t("common.cancel")}
+            </Button>
+            <Button className="ok-button" onClick={onSubmit}>
+              {t("common.ok")}
+            </Button>
           </div>
-
-          <StartSampleSettings onChange={onChangeStartCondition} startSampleCondition={startSampleCondition} />
-          <StopSampleSettings onChange={onChangeStopCondition} stopSampleCondition={stopSampleCondition} />
-        </div>
-
-        <div className="sampling-settings-buttons">
-          <Button className="cancel-button" onClick={onClose}>
-            {t("common.cancel")}
-          </Button>
-          <Button className="ok-button" onClick={onSubmit}>
-            {t("common.ok")}
-          </Button>
         </div>
       </div>
     </Page>

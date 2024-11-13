@@ -82,6 +82,13 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
     onClosePopup();
   };
 
+  const onResetSensorCalibratingHandler = () => {
+    const strCalib = "$$$cal,clr###";
+    DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
+    toast.notifyCmdDTO();
+    onClosePopup();
+  };
+
   const onSaveOtherSettingsHandler = ({ sensorId, action, data }) => {
     if (action == "zero") {
       const cmdZero = "$$$zer###";
@@ -233,6 +240,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
                 sensorInfo={sensorInfo}
                 sensorDataIndex={sensorDataIndex}
                 onSaveHandler={onSaveSensorCalibratingHandler}
+                onResetHandler={onResetSensorCalibratingHandler}
               />
             )}
             {currentTab === REMOTE_LOGGING_TAB && (

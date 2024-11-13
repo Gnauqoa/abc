@@ -2,35 +2,26 @@ import React from "react";
 import { Button, Popover, List, f7 } from "framework7-react";
 
 import "./sampling-settings.scss";
+import CustomDropdownInput from "../popup-sensor-setting/custom-list-input";
 
-const PopoverButton = ({ options, onChange, display, name }) => {
+const PopoverButton = ({ options, onChange, display, label, name }) => {
   return (
-    <>
-      <Button className="open-popover-button" raised popoverOpen={`.popover-${name}-advanced`}>
-        <span id={`input-sampling-${name}-data`}>{display}</span>
-      </Button>
-
-      <Popover className={`popover-${name}-advanced popover-advanced`}>
-        <List className={`popover-list`}>
-          {options.map((option) => {
-            return (
-              <Button
-                className={`popover-button ${option.className}`}
-                key={option.value}
-                textColor="black"
-                onClick={() => {
-                  onChange(option.value);
-                  f7.popover.close();
-                }}
-              >
-                <span style={{ textTransform: "none" }}>{option.display}</span>
-              </Button>
-            );
-          })}
-        </List>
-      </Popover>
-    </>
+    <CustomDropdownInput labelName={label} buttonName={display} popOverName={`sample-setting-popover-${name}`}>
+      {options.map((option) => {
+        return (
+          <Button
+            key={option.value}
+            onClick={() => {
+              onChange(option.value);
+              f7.popover.close();
+            }}
+          >
+            <span style={{ textTransform: "none" }}>{option.display}</span>
+          </Button>
+        );
+      })}
+    </CustomDropdownInput>
   );
 };
 
-export default PopoverButton
+export default PopoverButton;

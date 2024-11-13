@@ -204,10 +204,10 @@ export const CONDITION_TYPE = {
 };
 
 export const CONDITION = {
-  GREATER_OR_EQUAL: "greater_or_equal",
-  LESS_OR_EQUAL: "less_or_equal",
-  OVER_THRESHOLD: "over_threshold",
-  UNDER_THRESHOLD: "under_threshold",
+  GREATER_THAN: "greater_than",
+  LESS_THAN: "less_than",
+  RISES_ABOVE: "rises_above",
+  FALLS_BELOW: "falls_below",
 };
 
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
