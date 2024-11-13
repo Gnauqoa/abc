@@ -335,25 +335,25 @@ export class DataManager {
 
     if (!currentData) return;
 
-    if (sampleCondition.condition === CONDITION.GREATER_OR_EQUAL && currentData >= sampleCondition.conditionValue) {
+    if (sampleCondition.condition === CONDITION.GREATER_THAN && currentData >= sampleCondition.conditionValue) {
       return onCheckingSuccess();
     }
 
-    if (sampleCondition.condition === CONDITION.LESS_OR_EQUAL && currentData <= sampleCondition.conditionValue) {
+    if (sampleCondition.condition === CONDITION.LESS_THAN && currentData <= sampleCondition.conditionValue) {
       return onCheckingSuccess();
     }
 
     if (!previousData) return;
 
     if (
-      sampleCondition.condition === CONDITION.OVER_THRESHOLD &&
+      sampleCondition.condition === CONDITION.RISES_ABOVE &&
       previousData < sampleCondition.conditionValue &&
       currentData >= sampleCondition.conditionValue
     ) {
       return onCheckingSuccess();
     }
     if (
-      sampleCondition.condition === CONDITION.UNDER_THRESHOLD &&
+      sampleCondition.condition === CONDITION.FALLS_BELOW &&
       previousData > sampleCondition.conditionValue &&
       currentData <= sampleCondition.conditionValue
     ) {
