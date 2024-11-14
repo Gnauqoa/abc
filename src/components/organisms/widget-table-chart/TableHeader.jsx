@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FIRST_COLUMN_DEFAULT_OPT, getFirstColumnOptions } from "../../../utils/widget-table-chart/commons";
-import { Button } from "framework7-react";
+import { Popover, List, Button, f7 } from "framework7-react";
 import AddUserUnitPopup from "../../molecules/popup-add-user-unit";
 
 import "./index.scss";
@@ -8,7 +8,16 @@ import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useTableContext } from "../../../context/TableContext";
 import { useTranslation } from "react-i18next";
 
-const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChange }) => {
+const TableHeader = ({
+  tableId,
+  isRunning,
+  widget,
+  sensorsUnit,
+  handleSensorChange,
+  dataRuns,
+  handleChangeDataRun,
+  dataRunName,
+}) => {
   const { t } = useTranslation();
 
   const { getFirstColumnOption, setFirstColumnOptions } = useTableContext();
@@ -60,7 +69,7 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
           ></Button>
           <AddUserUnitPopup onSubmit={handleAddUserUnit} unitId={firstColumnOption.id} />
         </div>
-        <div className="__header-unit">
+        <div className="__header-unit" style={{ marginRight: "25px" }}>
           {firstColumnTables.find((option) => option.id === firstColumnOption.id)?.unit}
         </div>
       </td>
@@ -75,8 +84,40 @@ const TableHeader = ({ tableId, isRunning, widget, sensorsUnit, handleSensorChan
             hideDisplayUnit={true}
             onChange={(sensor) => handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor })}
           ></SensorSelector>
-          <div className="__header-unit">
+          <div className="__header-unit" style={{ display: "flex", width: "100%", alignItems: "center" }}>
             {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
+            {dataRuns.length > 1 && (
+              <div>
+                <Button
+                  className="button __btn-select-time-id"
+                  textColor="black"
+                  bgColor="white"
+                  raised
+                  popoverOpen=".popover-time"
+                >
+                  <span style={{ textTransform: "none" }}>
+                    {dataRunName ? dataRunName : dataRuns[dataRuns.length - 1].name}
+                  </span>
+                </Button>
+                <Popover className="popover-time">
+                  <List className="list-frequency">
+                    {dataRuns &&
+                      dataRuns.map((dataRun) => (
+                        <Button
+                          className="button-frequency frequency"
+                          key={dataRun.id}
+                          onClick={() => {
+                            handleChangeDataRun(dataRun);
+                            f7.popover.close();
+                          }}
+                        >
+                          <span style={{ textTransform: "none" }}> {dataRun.name}</span>
+                        </Button>
+                      ))}
+                  </List>
+                </Popover>
+              </div>
+            )}
           </div>
         </td>
       ))}

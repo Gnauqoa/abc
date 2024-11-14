@@ -30,7 +30,7 @@
       .__header-column {
         width: 100%;
         display: flex;
-        height: 80px;
+        height: 90px;
 
         .__header-name {
           font-size: 16px;
@@ -49,7 +49,7 @@
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            margin-left: 45px;
+            margin-left: 15px;
 
             .custom-select {
               margin: 1px;
@@ -58,6 +58,9 @@
               position: inherit;
               text-align: center;
               font-size: 18px;
+              @media only screen and (max-width: 1440px) {
+                font-size: 11px;
+              }
             }
 
             i {
@@ -80,6 +83,18 @@
           .__header-unit {
             display: flex;
             justify-content: center;
+            margin-top: 5px;
+            @media only screen and (max-width: 1440px) {
+              font-size: 11px;
+            }
+            .__btn-select-time-id {
+              margin-left: 10px;
+              height: 23px;
+              @media only screen and (max-width: 1440px) {
+                font-size: 13px;
+                height: 20px;
+              }
+            }
           }
         }
       }
@@ -161,6 +176,29 @@
   width: 35%;
 }
 
+.popover-time {
+  border-radius: 15px;
+  width: 140px;
+
+  .list-frequency {
+    .button-frequency {
+      border-radius: 0px;
+    }
+
+    .button-frequency.inverse-frequency {
+      background-color: antiquewhite;
+    }
+
+    .button-frequency:first-child {
+      border-radius: 15px 15px 0px 0px;
+    }
+
+    .button-frequency:last-child {
+      border-radius: 0px 0px 15px 15px;
+    }
+  }
+}
+
 @media only screen and (min-height: 600px) {
   .wapper {
     .summarize {
@@ -222,7 +260,7 @@
       }
 
       .__header-column {
-        height: 55px;
+        height: 75px;
 
         .__header-name {
           min-width: 85px;
@@ -267,7 +305,7 @@
       }
 
       .__header-column {
-        height: 80px;
+        height: 90px;
 
         .__header-name {
           min-width: 160px;
