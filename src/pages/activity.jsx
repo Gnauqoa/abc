@@ -510,6 +510,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     return tableDatas;
   }
 
+  function getDataRuns() {
+    return DataManagerIST.getDataRuns();
+  }
+
   function getDataForBarChart({ sensors, unitId }) {
     const defaultSensorIndex = 0;
     const sensor = sensors[defaultSensorIndex] || DEFAULT_SENSOR_DATA;
@@ -592,6 +596,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     key={`${currentPageIndex}_table`}
                     id={`${currentPageIndex}_table`}
                     datas={getDatasForTable(pages[currentPageIndex].widgets[0].sensors)}
+                    dataRuns={getDataRuns()}
                     currentValues={getCurrentValues(pages[currentPageIndex].widgets[0].sensors, true)}
                     widget={pages[currentPageIndex].widgets[0]}
                     chartLayout={LAYOUT_TABLE_CHART}
@@ -627,6 +632,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                     key={`${currentPageIndex}_table`}
                     id={`${currentPageIndex}_table`}
                     datas={getDatasForTable(pages[currentPageIndex].widgets[1].sensors)}
+                    dataRuns={getDataRuns()}
                     currentValues={getCurrentValues(pages[currentPageIndex].widgets[1].sensors, true)}
                     widget={pages[currentPageIndex].widgets[1]}
                     chartLayout={LAYOUT_NUMBER_TABLE}
@@ -659,6 +665,7 @@ export default ({ f7route, f7router, filePath, content }) => {
                   key={`${currentPageIndex}_table`}
                   id={`${currentPageIndex}_table`}
                   datas={getDatasForTable(pages[currentPageIndex].widgets[0].sensors)}
+                  dataRuns={getDataRuns()}
                   currentValues={getCurrentValues(pages[currentPageIndex].widgets[0].sensors, true)}
                   widget={pages[currentPageIndex].widgets[0]}
                   chartLayout={LAYOUT_TABLE}

@@ -25,10 +25,16 @@ import { useTableContext } from "../../../context/TableContext";
 import { useActivityContext } from "../../../context/ActivityContext";
 import _ from "lodash";
 
-const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, samplingMode }, ref) => {
+const TableWidget = ({ id: tableId, datas, dataRuns, currentValues, widget, chartLayout, samplingMode }, ref) => {
   const { getUserInputValue, getFirstColumnOption } = useTableContext();
-  const { isRunning, handleDeleteExtraCollectingSensor, handleAddExtraCollectingSensor, handleSensorChange } =
-    useActivityContext();
+  const {
+    isRunning,
+    handleDeleteExtraCollectingSensor,
+    handleAddExtraCollectingSensor,
+    handleSensorChange,
+    setCurrentDataRunId,
+    currentDataRunId,
+  } = useActivityContext();
 
   // ========================== Create variables depending on number of columns ==========================
   const numColumns = widget.sensors.length;
@@ -48,6 +54,7 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
     selectedColumn: 0,
   });
   const [isShowSummarizedData, setIsShowSummarizedData] = useState(false);
+  const [dataRunName, setDataRunName] = useState("");
 
   const expandOptions = expandableOptions.map((option) => {
     if (option.id !== SUMMARIZE_OPTION) return option;
@@ -300,6 +307,23 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
     }
   };
 
+  const handleChangeDataRun = (dataRun) => {
+    setCurrentDataRunId(dataRun.id);
+    setDataRunName(dataRun.name);
+  };
+
+  const findIdDataRun = () => {
+    if (dataRuns.length < 1) return;
+    else {
+      const currentData = dataRuns.filter((data) => data.id === currentDataRunId);
+      setDataRunName(currentData[0].name);
+    }
+  };
+
+  useEffect(() => {
+    findIdDataRun();
+  }, []);
+
   return (
     <div className="wapper">
       <div className="wapper__chart">
@@ -313,6 +337,9 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
               widget={widget}
               sensorsUnit={sensorsUnit}
               handleSensorChange={handleSensorChange}
+              dataRuns={dataRuns}
+              handleChangeDataRun={handleChangeDataRun}
+              dataRunName={dataRunName}
             />
             {/* ========================== TABLE CONTENT ========================== */}
             <TableContent
@@ -325,8 +352,8 @@ const TableWidget = ({ id: tableId, datas, currentValues, widget, chartLayout, s
               selectedElement={selectedElement}
               numColumns={numColumns}
               handleChangeSelectedColumn={handleChangeSelectedColumn}
+              dataRunName={dataRunName}
             />
-            <div></div>
           </tbody>
         </table>
       </div>
