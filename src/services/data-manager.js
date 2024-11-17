@@ -647,6 +647,10 @@ export class DataManager {
     return widgetDatas;
   }
 
+  getDataRuns() {
+    return Object.keys(this.dataRuns).map((value) => ({ id: value, name: this.dataRuns[value].name }));
+  }
+
   setCurrentDataRun(dataRunId) {
     if (this.dataRuns.hasOwnProperty(dataRunId)) {
       this.curDataRunId = dataRunId;
