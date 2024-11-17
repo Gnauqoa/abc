@@ -71,9 +71,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
                 name="stopSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
                 type="text"
-                value={
-                  stopSampleCondition.conditionValue === SENSOR_NONE_VALUE ? "" : stopSampleCondition.conditionValue
-                }
+                value={stopSampleCondition.conditionValue}
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
             </>

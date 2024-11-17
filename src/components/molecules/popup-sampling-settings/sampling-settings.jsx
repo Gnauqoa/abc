@@ -52,9 +52,7 @@ const SamplingSettingPopup = ({
 
     if (
       sampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE &&
-      (Number.isNaN(sampleCondition.conditionValue) ||
-        Number(sampleCondition.conditionValue) <= 0 ||
-        sampleCondition.conditionValue === "")
+      (Number.isNaN(sampleCondition.conditionValue) || sampleCondition.conditionValue === "")
     ) {
       f7.dialog.alert(`${t("modules.condition_value_must_be_numeric_and_greater_than_0")}`);
       return false;
