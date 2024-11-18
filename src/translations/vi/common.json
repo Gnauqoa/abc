@@ -150,7 +150,7 @@
     "read_the_sensor": "Đọc cảm biến",
     "display_information_cannot_be_left_blank": "Thông tin hiển thị không được phép để trống",
     "sensor_can_not_be_blank": "Cảm biến không được phép để trống",
-    "condition_value_must_be_numeric_and_greater_than_0": "Giá trị phải là số và lớn hơn 0",
+    "condition_value_must_be_numeric": "Giá trị phải là số",
     "minimum_value_must_be_numeric": "Giá trị tối thiểu phải là số",
     "maximum_value_must_be_numeric": "Giá trị tối đa phải là số",
     "the_format_value_must_be_numeric": "Giá trị định dạng phải là số",

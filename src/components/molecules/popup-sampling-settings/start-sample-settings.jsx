@@ -73,9 +73,7 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
                 name="startSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
                 type="text"
-                value={
-                  startSampleCondition.conditionValue === SENSOR_NONE_VALUE ? "" : startSampleCondition.conditionValue
-                }
+                value={startSampleCondition.conditionValue}
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
             </>
