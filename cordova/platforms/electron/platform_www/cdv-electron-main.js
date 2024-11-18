@@ -41,9 +41,9 @@ const { DelimiterParser } = require("@serialport/parser-delimiter");
 const BLE_TYPE = "ble";
 const USB_TYPE = "usb";
 
-// CP2104
-const VID = "10C4";
-const PID = "EA60";
+// ESP32-S3
+const VID = "303A";
+const PID = "1001";
 
 // CH340
 const VID_CH = "1A86";
@@ -312,7 +312,7 @@ async function listSerialPorts() {
               portsList[port.path] = undefined;
             });
 
-            const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xbb] }));
+            const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xbb], includeDelimiter:false }));
             parser.on("data", function (data) {
               if (data[0] === 0xaa) {
                 // sensor data
@@ -339,7 +339,7 @@ async function listSerialPorts() {
 
 function listPorts() {
   listSerialPorts();
-  setTimeout(listPorts, 3000);
+  setTimeout(listPorts, 1500);
 }
 
 function setupBluetooth(win) {
@@ -364,8 +364,8 @@ function setupBluetooth(win) {
   });
 }
 
-// Set a timeout that will check for new serialPorts every 2 seconds.
+// Set a timeout that will check for new serialPorts every 1 seconds.
 // This timeout reschedules itself.
-setTimeout(listPorts, 3000);
+setTimeout(listPorts, 1000);
 
 listSerialPorts();
