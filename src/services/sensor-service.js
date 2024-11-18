@@ -82,7 +82,16 @@ export const defaultSensors = [
     icon: tempSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-004-tem", name: "list_sensor.temperature", unit: "°C", min: -40, max: 125, formatFloatingPoint: 1 }],
+    data: [{ 
+      id: "inno-004-tem", 
+      name: "list_sensor.temperature", 
+      unit: "°C", 
+      min: -40, 
+      max: 125, 
+      formatFloatingPoint: 1, 
+      //dataLength: 4,
+      //calcFunc: x => x/1000,
+    }],
   },
   {
     id: 5,
@@ -167,7 +176,16 @@ export const defaultSensors = [
     icon: voltageSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-012-volt", name: "list_sensor.voltage", unit: "V", min: -10, max: 10, formatFloatingPoint: 1 }],
+    data: [{ 
+      id: "inno-012-volt", 
+      name: "list_sensor.voltage", 
+      unit: "V", 
+      min: -10, 
+      max: 10, 
+      formatFloatingPoint: 1,
+      dataLength: 4, // in bytes
+      //calcFunc: x => x+10,
+    }],
   },
   {
     id: 13,

@@ -43,6 +43,14 @@ export class DataManager {
     this.subscribers = {};
 
     /**
+     * Object containing uncompleted sensor data.
+     * @type {Uint8Array}
+     */
+    this.usb_rx_buffer = null;
+
+    this.usb_rx_data_lenth = 0;
+
+    /**
      * Object containing sensor data buffer.
      * @type {Object.<number, Array(string)>}
      */
@@ -823,7 +831,22 @@ export class DataManager {
     return dataRunsInfo;
   }
 
+  /**
+   * Util function to combine 2 buffer array
+   * @param {Uint8Array} a Array to be combined
+   * @param {Uint8Array} b Array to be combined
+   *
+   */
+  concatTypedArrays(a, b) {
+    var c = new (a.constructor)(a.length + b.length + 1);
+    c.set(a, 0);
+    c.set([0xbb], a.length);
+    c.set(b, a.length+1);
+    return c;
+  }
+
   // -------------------------------- Read sensor data -------------------------------- //
+
   /**
    * Entry point for all kind of device data
    * @param {string} data Uint8Array data from sensor
@@ -838,12 +861,45 @@ export class DataManager {
     } else if (device.code && device.code.includes("BLE-9100")) {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
-    } else if (data[0] === 0xaa) {
-      const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
-      dataArray && this.callbackReadSensor(dataArray);
     } else {
-      data = new TextDecoder("utf-8").decode(data);
-      this.callbackCommandDTO(data);
+      if (data[0] === 0xaa) { // new sensor message
+        if (data[data.length-1] === 0xbb) {
+          this.rx_data_lenth = data[4] + 7; // a data record include data + 7 extra bytes
+        } else {
+          this.rx_data_lenth = data[4] + 6; // a data record include data + 6 extra bytes
+        }
+        
+        if (data.length === this.rx_data_lenth) {
+          // full message in one shot
+          const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
+          dataArray && this.callbackReadSensor(dataArray);
+          this.usb_rx_buffer = null;
+        } else if (data.length < this.rx_data_lenth) {
+          // not enough data, wait for full message received
+          this.usb_rx_buffer = new Uint8Array(data);
+        }
+      } else {
+        if (this.usb_rx_buffer !== null) {
+          // append to last message received
+          let buf_data = this.concatTypedArrays(this.usb_rx_buffer, data);
+
+          if (buf_data.length === this.rx_data_lenth) {
+            // now got full message
+            const dataArray = this.decodeDataFromInnoLabSensor(buf_data, source, device);
+            dataArray && this.callbackReadSensor(dataArray);
+            this.usb_rx_buffer = null;
+          } else if (buf_data.length > this.rx_data_lenth) {
+            console.log("Invalid data received");
+            this.usb_rx_buffer = null;
+          } else {
+            // wait for more data to be completed
+            this.usb_rx_buffer = buf_data;
+          }
+        } else {
+          data = new TextDecoder("utf-8").decode(data);
+          this.callbackCommandDTO(data);
+        }        
+      }
     }
   }
 
@@ -859,12 +915,16 @@ export class DataManager {
         0xBB - stop byte (already cut off by serial delimiter parser)
       */
     let sensorId = data[1];
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+    if (sensorInfo === null) 
+      return;
+
     let sensorSerial = data[2]; // TODO: Will use later
     let battery = data[3]; // TODO: Will use later
-    let dataLength = data[4];
-    let checksum = data[5 + dataLength];
+    let totalDataLength = data[4];
+    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + data[4]];
     let calculatedChecksum = 0xff;
-    for (let i = 0; i < dataLength + 5; i++) {
+    for (let i = 0; i < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
       calculatedChecksum = calculatedChecksum ^ data[i];
     }
 
@@ -873,27 +933,48 @@ export class DataManager {
       return;
     }
 
-    let dataRead = 0;
+    let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after 5 header bytes
     let sensorData = [];
 
-    while (dataRead < dataLength) {
-      // read next 4 bytes
-      let rawBytes = data.slice(dataRead + 5, dataRead + 9);
+    while (dataRead < totalDataLength+NUM_NON_DATA_SENSORS_CALLBACK) {
+      for(let i=0; i<sensorInfo.data.length; i++) {
+        let dataLength = sensorInfo.data[i].dataLength ?? 4;
+        // read next dataLength bytes
+        let rawBytes = data.slice(dataRead, dataRead + dataLength);
 
-      let view = new DataView(new ArrayBuffer(4));
+        let view = new DataView(new ArrayBuffer(dataLength));
 
-      rawBytes.forEach(function (b, i) {
-        view.setUint8(3 - i, b);
-      });
+        rawBytes.forEach(function (b, i) {
+          view.setUint8(dataLength - i - 1, b);
+        });
 
-      sensorData.push(view.getFloat32(0));
-      dataRead += 4;
+        let num;
+
+        if (dataLength == 1) {
+          num = view.getInt8(0);
+        } else if (dataLength == 2) {
+          num = view.getInt16(0);
+        } else if (dataLength == 4) {
+          num = view.getFloat32(0);
+        }
+
+        if (sensorInfo.data[i].calcFunc) {
+          num = sensorInfo.data[i].calcFunc(num);
+        }
+
+        sensorData.push(num);
+
+        dataRead += dataLength;
+      }
+      
     }
 
-    var dataArray = [sensorId, battery, source, device.deviceId, dataLength];
+    var dataArray = [sensorId, battery, source, device.deviceId, totalDataLength];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
+
+    //console.log(sensorData);
 
     return dataArray;
   }
