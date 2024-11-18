@@ -104,8 +104,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onRe
     const unitInfos = sensorInfo.data;
     if (Array.isArray(unitInfos) && unitInfos.length > 0) {
       const unitInfo = unitInfos[sensorDataIndex || 0];
-      const calibrationType = unitInfo.calibrationType;
-      const calibrationValues = unitInfo.calibrationValues;
+
       setFormField({
         unitId: unitInfo.id,
         unitName: unitInfo.name || "",
@@ -195,7 +194,11 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onRe
                 size={5}
                 label={t("modules.standard_value") + ":"}
                 type="number"
-                value={formField.calibrationValues?.[calibrateType]}
+                value={
+                  formField.calibrationValues?.length > calibrateType
+                    ? formField.calibrationValues?.[calibrateType]
+                    : ""
+                }
                 onChange={(e) =>
                   formFieldHandler({ value: e.target.value, type: "calibrationValues", index: calibrateType })
                 }
@@ -211,7 +214,11 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onRe
                           type="number"
                           size="5"
                           class=""
-                          value={formField.calibrationValuesRead?.[calibrateType]}
+                          value={
+                            formField.calibrationValues?.length > calibrateType
+                              ? formField.calibrationValuesRead?.[calibrateType]
+                              : ""
+                          }
                           onChange={(e) =>
                             formFieldHandler({
                               value: e.target.value,

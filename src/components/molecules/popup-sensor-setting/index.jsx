@@ -79,14 +79,14 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
 
     DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
     toast.notifyCmdDTO();
-    onClosePopup();
+    // onClosePopup();
   };
 
   const onResetSensorCalibratingHandler = () => {
     const strCalib = "$$$cal,clr###";
     DeviceManagerIST.sendCmdDTO(sensorId, strCalib);
     toast.notifyCmdDTO();
-    onClosePopup();
+    // onClosePopup();
   };
 
   const onSaveOtherSettingsHandler = ({ sensorId, action, data }) => {
