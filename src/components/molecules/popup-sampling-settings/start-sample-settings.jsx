@@ -72,7 +72,7 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
                 size={5}
                 name="startSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
-                type="text"
+                type="number"
                 value={startSampleCondition.conditionValue}
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
@@ -87,7 +87,7 @@ const StartSampleSettings = ({ startSampleCondition, onChange }) => {
             size={5}
             name="startSampleCdt.delayTime"
             label={`${t("modules.delay_time")} (${t("common.second")}):`}
-            type="text"
+            type="number"
             value={startSampleCondition.delayTime === TIMER_NO_STOP ? "" : startSampleCondition.delayTime}
             onChange={(e) => onChange("delayTime", e.target.value)}
           ></ListInput>

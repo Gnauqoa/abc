@@ -70,7 +70,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
                 size={5}
                 name="stopSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
-                type="text"
+                type="number"
                 value={stopSampleCondition.conditionValue}
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
@@ -82,7 +82,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
               size={5}
               name="stopSampleCdt.timer"
               label={`${t("common.time")} (${t("common.second")}):`}
-              type="text"
+              type="number"
               value={stopSampleCondition.timer === TIMER_NO_STOP ? "" : stopSampleCondition.timer}
               onChange={(e) => onChange("timer", e.target.value)}
             />
