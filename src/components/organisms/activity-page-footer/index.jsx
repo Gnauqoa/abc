@@ -15,9 +15,7 @@ const ActivityFooter = ({
   handleSampleClick,
 }) => {
   const {
-    isDelay,
     isRunning,
-    isCheckingSensor,
     frequency,
     startSampleCondition,
     stopSampleCondition,
@@ -30,7 +28,7 @@ const ActivityFooter = ({
     <div className="activity-footer display-flex justify-content-space-between">
       <div className="__toolbar-left">
         <SamplingSetting
-          isRunning={isRunning || isDelay || isCheckingSensor}
+          isRunning={isRunning}
           frequency={frequency}
           startSampleCondition={startSampleCondition}
           handleStartSampleConditionChange={setStartSampleCondition}
@@ -46,10 +44,9 @@ const ActivityFooter = ({
         <ActivityPageNav onNextPage={handlePageNext} onPrevPage={handlePagePrev} />
       </div>
       <div className="__toolbar-right">
-        {isDelay ? <Timer isRunning={isDelay} type={"delayTimer"} /> : <></>}
-        {!isDelay ? <Timer isRunning={isRunning} /> : <></>}
+        <Timer isRunning={isRunning} />
         <div className="sample">
-          {isRunning || isDelay || isCheckingSensor ? (
+          {isRunning ? (
             <RoundButton icon="stop" color="#FF0000" onClick={handleSampleClick} />
           ) : (
             <RoundButton icon="play_arrow" color="#45A3DB" onClick={handleSampleClick} />

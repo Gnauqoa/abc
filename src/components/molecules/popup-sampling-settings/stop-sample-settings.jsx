@@ -10,7 +10,7 @@ import { ListInput } from "framework7-react";
 
 const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
   const { t } = useTranslation();
-  const { isRunning, isDelay, isCheckingSensor } = useActivityContext();
+  const { isRunning } = useActivityContext();
   return (
     <>
       <div className="item">
@@ -57,7 +57,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
                 <div className="text item-first">{`${t("modules.input_value")} (${t("modules.sensor")}):`}</div>
                 <div className="item-second">
                   <SensorSelector
-                    disabled={isRunning || isDelay || isCheckingSensor}
+                    disabled={isRunning}
                     selectedSensor={stopSampleCondition.sensor}
                     onChange={(sensor) => onChange("sensor", sensor)}
                   />
