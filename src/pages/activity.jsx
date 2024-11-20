@@ -120,12 +120,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   const {
     name,
     setName,
-    isDelay,
-    setIsDelay,
     pages,
     setPages,
-    isCheckingSensor,
-    setIsCheckingSensor,
     timerStopCollecting,
     startSampleCondition,
     stopSampleCondition,
@@ -364,11 +360,6 @@ export default ({ f7route, f7router, filePath, content }) => {
     setPages(() => updatedPages);
   }
 
-  function handleStopCollecting() {
-    DataManagerIST.stopCollectingData();
-    setIsRunning(false);
-  }
-
   function handleGetManualSample() {
     if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
       tableRef.current.handleSamplingManual();
@@ -377,42 +368,18 @@ export default ({ f7route, f7router, filePath, content }) => {
     }
   }
 
-  function handleStartCollectData() {
-    if (isRunning) return;
-
-    let unitId = FIRST_COLUMN_DEFAULT_OPT;
-    if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
-      const tableId = `${currentPageIndex}_table`;
-      unitId = getFirstColumnOption({ tableId }).id;
-    }
-
-    // MicrophoneServicesIST.init() if the current widget is scope view
-    const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
-    if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
-      MicrophoneServicesIST.init();
-    }
-
-    const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time") });
+  function initStopCondition() {
     if (stopSampleCondition.active)
-      if (stopSampleCondition.conditionType === CONDITION_TYPE.TIME)
-        timerStopCollecting !== TIMER_NO_STOP &&
-          DataManagerIST.subscribeTimer(handleStopCollecting, timerStopCollecting);
-      else if (stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
-        console.log(">>>>> AUTO - startCollectData - stopSampleCondition:", stopSampleCondition);
+      if (stopSampleCondition.conditionType === CONDITION_TYPE.TIME) {
+        timerStopCollecting !== TIMER_NO_STOP && DataManagerIST.subscribeTimer(stopCollectData, timerStopCollecting);
+      } else if (stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
         DataManagerIST.startCheckingSensor(stopSampleCondition, () => {
-          console.log(">>>>> AUTO - startCollectData - stopSampleCondition - callback");
-          handleStopCollectData(true);
-          DataManagerIST.stopCheckingSensor();
+          stopCollectData();
         });
       }
-    setCurrentDataRunId(dataRunId);
-    setLastDataRunIdForCurrentPage(dataRunId);
-
-    setIsRunning(true);
   }
 
-  function handleStopCollectData(flag) {
-    if (!isRunning && !flag) return;
+  function stopCollectData() {
     DataManagerIST.unsubscribeTimer();
     DataManagerIST.stopCollectingData();
 
@@ -420,48 +387,56 @@ export default ({ f7route, f7router, filePath, content }) => {
     if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
       MicrophoneServicesIST.stop();
     }
-    setIsRunning((prev) => !prev);
-  }
-
-  function stopCollectData() {
-    if (isRunning) {
-      handleStopCollectData();
-      if (stopSampleCondition.active && stopSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE)
-        DataManagerIST.stopCheckingSensor();
-    } else if (isDelay) {
-      DataManagerIST.stopDelayStartCollectingDataTimer();
-      setIsDelay(false);
-    } else if (isCheckingSensor) {
-      DataManagerIST.stopCheckingSensor();
-      setIsCheckingSensor(false);
-    }
+    setIsRunning(false);
   }
 
   function startCollectData() {
+    DataManagerIST.resetTimerCollectingTime();
     if (startSampleCondition.active && startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
-      setIsCheckingSensor(true);
       DataManagerIST.startCheckingSensor(startSampleCondition, () => {
         DataManagerIST.stopCheckingSensor();
-        setIsCheckingSensor(false);
-        handleStartCollectData();
+        initStopCondition();
+        DataManagerIST.stopWaitingCollectingData();
       });
-    } else handleStartCollectData();
+    } else {
+      initStopCondition();
+      DataManagerIST.stopWaitingCollectingData();
+    }
   }
 
   function handleSampleClick() {
     // TODO: check if user select one or more sensors
-    if (!isRunning && !isDelay && !isCheckingSensor) {
+    if (!isRunning) {
       /* For user input collecting data
         - Check if the current page is table of not.
         - If yes, clear Custom X Axis Datas with use input id
       */
-      if (startSampleCondition.active && startSampleCondition.delayTime > 0) {
-        setIsDelay(true);
-        DataManagerIST.startDelayStartCollectingDataTimer(Number(startSampleCondition.delayTime), () => {
-          setIsDelay(false);
-          startCollectData();
-        });
-      } else startCollectData();
+      const isWaiting =
+        (startSampleCondition.active && startSampleCondition.delayTime > 0) ||
+        (startSampleCondition.active && startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE);
+
+      let unitId = FIRST_COLUMN_DEFAULT_OPT;
+      if ([LAYOUT_TABLE, LAYOUT_TABLE_CHART, LAYOUT_NUMBER_TABLE].includes(pages[currentPageIndex].layout)) {
+        const tableId = `${currentPageIndex}_table`;
+        unitId = getFirstColumnOption({ tableId }).id;
+      }
+
+      // MicrophoneServicesIST.init() if the current widget is scope view
+      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
+      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
+        MicrophoneServicesIST.init();
+      }
+
+      const dataRunId = DataManagerIST.startCollectingData({ unitId, unit: t("modules.time"), isWaiting });
+
+      setCurrentDataRunId(dataRunId);
+      setLastDataRunIdForCurrentPage(dataRunId);
+      setIsRunning(true);
+
+      if (startSampleCondition.active && startSampleCondition.delayTime > 0)
+        DataManagerIST.subscribeTimer(startCollectData, Number(startSampleCondition.delayTime));
+      else startCollectData();
+
       return;
     }
     stopCollectData();
@@ -527,7 +502,10 @@ export default ({ f7route, f7router, filePath, content }) => {
     let isDefaultXAxis = [FIRST_COLUMN_DEFAULT_OPT].includes(unitId);
     widgets.forEach((widget, index) => {
       const { sensors } = widget;
-      const { chartDatas, dataRunIds } = getChartDatas({ sensors, unitId });
+      const { chartDatas, dataRunIds } = getChartDatas({
+        sensors,
+        unitId,
+      });
       const parsedChartDatas = isDefaultXAxis ? createChartDataAndParseXAxis({ chartDatas }) : chartDatas;
       if (!prevChartDataRef.current.widgets[currentPageIndex][index])
         prevChartDataRef.current.widgets[currentPageIndex][index] = [{ sensors: [], data: [], dataRunIds: [] }];
