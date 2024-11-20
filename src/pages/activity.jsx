@@ -397,10 +397,12 @@ export default ({ f7route, f7router, filePath, content }) => {
         DataManagerIST.stopCheckingSensor();
         initStopCondition();
         DataManagerIST.stopWaitingCollectingData();
+        DataManagerIST.emitSubscribersScheduler();
       });
     } else {
       initStopCondition();
       DataManagerIST.stopWaitingCollectingData();
+      DataManagerIST.emitSubscribersScheduler();
     }
   }
 
