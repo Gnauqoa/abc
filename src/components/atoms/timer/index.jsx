@@ -14,6 +14,7 @@ const Timer = ({ isRunning }) => {
         setCount(DataManagerIST.getTimerCollectingTime());
       }, TIMER_INTERVAL);
     } else {
+      setCount(DataManagerIST.getTimerCollectingTime());
       clearInterval(id);
     }
 

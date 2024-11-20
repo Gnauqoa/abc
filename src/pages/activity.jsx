@@ -436,7 +436,10 @@ export default ({ f7route, f7router, filePath, content }) => {
       setIsRunning(true);
 
       if (startSampleCondition.active && startSampleCondition.delayTime > 0)
-        DataManagerIST.subscribeTimer(startCollectData, Number(startSampleCondition.delayTime));
+        DataManagerIST.subscribeTimer(() => {
+          DataManagerIST.unsubscribeTimer();
+          startCollectData();
+        }, Number(startSampleCondition.delayTime));
       else startCollectData();
 
       return;
