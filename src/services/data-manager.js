@@ -187,7 +187,6 @@ export class DataManager {
 
   subscribeTimer(emitFunction, stopTime) {
     try {
-      this.unsubscribeTimer();
       const hasEmitFunction = typeof emitFunction === "function";
       const timer = stopTime * 1000;
       if (!hasEmitFunction) {
@@ -1415,7 +1414,7 @@ export class DataManager {
       this.timerCollectingTime += this.collectingDataInterval;
 
       if (this.timerCollectingTime >= this.timerSubscriber.stopTime) {
-        console.log(`DATA_MANAGER-emitSubscribersScheduler: Stop collecting data`);
+        this.unsubscribeTimer();
         this.emitter.emit(this.timerSubscriber.subscriberTimerId);
       }
     } catch (error) {
