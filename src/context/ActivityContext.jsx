@@ -386,7 +386,6 @@ export const ActivityContextProvider = ({ children }) => {
   const initContext = () => {
     setPages(defaultPages);
     setFrequency(1);
-    setTimerStopCollecting(TIMER_NO_STOP);
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
