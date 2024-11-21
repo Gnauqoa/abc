@@ -43,7 +43,12 @@ const PageManagement = () => {
             {t("atoms.rename_current_page")}
           </ListItem>
           <ListItem>{t("atoms.list_of_pages")}</ListItem>
-          <List>
+          <List
+            style={{
+              maxHeight: "200px",
+              overflowY: "auto",
+            }}
+          >
             {pages.map((page, index) => (
               <Button
                 key={`page-${index}`}
