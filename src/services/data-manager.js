@@ -188,6 +188,7 @@ export class DataManager {
   subscribeTimer(emitFunction, stopTime) {
     try {
       const hasEmitFunction = typeof emitFunction === "function";
+      console.log({ hasEmitFunction, stopTime });
       const timer = stopTime * 1000;
       if (!hasEmitFunction) {
         // console.log("DATA_MANAGER-subscribeTimer-INVALID-emitFunction");
@@ -195,7 +196,10 @@ export class DataManager {
       }
 
       const subscriberTimerId = "TIMER_SUBSCRIBER";
-      const subscription = this.emitter.addListener(subscriberTimerId, emitFunction);
+      const subscription = this.emitter.addListener(subscriberTimerId, () => {
+        this.unsubscribeTimer();
+        emitFunction();
+      });
 
       this.timerSubscriber = {
         subscriberTimerId: subscriberTimerId,
@@ -1414,7 +1418,6 @@ export class DataManager {
       this.timerCollectingTime += this.collectingDataInterval;
 
       if (this.timerCollectingTime >= this.timerSubscriber.stopTime) {
-        this.unsubscribeTimer();
         this.emitter.emit(this.timerSubscriber.subscriberTimerId);
       }
     } catch (error) {
