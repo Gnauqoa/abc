@@ -52,6 +52,16 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
         topics: [""],
         startMode: IMMEDIATELY,
       };
+
+    if (savedSetting.mqttUri === "") {
+      savedSetting.mqttUri = "mqtt://mqtt.ohstem.vn:1883";
+    }
+
+    if (savedSetting.topics.length < sensorInfo.data.length) {
+      savedSetting.topics = sensorInfo.data.map((d, index) => `${savedSetting.mqttUsername}feeds/V${index + 1}`);
+    }
+
+    console.log({ savedSetting, sensorInfo });
     setFormSetting({ ...savedSetting, id: sensorId });
   }, [sensorInfo]);
 
@@ -59,6 +69,15 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
     const name = e.target.name;
     let value = e.target.value.trim();
     if (["duration", "interval"].includes(name)) value = parseInt(value);
+
+    if (name === "mqttUsername") {
+      return setFormSetting((setting) => ({
+        ...setting,
+        [name]: value,
+        topics: setting.topics.map((d, index) => `${value}/feeds/V${index + 1}`),
+      }));
+    }
+
     setFormSetting((setting) => ({ ...setting, [name]: value }));
   };
 
