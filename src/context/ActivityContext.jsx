@@ -141,7 +141,6 @@ export const ActivityContextProvider = ({ children }) => {
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
-    console.log("newPages", newPages);
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newCurDataRunId);
