@@ -12,7 +12,7 @@ const CALIBRATING_2_POINTS = 2;
 const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onResetHandler }) => {
   const { t, i18n } = useTranslation();
   const [formField, setFormField] = React.useState({});
-  const [test, setTest] = useState("");
+
   useEffect(() => {
     const unitInfos = sensorInfo.data;
     if (Array.isArray(unitInfos) && unitInfos.length > 0) {
@@ -215,7 +215,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onRe
                           size="5"
                           class=""
                           value={
-                            formField.calibrationValues?.length > calibrateType
+                            formField.calibrationValuesRead?.length > calibrateType
                               ? formField.calibrationValuesRead?.[calibrateType]
                               : ""
                           }
