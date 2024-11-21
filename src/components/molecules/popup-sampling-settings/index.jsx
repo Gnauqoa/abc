@@ -16,8 +16,6 @@ import { useTranslation } from "react-i18next";
 
 const SamplingSetting = ({
   isRunning,
-  isDelay,
-  isCheckingSensor,
   frequency,
   startSampleCondition,
   handleStartSampleConditionChange,
@@ -63,7 +61,7 @@ const SamplingSetting = ({
     callbackFn: handleGetSampleSettings,
   });
   const handleOpenSamplingSettings = () => {
-    if (!isRunning && !isDelay && !isCheckingSensor) {
+    if (!isRunning) {
       showModal((onClose) => (
         <SamplingSettingPopup
           defaultStartSampleCondition={startSampleCondition}
@@ -83,7 +81,7 @@ const SamplingSetting = ({
       </div>
 
       <Button
-        disabled={isRunning || isDelay || isCheckingSensor}
+        disabled={isRunning}
         className="button"
         textColor="black"
         bgColor="white"

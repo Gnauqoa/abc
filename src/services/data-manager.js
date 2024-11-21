@@ -96,6 +96,16 @@ export class DataManager {
     this.isCollectingData = false;
 
     /**
+     * Boolean indicating if data is waiting start collect data.
+     */
+    this.isWaitingCollectingData = false;
+
+    /**
+     * Boolean indicating if data is need clear data run before start collect data.
+     */
+    this.isClearDataRun = false;
+
+    /**
      * interval to emit data when in collecting data mode
      * @type {number}
      */
@@ -192,7 +202,7 @@ export class DataManager {
         stopTime: timer,
         subscription: subscription,
       };
-      // console.log(`DATA_MANAGER-subscribeTimer-subscriberTimerId_${subscriberTimerId}-stopTime_${timer}`);
+      console.log(`DATA_MANAGER-subscribeTimer-subscriberTimerId_${subscriberTimerId}-stopTime_${timer}`);
 
       return subscriberTimerId;
     } catch (error) {
@@ -301,6 +311,33 @@ export class DataManager {
     return this.samplingMode;
   }
 
+  // -------------------------------- START/STOP -------------------------------- //
+  /**
+   * Start collecting data
+   * @returns {string} - Returns the curDataRunId.
+   */
+  startCollectingData({ unitId, unit = "Lần", isWaiting = false }) {
+    this.collectingDataTime = 0;
+    this.timerCollectingTime = 0;
+    this.isCollectingData = true;
+    if (isWaiting) this.startWaitingCollectingData();
+    // Clear custom axis datas
+    // this.clearCustomUnitDatas({ unitId });
+    const dataRunId = this.createDataRun(null, unit);
+    // this.emitSubscribersScheduler();
+    return dataRunId;
+  }
+
+  /**
+   * Stop collecting data
+   */
+  stopCollectingData() {
+    this.isCollectingData = false;
+    this.stopWaitingCollectingData();
+    this.stopDelayStartCollectingDataTimer();
+    this.stopCheckingSensor();
+  }
+
   startDelayStartCollectingDataTimer(delayTime, callback) {
     const isValidDelay = Number.isInteger(delayTime) && delayTime >= 0;
 
@@ -313,14 +350,23 @@ export class DataManager {
       `DATA_MANAGER-startDelayStartCollectingDataTimer-DELAY_TIME_${delayTime}Hz-INTERVAL_${this.delayStartCollectingDataInterval}`
     );
 
-    this.delayStartCollectingDataTimer = 0;
     this.stopDelayStartCollectingDataTimer();
     this.runDelayStartCollectingDataTimer(delayTime, callback);
 
     return true;
   }
 
+  startWaitingCollectingData() {
+    this.isWaitingCollectingData = true;
+    this.isClearDataRun = true;
+  }
+
+  stopWaitingCollectingData() {
+    this.isWaitingCollectingData = false;
+  }
+
   runDelayStartCollectingDataTimer(delayTime, callback) {
+    this.delayStartCollectingDataTimer = 0;
     this.delayStartCollectingDataIntervalId = setInterval(() => {
       this.delayStartCollectingDataTimer += this.delayStartCollectingDataInterval;
       if (this.delayStartCollectingDataTimer >= delayTime * 1000) {
@@ -388,29 +434,6 @@ export class DataManager {
     this.unsubscribe(this.checkingSensorSubscriber.subscriberId);
     this.checkingSensorSubscriber = {};
   }
-  // -------------------------------- START/STOP -------------------------------- //
-  /**
-   * Start collecting data
-   * @returns {string} - Returns the curDataRunId.
-   */
-  startCollectingData({ unitId, unit = "Lần" }) {
-    this.collectingDataTime = 0;
-    this.timerCollectingTime = 0;
-    this.isCollectingData = true;
-    // Clear custom axis datas
-    // this.clearCustomUnitDatas({ unitId });
-    const dataRunId = this.createDataRun(null, unit);
-    this.emitSubscribersScheduler();
-    return dataRunId;
-  }
-
-  /**
-   * Stop collecting data
-   */
-  stopCollectingData() {
-    this.isCollectingData = false;
-  }
-
   // -------------------------------- DATA RUN -------------------------------- //
   /**
    * Creates a new data run and sets it as the current data run.
@@ -430,12 +453,8 @@ export class DataManager {
      * @property {Array} data - An array of sensor data collected during the data run.
      */
     // Find the max dataRun Name
-    const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
-      const value = parseInt(dataRun.name.replace(`${unit} `, ""));
-      return !Number.isNaN(value) && Math.max(maxValue, value);
-    }, 0);
 
-    const dataRunName = name || `${unit} ${maxDataRunNum + 1}`;
+    const dataRunName = name || this.createDataRunName(unit);
     const createdAt = getCurrentTime();
     this.curDataRunId = uuidv4();
     this.dataRuns[this.curDataRunId] = {
@@ -445,6 +464,14 @@ export class DataManager {
       interval: this.collectingDataInterval,
     };
     return this.curDataRunId;
+  }
+
+  createDataRunName(unit) {
+    const maxDataRunNum = Object.values(this.dataRuns).reduce((maxValue, dataRun) => {
+      const value = parseInt(dataRun.name.replace(`${unit} `, ""));
+      return !Number.isNaN(value) && Math.max(maxValue, value);
+    }, 0);
+    return `${unit} ${maxDataRunNum + 1}`;
   }
 
   /**
@@ -543,6 +570,32 @@ export class DataManager {
       } else {
         dataRunData[sensorId] = [sensorData];
       }
+    });
+  }
+
+  clearDataRun(dataRunId) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-appendDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+    dataRun.data = {};
+  }
+
+  replaceDataRun(dataRunId, parsedTime, curBuffer) {
+    const dataRun = this.dataRuns[dataRunId];
+    if (!dataRun) {
+      // console.log(`DATA_MANAGER-appendDataRun: dataRunId ${dataRunId} does not exist`);
+      return false;
+    }
+    const dataRunData = dataRun.data;
+
+    Object.keys(curBuffer).forEach((sensorId) => {
+      const sensorData = {
+        time: parsedTime,
+        values: curBuffer[sensorId],
+      };
+      dataRunData[sensorId] = [sensorData];
     });
   }
 
@@ -838,10 +891,10 @@ export class DataManager {
    *
    */
   concatTypedArrays(a, b) {
-    var c = new (a.constructor)(a.length + b.length + 1);
+    var c = new a.constructor(a.length + b.length + 1);
     c.set(a, 0);
     c.set([0xbb], a.length);
-    c.set(b, a.length+1);
+    c.set(b, a.length + 1);
     return c;
   }
 
@@ -862,13 +915,14 @@ export class DataManager {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
     } else {
-      if (data[0] === 0xaa) { // new sensor message
-        if (data[data.length-1] === 0xbb) {
+      if (data[0] === 0xaa) {
+        // new sensor message
+        if (data[data.length - 1] === 0xbb) {
           this.rx_data_lenth = data[4] + 7; // a data record include data + 7 extra bytes
         } else {
           this.rx_data_lenth = data[4] + 6; // a data record include data + 6 extra bytes
         }
-        
+
         if (data.length === this.rx_data_lenth) {
           // full message in one shot
           const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
@@ -898,7 +952,7 @@ export class DataManager {
         } else {
           data = new TextDecoder("utf-8").decode(data);
           this.callbackCommandDTO(data);
-        }        
+        }
       }
     }
   }
@@ -916,8 +970,7 @@ export class DataManager {
       */
     let sensorId = data[1];
     const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    if (sensorInfo === null) 
-      return;
+    if (sensorInfo === null) return;
 
     let sensorSerial = data[2]; // TODO: Will use later
     let battery = data[3]; // TODO: Will use later
@@ -936,8 +989,8 @@ export class DataManager {
     let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after 5 header bytes
     let sensorData = [];
 
-    while (dataRead < totalDataLength+NUM_NON_DATA_SENSORS_CALLBACK) {
-      for(let i=0; i<sensorInfo.data.length; i++) {
+    while (dataRead < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK) {
+      for (let i = 0; i < sensorInfo.data.length; i++) {
         let dataLength = sensorInfo.data[i].dataLength ?? 4;
         // read next dataLength bytes
         let rawBytes = data.slice(dataRead, dataRead + dataLength);
@@ -966,7 +1019,6 @@ export class DataManager {
 
         dataRead += dataLength;
       }
-      
     }
 
     var dataArray = [sensorId, battery, source, device.deviceId, totalDataLength];
@@ -1328,6 +1380,9 @@ export class DataManager {
     return this.delayStartCollectingDataTimer;
   }
 
+  resetTimerCollectingTime() {
+    this.timerCollectingTime = 0;
+  }
   // -------------------------------- SCHEDULERS -------------------------------- //
   emitSubscribersScheduler = () => {
     try {
@@ -1338,8 +1393,15 @@ export class DataManager {
       this.emitSubscribers(parsedTime, curBuffer);
 
       // Append data to data run and increment collecting data time
-      if (this.isCollectingData) {
+      if (this.isWaitingCollectingData) {
+        this.replaceDataRun(this.curDataRunId, (0).toFixed(3), curBuffer);
+      } else if (this.isCollectingData) {
         // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
+        if (this.isClearDataRun) {
+          this.isClearDataRun = false;
+          this.timerCollectingTime = 0;
+          this.clearDataRun(this.curDataRunId);
+        }
         if (this.samplingMode === SAMPLING_AUTO && this.collectingDataTime % this.selectedInterval === 0) {
           this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
         }
@@ -1350,9 +1412,10 @@ export class DataManager {
 
       // Increment timer collecting time and stop if it reaches the stop time
       this.timerCollectingTime += this.collectingDataInterval;
-      if (this.timerCollectingTime > this.timerSubscriber.stopTime) {
-        this.emitter.emit(this.timerSubscriber.subscriberTimerId);
+
+      if (this.timerCollectingTime >= this.timerSubscriber.stopTime) {
         this.unsubscribeTimer();
+        this.emitter.emit(this.timerSubscriber.subscriberTimerId);
       }
     } catch (error) {
       const schedulerError = new Error(`runEmitSubscribersScheduler: ${error.message}`);
