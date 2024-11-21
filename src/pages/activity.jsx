@@ -391,19 +391,19 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function startCollectData() {
+    const start = () => {
+      initStopCondition();
+      DataManagerIST.stopWaitingCollectingData();
+      DataManagerIST.emitSubscribersScheduler();
+    };
+
     DataManagerIST.resetTimerCollectingTime();
     if (startSampleCondition.active && startSampleCondition.conditionType === CONDITION_TYPE.SENSOR_VALUE) {
       DataManagerIST.startCheckingSensor(startSampleCondition, () => {
         DataManagerIST.stopCheckingSensor();
-        initStopCondition();
-        DataManagerIST.stopWaitingCollectingData();
-        DataManagerIST.emitSubscribersScheduler();
+        start();
       });
-    } else {
-      initStopCondition();
-      DataManagerIST.stopWaitingCollectingData();
-      DataManagerIST.emitSubscribersScheduler();
-    }
+    } else start();
   }
 
   function handleSampleClick() {
