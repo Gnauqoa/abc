@@ -13,8 +13,11 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
   CONDITION,
+  READ_BUFFER_INTERVAL,
+  RENDER_INTERVAL,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
+import buffers, { addBufferData, getBufferData, clearAllBuffersData } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -132,6 +135,15 @@ export class DataManager {
     this.stopEmitSubscribersScheduler();
     this.initializeVariables();
     this.runEmitSubscribersScheduler();
+    this.renderDataScheduler();
+  }
+
+  renderDataScheduler() {
+    setInterval(() => {
+      const parsedTime = this.getParsedCollectingDataTime();
+      const curBuffer = { ...this.buffer };
+      this.emitSubscribers(parsedTime, curBuffer);
+    }, RENDER_INTERVAL);
   }
 
   /**
@@ -563,18 +575,39 @@ export class DataManager {
       return false;
     }
     const dataRunData = dataRun.data;
+    if (curBuffer) {
+      Object.keys(curBuffer).forEach((sensorId) => {
+        const sensorData = {
+          time: parsedTime,
+          values: curBuffer[sensorId],
+        };
+        if (dataRunData.hasOwnProperty(sensorId)) {
+          dataRunData[sensorId].push(sensorData);
+        } else {
+          dataRunData[sensorId] = [sensorData];
+        }
+      });
+    } else {
+      const sampleSize = READ_BUFFER_INTERVAL / this.selectedInterval;
 
-    Object.keys(curBuffer).forEach((sensorId) => {
-      const sensorData = {
-        time: parsedTime,
-        values: curBuffer[sensorId],
-      };
-      if (Object.keys(dataRunData).includes(sensorId)) {
-        dataRunData[sensorId].push(sensorData);
-      } else {
-        dataRunData[sensorId] = [sensorData];
-      }
-    });
+      buffers.keys().forEach((sensorId) => {
+        const sensorBuffer = getBufferData(sensorId, sampleSize);
+        if (!sensorBuffer) return;
+
+        const sensorDataList = sensorBuffer.map((value, index) => {
+          return {
+            time: (Number(parsedTime) + (index * this.selectedInterval) / 1000).toFixed(3),
+            values: value,
+          };
+        });
+
+        if (dataRunData.hasOwnProperty(sensorId)) {
+          dataRunData[sensorId] = dataRunData[sensorId].concat(sensorDataList);
+        } else {
+          dataRunData[sensorId] = sensorDataList;
+        }
+      });
+    }
   }
 
   clearDataRun(dataRunId) {
@@ -1221,6 +1254,7 @@ export class DataManager {
       }
 
       this.buffer[sensorId] = sensorsData;
+      addBufferData(sensorId, sensorsData);
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
       const activeSensorsIds = this.getActiveSensorIds();
@@ -1393,9 +1427,6 @@ export class DataManager {
       const curBuffer = { ...this.buffer };
       const parsedTime = this.getParsedCollectingDataTime();
 
-      // Emit all subscribers
-      this.emitSubscribers(parsedTime, curBuffer);
-
       // Append data to data run and increment collecting data time
       if (this.isWaitingCollectingData) {
         this.replaceDataRun(this.curDataRunId, (0).toFixed(3), curBuffer);
@@ -1406,17 +1437,21 @@ export class DataManager {
           this.timerCollectingTime = 0;
           this.clearDataRun(this.curDataRunId);
         }
-        if (this.samplingMode === SAMPLING_AUTO && this.collectingDataTime % this.selectedInterval === 0) {
-          this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+        if (this.samplingMode === SAMPLING_AUTO) {
+          if (this.selectedInterval >= READ_BUFFER_INTERVAL && this.collectingDataTime % this.selectedInterval === 0) {
+            // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
+            this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+          } else if (this.selectedInterval < READ_BUFFER_INTERVAL) {
+            this.appendDataRun(this.curDataRunId, parsedTime);
+          }
         }
 
         // Update total time collecting data
-        this.collectingDataTime += this.collectingDataInterval;
+        this.collectingDataTime += READ_BUFFER_INTERVAL;
       }
 
       // Increment timer collecting time and stop if it reaches the stop time
-      this.timerCollectingTime += this.collectingDataInterval;
-
+      this.timerCollectingTime += READ_BUFFER_INTERVAL;
       if (this.timerCollectingTime >= this.timerSubscriber.stopTime) {
         this.emitter.emit(this.timerSubscriber.subscriberTimerId);
       }
@@ -1427,7 +1462,12 @@ export class DataManager {
   };
 
   runEmitSubscribersScheduler() {
-    this.emitSubscribersIntervalId = setInterval(this.emitSubscribersScheduler, this.collectingDataInterval);
+    clearAllBuffersData();
+    this.emitSubscribersIntervalId = setInterval(() => {
+      this.emitSubscribersScheduler();
+      this.buffer = {};
+      clearAllBuffersData();
+    }, READ_BUFFER_INTERVAL);
     // console.log(`DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`);
   }
 
