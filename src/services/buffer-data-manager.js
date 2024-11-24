@@ -1,5 +1,14 @@
 const buffers = new Map();
 
+/**
+ * Both recentBuffer and currentBuffer store latest data received from sensors
+ * 
+ * currentBuffer[sensorId] will be deleted when DataManager.appendDataRun called
+ * but recentBuffer still retain its data (used for render the sensor info card - DataManager.getDataSensor)
+ */
+export const recentBuffer = {};
+export const currentBuffer = {};
+
 export function clearAllBuffersData() {
   buffers.clear();
 }
@@ -9,6 +18,8 @@ export function clearBufferData(sensorId) {
 }
 
 export function addBufferData(sensorId, data) {
+  recentBuffer[sensorId] = data;
+  currentBuffer[sensorId] = data;
   let bufferData = buffers.get(sensorId) || [];
   if (!Array.isArray(data)) {
     bufferData = bufferData.concat(data);
