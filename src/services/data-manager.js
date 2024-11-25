@@ -17,7 +17,7 @@ import {
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 5;
+const NUM_NON_DATA_SENSORS_CALLBACK = 6;
 
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
@@ -863,12 +863,10 @@ export class DataManager {
       dataArray && this.callbackReadSensor(dataArray);
     } else {
       if (data[0] === 0xaa) { // new sensor message
+        this.rx_data_lenth = ((data[4] << 8) | data[5]) + NUM_NON_DATA_SENSORS_CALLBACK + 1; // data + header bytes
         if (data[data.length-1] === 0xbb) {
-          this.rx_data_lenth = data[4] + 7; // a data record include data + 7 extra bytes
-        } else {
-          this.rx_data_lenth = data[4] + 6; // a data record include data + 6 extra bytes
+          this.rx_data_lenth += 1; // 1 ending byte
         }
-        
         if (data.length === this.rx_data_lenth) {
           // full message in one shot
           const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
@@ -908,8 +906,8 @@ export class DataManager {
     /* Each sensor data record has following structure
         0xAA - start byte
         Sensor ID - 1 byte
-        Sensor Serial ID - 1 byte
-        Data length - 1 byte
+        Sensor Serial ID - 2 bytes
+        Data length - 2 bytes
         Sensor data [0..len] - 4 byte per data
         Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
         0xBB - stop byte (already cut off by serial delimiter parser)
@@ -921,8 +919,8 @@ export class DataManager {
 
     let sensorSerial = data[2]; // TODO: Will use later
     let battery = data[3]; // TODO: Will use later
-    let totalDataLength = data[4];
-    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + data[4]];
+    let totalDataLength = (data[4] << 8) | data[5];
+    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + totalDataLength];
     let calculatedChecksum = 0xff;
     for (let i = 0; i < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
       calculatedChecksum = calculatedChecksum ^ data[i];
@@ -933,7 +931,7 @@ export class DataManager {
       return;
     }
 
-    let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after 5 header bytes
+    let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after header bytes
     let sensorData = [];
 
     while (dataRead < totalDataLength+NUM_NON_DATA_SENSORS_CALLBACK) {
@@ -974,7 +972,7 @@ export class DataManager {
       dataArray.push(d);
     });
 
-    //console.log(sensorData);
+    console.log(sensorData);
 
     return dataArray;
   }

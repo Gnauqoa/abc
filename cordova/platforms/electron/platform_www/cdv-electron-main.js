@@ -292,7 +292,7 @@ async function listSerialPorts() {
           try {
             const serialPort = new SerialPort({
               path: port.path,
-              baudRate: 115200,
+              baudRate: 921600,
             });
 
             // Open errors will be emitted as an error event
