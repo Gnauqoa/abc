@@ -56,7 +56,7 @@ const TableHeader = ({
             {firstColumnTables.map((option) => {
               return (
                 <option key={option.id} value={option.id}>
-                  {t(option.name)}
+                  {t(option.name)} {firstColumnTables.find((option) => option.id === firstColumnOption.id)?.unit}
                 </option>
               );
             })}
@@ -69,9 +69,6 @@ const TableHeader = ({
           ></Button>
           <AddUserUnitPopup onSubmit={handleAddUserUnit} unitId={firstColumnOption.id} />
         </div>
-        <div className="__header-unit" style={{ marginRight: "25px" }}>
-          {firstColumnTables.find((option) => option.id === firstColumnOption.id)?.unit}
-        </div>
       </td>
 
       {/* ========================== DYNAMIC COLUMN ========================== */}
@@ -81,11 +78,9 @@ const TableHeader = ({
             className="sensor-selector "
             disabled={isRunning}
             selectedSensor={sensor}
-            hideDisplayUnit={true}
             onChange={(sensor) => handleSensorChange({ widgetId: widget.id, sensorIndex: sensorIndex, sensor: sensor })}
-          ></SensorSelector>
+          />
           <div className="__header-unit" style={{ display: "flex", width: "100%", alignItems: "center" }}>
-            {sensorsUnit[sensorIndex] !== "" ? `(${sensorsUnit[sensorIndex]})` : "--------"}
             {dataRuns.length > 1 && (
               <div>
                 <Button

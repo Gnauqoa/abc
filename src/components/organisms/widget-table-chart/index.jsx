@@ -313,7 +313,7 @@ const TableWidget = ({ id: tableId, datas, dataRuns, currentValues, widget, char
   };
 
   const findIdDataRun = () => {
-    if (dataRuns.length < 1) return;
+    if (dataRuns.length < 1 || !currentDataRunId) return;
     else {
       const currentData = dataRuns.filter((data) => data.id === currentDataRunId);
       setDataRunName(currentData[0].name);
@@ -322,7 +322,7 @@ const TableWidget = ({ id: tableId, datas, dataRuns, currentValues, widget, char
 
   useEffect(() => {
     findIdDataRun();
-  }, []);
+  }, [isRunning]);
 
   return (
     <div className="wapper">
