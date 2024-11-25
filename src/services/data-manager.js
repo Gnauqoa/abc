@@ -13,8 +13,11 @@ import {
   USB_TYPE,
   SAMPLING_INTERVAL_LESS_1HZ,
   CONDITION,
+  READ_BUFFER_INTERVAL,
+  RENDER_INTERVAL,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
+import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, recentBuffer } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -49,12 +52,6 @@ export class DataManager {
     this.usb_rx_buffer = null;
 
     this.usb_rx_data_lenth = 0;
-
-    /**
-     * Object containing sensor data buffer.
-     * @type {Object.<number, Array(string)>}
-     */
-    this.buffer = {};
 
     /**
      * Object containing data run information.
@@ -132,6 +129,15 @@ export class DataManager {
     this.stopEmitSubscribersScheduler();
     this.initializeVariables();
     this.runEmitSubscribersScheduler();
+    this.renderDataScheduler();
+  }
+
+  renderDataScheduler() {
+    setInterval(() => {
+      const parsedTime = this.getParsedCollectingDataTime();
+      const curBuffer = { ...currentBuffer };
+      this.emitSubscribers(parsedTime, curBuffer);
+    }, RENDER_INTERVAL);
   }
 
   /**
@@ -563,18 +569,41 @@ export class DataManager {
       return false;
     }
     const dataRunData = dataRun.data;
+    if (curBuffer) {
+      Object.keys(curBuffer).forEach((sensorId) => {
+        const sensorData = {
+          time: parsedTime,
+          values: curBuffer[sensorId],
+        };
+        if (dataRunData.hasOwnProperty(sensorId)) {
+          dataRunData[sensorId].push(sensorData);
+        } else {
+          dataRunData[sensorId] = [sensorData];
+        }
 
-    Object.keys(curBuffer).forEach((sensorId) => {
-      const sensorData = {
-        time: parsedTime,
-        values: curBuffer[sensorId],
-      };
-      if (Object.keys(dataRunData).includes(sensorId)) {
-        dataRunData[sensorId].push(sensorData);
-      } else {
-        dataRunData[sensorId] = [sensorData];
-      }
-    });
+        delete currentBuffer[sensorId];
+      });
+    } else {
+      const sampleSize = READ_BUFFER_INTERVAL / this.selectedInterval;
+
+      buffers.keys().forEach((sensorId) => {
+        const sensorBuffer = getBufferData(sensorId, sampleSize);
+        if (!sensorBuffer) return;
+
+        const sensorDataList = sensorBuffer.map((value, index) => {
+          return {
+            time: (Number(parsedTime) + (index * this.selectedInterval) / 1000).toFixed(3),
+            values: value,
+          };
+        });
+
+        if (dataRunData.hasOwnProperty(sensorId)) {
+          dataRunData[sensorId] = dataRunData[sensorId].concat(sensorDataList);
+        } else {
+          dataRunData[sensorId] = sensorDataList;
+        }
+      });
+    }
   }
 
   clearDataRun(dataRunId) {
@@ -757,11 +786,6 @@ export class DataManager {
     } else {
       return (dataRun.data ??= []);
     }
-  }
-
-  addCustomSensor(sensorId) {
-    const sensorsData = [];
-    this.buffer[parseInt(sensorId)] = sensorsData;
   }
 
   getUartConnections() {
@@ -1220,7 +1244,8 @@ export class DataManager {
         sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
       }
 
-      this.buffer[sensorId] = sensorsData;
+      currentBuffer[sensorId] = sensorsData;
+      addBufferData(sensorId, sensorsData);
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
       const activeSensorsIds = this.getActiveSensorIds();
@@ -1272,7 +1297,10 @@ export class DataManager {
         this.uartConnections.delete(sensorId);
       }
 
-      delete this.buffer[sensorId];
+      delete currentBuffer[sensorId];
+      delete recentBuffer[sensorId];
+      clearBufferData(sensorId);
+      
       const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
       if (index !== -1) {
         this.sensorsQueue.splice(index, 1);
@@ -1283,7 +1311,7 @@ export class DataManager {
   }
 
   getListActiveSensor() {
-    const activeDeviceSensors = Object.keys(this.buffer).map((sensorId) => parseInt(sensorId));
+    const activeDeviceSensors = Object.keys(currentBuffer).map((sensorId) => parseInt(sensorId));
 
     // Get the status of built-in devices
     const activeBuiltinSensors = SensorServicesIST.getActiveBuiltinSensors();
@@ -1297,7 +1325,7 @@ export class DataManager {
    * @returns {(Array|boolean)} The data for the specified data run or false if the data run doesn't exist.
    */
   appendManualSample(sensorIds, sensorValues) {
-    const curBuffer = { ...this.buffer };
+    const curBuffer = { ...currentBuffer };
     const parsedTime = this.getParsedCollectingDataTime();
 
     if (Array.isArray(sensorIds)) {
@@ -1311,7 +1339,7 @@ export class DataManager {
     }
 
     this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
-    return { ...this.buffer };
+    return { ...currentBuffer };
   }
 
   updateDataRunDataAtIndex(selectedIndex, sensorIds, sensorValues) {
@@ -1333,16 +1361,16 @@ export class DataManager {
    * @returns {any} - The sensor data or the specified data item (if the data is an array).
    */
   getDataSensor(sensorId, sensorIndex) {
-    const sensorData = this.buffer[sensorId];
+    const sensorData = currentBuffer[sensorId];
     return Array.isArray(sensorData) && sensorIndex !== undefined ? sensorData[sensorIndex] : sensorData;
   }
 
   getBuffer() {
-    return this.buffer;
+    return currentBuffer;
   }
 
   getDataBuffer(sensorId) {
-    return this.buffer[sensorId];
+    return recentBuffer[sensorId];
   }
 
   getBatteryStatus() {
@@ -1364,7 +1392,7 @@ export class DataManager {
 
   removeWirelessSensor(sensorId) {
     try {
-      delete this.buffer[parseInt(sensorId)];
+      delete currentBuffer[parseInt(sensorId)];
     } catch (e) {
       console.error(`callbackSensorDisconnected: ${e.message}`);
     }
@@ -1390,11 +1418,8 @@ export class DataManager {
   // -------------------------------- SCHEDULERS -------------------------------- //
   emitSubscribersScheduler = () => {
     try {
-      const curBuffer = { ...this.buffer };
+      const curBuffer = { ...currentBuffer };
       const parsedTime = this.getParsedCollectingDataTime();
-
-      // Emit all subscribers
-      this.emitSubscribers(parsedTime, curBuffer);
 
       // Append data to data run and increment collecting data time
       if (this.isWaitingCollectingData) {
@@ -1406,17 +1431,21 @@ export class DataManager {
           this.timerCollectingTime = 0;
           this.clearDataRun(this.curDataRunId);
         }
-        if (this.samplingMode === SAMPLING_AUTO && this.collectingDataTime % this.selectedInterval === 0) {
-          this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+        if (this.samplingMode === SAMPLING_AUTO) {
+          if (this.selectedInterval >= READ_BUFFER_INTERVAL && this.collectingDataTime % this.selectedInterval === 0) {
+            // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
+            this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+          } else if (this.selectedInterval < READ_BUFFER_INTERVAL) {
+            this.appendDataRun(this.curDataRunId, parsedTime);
+          }
         }
 
         // Update total time collecting data
-        this.collectingDataTime += this.collectingDataInterval;
+        this.collectingDataTime += READ_BUFFER_INTERVAL;
       }
 
       // Increment timer collecting time and stop if it reaches the stop time
-      this.timerCollectingTime += this.collectingDataInterval;
-
+      this.timerCollectingTime += READ_BUFFER_INTERVAL;
       if (this.timerCollectingTime >= this.timerSubscriber.stopTime) {
         this.emitter.emit(this.timerSubscriber.subscriberTimerId);
       }
@@ -1427,7 +1456,11 @@ export class DataManager {
   };
 
   runEmitSubscribersScheduler() {
-    this.emitSubscribersIntervalId = setInterval(this.emitSubscribersScheduler, this.collectingDataInterval);
+    clearAllBuffersData();
+    this.emitSubscribersIntervalId = setInterval(() => {
+      this.emitSubscribersScheduler();
+      clearAllBuffersData();
+    }, READ_BUFFER_INTERVAL);
     // console.log(`DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`);
   }
 

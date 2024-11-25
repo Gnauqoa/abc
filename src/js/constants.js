@@ -216,6 +216,8 @@ export const SAMPLING_MANUAL_NAME = "const.manual";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
 export const EMIT_DATA_MANUAL_FREQUENCY = 1;
+export const RENDER_INTERVAL = 1000;
+export const READ_BUFFER_INTERVAL = 100;
 
 // SAMPLING MODE
 export const SAMPLING_AUTO = 0;
