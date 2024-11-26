@@ -17,7 +17,7 @@ import {
   RENDER_INTERVAL,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
-import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, recentBuffer } from "./buffer-data-manager";
+import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, keepRecentBuffersData } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -580,8 +580,6 @@ export class DataManager {
         } else {
           dataRunData[sensorId] = [sensorData];
         }
-
-        delete currentBuffer[sensorId];
       });
     } else {
       const sampleSize = READ_BUFFER_INTERVAL / this.selectedInterval;
@@ -1298,7 +1296,6 @@ export class DataManager {
       }
 
       delete currentBuffer[sensorId];
-      delete recentBuffer[sensorId];
       clearBufferData(sensorId);
       
       const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
@@ -1370,7 +1367,7 @@ export class DataManager {
   }
 
   getDataBuffer(sensorId) {
-    return recentBuffer[sensorId];
+    return currentBuffer[sensorId];
   }
 
   getBatteryStatus() {
@@ -1459,7 +1456,7 @@ export class DataManager {
     clearAllBuffersData();
     this.emitSubscribersIntervalId = setInterval(() => {
       this.emitSubscribersScheduler();
-      clearAllBuffersData();
+      keepRecentBuffersData();
     }, READ_BUFFER_INTERVAL);
     // console.log(`DATA_MANAGER-runEmitSubscribersScheduler-${this.emitSubscribersIntervalId}-${this.collectingDataInterval}`);
   }
