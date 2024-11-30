@@ -374,7 +374,7 @@ export class DeviceManager {
     }, CHECKING_CONNECTION_INTERVAL);
   }
 
-  sendCmdDTO(sensorId, cmd) {
+  sendCmdDTO(sensorId, cmd, waitingResponseCompletedEvent) {
     console.log("sendCmdDTO:", cmd);
     const parsedSensorId = parseInt(sensorId);
     const uartConnections = DataManagerIST.getUartConnections();
@@ -391,7 +391,7 @@ export class DeviceManager {
       const usbDevice = usbDevices.find((device) => device.sensorId === parsedSensorId);
 
       if (f7.device.android) {
-        MobileSerialManagerIST.writeUsbData(usbDevice.deviceId, cmd);
+        MobileSerialManagerIST.writeUsbData(usbDevice.deviceId, cmd, waitingResponseCompletedEvent);
       } else this.writeUsbData(usbDevice.deviceId, cmd);
     }
   }
