@@ -663,7 +663,11 @@ export default ({ f7route, f7router, filePath, content }) => {
                 <TextViewWidget key={`${currentPageIndex}_text`} widget={pages[currentPageIndex].widgets[0]} />
               )}
               {pages[currentPageIndex].layout === LAYOUT_SCOPE && (
-                <ScopeViewWidget key={`${currentPageIndex}_scope`} widget={pages[currentPageIndex].widgets[0]} />
+                <ScopeViewWidget
+                  pageId={`${currentPageIndex}_scope_view`}
+                  key={`${currentPageIndex}_scope`}
+                  widget={pages[currentPageIndex].widgets[0]}
+                />
               )}
               {pages[currentPageIndex].layout === LAYOUT_BAR && (
                 <BarCharWidget
