@@ -57,7 +57,8 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
 
   if (event.type === "click") {
     const isPointElement = elements[0]?.element instanceof PointElement;
-
+    const idContainerSelected =
+      widgetIndex != undefined ? `icon-container-widget-${widgetIndex}` : "icon-container-widget";
     // Handle click point
     if (isPointElement || selectedPointElement !== null) {
       if (isPointElement) {
@@ -96,7 +97,7 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
           iconContainer.style.display = "none";
         });
 
-        const iconContainerSelected = document.getElementById(`icon-container-widget-${widgetIndex}`);
+        const iconContainerSelected = document.getElementById(idContainerSelected);
         iconContainerSelected.style.left = `${x}px`;
         iconContainerSelected.style.top = `${y}px`;
         iconContainerSelected.style.display = "flex"; // Hiện các icon
@@ -109,12 +110,12 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
         chart.update();
 
         // Ẩn icon nếu không có điểm nào được chọn
-        const iconContainer = document.getElementById(`icon-container-widget-${widgetIndex}`);
+        const iconContainer = document.getElementById(idContainerSelected);
         iconContainer.style.display = "none";
       }
     } else {
       // Ẩn icon nếu không có điểm nào được chọn
-      const iconContainer = document.getElementById(`icon-container-widget-${widgetIndex}`);
+      const iconContainer = document.getElementById(idContainerSelected);
       iconContainer.style.display = "none";
     }
   }
