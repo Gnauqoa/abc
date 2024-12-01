@@ -147,10 +147,10 @@ export class MobileSerialManager {
   }
 
   isInnoLabSensor(data) {
-    let dataLength = data[4];
-    let checksum = data[5 + dataLength];
+    let dataLength = (data[4] << 8) | data[5];
+    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + dataLength];
     let calculatedChecksum = 0xff;
-    for (let i = 0; i < dataLength + 5; i++) {
+    for (let i = 0; i < dataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
       calculatedChecksum = calculatedChecksum ^ data[i];
     }
 

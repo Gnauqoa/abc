@@ -196,7 +196,7 @@ export const defaultSensors = [
     remote_logging: true,
     support_calib: false,
     data: [
-      { id: "inno-013-light", name: "list_sensor.brightness", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
+      { id: "inno-013-light", name: "list_sensor.brightness", unit: "lux", min: 0, max: 500, formatFloatingPoint: 0 },
       //{ id: "inno-013-red", name: "Đỏ", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
       //{ id: "inno-013-green", name: "Xanh lá", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },
       //{ id: "inno-013-blue", name: "Xanh lam", unit: "lux", min: 0, max: 3000, formatFloatingPoint: 0 },

@@ -339,7 +339,7 @@ async function listSerialPorts() {
 
 function listPorts() {
   listSerialPorts();
-  setTimeout(listPorts, 1500);
+  setTimeout(listPorts, 1000);
 }
 
 function setupBluetooth(win) {
