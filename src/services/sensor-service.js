@@ -585,13 +585,11 @@ export class SensorServices {
     return core.timeoutEventData("log,get", size, 2000, true);
   }
   configureSensorsDataRate(rate) {
-    const sensors = DataManagerIST.getSensorsOfDataRun();
+    const sensors = DataManagerIST.getActiveSensorIds();
 
     for (let i = 0; i < sensors.length; ++i) {
-      DeviceManagerIST.sendCmdDTO(sensors[i].sensorId, `$$$fre,${rate}###`);
+      DeviceManagerIST.sendCmdDTO(sensors[i], `$$$fre,${rate}###`);
     }
-
-    // return core.timeoutEventData(eventName, sensors.length, 1000, true);
   }
 }
 
