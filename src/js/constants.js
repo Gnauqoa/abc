@@ -195,6 +195,7 @@ export const SPACE_KEY = 32;
 
 // Frequency
 export const FREQUENCY_UNIT = "const.sample_second";
+export const FREQUENCY_MINI_SECOND_UNIT = "const.sample_mini_second";
 export const INVERSE_FREQUENCY_UNIT = "const.seconds_sample";
 // Sample setting
 export const CONDITION_TYPE = {
@@ -211,7 +212,7 @@ export const CONDITION = {
 };
 
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
-export const FREQUENCIES = [0.033, 0.1, 0.2, 1, 2, 5, 10, 50];
+export const FREQUENCIES = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000];
 export const SAMPLING_MANUAL_NAME = "const.manual";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
