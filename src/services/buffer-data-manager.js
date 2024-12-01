@@ -17,11 +17,12 @@ export function clearBufferData(sensorId) {
 }
 
 export function addBufferData(sensorId, data) {
-  currentBuffer[sensorId] = data;
   let bufferData = buffers.get(sensorId) || [];
-  if (!Array.isArray(data)) {
+  if (Array.isArray(data[0])) {
+    currentBuffer[sensorId] = data[data.length - 1];
     bufferData = bufferData.concat(data);
   } else {
+    currentBuffer[sensorId] = data;
     bufferData.push(data);
   }
   buffers.set(sensorId, bufferData);
