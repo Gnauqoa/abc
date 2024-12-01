@@ -1250,7 +1250,6 @@ export class DataManager {
         sensorsData.push(sample);
       }
 
-      currentBuffer[sensorId] = sensorsData;
       addBufferData(sensorId, sensorsData);
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
