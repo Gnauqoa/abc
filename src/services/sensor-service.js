@@ -237,7 +237,7 @@ export const defaultSensors = [
     data: [
       { id: "BLE-9909-PH", name: "list_sensor.pH_level", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
       { id: "BLE-9909-EC", name: "list_sensor.electrical_conductivity", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-9909-TDS", name: "list_sensor.TDS_concentration", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
+      { id: "BLE-9909-TDS", name: "list_sensor.TDS_concentration", unit: "ppm", min: 0, max: 300, formatFloatingPoint: 0 },
       { id: "BLE-9909-SALT%", name: "list_sensor.salinity_concentration_percent", unit: "%", min: 0, max: 25, formatFloatingPoint: 2 },
       { id: "BLE-9909-SALTPPM", name: "list_sensor.salinity_ppm", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
       { id: "BLE-9909-TEMP", name: "list_sensor.water_temperature", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },

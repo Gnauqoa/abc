@@ -1011,7 +1011,7 @@ export class DataManager {
 
     let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after header bytes
     let sensorData = [];
-    let calcDataLength = 0; // total data length in terms of data records
+    let dataRecords = 0; // total data length in terms of data records
 
     while (dataRead < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK) {
       for (let i = 0; i < sensorInfo.data.length; i++) {
@@ -1041,13 +1041,12 @@ export class DataManager {
 
         sensorData.push(num);
 
-        calcDataLength++;
-
         dataRead += dataLength;
       }
+      dataRecords++;
     }
 
-    var dataArray = [sensorId, battery, source, device.deviceId, calcDataLength];
+    var dataArray = [sensorId, battery, source, device.deviceId, dataRecords];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1136,7 +1135,7 @@ export class DataManager {
     sensorData.push(salt_tds);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, source, device.deviceId, 6];
+    var dataArray = [device.id, batt, source, device.deviceId, 1];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1212,7 +1211,7 @@ export class DataManager {
     sensorData.push(do_percent);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, source, device.deviceId, 3];
+    var dataArray = [device.id, batt, source, device.deviceId, 1];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1245,8 +1244,8 @@ export class DataManager {
           let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
           formatFloatingPoint = formatFloatingPoint ??= 1;
           sample.push(parseFloat(value).toFixed(formatFloatingPoint));
-          recordsRead++;
         }
+        recordsRead++;
         sensorsData.push(sample);
       }
 
