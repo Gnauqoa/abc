@@ -379,7 +379,9 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
   }
 
-  function stopCollectData() {
+  async function stopCollectData() {
+    await SensorServicesIST.configureSensorsDataRate(10);
+
     DataManagerIST.unsubscribeTimer();
     DataManagerIST.stopCollectingData();
 
@@ -391,7 +393,9 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function startCollectData() {
-    const start = () => {
+    const start = async () => {
+      await SensorServicesIST.configureSensorsDataRate(1000);
+
       initStopCondition();
       DataManagerIST.stopWaitingCollectingData();
       DataManagerIST.emitSubscribersScheduler();

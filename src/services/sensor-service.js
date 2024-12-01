@@ -17,6 +17,7 @@ import motionSensorIcon from "../img/sensor-info/sensor-icons/motion.png";
 import amperageSensorIcon from "../img/sensor-info/sensor-icons/amperage.png";
 import DeviceManagerIST from "./device-manager";
 import * as core from "../utils/core";
+import DataManagerIST from "./data-manager";
 
 export const defaultSensors = [
   {
@@ -72,7 +73,16 @@ export const defaultSensors = [
     icon: o2SensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-003-o2", name: "list_sensor.oxygen_concentration", unit: "%", min: 0, max: 30, formatFloatingPoint: 1 }],
+    data: [
+      {
+        id: "inno-003-o2",
+        name: "list_sensor.oxygen_concentration",
+        unit: "%",
+        min: 0,
+        max: 30,
+        formatFloatingPoint: 1,
+      },
+    ],
   },
   {
     id: 4,
@@ -82,16 +92,18 @@ export const defaultSensors = [
     icon: tempSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ 
-      id: "inno-004-tem", 
-      name: "list_sensor.temperature", 
-      unit: "°C", 
-      min: -40, 
-      max: 125, 
-      formatFloatingPoint: 1, 
-      //dataLength: 4,
-      //calcFunc: x => x/1000,
-    }],
+    data: [
+      {
+        id: "inno-004-tem",
+        name: "list_sensor.temperature",
+        unit: "°C",
+        min: -40,
+        max: 125,
+        formatFloatingPoint: 1,
+        //dataLength: 4,
+        //calcFunc: x => x/1000,
+      },
+    ],
   },
   {
     id: 5,
@@ -146,7 +158,9 @@ export const defaultSensors = [
     icon: pressureSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-009-kpa", name: "list_sensor.gas_pressure", unit: "kPa", min: -50, max: 250, formatFloatingPoint: 0 }],
+    data: [
+      { id: "inno-009-kpa", name: "list_sensor.gas_pressure", unit: "kPa", min: -50, max: 250, formatFloatingPoint: 0 },
+    ],
   },
   {
     id: 10,
@@ -156,7 +170,16 @@ export const defaultSensors = [
     icon: soundSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-010-dba", name: "list_sensor.sound_intensity", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 }],
+    data: [
+      {
+        id: "inno-010-dba",
+        name: "list_sensor.sound_intensity",
+        unit: "dBA",
+        min: 30,
+        max: 120,
+        formatFloatingPoint: 1,
+      },
+    ],
   },
   {
     id: 11,
@@ -166,7 +189,16 @@ export const defaultSensors = [
     icon: amperageSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ id: "inno-011-amp", name: "list_sensor.electrical_current", unit: "mA", min: 0, max: 5000, formatFloatingPoint: 1 }],
+    data: [
+      {
+        id: "inno-011-amp",
+        name: "list_sensor.electrical_current",
+        unit: "mA",
+        min: 0,
+        max: 5000,
+        formatFloatingPoint: 1,
+      },
+    ],
   },
   {
     id: 12,
@@ -176,16 +208,18 @@ export const defaultSensors = [
     icon: voltageSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [{ 
-      id: "inno-012-volt", 
-      name: "list_sensor.voltage", 
-      unit: "V", 
-      min: -10, 
-      max: 10, 
-      formatFloatingPoint: 1,
-      dataLength: 4, // in bytes
-      //calcFunc: x => x+10,
-    }],
+    data: [
+      {
+        id: "inno-012-volt",
+        name: "list_sensor.voltage",
+        unit: "V",
+        min: -10,
+        max: 10,
+        formatFloatingPoint: 1,
+        dataLength: 4, // in bytes
+        //calcFunc: x => x+10,
+      },
+    ],
   },
   {
     id: 13,
@@ -210,9 +244,7 @@ export const defaultSensors = [
     icon: forceSensorIcon,
     remote_logging: true,
     support_calib: true,
-    data: [
-      { id: "inno-014-force", name: "list_sensor.traction", unit: "N", min: 0, max: 50, formatFloatingPoint: 1 },
-    ],
+    data: [{ id: "inno-014-force", name: "list_sensor.traction", unit: "N", min: 0, max: 50, formatFloatingPoint: 1 }],
   },
   {
     id: 15,
@@ -236,11 +268,46 @@ export const defaultSensors = [
     support_calib: false,
     data: [
       { id: "BLE-9909-PH", name: "list_sensor.pH_level", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
-      { id: "BLE-9909-EC", name: "list_sensor.electrical_conductivity", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-9909-TDS", name: "list_sensor.TDS_concentration", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-9909-SALT%", name: "list_sensor.salinity_concentration_percent", unit: "%", min: 0, max: 25, formatFloatingPoint: 2 },
-      { id: "BLE-9909-SALTPPM", name: "list_sensor.salinity_ppm", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-9909-TEMP", name: "list_sensor.water_temperature", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },
+      {
+        id: "BLE-9909-EC",
+        name: "list_sensor.electrical_conductivity",
+        unit: "uS/cm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-9909-TDS",
+        name: "list_sensor.TDS_concentration",
+        unit: "ppm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-9909-SALT%",
+        name: "list_sensor.salinity_concentration_percent",
+        unit: "%",
+        min: 0,
+        max: 25,
+        formatFloatingPoint: 2,
+      },
+      {
+        id: "BLE-9909-SALTPPM",
+        name: "list_sensor.salinity_ppm",
+        unit: "ppm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-9909-TEMP",
+        name: "list_sensor.water_temperature",
+        unit: "°C",
+        min: 0,
+        max: 60,
+        formatFloatingPoint: 1,
+      },
     ],
   },
   {
@@ -253,11 +320,46 @@ export const defaultSensors = [
     support_calib: false,
     data: [
       { id: "BLE-C600-PH", name: "list_sensor.pH_level", unit: "", min: 0, max: 14, formatFloatingPoint: 2 },
-      { id: "BLE-C600-EC", name: "list_sensor.electrical_conductivity", unit: "uS/cm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-C600-TDS", name: "list_sensor.TDS_concentration", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-C600-SALT%", name: "list_sensor.salinity_concentration_percent", unit: "%", min: 0, max: 25, formatFloatingPoint: 2 },
-      { id: "BLE-C600-SALTPPM", name: "list_sensor.salinity_ppm", unit: "ppm", min: 0, max: 9999, formatFloatingPoint: 0 },
-      { id: "BLE-C600-TEMP", name: "list_sensor.water_temperature", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },
+      {
+        id: "BLE-C600-EC",
+        name: "list_sensor.electrical_conductivity",
+        unit: "uS/cm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-C600-TDS",
+        name: "list_sensor.TDS_concentration",
+        unit: "ppm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-C600-SALT%",
+        name: "list_sensor.salinity_concentration_percent",
+        unit: "%",
+        min: 0,
+        max: 25,
+        formatFloatingPoint: 2,
+      },
+      {
+        id: "BLE-C600-SALTPPM",
+        name: "list_sensor.salinity_ppm",
+        unit: "ppm",
+        min: 0,
+        max: 9999,
+        formatFloatingPoint: 0,
+      },
+      {
+        id: "BLE-C600-TEMP",
+        name: "list_sensor.water_temperature",
+        unit: "°C",
+        min: 0,
+        max: 60,
+        formatFloatingPoint: 1,
+      },
     ],
   },
   {
@@ -269,9 +371,30 @@ export const defaultSensors = [
     remote_logging: false,
     support_calib: false,
     data: [
-      { id: "BLE-9100-MG", name: "list_sensor.oxygen_concentration_mg", unit: "mg/L", min: 0, max: 30, formatFloatingPoint: 2 },
-      { id: "BLE-9100-%", name: "list_sensor.oxygen_concentration_percent", unit: "%", min: 0, max: 300, formatFloatingPoint: 1 },
-      { id: "BLE-9100-TEMP", name: "list_sensor.water_temperature", unit: "°C", min: 0, max: 60, formatFloatingPoint: 1 },
+      {
+        id: "BLE-9100-MG",
+        name: "list_sensor.oxygen_concentration_mg",
+        unit: "mg/L",
+        min: 0,
+        max: 30,
+        formatFloatingPoint: 2,
+      },
+      {
+        id: "BLE-9100-%",
+        name: "list_sensor.oxygen_concentration_percent",
+        unit: "%",
+        min: 0,
+        max: 300,
+        formatFloatingPoint: 1,
+      },
+      {
+        id: "BLE-9100-TEMP",
+        name: "list_sensor.water_temperature",
+        unit: "°C",
+        min: 0,
+        max: 60,
+        formatFloatingPoint: 1,
+      },
     ],
   },
   {
@@ -283,7 +406,9 @@ export const defaultSensors = [
     isBuiltin: true,
     remote_logging: false,
     support_calib: false,
-    data: [{ id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 }],
+    data: [
+      { id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 },
+    ],
   },
   {
     id: 69,
@@ -296,7 +421,14 @@ export const defaultSensors = [
     support_calib: false,
     data: [
       { id: "inno-069-wave", name: "list_sensor.wave", unit: "", min: -1, max: 1, formatFloatingPoint: 1 },
-      { id: "inno-069-frequency", name: "list_sensor.frequency", unit: "", min: -100, max: 100, formatFloatingPoint: 1 },
+      {
+        id: "inno-069-frequency",
+        name: "list_sensor.frequency",
+        unit: "",
+        min: -100,
+        max: 100,
+        formatFloatingPoint: 1,
+      },
     ],
   },
 ];
@@ -451,6 +583,15 @@ export class SensorServices {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###", "log,get-done");
 
     return core.timeoutEventData("log,get", size, 2000, true);
+  }
+  async configureSensorsDataRate(rate) {
+    const sensors = DataManagerIST.getSensorsOfDataRun();
+
+    for (const sensor in sensors) {
+      DeviceManagerIST.sendCmdDTO(sensor.sensorId, `$$$fre,${rate}###`);
+    }
+
+    return core.timeoutEventData("fre,all", sensors.length, 1000, true);
   }
 }
 
