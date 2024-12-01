@@ -191,6 +191,7 @@
     "bell": "Bell",
     "lock": "Lock",
     "sample_second": "Hz",
+    "sample_mini_second": "KHz",
     "seconds_sample": "secs/sample",
     "manual": "Manual",
     "servo_calibration": "Servo calibration"

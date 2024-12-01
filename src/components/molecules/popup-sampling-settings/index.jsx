@@ -7,6 +7,7 @@ import {
   SAMPLING_MANUAL_NAME,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
+  FREQUENCY_MINI_SECOND_UNIT,
 } from "../../../js/constants";
 
 import "./index.scss";
@@ -105,6 +106,8 @@ const SamplingSetting = ({
               const displayedFrequency =
                 f === SAMPLING_MANUAL_FREQUENCY
                   ? t(SAMPLING_MANUAL_NAME)
+                  : f >= 1000
+                  ? `${f / 1000} ${t(FREQUENCY_MINI_SECOND_UNIT)}`
                   : f >= 1
                   ? `${f} ${t(FREQUENCY_UNIT)}`
                   : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`;

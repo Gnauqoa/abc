@@ -125,6 +125,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     timerStopCollecting,
     startSampleCondition,
     stopSampleCondition,
+    frequency,
     setFrequency,
     isRunning,
     setIsRunning,
@@ -380,8 +381,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   async function stopCollectData() {
-    await SensorServicesIST.configureSensorsDataRate(10);
-
     DataManagerIST.unsubscribeTimer();
     DataManagerIST.stopCollectingData();
 
@@ -390,11 +389,13 @@ export default ({ f7route, f7router, filePath, content }) => {
       MicrophoneServicesIST.stop();
     }
     setIsRunning(false);
+
+    SensorServicesIST.configureSensorsDataRate(10);
   }
 
   function startCollectData() {
-    const start = async () => {
-      await SensorServicesIST.configureSensorsDataRate(1000);
+    const start = () => {
+      SensorServicesIST.configureSensorsDataRate(frequency);
 
       initStopCondition();
       DataManagerIST.stopWaitingCollectingData();
