@@ -292,7 +292,7 @@ async function listSerialPorts() {
           try {
             const serialPort = new SerialPort({
               path: port.path,
-              baudRate: 921600,
+              baudRate: 115200,
             });
 
             // Open errors will be emitted as an error event
@@ -339,7 +339,7 @@ async function listSerialPorts() {
 
 function listPorts() {
   listSerialPorts();
-  setTimeout(listPorts, 1500);
+  setTimeout(listPorts, 1000);
 }
 
 function setupBluetooth(win) {

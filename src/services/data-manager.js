@@ -997,7 +997,7 @@ export class DataManager {
 
     let sensorSerial = data[2]; // TODO: Will use later
     let battery = data[3]; // TODO: Will use later
-    let totalDataLength = (data[4] << 8) | data[5];
+    let totalDataLength = (data[4] << 8) | data[5]; // total data length in bytes
     let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + totalDataLength];
     let calculatedChecksum = 0xff;
     for (let i = 0; i < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
@@ -1011,6 +1011,7 @@ export class DataManager {
 
     let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after header bytes
     let sensorData = [];
+    let calcDataLength = 0; // total data length in terms of data records
 
     while (dataRead < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK) {
       for (let i = 0; i < sensorInfo.data.length; i++) {
@@ -1040,11 +1041,13 @@ export class DataManager {
 
         sensorData.push(num);
 
+        calcDataLength++;
+
         dataRead += dataLength;
       }
     }
 
-    var dataArray = [sensorId, battery, source, device.deviceId, totalDataLength];
+    var dataArray = [sensorId, battery, source, device.deviceId, calcDataLength];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1133,7 +1136,7 @@ export class DataManager {
     sensorData.push(salt_tds);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, source, device.deviceId, 24];
+    var dataArray = [device.id, batt, source, device.deviceId, 6];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1209,7 +1212,7 @@ export class DataManager {
     sensorData.push(do_percent);
     sensorData.push(temp);
 
-    var dataArray = [device.id, batt, source, device.deviceId, 12];
+    var dataArray = [device.id, batt, source, device.deviceId, 3];
     sensorData.forEach(function (d, i) {
       dataArray.push(d);
     });
@@ -1233,10 +1236,16 @@ export class DataManager {
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
 
-      for (let i = 0; i < dataLength; i++) {
-        let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
-        formatFloatingPoint = formatFloatingPoint ??= 1;
-        sensorsData.push(parseFloat(data[NUM_NON_DATA_SENSORS_CALLBACK + i]).toFixed(formatFloatingPoint));
+      let dataRead = 0;
+
+      while (dataRead < dataLength) {
+        for (let i = 0; i < sensorInfo.data.length; i++) {
+          let value = data[5 + dataRead*sensorInfo.data.length + i];
+          let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
+          formatFloatingPoint = formatFloatingPoint ??= 1;
+          sensorsData.push(parseFloat(value).toFixed(formatFloatingPoint));
+          dataRead++;
+        }
       }
 
       currentBuffer[sensorId] = sensorsData;
