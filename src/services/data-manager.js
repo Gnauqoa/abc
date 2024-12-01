@@ -1231,24 +1231,25 @@ export class DataManager {
       const battery = data[1];
       const source = data[2];
       const deviceId = data[3];
-      const dataLength = data[4];
+      const totalRecords = data[4];
       const sensorsData = [];
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
 
-      let dataRead = 0;
+      let recordsRead = 0;
 
-      while (dataRead < dataLength) {
+      while (recordsRead < totalRecords) {
+        let sample = [];
         for (let i = 0; i < sensorInfo.data.length; i++) {
-          let value = data[5 + dataRead*sensorInfo.data.length + i];
+          let value = data[5 + recordsRead*sensorInfo.data.length + i];
           let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
           formatFloatingPoint = formatFloatingPoint ??= 1;
-          sensorsData.push(parseFloat(value).toFixed(formatFloatingPoint));
-          dataRead++;
+          sample.push(parseFloat(value).toFixed(formatFloatingPoint));
+          recordsRead++;
         }
+        sensorsData.push(sample);
       }
 
-      currentBuffer[sensorId] = sensorsData;
       addBufferData(sensorId, sensorsData);
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
