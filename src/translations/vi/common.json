@@ -192,6 +192,7 @@
     "bell": "Chuông",
     "lock": "Ổ khóa",
     "sample_second": "Hz",
+    "sample_mini_second": "KHz",
     "seconds_sample": "giây/mẫu",
     "manual": "Thủ công",
     "servo_calibration": "Cân chỉnh servo"

@@ -122,10 +122,12 @@ const SamplingSettingPopup = ({
               name={"frequency"}
               display={
                 frequency === SAMPLING_MANUAL_FREQUENCY
-                  ? t(SAMPLING_MANUAL_NAME)
-                  : frequency >= 1
-                  ? `${frequency} ${t(FREQUENCY_UNIT)}`
-                  : `${parseInt(1 / frequency)} ${t(INVERSE_FREQUENCY_UNIT)}`
+                ? t(SAMPLING_MANUAL_NAME)
+                : frequency >= 1000
+                ? `${frequency / 1000} ${t(FREQUENCY_MINI_SECOND_UNIT)}`
+                : frequency >= 1
+                ? `${frequency} ${t(FREQUENCY_UNIT)}`
+                : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`
               }
               onChange={setFrequency}
               options={[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY]

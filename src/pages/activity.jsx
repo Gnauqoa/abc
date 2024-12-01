@@ -125,6 +125,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     timerStopCollecting,
     startSampleCondition,
     stopSampleCondition,
+    frequency,
     setFrequency,
     isRunning,
     setIsRunning,
@@ -393,8 +394,8 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function startCollectData() {
-    const start = async () => {
-      SensorServicesIST.configureSensorsDataRate(1000);
+    const start = () => {
+      SensorServicesIST.configureSensorsDataRate(frequency);
 
       initStopCondition();
       DataManagerIST.stopWaitingCollectingData();
