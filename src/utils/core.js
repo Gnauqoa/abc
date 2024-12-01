@@ -557,8 +557,6 @@ export function createExcelWorkbookBuffer({ sheets }) {
 }
 
 export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }) {
-
-  
   const fileExt = "xlsx";
   const excelBuffer = createExcelWorkbookBuffer({ sheets: dataRunsInfo });
 
@@ -583,7 +581,11 @@ export async function exportDataRunsToExcel({ filePath, fileName, dataRunsInfo }
   } else if (f7.device.cordova) {
     try {
       const savedPath = await exportFileAndroid(excelBuffer, fileName, fileExt);
-      dialog.alert(i18next.t("utils.saved_successfully"), `${i18next.t("utils.saved_run_data_successfully_at")} ${savedPath}`, () => {});
+      dialog.alert(
+        i18next.t("utils.saved_successfully"),
+        `${i18next.t("utils.saved_run_data_successfully_at")} ${savedPath}`,
+        () => {}
+      );
       return;
     } catch (error) {
       console.log("Save file error", error);
@@ -638,10 +640,10 @@ export function getPageName(listPageName) {
 }
 
 export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCancel = false) {
-  f7.dialog.preloader(i18next.t("utils.loading")+"...");
+  f7.dialog.preloader(i18next.t("utils.loading") + "...");
   hasCancel &&
     $(".dialog-preloader .dialog-title").html(
-      `${i18next.t("utils.loading")+"..."} <span class="edl-cancel-preloader dialog-button">Hủy</span>`
+      `${i18next.t("utils.loading") + "..."} <span class="edl-cancel-preloader dialog-button">Hủy</span>`
     );
   return new Promise((resolve, reject) => {
     let timeoutHandler;
@@ -659,6 +661,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
         f7.dialog.close();
         clearTimeout(timeoutHandler);
         document.removeEventListener(eventName, dataHandler);
+        document.dispatchEvent(new CustomEvent(`${eventName}-done`, { detail: { status: "success", dataBuffer } }));
         resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
       }
     }
@@ -671,6 +674,8 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
     timeoutHandler = setTimeout(() => {
       f7.dialog.close();
       document.removeEventListener(eventName, dataHandler);
+      document.dispatchEvent(new CustomEvent(`${eventName}-done`, { detail: { status: "failed", dataBuffer } }));
+
       reject("timeout");
     }, timeout + 200 * dataSize);
 

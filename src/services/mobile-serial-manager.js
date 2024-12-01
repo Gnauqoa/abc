@@ -14,6 +14,7 @@ export class MobileSerialManager {
   init() {
     this.initVariables();
     this.initInterval();
+    this.initReadCallback();
   }
 
   initVariables() {
@@ -35,6 +36,8 @@ export class MobileSerialManager {
     this.runnerInterval = null;
 
     this.isRunning = false;
+
+    this.isWaitingSensorResponse = false;
   }
 
   initInterval() {
@@ -56,7 +59,7 @@ export class MobileSerialManager {
 
     if (!this.runnerInterval) {
       this.runnerInterval = setInterval(async () => {
-        if (this.runnerQueue.length <= 0 || this.isRunning) return;
+        if (this.runnerQueue.length <= 0 || this.isRunning || this.isWaitingSensorResponse) return;
 
         this.isRunning = true;
         const runner = this.runnerQueue.shift();
@@ -67,7 +70,17 @@ export class MobileSerialManager {
           } else if (runner.type === RUNNER_TYPE.READ) {
             await this.readDeviceData(runner.opts.deviceId);
           } else if (runner.type === RUNNER_TYPE.SEND) {
-            await this.writeSerialByDeviceId(runner.opts.deviceId, runner.opts.data);
+            if (runner.opts.waitingResponseCompletedEvent) {
+              this.isWaitingSensorResponse = true;
+              document.addEventListener(runner.opts.waitingResponseCompletedEvent, () =>
+                this.onWaitingResponseCompletedEvent(runner.opts.waitingResponseCompletedEvent)
+              );
+
+              this.initReadCallback();
+              await this.openSerialByDeviceId(runner.opts.deviceId);
+            }
+
+            await this.writeSerial(runner.opts.data);
           }
         } catch (error) {
           this.handleError(error);
@@ -76,6 +89,11 @@ export class MobileSerialManager {
         }
       }, RUNNER_INTERVAL);
     }
+  }
+
+  onWaitingResponseCompletedEvent(eventName) {
+    this.isWaitingSensorResponse = false;
+    document.removeEventListener(eventName, this.onWaitingResponseCompletedEvent);
   }
 
   /**
@@ -89,12 +107,43 @@ export class MobileSerialManager {
     return MobileSerialManager.instance;
   }
 
+  async writeSerial(data) {
+    if (!window.serial) return;
+
+    return new Promise((resolve, reject) => {
+      serial.write(data, resolve, reject);
+    });
+  }
+
   handleError(message) {
     console.error("Serial Error:", message);
 
     // if (!message.includes("No device found") && !message.includes("Already open")) {
     //   alert(`Error: ${message}`);
     // }
+  }
+
+  initReadCallback = () => {
+    serial.registerReadCallback((data) => this.onReadDataSuccess(new Uint8Array(data)), this.handleError);
+  };
+
+  initOnNewApprovedDeviceCallback = () => {
+    serial.registerNewApprovedDeviceCallback((device) => {
+      this.updateActiveDevices(device);
+    });
+  };
+
+  async openSerialByDeviceId(deviceId) {
+    return new Promise((resolve, reject) => {
+      serial.openSerialByDeviceId(
+        {
+          baudRate: SERIAL_BAUD_RATE,
+          deviceId,
+        },
+        resolve,
+        reject
+      );
+    });
   }
 
   isInnoLabSensor(data) {
@@ -112,8 +161,6 @@ export class MobileSerialManager {
   }
 
   onReadDataSuccess(newData, deviceId) {
-    console.log("Data received: ", newData.join(", "));
-
     dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
 
     if (this.isInnoLabSensor(newData)) {
@@ -176,11 +223,11 @@ export class MobileSerialManager {
     }
   }
 
-  async writeUsbData(deviceId, data) {
+  async writeUsbData(deviceId, data, waitingResponseCompletedEvent) {
     const firstTask = this.runnerQueue[0];
 
     this.runnerQueue = [
-      { type: RUNNER_TYPE.SEND, opts: { deviceId, data } },
+      { type: RUNNER_TYPE.SEND, opts: { deviceId, data, waitingResponseCompletedEvent } },
       { type: RUNNER_TYPE.READ, opts: { deviceId } },
       ...this.runnerQueue.slice(1),
     ];

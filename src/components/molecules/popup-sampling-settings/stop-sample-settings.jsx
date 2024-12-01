@@ -10,7 +10,7 @@ import { ListInput } from "framework7-react";
 
 const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
   const { t } = useTranslation();
-  const { isRunning, isDelay, isCheckingSensor } = useActivityContext();
+  const { isRunning } = useActivityContext();
   return (
     <>
       <div className="item">
@@ -57,7 +57,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
                 <div className="text item-first">{`${t("modules.input_value")} (${t("modules.sensor")}):`}</div>
                 <div className="item-second">
                   <SensorSelector
-                    disabled={isRunning || isDelay || isCheckingSensor}
+                    disabled={isRunning}
                     selectedSensor={stopSampleCondition.sensor}
                     onChange={(sensor) => onChange("sensor", sensor)}
                   />
@@ -70,7 +70,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
                 size={5}
                 name="stopSampleCdt.cdtValue"
                 label={`${t("modules.condition_value")}:`}
-                type="text"
+                type="number"
                 value={stopSampleCondition.conditionValue}
                 onChange={(e) => onChange("conditionValue", e.target.value)}
               />
@@ -82,7 +82,7 @@ const StopSampleSettings = ({ stopSampleCondition, onChange }) => {
               size={5}
               name="stopSampleCdt.timer"
               label={`${t("common.time")} (${t("common.second")}):`}
-              type="text"
+              type="number"
               value={stopSampleCondition.timer === TIMER_NO_STOP ? "" : stopSampleCondition.timer}
               onChange={(e) => onChange("timer", e.target.value)}
             />

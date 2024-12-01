@@ -54,10 +54,6 @@ const deltasStorage = new storeService(LINE_CHART_DELTA_TABLE);
 export const ActivityContext = React.createContext({
   name: [],
   setName: () => {},
-  isCheckingSensor: false,
-  setIsCheckingSensor: () => {},
-  isDelay: false,
-  setIsDelay: () => {},
   pages: [],
   setPages: () => {},
   frequency: null,
@@ -99,8 +95,6 @@ export const ActivityContext = React.createContext({
 });
 
 export const ActivityContextProvider = ({ children }) => {
-  const [isDelay, setIsDelay] = useState(false);
-  const [isCheckingSensor, setIsCheckingSensor] = useState(false);
   const [name, setName] = useState("");
   const [pages, setPages] = useState(defaultPages);
   const [frequency, setFrequency] = useState(1);
@@ -147,7 +141,6 @@ export const ActivityContextProvider = ({ children }) => {
 
     const newCurDataRunId = DataManagerIST.getCurrentDataRunId();
 
-    console.log("newPages", newPages);
     setPages(newPages);
     setCurrentPageIndex(newPageIndex);
     setCurrentDataRunId(newCurDataRunId);
@@ -392,7 +385,6 @@ export const ActivityContextProvider = ({ children }) => {
   const initContext = () => {
     setPages(defaultPages);
     setFrequency(1);
-    setTimerStopCollecting(TIMER_NO_STOP);
     setIsRunning(false);
     setCurrentPageIndex(0);
     setCurrentDataRunId(defaultPages[0].lastDataRunId);
@@ -407,10 +399,6 @@ export const ActivityContextProvider = ({ children }) => {
       value={{
         name,
         setName,
-        isCheckingSensor,
-        setIsCheckingSensor,
-        isDelay,
-        setIsDelay,
         pages,
         setPages,
         frequency,

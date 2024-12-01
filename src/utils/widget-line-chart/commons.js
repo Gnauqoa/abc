@@ -620,6 +620,9 @@ export const interpolateHandler = (chartInstance, hiddenDataLineIds) => {
 
 // ======================================= END EXPANDED OPTIONS FUNCTIONS =======================================
 export const prepareContentNote = (str) => {
+  if (typeof str != "string") {
+    return undefined;
+  }
   const words = str.split(" ");
   const result = [];
   let currentString = "";
