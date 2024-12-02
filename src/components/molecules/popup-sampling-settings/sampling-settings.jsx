@@ -6,6 +6,7 @@ import "./sampling-settings.scss";
 import {
   CONDITION_TYPE,
   FREQUENCIES,
+  FREQUENCY_MINI_SECOND_UNIT,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
   SAMPLING_MANUAL_FREQUENCY,
@@ -122,12 +123,12 @@ const SamplingSettingPopup = ({
               name={"frequency"}
               display={
                 frequency === SAMPLING_MANUAL_FREQUENCY
-                ? t(SAMPLING_MANUAL_NAME)
-                : frequency >= 1000
-                ? `${frequency / 1000} ${t(FREQUENCY_MINI_SECOND_UNIT)}`
-                : frequency >= 1
-                ? `${frequency} ${t(FREQUENCY_UNIT)}`
-                : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`
+                  ? t(SAMPLING_MANUAL_NAME)
+                  : frequency >= 1000
+                  ? `${frequency / 1000} ${t(FREQUENCY_MINI_SECOND_UNIT)}`
+                  : frequency >= 1
+                  ? `${frequency} ${t(FREQUENCY_UNIT)}`
+                  : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`
               }
               onChange={setFrequency}
               options={[...FREQUENCIES, SAMPLING_MANUAL_FREQUENCY]
@@ -140,6 +141,8 @@ const SamplingSettingPopup = ({
                   display:
                     f === SAMPLING_MANUAL_FREQUENCY
                       ? t(SAMPLING_MANUAL_NAME)
+                      : f >= 1000
+                      ? `${f / 1000} ${t(FREQUENCY_MINI_SECOND_UNIT)}`
                       : f >= 1
                       ? `${f} ${t(FREQUENCY_UNIT)}`
                       : `${parseInt(1 / f)} ${t(INVERSE_FREQUENCY_UNIT)}`,
