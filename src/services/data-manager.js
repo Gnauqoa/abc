@@ -20,7 +20,8 @@ import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widg
 import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, keepRecentBuffersData } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 6;
+const NUM_NON_DATA_SENSORS_CALLBACK = 5;
+const NUM_NON_DATA_SENSORS_CALLBACK_V2 = 6;
 
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
@@ -941,8 +942,16 @@ export class DataManager {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
     } else {
-      if (data[0] === 0xaa) { // new sensor message
-        this.rx_data_lenth = ((data[4] << 8) | data[5]) + NUM_NON_DATA_SENSORS_CALLBACK + 1; // data + header bytes
+      if (data[0] === 0xaa || data[0] === 0xcc) { // new sensor message
+        let header_bytes;
+        if (data[0] === 0xaa) { // V1 message
+          header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
+          this.rx_data_lenth = data[4] + header_bytes + 1; // data + header bytes
+        } else if (data[0] === 0xcc) { // V2 message
+          header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
+          this.rx_data_lenth = ((data[4] << 8) | data[5]) + header_bytes + 1; // data + header bytes
+        }
+        
         if (data[data.length-1] === 0xbb) {
           this.rx_data_lenth += 1; // 1 ending byte
         }
@@ -985,22 +994,33 @@ export class DataManager {
     /* Each sensor data record has following structure
         0xAA - start byte
         Sensor ID - 1 byte
-        Sensor Serial ID - 2 bytes
-        Data length - 2 bytes
+        Sensor Serial ID - 1 byte
+        Sensor Battery - 1 byte
+        Data length - 1 byte (V1) 2 bytes (V2)
         Sensor data [0..len] - 4 byte per data
         Checksum - 1 byte xor(start byte, sensor id, sensor serial ... data[len])
         0xBB - stop byte (already cut off by serial delimiter parser)
       */
+    let header_bytes;
     let sensorId = data[1];
-    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    if (sensorInfo === null) return;
+    let sensorSerial = data[2]; // TODO: Will use later;
+    let battery = data[3];
+    let totalDataLength;
 
-    let sensorSerial = data[2]; // TODO: Will use later
-    let battery = data[3]; // TODO: Will use later
-    let totalDataLength = (data[4] << 8) | data[5]; // total data length in bytes
-    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + totalDataLength];
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+    if (sensorInfo === null) return;    
+
+    if (data[0] == 0xaa) { // Sensor V1 message
+      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
+      totalDataLength = data[4]; // total data length in bytes
+    } else if (data[0] == 0xcc) { // Sensor V2 message
+      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
+      totalDataLength = (data[4] << 8) | data[5]; // total data length in bytes
+    }
+        
+    let checksum = data[header_bytes + totalDataLength];
     let calculatedChecksum = 0xff;
-    for (let i = 0; i < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
+    for (let i = 0; i < totalDataLength + header_bytes; i++) {
       calculatedChecksum = calculatedChecksum ^ data[i];
     }
 
@@ -1009,11 +1029,11 @@ export class DataManager {
       return;
     }
 
-    let dataRead = NUM_NON_DATA_SENSORS_CALLBACK; // only read after header bytes
+    let dataRead = header_bytes; // only read after header bytes
     let sensorData = [];
     let dataRecords = 0; // total data length in terms of data records
 
-    while (dataRead < totalDataLength + NUM_NON_DATA_SENSORS_CALLBACK) {
+    while (dataRead < totalDataLength + header_bytes) {
       for (let i = 0; i < sensorInfo.data.length; i++) {
         let dataLength = sensorInfo.data[i].dataLength ?? 4;
         // read next dataLength bytes
@@ -1043,6 +1063,7 @@ export class DataManager {
 
         dataRead += dataLength;
       }
+
       dataRecords++;
     }
 
