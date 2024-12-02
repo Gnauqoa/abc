@@ -129,6 +129,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       }
       case DELETE_LOG_ACTION: {
         DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,del###");
+        setRemoteLoggingInfo([0, 0, 0, 0]);
         toast.notifyCmdDTO();
         break;
       }
