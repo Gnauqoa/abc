@@ -511,7 +511,7 @@ export const getCustomTooltipFunc = ({ axisRef }) => {
           let span = "";
           span = `<tr><td><span style="${style}"></span><span>${dataSetName}</span></td></tr>`;
           innerHtml += span;
-          innerHtml += `<tr><td>x=${xValue}(${X_DEFAULT_UNIT})</td></tr>`;
+          innerHtml += `<tr><td>x=${xValue}(${axisRef.current.xUnit || ""})</td></tr>`;
           innerHtml += `<tr><td>y=${yValue}(${axisRef.current.yUnit || ""})</td></tr>`;
         }
       });
