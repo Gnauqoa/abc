@@ -6,8 +6,8 @@ import { BUILTIN_DECIBELS_SENSOR_ID } from "./sensor-service";
 const MIN_DECIBEL = -90;
 const MAX_DECIBEL = 0;
 const SCALE_DECIBEL = 150;
-const GET_SAMPLES_INTERVAL = 200;
-export const BUFFER_LENGTH = 2048;
+const GET_SAMPLES_INTERVAL = 100;
+export const BUFFER_LENGTH = 1024;
 
 // var filterNode;
 

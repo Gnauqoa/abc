@@ -67,8 +67,8 @@ import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/comm
 
 const MAX_DECIBEL = 120;
 const MIN_DECIBEL = 30;
-const GET_SAMPLES_INTERVAL = 1000;
-const DEFAULT_MIN_AMPLITUDE = 0.3;
+const GET_SAMPLES_INTERVAL = 100;
+const DEFAULT_MIN_AMPLITUDE = 0.1;
 const MAX_FREQUENCY = 1000;
 const REF_VALUE = 1.0; // Reference value for SPL calculation
 const REF_DB = 150.0; // Reference level in dB
