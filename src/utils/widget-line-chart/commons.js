@@ -45,6 +45,7 @@ export const STATISTIC_POWER = `${LAYOUT_CHART}-statistic-option-2`;
 export const STATISTIC_INVERSE = `${LAYOUT_CHART}-statistic-option-3`;
 export const STATISTIC_INVERSE_SQUARE = `${LAYOUT_CHART}-statistic-option-4`;
 export const STATISTIC_SINUSOIDAL = `${LAYOUT_CHART}-statistic-option-5`;
+export const STATISTIC_AREA = `${LAYOUT_CHART}-statistic-option-6`;
 
 export const OPTIONS_WITH_SELECTED = [STATISTIC_OPTION, SELECTION_OPTION, SHOW_OFF_DATA_POINT_MARKER];
 

@@ -82,11 +82,12 @@ export const handleDeleteSelection = ({ pageId, chartInstance, widgetId }) => {
   chartInstance.update();
 };
 
-export const getRangeSelections = ({ pageId, chartId }) => {
+export const getRangeSelections = ({ pageId, chartId, widgetId }) => {
   const condition = {};
   const rangeSelections = {};
   if (pageId) condition.pageId = pageId;
   if (chartId) condition.chartId = chartId;
+  if (!_.isNil(widgetId)) condition.widgetId = widgetId;
   const allRangeSelections = rangeSelectionStorage.query(condition);
 
   allRangeSelections.forEach((selectionNote) => {

@@ -7,6 +7,7 @@ import {
   STATISTIC_INVERSE,
   STATISTIC_INVERSE_SQUARE,
   STATISTIC_SINUSOIDAL,
+  STATISTIC_AREA,
 } from "./commons";
 
 const COULD_NOT_FIND_BEST_FIT_LABEL = "Could not find a best fit";
@@ -466,7 +467,50 @@ export const sinusoidalRegression = (data) => {
     midOriginalPoint,
   };
 };
+// Area Regression
+export const areaRegression = (data) => {
+  const n = data.length;
+  const xValues = data.map((point) => parseFloat(point.x));
+  const yValues = data.map((point) => parseFloat(point.y));
+  const midOriginalPoint = getMidOriginalPoint(xValues, yValues);
+  const notFoundContent = [COULD_NOT_FIND_BEST_FIT_LABEL, ""];
 
+  if (n < 2) {
+    return {
+      type: STATISTIC_AREA,
+      fitSuccessful: false,
+      content: notFoundContent,
+      equationLabel: "N/A",
+      equation: () => NaN,
+      midOriginalPoint,
+    };
+  }
+
+  let totalArea = 0;
+  for (let i = 0; i < data.length - 1; i++) {
+    let x1 = data[i].x;
+    let y1 = parseFloat(data[i].y); // Chuyển đổi y từ chuỗi thành số
+    let x2 = data[i + 1].x;
+    let y2 = parseFloat(data[i + 1].y); // Chuyển đổi y từ chuỗi thành số
+
+    // Diện tích của hình thang giữa (x1, y1) và (x2, y2)
+    let area = 0.5 * (x2 - x1) * (y1 + y2);
+    totalArea += area;
+  }
+
+  const content = totalArea
+    ? ["Area fit", "  Area = ∑ (1/2 * (x_{i+1} - x_i) * (y_i + y_{i+1}))", `  = ${totalArea}`, ""]
+    : notFoundContent;
+
+  return {
+    type: STATISTIC_AREA,
+    fitSuccessful: true,
+    content,
+    equationLabel: totalArea ? `Area = ${totalArea}` : "N/A",
+    equation: () => NaN,
+    midOriginalPoint,
+  };
+};
 export const createRegressionDataPoints = (
   id,
   { equation, fitSuccessful, color },
@@ -510,7 +554,7 @@ export const createRegressionDataPoints = (
       if (!firstPoint) {
         firstPoint = { x: roundXValue(x), y };
       }
-      data.push({ x: roundXValue(x - firstPoint.x), y });
+      data.push({ x: roundXValue(x - firstPoint.x) + x1, y });
     } else {
       return defaultResponse;
     }
@@ -523,7 +567,7 @@ export const createRegressionDataPoints = (
 
   const midPointX = (x1 + x2) / 2;
   const midPoint = {
-    x: roundXValue(midPointX - firstPoint.x),
+    x: roundXValue(midPointX - firstPoint.x) + x1,
     y: roundXValue(equation(midPointX)),
   };
 
