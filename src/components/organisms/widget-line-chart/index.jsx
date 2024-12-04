@@ -902,6 +902,7 @@ let LineChart = (props, ref) => {
   };
 
   const changeSelectedSensor = ({ sensor, sensorIndex, widgetId }) => {
+    axisRef.current.yUnit = sensor.unit;
     handleSensorChange({ widgetId, sensorIndex, sensor });
   };
 
