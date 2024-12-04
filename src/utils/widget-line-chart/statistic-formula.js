@@ -485,6 +485,9 @@ export const areaRegression = (data) => {
       midOriginalPoint,
     };
   }
+  // Area là tổng diện tích của tất cả các hình thang giữa các điểm trong mảng dữ liệu data.
+  // Công thức tính diện tích hình thang giữa (x1, y1) và (x2, y2):
+  // A_i = 1/2 * (x_{i+1} - x_i) * (y_i + y_{i+1})
 
   let totalArea = 0;
   for (let i = 0; i < data.length - 1; i++) {
@@ -498,9 +501,7 @@ export const areaRegression = (data) => {
     totalArea += area;
   }
 
-  const content = totalArea
-    ? ["Area fit", "  Area = ∑ (1/2 * (x_{i+1} - x_i) * (y_i + y_{i+1}))", `  = ${totalArea}`, ""]
-    : notFoundContent;
+  const content = totalArea ? ["Area fit", ` Area = ${totalArea}`, ""] : notFoundContent;
 
   return {
     type: STATISTIC_AREA,
