@@ -355,7 +355,7 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
         hiddenDataLineIds,
         widgetId,
       });
-      const { rangeSelections } = getRangeSelections({ pageId: pageId, chartId: chartInstance.id });
+      const { rangeSelections } = getRangeSelections({ pageId: pageId, widgetId });
       newChartAnnotations = {
         ...labelNoteAnnotations,
         ...labelDeltaAnnotations,
@@ -840,6 +840,27 @@ let LineChart = (props, ref) => {
       if (!isRangeSelected) {
         const widgetId = widgets[index].id;
         handleDeleteSelection({ pageId, chartInstance, widgetId });
+        const statisticNotes = statisticNotesStorage.query({ pageId, widgetId });
+        statisticNotes.forEach((statisticNote) => {
+          statisticNotesStorage.delete(statisticNote.id);
+          delete chartInstance.config.options.plugins.annotation.annotations[statisticNote.id];
+
+          if (statisticNote.linearReg) {
+            chartInstance.data.datasets = chartInstance.data.datasets.filter(
+              (dataset) => dataset.id != statisticNote.linearReg.id
+            );
+          }
+          addStatisticNote({
+            chartInstance,
+            isShowStatistic,
+            sensors: widgets[index].sensors,
+            pageId,
+            hiddenDataLineIds,
+            isDefaultXAxis: statisticNote.isDefaultXAxis,
+            statisticOptionId: statisticNote.statisticOptionId,
+            widgetId,
+          });
+        });
       } else {
         chartInstance.update();
       }

@@ -9,6 +9,7 @@ import {
   STATISTIC_INVERSE,
   STATISTIC_INVERSE_SQUARE,
   STATISTIC_SINUSOIDAL,
+  STATISTIC_AREA,
 } from "./commons";
 import DataManagerIST from "../../services/data-manager";
 import { LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
@@ -24,6 +25,7 @@ import {
   inverseRegression,
   inverseSquareRegression,
   sinusoidalRegression,
+  areaRegression,
   createRegressionDataPoints,
 } from "./statistic-formula";
 import _ from "lodash";
@@ -52,6 +54,8 @@ const createRegression = ({ statisticOptionId, datasetData, color }) => {
       break;
     case STATISTIC_SINUSOIDAL:
       regression = sinusoidalRegression(datasetData);
+    case STATISTIC_AREA:
+      regression = areaRegression(datasetData);
     default:
       break;
   }
@@ -203,6 +207,8 @@ export const addStatisticNote = ({
           summary: statisticNote,
           linearReg: regressionDataPoints,
           widgetId,
+          statisticOptionId,
+          isDefaultXAxis,
         });
 
         // If the current dataRun is hidden, skip update it in chart

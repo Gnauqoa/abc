@@ -10,6 +10,7 @@ import {
   STATISTIC_INVERSE,
   STATISTIC_INVERSE_SQUARE,
   STATISTIC_SINUSOIDAL,
+  STATISTIC_AREA,
 } from "../../../utils/widget-line-chart/commons";
 
 const PopoverStatisticOptions = ({ callback }) => {
@@ -54,6 +55,12 @@ const PopoverStatisticOptions = ({ callback }) => {
           popoverClose
           title="Sinusoidal fit"
           onClick={() => callback({ statisticOptionId: STATISTIC_SINUSOIDAL })}
+        />
+        <ListItem
+          link="#"
+          popoverClose
+          title="Area fit"
+          onClick={() => callback({ statisticOptionId: STATISTIC_AREA })}
         />
       </List>
     </Popover>
