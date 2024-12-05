@@ -69,3 +69,20 @@ export function getBufferData(sensorId, sampleSize) {
 }
 
 export default buffers;
+
+/** Buffer for OSC */
+const oscBuffers = new Map();
+
+export function clearOscBuffersData() {
+  oscBuffers.clear();
+}
+
+export function addOscBufferData(sensorId, data) {
+  let bufferData = oscBuffers.get(sensorId) || [];
+  bufferData = bufferData.concat(data);
+  oscBuffers.set(sensorId, bufferData);
+}
+
+export function getOscBufferData(sensorId) {
+  return oscBuffers.get(sensorId);
+}

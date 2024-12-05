@@ -28,9 +28,15 @@ import {
   PREFIX_LABEL_NOTE,
   NOTE_OPTION,
 } from "../../../utils/widget-line-chart/commons";
-import { abs } from "mathjs";
 import SensorSelector from "../../molecules/popup-sensor-selector";
-import SensorServiceIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID } from "../../../services/sensor-service";
+
+import SensorServiceIST, {
+  SINE_WAVE_SENSOR_INFO,
+  FREQUENCY_WAVE_SENSOR_INFO,
+  CURRENT_SENSOR_INFO,
+  VOLTAGE_SENSOR_INFO,
+} from "../../../services/sensor-service";
+
 import MicrophoneServiceIST, { BUFFER_LENGTH } from "../../../services/microphone-service";
 import DataManagerIST from "../../../services/data-manager";
 import { createSensorInfo } from "../../../utils/core";
@@ -64,27 +70,17 @@ import PopoverStatisticOptions from "../widget-line-chart/PopoverStatisticOption
 import { addStatisticNote, removeStatisticNote } from "../../../utils/widget-scope-view/statistic-plugin";
 import { f7 } from "framework7-react";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
+import { getOscBufferData, clearOscBuffersData } from "../../../services/buffer-data-manager";
 
 const MAX_DECIBEL = 120;
 const MIN_DECIBEL = 30;
-const GET_SAMPLES_INTERVAL = 100;
 const DEFAULT_MIN_AMPLITUDE = 0.1;
 const MAX_FREQUENCY = 1000;
-const REF_VALUE = 1.0; // Reference value for SPL calculation
-const REF_DB = 150.0; // Reference level in dB
 const POINT_RADIUS = 2;
+const READ_BUFFER_INTERVAL = 100;
 
-let drawChartTimerId;
-
-const SINE_WAVE = 0;
-const FREQUENCY_WAVE = 1;
-const DECIBEL = 2;
-
-const visualSettings = {
-  [`${BUILTIN_DECIBELS_SENSOR_ID}-0`]: DECIBEL,
-  [`${BUILTIN_MICROPHONE_ID}-0`]: SINE_WAVE,
-  [`${BUILTIN_MICROPHONE_ID}-1`]: FREQUENCY_WAVE,
-};
+let drawChartAnimationFrameId;
+let drawChartTimeoutID;
 
 let selectedPointElement = null;
 let selectedNoteElement = null;
@@ -98,6 +94,14 @@ const labelNotesStorage = new StoreService(LINE_CHART_LABEL_NOTE_TABLE);
 const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const deltasStorage = new StoreService(LINE_CHART_DELTA_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
+
+function generateRandomNumbers() {
+  const randomNumbers = [];
+  for (let i = 0; i < 1000; i++) {
+      randomNumbers.push(Math.floor(Math.random() * 100) + 1);
+  }
+  return randomNumbers;
+}
 
 const handleDrag = function ({ event, chart, pageId, widgetId }) {
   if (isRangeSelected) {
@@ -321,98 +325,8 @@ const ScopeViewWidget = ({ widget, pageId }) => {
   const sensor = widget.sensors[defaultSensorIndex];
   const sensorInfo = createSensorInfo(sensor);
 
-  const soundSensors = SensorServiceIST.getActiveSoundSensors();
-  const soundSensorsId = soundSensors.map((sensor) => sensor.id);
-
-  const initWebAudio = () => {
-    const samplingRate = MicrophoneServiceIST.getSamplingRate();
-    const fftSize = MicrophoneServiceIST.getFFTSize();
-    const timePerSample = MicrophoneServiceIST.getTimePerSample();
-    let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
-
-    function visualize() {
-      if (visualSettings[sensorInfo] === SINE_WAVE) {
-        const drawSineWave = function () {
-          let time = 0;
-          const normalizedArray = [];
-          const dataArray = MicrophoneServiceIST.getFloatTimeDomainData();
-
-          for (let i = 0; i < BUFFER_LENGTH; i++) {
-            const y = dataArray[i];
-            if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
-            normalizedArray.push({ x: time, y: y });
-            time += timePerSample * 1000;
-          }
-
-          const chartData = [
-            {
-              name: t("organisms.sound_amplitude"),
-              data: normalizedArray,
-              dataRunId: currentDataRunId,
-            },
-          ];
-
-          const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
-          updateChart({
-            chartInstance: chartInstanceRef.current,
-            data: chartDatas,
-            maxX: timePerSample * BUFFER_LENGTH * 1000,
-            maxY: maxAmplitude,
-            minY: maxAmplitude * -1,
-            labelY: t("organisms.sound_amplitude"),
-            labelX: t("common.time") + " (ms)",
-            tension: 0.2,
-          });
-
-          if (isRunning) drawChartTimerId = setTimeout(drawSineWave, GET_SAMPLES_INTERVAL);
-        };
-
-        drawSineWave();
-      } else if (visualSettings[sensorInfo] === FREQUENCY_WAVE) {
-        const drawFrequencyWave = function () {
-          let frequency = 0;
-          const normalizedArray = [];
-          const dataArrayAlt = MicrophoneServiceIST.getFloatFrequencyData();
-
-          for (let i = 0; i < dataArrayAlt.length; i++) {
-            const amplitude = Math.pow(10, dataArrayAlt[i] / 20);
-            const spl = 20 * Math.log10(amplitude / REF_VALUE);
-            const positivedB = spl + REF_DB;
-
-            if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
-
-            normalizedArray.push({ x: frequency, y: positivedB });
-            frequency = i * (samplingRate / fftSize);
-          }
-
-          const chartData = [
-            {
-              name: t("organisms.sound_level"),
-              data: normalizedArray,
-              dataRunId: currentDataRunId,
-            },
-          ];
-
-          const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
-          updateChart({
-            chartInstance: chartInstanceRef.current,
-            data: chartDatas,
-            maxX: MAX_FREQUENCY,
-            maxY: MAX_DECIBEL,
-            minY: MIN_DECIBEL,
-            labelY: t("organisms.sound_level"),
-            labelX: t("organisms.sound_frequency"),
-            tension: 0.2,
-          });
-
-          if (isRunning) drawChartTimerId = setTimeout(drawFrequencyWave, GET_SAMPLES_INTERVAL);
-        };
-        drawFrequencyWave();
-      }
-    }
-
-    visualize();
-  };
+  const oscSensors = SensorServiceIST.getOscSensors();
+  const oscSensorsId = oscSensors.map((sensor) => sensor.id);
 
   useEffect(() => {
     try {
@@ -532,9 +446,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
           data: chartDatas,
           maxX: maxX,
           maxY: yValue,
-          labelY: visualSettings[sensorInfo] === SINE_WAVE ? "amplitude" : "decibels",
-          labelX: visualSettings[sensorInfo] === SINE_WAVE ? "ms" : "frequency",
-          tension: visualSettings[sensorInfo] === SINE_WAVE ? 0.6 : 0.2,
+          labelY: sensorInfo === SINE_WAVE_SENSOR_INFO ? "amplitude" : "decibels",
+          labelX: sensorInfo === SINE_WAVE_SENSOR_INFO ? "ms" : "frequency",
+          tension: sensorInfo === SINE_WAVE_SENSOR_INFO ? 0.6 : 0.2,
         });
       } else {
         // Not need updated chart, as updateChart function will call update
@@ -548,15 +462,108 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     }
   }, []);
 
+  const drawSoundChart = () => {
+    const normalizedArray = MicrophoneServiceIST.getSoundChartData(sensorInfo);
+    const chartData = [
+      {
+        name: sensorInfo === SINE_WAVE_SENSOR_INFO ? t("organisms.sound_amplitude") : t("organisms.sound_level"),
+        data: normalizedArray,
+        dataRunId: currentDataRunId,
+      },
+    ];
+  
+    const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+  
+    if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
+      const timePerSample = MicrophoneServiceIST.getTimePerSample();
+      let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
+      updateChart({
+        chartInstance: chartInstanceRef.current,
+        data: chartDatas,
+        maxX: timePerSample * BUFFER_LENGTH * 1000,
+        maxY: maxAmplitude,
+        minY: maxAmplitude * -1,
+        labelY: t("organisms.sound_amplitude"),
+        labelX: t("common.time") + " (ms)",
+        tension: 0.2,
+      });
+    } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
+      updateChart({
+        chartInstance: chartInstanceRef.current,
+        data: chartDatas,
+        maxX: MAX_FREQUENCY,
+        maxY: MAX_DECIBEL,
+        minY: MIN_DECIBEL,
+        labelY: t("organisms.sound_level"),
+        labelX: t("organisms.sound_frequency"),
+        tension: 0.2,
+      });
+    }
+  }
+
+  const drawBufferChart = () => {
+    const bufferData = getOscBufferData(sensor.id);
+    if (!bufferData) return;
+
+    clearOscBuffersData();
+
+    const deltaTime = READ_BUFFER_INTERVAL / bufferData.length;
+    const normalizedArray = bufferData.map((value, index) => {
+      return {
+        x: index * deltaTime,
+        y: value,
+      };
+    });
+
+    const chartData = [
+      {
+        name: sensor.name,
+        data: normalizedArray,
+        dataRunId: currentDataRunId,
+      },
+    ];
+
+    const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+
+    updateChart({
+      chartInstance: chartInstanceRef.current,
+      data: chartDatas,
+      maxX: 100,
+      maxY: 100,
+      minY: 0,
+      labelY: sensor.name + ` (${sensor.unit})`,
+      labelX: t("common.time") + " (ms)",
+      tension: 0.2,
+    });
+  };
+
   useEffect(() => {
-    if (isRunning) initWebAudio();
-    else {
+    if (isRunning) {
+      const drawChart = function () {
+        if ([SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO].includes(sensorInfo)) {
+          drawSoundChart();
+          if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
+        } else if ([CURRENT_SENSOR_INFO, VOLTAGE_SENSOR_INFO].includes(sensorInfo)) {
+          drawBufferChart();
+          if (isRunning) drawChartTimeoutID = setTimeout(drawChart, READ_BUFFER_INTERVAL);
+        }
+      };
+
+      drawChart();
+    } else {
       const curDatasets = chartInstanceRef.current.data?.datasets;
       if (Array.isArray(curDatasets) && curDatasets.length === 1) {
         const data = curDatasets[0].data;
         DataManagerIST.addSoundDataDataRun(sensorInfo, data, currentDataRunId);
       }
-      clearTimeout(drawChartTimerId);
+      if (drawChartAnimationFrameId) {
+        cancelAnimationFrame(drawChartAnimationFrameId);
+        drawChartAnimationFrameId = null;
+      }
+      if (drawChartTimeoutID) {
+        clearTimeout(drawChartTimeoutID);
+        drawChartTimeoutID = null;
+      }
     }
   }, [isRunning]);
 
@@ -835,7 +842,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
           onChange={(sensor) =>
             handleSensorChange({ widgetId: widget.id, sensorIndex: defaultSensorIndex, sensor: sensor })
           }
-          definedSensors={soundSensorsId}
+          definedSensors={oscSensorsId}
         ></SensorSelector>
       </div>
       {prompt}

@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import _ from "lodash";
-import SensorServicesIST from "./sensor-service";
+import SensorServicesIST, { CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID } from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
@@ -17,7 +17,15 @@ import {
   RENDER_INTERVAL,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
-import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, keepRecentBuffersData } from "./buffer-data-manager";
+import buffers, {
+  addBufferData,
+  getBufferData,
+  clearAllBuffersData,
+  clearBufferData,
+  currentBuffer,
+  keepRecentBuffersData,
+  addOscBufferData,
+} from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -1270,7 +1278,12 @@ export class DataManager {
         sensorsData.push(sample);
       }
 
-      addBufferData(sensorId, sensorsData);
+      if ([CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID].includes(sensorId)) {
+        // TODO: convert sensorsData to be an array of numbers [1,2,3,4,5...]
+        addOscBufferData(sensorId, sensorsData);
+      } else {
+        addBufferData(sensorId, sensorsData);
+      }
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
       const activeSensorsIds = this.getActiveSensorIds();

@@ -19,6 +19,17 @@ import DeviceManagerIST from "./device-manager";
 import * as core from "../utils/core";
 import DataManagerIST from "./data-manager";
 
+export const BUILTIN_DECIBELS_SENSOR_ID = 68;
+export const BUILTIN_MICROPHONE_ID = 69;
+export const BUILTIN_MICROPHONE_CODE = "inno-069";
+export const CURRENT_SENSOR_ID = 11;
+export const VOLTAGE_SENSOR_ID = 12;
+
+export const SINE_WAVE_SENSOR_INFO = `${BUILTIN_MICROPHONE_ID}-0`;
+export const FREQUENCY_WAVE_SENSOR_INFO = `${BUILTIN_MICROPHONE_ID}-1`;
+export const CURRENT_SENSOR_INFO = `${CURRENT_SENSOR_ID}-0`;
+export const VOLTAGE_SENSOR_INFO = `${VOLTAGE_SENSOR_ID}-0`;
+
 export const defaultSensors = [
   {
     id: 0,
@@ -182,7 +193,7 @@ export const defaultSensors = [
     ],
   },
   {
-    id: 11,
+    id: CURRENT_SENSOR_ID,
     code: "inno-011",
     name: "list_sensor.current_sensor",
     label: "list_sensor.electrical_current",
@@ -201,7 +212,7 @@ export const defaultSensors = [
     ],
   },
   {
-    id: 12,
+    id: VOLTAGE_SENSOR_ID,
     code: "inno-012",
     name: "list_sensor.voltage_sensor",
     label: "list_sensor.voltage",
@@ -398,7 +409,7 @@ export const defaultSensors = [
     ],
   },
   {
-    id: 68,
+    id: BUILTIN_DECIBELS_SENSOR_ID,
     code: "inno-068",
     name: "list_sensor.built_in_microphone",
     label: "Microphone",
@@ -411,8 +422,8 @@ export const defaultSensors = [
     ],
   },
   {
-    id: 69,
-    code: "inno-069",
+    id: BUILTIN_MICROPHONE_ID,
+    code: BUILTIN_MICROPHONE_CODE,
     name: "list_sensor.built_in_microphone",
     label: "Microphone",
     icon: soundSensorIcon,
@@ -432,10 +443,6 @@ export const defaultSensors = [
     ],
   },
 ];
-
-export const BUILTIN_DECIBELS_SENSOR_ID = 68;
-export const BUILTIN_MICROPHONE_ID = 69;
-export const BUILTIN_MICROPHONE_CODE = "inno-069";
 
 export class SensorServices {
   constructor() {
@@ -459,6 +466,7 @@ export class SensorServices {
     this.definedSoundSensorsId = [];
     this.builtinSensors = [BUILTIN_DECIBELS_SENSOR_ID];
     this.excludeSensorsId = [BUILTIN_MICROPHONE_ID];
+    this.oscSensorsId = [CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID];
   }
 
   getSensors() {
@@ -560,6 +568,14 @@ export class SensorServices {
       else return false;
     });
     return soundSensors;
+  }
+
+  getOscSensors() {
+    const oscSensors = this.sensors.filter((sensor) => {
+      if (this.oscSensorsId.includes(sensor.id)) return true;
+      else return false;
+    });
+    return [...oscSensors, ...this.getActiveSoundSensors()];
   }
 
   getActiveBuiltinSensors() {
