@@ -295,10 +295,10 @@ export class DataManager {
       // For this reason, we set collectingDataInterval = 1000ms for the timer to count the sampling interval
       // and the selectedInterval used to tracking when we sampled the data
       if (frequency >= 1) {
-        this.selectedInterval = Number(((1 / frequency) * 1000).toFixed(0));
+        this.selectedInterval = (1 / frequency) * 1000;
         this.collectingDataInterval = this.selectedInterval;
       } else {
-        this.selectedInterval = Number((1 / frequency).toFixed(0) * 1000);
+        this.selectedInterval = (1 / frequency) * 1000;
         this.collectingDataInterval = SAMPLING_INTERVAL_LESS_1HZ;
       }
       this.samplingMode = SAMPLING_AUTO;
@@ -1072,7 +1072,7 @@ export class DataManager {
       dataArray.push(d);
     });
 
-    console.log(sensorData);
+    //console.log(sensorData);
 
     return dataArray;
   }
