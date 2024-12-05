@@ -324,6 +324,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
   const sensorInfo = createSensorInfo(sensor);
+  const sensorDataInfo = SensorServiceIST.getSensorInfo(sensor.id)?.data[sensor.index];
 
   const oscSensors = SensorServiceIST.getOscSensors();
   const oscSensorsId = oscSensors.map((sensor) => sensor.id);
@@ -511,7 +512,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     const normalizedArray = bufferData.map((value, index) => {
       return {
         x: index * deltaTime,
-        y: value,
+        y: value[sensor.index],
       };
     });
 
@@ -529,8 +530,8 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       chartInstance: chartInstanceRef.current,
       data: chartDatas,
       maxX: 100,
-      maxY: 100,
-      minY: 0,
+      maxY: sensorDataInfo.max,
+      minY: sensorDataInfo.min,
       labelY: sensor.name + ` (${sensor.unit})`,
       labelX: t("common.time") + " (ms)",
       tension: 0.2,

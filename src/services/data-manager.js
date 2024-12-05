@@ -24,7 +24,6 @@ import buffers, {
   clearBufferData,
   currentBuffer,
   keepRecentBuffersData,
-  addOscBufferData,
 } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
@@ -1278,12 +1277,7 @@ export class DataManager {
         sensorsData.push(sample);
       }
 
-      if ([CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID].includes(sensorId)) {
-        // TODO: convert sensorsData to be an array of numbers [1,2,3,4,5...]
-        addOscBufferData(sensorId, sensorsData);
-      } else {
-        addBufferData(sensorId, sensorsData);
-      }
+      addBufferData(sensorId, sensorsData);
 
       // Add the sensor to sensorsQueue if not exist, otherwise update battery
       const activeSensorsIds = this.getActiveSensorIds();

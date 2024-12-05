@@ -1,6 +1,27 @@
+import { CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID } from "./sensor-service";
+
 const buffers = new Map();
+const oscBuffers = new Map();
 
 export const currentBuffer = {};
+
+export function clearOscBuffersData() {
+  oscBuffers.clear();
+}
+
+export function addOscBufferData(sensorId, data) {
+  let oscBufferData = oscBuffers.get(sensorId) || [];
+  if (Array.isArray(data[0])) {
+    oscBufferData = oscBufferData.concat(data);
+  } else {
+    oscBufferData.push(data);
+  }
+  oscBuffers.set(sensorId, oscBufferData);
+}
+
+export function getOscBufferData(sensorId) {
+  return oscBuffers.get(sensorId);
+}
 
 export function clearAllBuffersData() {
   buffers.clear();
@@ -26,6 +47,10 @@ export function addBufferData(sensorId, data) {
     bufferData.push(data);
   }
   buffers.set(sensorId, bufferData);
+
+  if ([CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID].includes(sensorId)) {
+    addOscBufferData(sensorId, data);
+  }
 }
 
 function interpolateData(data, sampleSize) {
@@ -69,20 +94,3 @@ export function getBufferData(sensorId, sampleSize) {
 }
 
 export default buffers;
-
-/** Buffer for OSC */
-const oscBuffers = new Map();
-
-export function clearOscBuffersData() {
-  oscBuffers.clear();
-}
-
-export function addOscBufferData(sensorId, data) {
-  let bufferData = oscBuffers.get(sensorId) || [];
-  bufferData = bufferData.concat(data);
-  oscBuffers.set(sensorId, bufferData);
-}
-
-export function getOscBufferData(sensorId) {
-  return oscBuffers.get(sensorId);
-}
