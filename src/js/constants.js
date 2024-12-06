@@ -284,3 +284,4 @@ export const DOWNLOAD_LOG_ACTION = "download-log";
 export const DELETE_LOG_ACTION = "delete-log";
 export const SET_LOG_SETTING = "set-log-setting";
 export const MAX_SAMPLE_REMOTE_LOGGING = 2000;
+export const MAX_SAMPLE_REMOTE_LOGGING_V2 = 100000;

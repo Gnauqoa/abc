@@ -16,6 +16,8 @@ import {
   DELETE_LOG_ACTION,
   SET_LOG_SETTING,
   MAX_SAMPLE_REMOTE_LOGGING,
+  SENSOR_VERSION,
+  MAX_SAMPLE_REMOTE_LOGGING_V2,
 } from "../../../js/constants";
 import { useTranslation } from "react-i18next";
 
@@ -257,7 +259,12 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             title={`${t("modules.total_number_of_samples")}: ${~~(
               (formSetting.duration * 60) /
               formSetting.interval
-            )} (${t("modules.max")} ${MAX_SAMPLE_REMOTE_LOGGING})`}
+            )} (${t("modules.max")} ${(sensorInfo.sensorVersion === SENSOR_VERSION.V2
+              ? MAX_SAMPLE_REMOTE_LOGGING
+              : MAX_SAMPLE_REMOTE_LOGGING_V2
+            )
+              .toString()
+              .replace(/\B(?=(\d{3})+(?!\d))/g, ",")})`}
           ></ListItem>
         )}
         {formSetting.loggingMode === MQTT && (

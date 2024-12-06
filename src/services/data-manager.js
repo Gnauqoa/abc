@@ -1457,6 +1457,13 @@ export class DataManager {
     return batteryStatusDict;
   }
 
+  getActiveSensorWithId(sensorId) {
+    const sensor = this.sensorsQueue.find((element) => element.sensorId === sensorId);
+    const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+
+    return { ...sensorInfo, sensorVersion: sensor.sensorVersion, battery: sensor.batteryStatus };
+  }
+
   getActiveSensorIds() {
     const activesSensorIds = [];
     this.sensorsQueue.forEach((element) => {

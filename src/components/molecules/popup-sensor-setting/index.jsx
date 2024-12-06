@@ -43,7 +43,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
-  const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
+  const sensorInfo = sensorId === undefined ? {} : { ...DataManagerIST.getActiveSensorWithId(sensorId) };
   const settingTabs = getSettingTabs();
   const toast = useToast();
 
