@@ -132,6 +132,11 @@ export class DataManager {
 
     this.customUnits = [];
     // this.customUnitDatas = {};
+
+    this.remoteLoggingBuffer = {
+      sensorId: null,
+      data: [],
+    };
   }
 
   init() {
@@ -970,10 +975,7 @@ export class DataManager {
           // full message in one shot
           const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
           dataArray &&
-            this.callbackReadSensor([
-              ...dataArray,
-              header_bytes === NUM_NON_DATA_SENSORS_CALLBACK_V2 ? SENSOR_VERSION.V2 : SENSOR_VERSION.V1,
-            ]);
+            this.callbackReadSensor([...dataArray, data[0] === 0xcc ? SENSOR_VERSION.V2 : SENSOR_VERSION.V1, data[0]]);
 
           this.usb_rx_buffer = null;
         } else if (data.length < this.rx_data_lenth) {
@@ -992,6 +994,7 @@ export class DataManager {
               this.callbackReadSensor([
                 ...dataArray,
                 this.rx_data_buffer[0] === 0xcc ? SENSOR_VERSION.V2 : SENSOR_VERSION.V1,
+                this.rx_data_buffer[0],
               ]);
             this.usb_rx_buffer = null;
           } else if (buf_data.length > this.rx_data_lenth) {
@@ -1275,9 +1278,33 @@ export class DataManager {
       const deviceId = data[3];
       const totalRecords = data[4];
       const sensorVersion = data[6] || SENSOR_VERSION.V1;
+      const firstByte = data[7] || 0;
       const sensorsData = [];
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
+      if (firstByte === 0xdd) {
+        if (this.remoteLoggingBuffer.sensorId !== sensorId) {
+          this.remoteLoggingBuffer = {
+            sensorId: sensorId,
+            data: data,
+          };
+          console.log("New buffer data: ", data);
+        } else {
+          this.remoteLoggingBuffer.data = this.remoteLoggingBuffer.data.concat(data);
+          console.log("Add data to buffer: ", data);
+        }
+        document.dispatchEvent(new CustomEvent("log,get", { detail: data }));
+
+        if (this.remoteLoggingBuffer.data.length >= totalRecords) {
+          console.log("Completed download data: ", this.remoteLoggingBuffer.data);
+          this.remoteLoggingBuffer = {
+            sensorId: null,
+            data: [],
+          };
+        }
+
+        return;
+      }
 
       let recordsRead = 0;
 
