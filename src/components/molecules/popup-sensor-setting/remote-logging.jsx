@@ -61,7 +61,6 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
       savedSetting.topics = sensorInfo.data.map((d, index) => `${savedSetting.mqttUsername}feeds/V${index + 1}`);
     }
 
-    console.log({ savedSetting, sensorInfo });
     setFormSetting({ ...savedSetting, id: sensorId });
   }, [sensorInfo]);
 
