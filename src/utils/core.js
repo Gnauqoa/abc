@@ -649,7 +649,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
     let timeoutHandler;
     let dataBuffer = [];
     function dataHandler(e) {
-      dataBuffer.push(e.detail);
+      dataBuffer.push(Array.isArray(e.detail) ? [...e.detail] : e.detail);
       document.dispatchEvent(new CustomEvent(`${eventName}-${dataBuffer.length}`));
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
