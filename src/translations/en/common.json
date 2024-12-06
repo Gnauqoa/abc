@@ -90,6 +90,7 @@
     "invalid_cycle": "Invalid cycle",
     "sampling_options": "Sampling options",
     "cycle": "Cycle:",
+    "start_condition": "Start condition",
     "condition_type": "Condition type",
     "time_condition_type": "Time-Based",
     "sensor_value_condition_type": "Measurement-Based",
