@@ -216,6 +216,13 @@ export const USB_TYPE = "usb";
 
 export const SENSOR_NONE_VALUE = 0;
 
+export const NUM_NON_DATA_SENSORS_CALLBACK = 5;
+export const NUM_NON_DATA_SENSORS_CALLBACK_V2 = 7;
+export const START_BYTE_V1 = 0xAA;
+export const START_BYTE_V2 = 0xCC;
+export const START_BYTE_V2_LOG = 0xDD;
+export const STOP_BYTE = 0xBB;
+
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
 export const LINE_CHART_STATISTIC_NOTE_TABLE = "line-chart-statistic-notes";

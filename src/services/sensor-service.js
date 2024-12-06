@@ -234,7 +234,6 @@ export const defaultSensors = [
         max: 10,
         formatFloatingPoint: 1,
         dataLength: 4, // in bytes
-        //calcFunc: x => x+10,
       },
     ],
   },

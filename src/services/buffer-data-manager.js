@@ -1,4 +1,4 @@
-import { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID } from "./sensor-service";
+import { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID, SOUND_SENSOR_V2_ID } from "./sensor-service";
 
 const buffers = new Map();
 const oscBuffers = new Map();

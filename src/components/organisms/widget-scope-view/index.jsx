@@ -510,10 +510,11 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     clearOscBuffersData();
 
     const deltaTime = READ_BUFFER_INTERVAL / bufferData.length;
+    //console.log(bufferData.length);
     const normalizedArray = bufferData.map((value, index) => {
       return {
         x: index * deltaTime,
-        y: value[sensor.index],
+        y: value,
       };
     });
 
@@ -530,12 +531,12 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     updateChart({
       chartInstance: chartInstanceRef.current,
       data: chartDatas,
-      maxX: 100,
+      maxX: bufferData.length*0.02,
       maxY: sensorDataInfo.max,
       minY: sensorDataInfo.min,
       labelY: sensor.name + ` (${sensor.unit})`,
       labelX: t("common.time") + " (ms)",
-      tension: 0.2,
+      tension: 0.6,
     });
   };
 
@@ -548,6 +549,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         } else if ([CURRENT_SENSOR_V2_INFO, VOLTAGE_SENSOR_V2_INFO, SOUND_SENSOR_V2_INFO].includes(sensorInfo)) {
           drawBufferChart();
           if (isRunning) drawChartTimeoutID = setTimeout(drawChart, READ_BUFFER_INTERVAL);
+          //if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
         }
       };
 
