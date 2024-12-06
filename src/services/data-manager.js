@@ -15,9 +15,17 @@ import {
   CONDITION,
   READ_BUFFER_INTERVAL,
   RENDER_INTERVAL,
+  SENSOR_VERSION,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
-import buffers, { addBufferData, getBufferData, clearAllBuffersData, clearBufferData, currentBuffer, keepRecentBuffersData } from "./buffer-data-manager";
+import buffers, {
+  addBufferData,
+  getBufferData,
+  clearAllBuffersData,
+  clearBufferData,
+  currentBuffer,
+  keepRecentBuffersData,
+} from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
 const NUM_NON_DATA_SENSORS_CALLBACK = 5;
@@ -942,23 +950,31 @@ export class DataManager {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
     } else {
-      if (data[0] === 0xaa || data[0] === 0xcc) { // new sensor message
+      if (data[0] === 0xaa || data[0] === 0xcc) {
+        // new sensor message
         let header_bytes;
-        if (data[0] === 0xaa) { // V1 message
+        if (data[0] === 0xaa) {
+          // V1 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
           this.rx_data_lenth = data[4] + header_bytes + 1; // data + header bytes
-        } else if (data[0] === 0xcc) { // V2 message
+        } else if (data[0] === 0xcc) {
+          // V2 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
           this.rx_data_lenth = ((data[4] << 8) | data[5]) + header_bytes + 1; // data + header bytes
         }
-        
-        if (data[data.length-1] === 0xbb) {
+
+        if (data[data.length - 1] === 0xbb) {
           this.rx_data_lenth += 1; // 1 ending byte
         }
         if (data.length === this.rx_data_lenth) {
           // full message in one shot
           const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
-          dataArray && this.callbackReadSensor(dataArray);
+          dataArray &&
+            this.callbackReadSensor([
+              ...dataArray,
+              header_bytes === NUM_NON_DATA_SENSORS_CALLBACK_V2 ? SENSOR_VERSION.V2 : SENSOR_VERSION.V1,
+            ]);
+
           this.usb_rx_buffer = null;
         } else if (data.length < this.rx_data_lenth) {
           // not enough data, wait for full message received
@@ -972,7 +988,11 @@ export class DataManager {
           if (buf_data.length === this.rx_data_lenth) {
             // now got full message
             const dataArray = this.decodeDataFromInnoLabSensor(buf_data, source, device);
-            dataArray && this.callbackReadSensor(dataArray);
+            dataArray &&
+              this.callbackReadSensor([
+                ...dataArray,
+                this.rx_data_buffer[0] === 0xcc ? SENSOR_VERSION.V2 : SENSOR_VERSION.V1,
+              ]);
             this.usb_rx_buffer = null;
           } else if (buf_data.length > this.rx_data_lenth) {
             console.log("Invalid data received");
@@ -1008,16 +1028,18 @@ export class DataManager {
     let totalDataLength;
 
     const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-    if (sensorInfo === null) return;    
+    if (sensorInfo === null) return;
 
-    if (data[0] == 0xaa) { // Sensor V1 message
+    if (data[0] == 0xaa) {
+      // Sensor V1 message
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
       totalDataLength = data[4]; // total data length in bytes
-    } else if (data[0] == 0xcc) { // Sensor V2 message
+    } else if (data[0] == 0xcc) {
+      // Sensor V2 message
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
       totalDataLength = (data[4] << 8) | data[5]; // total data length in bytes
     }
-        
+
     let checksum = data[header_bytes + totalDataLength];
     let calculatedChecksum = 0xff;
     for (let i = 0; i < totalDataLength + header_bytes; i++) {
@@ -1252,6 +1274,7 @@ export class DataManager {
       const source = data[2];
       const deviceId = data[3];
       const totalRecords = data[4];
+      const sensorVersion = data[6] || SENSOR_VERSION.V1;
       const sensorsData = [];
       const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
       if (sensorInfo === null) return;
@@ -1261,7 +1284,7 @@ export class DataManager {
       while (recordsRead < totalRecords) {
         let sample = [];
         for (let i = 0; i < sensorInfo.data.length; i++) {
-          let value = data[5 + recordsRead*sensorInfo.data.length + i];
+          let value = data[5 + recordsRead * sensorInfo.data.length + i];
           let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
           formatFloatingPoint = formatFloatingPoint ??= 1;
           sample.push(parseFloat(value).toFixed(formatFloatingPoint));
@@ -1279,6 +1302,7 @@ export class DataManager {
           sensorId: sensorId,
           deviceId: deviceId,
           batteryStatus: parseInt(battery),
+          sensorVersion,
         });
       } else {
         const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
@@ -1324,7 +1348,7 @@ export class DataManager {
 
       delete currentBuffer[sensorId];
       clearBufferData(sensorId);
-      
+
       const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
       if (index !== -1) {
         this.sensorsQueue.splice(index, 1);

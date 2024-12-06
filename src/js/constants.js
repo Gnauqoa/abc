@@ -246,6 +246,10 @@ export const BLE_TYPE = "ble";
 export const USB_TYPE = "usb";
 
 export const SENSOR_NONE_VALUE = 0;
+export const SENSOR_VERSION = {
+  V1: 1,
+  V2: 2,
+};
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
