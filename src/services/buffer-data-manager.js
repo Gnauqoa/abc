@@ -1,4 +1,4 @@
-import { CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID } from "./sensor-service";
+import { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID } from "./sensor-service";
 
 const buffers = new Map();
 const oscBuffers = new Map();
@@ -48,7 +48,7 @@ export function addBufferData(sensorId, data) {
   }
   buffers.set(sensorId, bufferData);
 
-  if ([CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID].includes(sensorId)) {
+  if ([CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID, SOUND_SENSOR_V2_ID].includes(sensorId)) {
     addOscBufferData(sensorId, data);
   }
 }

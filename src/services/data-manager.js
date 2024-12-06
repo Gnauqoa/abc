@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import _ from "lodash";
-import SensorServicesIST, { CURRENT_SENSOR_ID, VOLTAGE_SENSOR_ID } from "./sensor-service";
+import SensorServicesIST, { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID, SOUND_SENSOR_V2_ID } from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,

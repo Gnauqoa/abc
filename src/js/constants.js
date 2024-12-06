@@ -130,41 +130,10 @@ export const MENU = "menu";
 export const CHART = "chart";
 export const GAUGE = "gauge";
 
-// Devices
-export const ARMBOT = "armbit";
-export const MYPET = "mypet";
-export const BATMAN = "batman";
-export const YOLOBIT = "yolobit";
-export const TANK = "tank";
-export const XBOT = "xbot";
-export const XBUILD = "xbuild";
-export const TRANSFORMBOT = "transformbot";
-export const SPIDERBOT = "spiderbot";
-export const ROBOTWALLE = "robotwalle";
-export const CONTROLLERHANDLE = "controllerhandle";
-export const MYROBOT = "myrobot";
-export const GROUP_LESS = "group-less";
-export const AI = "ai";
-export const AI_DEVICE = "ai_device";
-export const RIO = "rio";
-
 //Connect type
 export const CONNECT_BLE_TYPE = 1;
 export const CONNECT_SERIAL_TYPE = 2;
 export const AUTO_CONNECT = false;
-
-//CONSTANT FOR CMD SETTING
-export const CMD_CTRL_A = 0x01;
-export const CMD_CTRL_B = 0x02;
-export const CMD_CTRL_C = 0x03;
-export const CMD_CTRL_D = 0x04;
-export const CMD_SYS_PREFIX = 0x11;
-export const CMD_REPL_BEGIN_PREFIX = 0x12;
-export const CMD_REPL_END_PREFIX = 0x13;
-export const CMD_REPL_EXEC_CMD = 13;
-
-export const ROBOT_MESSAGE_CHAR_LIMIT = 35;
-export const ROBOT_DATA_RECV_SIGN = "\x06";
 
 // Pin mode
 export const INPUT = "Input";

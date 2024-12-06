@@ -33,8 +33,9 @@ import SensorSelector from "../../molecules/popup-sensor-selector";
 import SensorServiceIST, {
   SINE_WAVE_SENSOR_INFO,
   FREQUENCY_WAVE_SENSOR_INFO,
-  CURRENT_SENSOR_INFO,
-  VOLTAGE_SENSOR_INFO,
+  CURRENT_SENSOR_V2_INFO,
+  VOLTAGE_SENSOR_V2_INFO,
+  SOUND_SENSOR_V2_INFO,
 } from "../../../services/sensor-service";
 
 import MicrophoneServiceIST, { BUFFER_LENGTH } from "../../../services/microphone-service";
@@ -544,7 +545,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         if ([SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO].includes(sensorInfo)) {
           drawSoundChart();
           if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
-        } else if ([CURRENT_SENSOR_INFO, VOLTAGE_SENSOR_INFO].includes(sensorInfo)) {
+        } else if ([CURRENT_SENSOR_V2_INFO, VOLTAGE_SENSOR_V2_INFO, SOUND_SENSOR_V2_INFO].includes(sensorInfo)) {
           drawBufferChart();
           if (isRunning) drawChartTimeoutID = setTimeout(drawChart, READ_BUFFER_INTERVAL);
         }
