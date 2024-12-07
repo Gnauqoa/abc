@@ -800,6 +800,13 @@ export class DataManager {
     }
   }
 
+  resetRemoteLoggingBuffer() {
+    this.remoteLoggingBuffer = {
+      data: [],
+      sensorId: null,
+    };
+  }
+
   getUartConnections() {
     return this.uartConnections;
   }
@@ -1294,15 +1301,6 @@ export class DataManager {
           console.log("Add data to buffer: ", data);
         }
         document.dispatchEvent(new CustomEvent("log,get", { detail: data }));
-
-        if (this.remoteLoggingBuffer.data.length >= totalRecords) {
-          console.log("Completed download data: ", this.remoteLoggingBuffer.data);
-          this.remoteLoggingBuffer = {
-            sensorId: null,
-            data: [],
-          };
-        }
-
         return;
       }
 

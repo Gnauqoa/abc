@@ -580,6 +580,7 @@ export class SensorServices {
   }
 
   async remoteLoggingData(sensorId, size) {
+    DataManagerIST.resetRemoteLoggingBuffer();
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,get###", "log,get-done");
 
     return core.timeoutEventData("log,get", size, 2000, true);
