@@ -667,7 +667,7 @@ export class SensorServices {
   async remoteLoggingInfo(sensorId) {
     DeviceManagerIST.sendCmdDTO(sensorId, "$$$log,chk###", "log,chk-done");
 
-    const data = await core.timeoutEventData("log,chk");
+    const data = await core.timeoutEventData("log,chk", 4);
 
     return data.map((d) => Number(d));
   }

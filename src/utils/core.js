@@ -649,7 +649,16 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
     let timeoutHandler;
     let dataBuffer = [];
     function dataHandler(e) {
-      dataBuffer.push(Array.isArray(e.detail) ? [...e.detail] : e.detail);
+      if (e.type == "log,get" && e.detail.log_version == undefined) { // data log get event for sensor V1
+        dataBuffer.push([parseFloat(e.detail.data.slice(2))]);
+      } else {
+        if (Array.isArray(e.detail.data)) {
+          dataBuffer = dataBuffer.concat(e.detail.data);
+        } else {
+          dataBuffer.push(e.detail.data);
+        }
+      }
+
       document.dispatchEvent(new CustomEvent(`${eventName}-${dataBuffer.length}`));
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
@@ -662,7 +671,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
         f7.dialog.close();
         clearTimeout(timeoutHandler);
         document.removeEventListener(eventName, dataHandler);
-        document.dispatchEvent(new CustomEvent(`${eventName}-done`, { detail: { status: "success", dataBuffer } }));
+        document.dispatchEvent(new CustomEvent(`${eventName}-done`, { detail: { status: "success", data: dataBuffer } }));
         resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
       }
     }
