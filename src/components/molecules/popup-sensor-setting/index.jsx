@@ -43,7 +43,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
   const sensorSettingPopupRef = useRef();
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [remoteLoggingInfo, setRemoteLoggingInfo] = useState([0, 0, 0, 0]);
-  const sensorInfo = sensorId === undefined ? {} : SensorServicesIST.getSensorInfo(sensorId);
+  const sensorInfo = sensorId === undefined ? {} : { ...DataManagerIST.getActiveSensorWithId(sensorId) };
   const settingTabs = getSettingTabs();
   const toast = useToast();
 
@@ -110,7 +110,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           sensorLog.forEach((log, index) => {
             const sensorData = {
               time: (interval * index).toFixed(3),
-              values: log.slice(2),
+              values: log
             };
             dataRunData[sensorId].push(sensorData);
           });
@@ -167,9 +167,9 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
 
   async function checkRemoteLogging() {
     try {
-      const logInfo = SensorServicesIST.remoteLoggingInfo(sensorId);
       toast.notifyCmdDTO(t("modules.check_log"));
-      setRemoteLoggingInfo(await logInfo);
+      let logInfo = await SensorServicesIST.remoteLoggingInfo(sensorId);;
+      setRemoteLoggingInfo(logInfo);
     } catch {
       setRemoteLoggingInfo([0, 0, 0, 0]);
     }

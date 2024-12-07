@@ -215,6 +215,10 @@ export const BLE_TYPE = "ble";
 export const USB_TYPE = "usb";
 
 export const SENSOR_NONE_VALUE = 0;
+export const SENSOR_VERSION = {
+  V1: 1,
+  V2: 2,
+};
 
 export const NUM_NON_DATA_SENSORS_CALLBACK = 5;
 export const NUM_NON_DATA_SENSORS_CALLBACK_V2 = 7;
@@ -256,3 +260,4 @@ export const DOWNLOAD_LOG_ACTION = "download-log";
 export const DELETE_LOG_ACTION = "delete-log";
 export const SET_LOG_SETTING = "set-log-setting";
 export const MAX_SAMPLE_REMOTE_LOGGING = 2000;
+export const MAX_SAMPLE_REMOTE_LOGGING_V2 = 100000;
