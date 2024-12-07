@@ -124,10 +124,6 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
         f7.dialog.alert(t("modules.invalid_server_username"));
         return false;
       }
-      if (setting.mqttPassword === "") {
-        f7.dialog.alert(t("modules.invalid_server_password"));
-        return false;
-      }
     }
 
     return true;
