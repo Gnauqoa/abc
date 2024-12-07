@@ -42,8 +42,8 @@ const BLE_TYPE = "ble";
 const USB_TYPE = "usb";
 
 // ESP32-S3
-const VID = "303A";
-const PID = "1001";
+const VID_S3 = "303A";
+const PID_S3 = "1001";
 
 // CH340
 const VID_CH = "1A86";
@@ -284,15 +284,23 @@ async function listSerialPorts() {
     if (ports.length > 0) {
       ports.forEach((port) => {
         //console.log(port);
-        if (port.vendorId != VID && port.productId != PID && port.vendorId != VID_CH && port.productId != PID_CH)
+        let baudRate = 115200;
+        if (port.vendorId == VID_S3 && port.productId == PID_S3) {
+          baudRate = 921600;
+        } else if (port.vendorId == VID_CH && port.productId == PID_CH) {
+          baudRate = 115200;
+        } else {
+          //console.log("Not InnoLab sensor device");
           return;
+        }
+
         //console.log(portsList[port.path]);
         if (portsList[port.path] === undefined) {
           // try open first port
           try {
             const serialPort = new SerialPort({
               path: port.path,
-              baudRate: 115200,
+              baudRate: baudRate,
             });
 
             // Open errors will be emitted as an error event
@@ -315,13 +323,20 @@ async function listSerialPorts() {
             const parser = serialPort.pipe(new DelimiterParser({ delimiter: [0xbb], includeDelimiter:false }));
             parser.on("data", function (data) {
               if (data[0] === 0xaa) {
-                // sensor data
+                // sensor data V1
                 var sensorId = data[1];
                 var battery = data[3]; // TODO: Will use later
                 var dataArray = [sensorId, battery, USB_TYPE];
                 portsList[port.path].sensorInfo = dataArray;
+                mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
+              } else if (data[0] === 0xcc || data[0] === 0xdd) {
+                // sensor data V2
+                var sensorId = data[1];
+                var battery = data[4]; // TODO: Will use later
+                var dataArray = [sensorId, battery, USB_TYPE];
+                portsList[port.path].sensorInfo = dataArray;
+                mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
               }
-              mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
             });
 
             portsList[port.path] = {

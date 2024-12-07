@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
 import _ from "lodash";
-import SensorServicesIST from "./sensor-service";
+import SensorServicesIST, { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID, SOUND_SENSOR_V2_ID } from "./sensor-service";
 import {
   FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
@@ -16,6 +16,12 @@ import {
   READ_BUFFER_INTERVAL,
   RENDER_INTERVAL,
   SENSOR_VERSION,
+  NUM_NON_DATA_SENSORS_CALLBACK,
+  NUM_NON_DATA_SENSORS_CALLBACK_V2,
+  START_BYTE_V1,
+  START_BYTE_V2,
+  START_BYTE_V2_LOG,
+  STOP_BYTE,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
 import buffers, {
@@ -28,8 +34,7 @@ import buffers, {
 } from "./buffer-data-manager";
 
 const TIME_STAMP_ID = 0;
-const NUM_NON_DATA_SENSORS_CALLBACK = 5;
-const NUM_NON_DATA_SENSORS_CALLBACK_V2 = 6;
+
 
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
@@ -940,7 +945,7 @@ export class DataManager {
   concatTypedArrays(a, b) {
     var c = new a.constructor(a.length + b.length + 1);
     c.set(a, 0);
-    c.set([0xbb], a.length);
+    c.set([STOP_BYTE], a.length);
     c.set(b, a.length + 1);
     return c;
   }
@@ -962,20 +967,17 @@ export class DataManager {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
     } else {
-      if (data[0] === 0xaa || data[0] === 0xcc) {
-        // new sensor message
+      if (data[0] === START_BYTE_V1 || data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) { // new sensor message
         let header_bytes;
-        if (data[0] === 0xaa) {
-          // V1 message
+        if (data[0] === START_BYTE_V1) { // V1 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
           this.rx_data_lenth = data[4] + header_bytes + 1; // data + header bytes
-        } else if (data[0] === 0xcc) {
-          // V2 message
+        } else if (data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) { // V2 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
-          this.rx_data_lenth = ((data[4] << 8) | data[5]) + header_bytes + 1; // data + header bytes
+          this.rx_data_lenth = ((data[5] << 8) | data[6]) + header_bytes + 1; // data + header bytes
         }
-
-        if (data[data.length - 1] === 0xbb) {
+        
+        if (data[data.length-1] === STOP_BYTE) {
           this.rx_data_lenth += 1; // 1 ending byte
         }
         if (data.length === this.rx_data_lenth) {
@@ -1022,9 +1024,9 @@ export class DataManager {
   decodeDataFromInnoLabSensor(data, source, device) {
     // sensor data
     /* Each sensor data record has following structure
-        0xAA - start byte
+        0xAA or 0xCC or 0xDD - start byte (V1=0xAA, V2 = 0xCC or 0xDD)
         Sensor ID - 1 byte
-        Sensor Serial ID - 1 byte
+        Sensor Serial ID - 2 bytes
         Sensor Battery - 1 byte
         Data length - 1 byte (V1) 2 bytes (V2)
         Sensor data [0..len] - 4 byte per data
@@ -1033,7 +1035,7 @@ export class DataManager {
       */
     let header_bytes;
     let sensorId = data[1];
-    let sensorSerial = data[2]; // TODO: Will use later;
+    let sensorSerial; // TODO: Will use later;
     let battery = data[3];
     let totalDataLength;
 
@@ -1043,11 +1045,12 @@ export class DataManager {
     if (data[0] == 0xaa) {
       // Sensor V1 message
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
+      sensorSerial = data[2]; // TODO: Will use later;
       totalDataLength = data[4]; // total data length in bytes
-    } else if (data[0] == 0xcc) {
-      // Sensor V2 message
+    } else if (data[0] == 0xcc || data[0] == 0xdd) { // Sensor V2 message
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
-      totalDataLength = (data[4] << 8) | data[5]; // total data length in bytes
+      sensorSerial = (data[2] << 8) | data[3]; // total data length in bytes
+      totalDataLength = (data[5] << 8) | data[6]; // total data length in bytes
     }
 
     let checksum = data[header_bytes + totalDataLength];
@@ -1104,7 +1107,7 @@ export class DataManager {
       dataArray.push(d);
     });
 
-    //console.log(sensorData);
+    console.log(sensorData);
 
     return dataArray;
   }

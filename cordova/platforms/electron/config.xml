@@ -3,8 +3,8 @@
     <name>InnoLab</name>
     <description>Ứng dụng thu nhận và phân tích dữ liệu thí nghiệm.</description>
     <author email="contact@ohstem.vn" href="https://www.ohstem.vn">
-        OhStem Education
-    </author>
+    OhStem Education
+  </author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />

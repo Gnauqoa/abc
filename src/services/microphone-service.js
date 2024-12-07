@@ -1,13 +1,20 @@
 import { f7 } from "framework7-react";
 import { USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
-import { BUILTIN_DECIBELS_SENSOR_ID } from "./sensor-service";
+import { BUILTIN_DECIBELS_SENSOR_ID, SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO } from "./sensor-service";
+import { abs } from "mathjs";
 
 const MIN_DECIBEL = -90;
 const MAX_DECIBEL = 0;
 const SCALE_DECIBEL = 150;
 const GET_SAMPLES_INTERVAL = 100;
 export const BUFFER_LENGTH = 1024;
+
+const DEFAULT_MIN_AMPLITUDE = 0.1;
+
+const MAX_FREQUENCY = 1000;
+const REF_VALUE = 1.0; // Reference value for SPL calculation
+const REF_DB = 150.0; // Reference level in dB
 
 // var filterNode;
 
@@ -278,6 +285,42 @@ export class MicrophoneServices {
         DataManagerIST.callbackReadSensor(dataArray);
       }
     }, 1000);
+  }
+
+  getSoundChartData(sensorInfo) {
+    const samplingRate = this.getSamplingRate();
+    const fftSize = this.getFFTSize();
+    const timePerSample = this.getTimePerSample();
+    let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
+    const normalizedArray = [];
+
+    if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
+      let time = 0;
+      const dataArray = this.getFloatTimeDomainData();
+
+      for (let i = 0; i < BUFFER_LENGTH; i++) {
+        const y = dataArray[i];
+        if (abs(y) > maxAmplitude) maxAmplitude = abs(y);
+        normalizedArray.push({ x: time, y: y });
+        time += timePerSample * 1000;
+      }
+    } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
+      let frequency = 0;
+      const dataArrayAlt = this.getFloatFrequencyData();
+
+      for (let i = 0; i < dataArrayAlt.length; i++) {
+        const amplitude = Math.pow(10, dataArrayAlt[i] / 20);
+        const spl = 20 * Math.log10(amplitude / REF_VALUE);
+        const positivedB = spl + REF_DB;
+
+        if (i * (samplingRate / fftSize) > MAX_FREQUENCY) break;
+
+        normalizedArray.push({ x: frequency, y: positivedB });
+        frequency = i * (samplingRate / fftSize);
+      }
+    }
+
+    return normalizedArray;
   }
 }
 

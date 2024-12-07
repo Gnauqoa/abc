@@ -5,6 +5,12 @@ import {
   SCAN_SERIAL_INTERVAL,
   SERIAL_BAUD_RATE,
   USB_TYPE,
+  NUM_NON_DATA_SENSORS_CALLBACK,
+  NUM_NON_DATA_SENSORS_CALLBACK_V2,
+  START_BYTE_V1,
+  START_BYTE_V2,
+  START_BYTE_V2_LOG,
+  STOP_BYTE,
 } from "../js/constants";
 import dataManager from "./data-manager";
 
@@ -147,10 +153,18 @@ export class MobileSerialManager {
   }
 
   isInnoLabSensor(data) {
-    let dataLength = (data[4] << 8) | data[5];
-    let checksum = data[NUM_NON_DATA_SENSORS_CALLBACK + dataLength];
+    let header_bytes;
+    let dataLength;
+    if (data[0] == START_BYTE_V1) { // Sensor V1 message
+      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
+      dataLength = data[4]; // total data length in bytes
+    } else if (data[0] == START_BYTE_V2 || data[0] == START_BYTE_V2_LOG) { // Sensor V2 message
+      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
+      dataLength = (data[5] << 8) | data[6]; // total data length in bytes
+    };
+    let checksum = data[header_bytes + dataLength];
     let calculatedChecksum = 0xff;
-    for (let i = 0; i < dataLength + NUM_NON_DATA_SENSORS_CALLBACK; i++) {
+    for (let i = 0; i < dataLength + header_bytes; i++) {
       calculatedChecksum = calculatedChecksum ^ data[i];
     }
 
