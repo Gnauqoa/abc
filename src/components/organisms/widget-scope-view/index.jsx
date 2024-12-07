@@ -96,13 +96,9 @@ const statisticNotesStorage = new StoreService(LINE_CHART_STATISTIC_NOTE_TABLE);
 const deltasStorage = new StoreService(LINE_CHART_DELTA_TABLE);
 const rangeSelectionStorage = new StoreService(LINE_CHART_RANGE_SELECTION_TABLE);
 
-function generateRandomNumbers() {
-  const randomNumbers = [];
-  for (let i = 0; i < 1000; i++) {
-      randomNumbers.push(Math.floor(Math.random() * 100) + 1);
-  }
-  return randomNumbers;
-}
+setInterval(() => {
+  clearOscBuffersData();
+}, READ_BUFFER_INTERVAL);
 
 const handleDrag = function ({ event, chart, pageId, widgetId }) {
   if (isRangeSelected) {
@@ -506,8 +502,6 @@ const ScopeViewWidget = ({ widget, pageId }) => {
   const drawBufferChart = () => {
     const bufferData = getOscBufferData(sensor.id);
     if (!bufferData) return;
-
-    clearOscBuffersData();
 
     const deltaTime = READ_BUFFER_INTERVAL / bufferData.length;
     //console.log(bufferData.length);
