@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button, Popup, Page, Navbar, NavRight, NavLeft } from "framework7-react";
 import _ from "lodash";
-import SensorServices from "../../../services/sensor-service";
+import SensorServices, { BUILTIN_DECIBELS_SENSOR_ID } from "../../../services/sensor-service";
 import DataManagerIST from "../../../services/data-manager";
 import {
   DEFAULT_SENSOR_ID,
@@ -15,6 +15,7 @@ import "./index.scss";
 import SensorTab from "./SensorTab";
 import UserTab from "./UserTab";
 import { useTranslation } from "react-i18next";
+import MicrophoneServicesIST from "../../../services/microphone-service";
 
 export default function SensorSelector({
   disabled,
@@ -66,7 +67,9 @@ export default function SensorSelector({
           existingSensorData = sensorList.find((s) => s.id == sensorId),
           sensorDetailData = existingSensorData.data.find((s) => s.id == sensorDetailId),
           sensorIndex = _.findIndex(existingSensorData.data, (item) => item.id === sensorDetailId);
-
+        if (sensorId === BUILTIN_DECIBELS_SENSOR_ID) {
+          MicrophoneServicesIST.init();
+        }
         if (sensorDetailData) {
           const { name, unit } = sensorDetailData;
           setSelectedSensorState(hideDisplayUnit ? t(name) : `${t(name)}${unit !== "" ? ` (${unit})` : ""}`);
