@@ -328,15 +328,14 @@ async function listSerialPorts() {
                 var battery = data[3]; // TODO: Will use later
                 var dataArray = [sensorId, battery, USB_TYPE];
                 portsList[port.path].sensorInfo = dataArray;
-                mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
               } else if (data[0] === 0xcc || data[0] === 0xdd) {
                 // sensor data V2
                 var sensorId = data[1];
                 var battery = data[4]; // TODO: Will use later
                 var dataArray = [sensorId, battery, USB_TYPE];
                 portsList[port.path].sensorInfo = dataArray;
-                mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
-              }
+              } 
+              mainWindow.webContents.send("device-data", data, USB_TYPE, { deviceId: port.path });
             });
 
             portsList[port.path] = {

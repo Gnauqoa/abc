@@ -35,7 +35,6 @@ import buffers, {
 
 const TIME_STAMP_ID = 0;
 
-
 // TODO: Fix when collecting data with timer, if any happen like manual sampling,
 // change frequency or start/stop collecting data. Stop timer
 
@@ -973,24 +972,26 @@ export class DataManager {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
     } else {
-      if (data[0] === START_BYTE_V1 || data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) { // new sensor message
+      if (data[0] === START_BYTE_V1 || data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) {
+        // new sensor message
         let header_bytes;
-        if (data[0] === START_BYTE_V1) { // V1 message
+        if (data[0] === START_BYTE_V1) {
+          // V1 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
           this.rx_data_lenth = data[4] + header_bytes + 1; // data + header bytes
-        } else if (data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) { // V2 message
+        } else if (data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) {
+          // V2 message
           header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
           this.rx_data_lenth = ((data[5] << 8) | data[6]) + header_bytes + 1; // data + header bytes
         }
-        
-        if (data[data.length-1] === STOP_BYTE) {
+
+        if (data[data.length - 1] === STOP_BYTE) {
           this.rx_data_lenth += 1; // 1 ending byte
         }
         if (data.length === this.rx_data_lenth) {
           // full message in one shot
           const dataArray = this.decodeDataFromInnoLabSensor(data, source, device);
-          dataArray &&
-            this.callbackReadSensor([data[0], ...dataArray]);
+          dataArray && this.callbackReadSensor([data[0], ...dataArray]);
 
           this.usb_rx_buffer = null;
         } else if (data.length < this.rx_data_lenth) {
@@ -1005,11 +1006,7 @@ export class DataManager {
           if (buf_data.length === this.rx_data_lenth) {
             // now got full message
             const dataArray = this.decodeDataFromInnoLabSensor(buf_data, source, device);
-            dataArray &&
-              this.callbackReadSensor([
-                this.rx_data_buffer[0],
-                ...dataArray,                
-              ]);
+            dataArray && this.callbackReadSensor([this.rx_data_buffer[0], ...dataArray]);
             this.usb_rx_buffer = null;
           } else if (buf_data.length > this.rx_data_lenth) {
             console.log("Invalid data received");
@@ -1052,7 +1049,8 @@ export class DataManager {
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
       sensorSerial = data[2]; // TODO: Will use later;
       totalDataLength = data[4]; // total data length in bytes
-    } else if (data[0] == START_BYTE_V2 || data[0] == START_BYTE_V2_LOG) { // Sensor V2 message
+    } else if (data[0] == START_BYTE_V2 || data[0] == START_BYTE_V2_LOG) {
+      // Sensor V2 message
       header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
       sensorSerial = (data[2] << 8) | data[3]; // total data length in bytes
       totalDataLength = (data[5] << 8) | data[6]; // total data length in bytes
@@ -1333,7 +1331,8 @@ export class DataManager {
         sensorsData.push(sample);
       }
 
-      if (startByte === START_BYTE_V2_LOG) { // remote logging data
+      if (startByte === START_BYTE_V2_LOG) {
+        // remote logging data
         if (this.remoteLoggingBuffer.sensorId !== sensorId) {
           this.remoteLoggingBuffer = {
             sensorId: sensorId,
@@ -1344,10 +1343,10 @@ export class DataManager {
           this.remoteLoggingBuffer.data = this.remoteLoggingBuffer.data.concat(sensorsData);
           //console.log("Add data to buffer: ", sensorsData);
         }
-        document.dispatchEvent(new CustomEvent("log,get", { detail: {log_version:2, data:sensorsData} }));
+        document.dispatchEvent(new CustomEvent("log,get", { detail: { log_version: 2, data: sensorsData } }));
         return;
-
-      } else { // real time data
+      } else {
+        // real time data
 
         addBufferData(sensorId, sensorsData);
 
@@ -1491,8 +1490,11 @@ export class DataManager {
     const sensor = this.sensorsQueue.find((element) => element.sensorId === sensorId);
 
     if (sensor != undefined) {
-      const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
-      return { ...sensorInfo, sensorVersion: sensor.sensorVersion != undefined?sensor.sensorVersion:SENSOR_VERSION.V1, battery: sensor.batteryStatus };
+      const sensorInfo = this.sensorsQueue.find((element) => element.sensorId === sensorId);
+      return {
+        ...sensorInfo,
+        sensorVersion: sensor.sensorVersion != undefined ? sensor.sensorVersion : SENSOR_VERSION.V1,
+      };
     } else {
       return {};
     }
@@ -1648,9 +1650,9 @@ export class DataManager {
     try {
       console.log("callbackCommandDTO", data);
       if (data.slice(0, 2) === "OK") {
-        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: {data:"OK"} }));
+        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: { data: "OK" } }));
       } else if (data.slice(0, 3) === "ERR") {
-        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: {data:"ERR"} }));
+        document.dispatchEvent(new CustomEvent("statusCmdDTO", { detail: { data: "ERR" } }));
       }
 
       // parse command DTO
@@ -1660,7 +1662,7 @@ export class DataManager {
       if (results.length > 0) {
         results.forEach((item) => {
           const result = item.split(",");
-          document.dispatchEvent(new CustomEvent(`${result[0]},${result[1]}`, { detail: {data: result.slice(2)} }));
+          document.dispatchEvent(new CustomEvent(`${result[0]},${result[1]}`, { detail: { data: result.slice(2) } }));
         });
         window.dataBuffer = window.dataBuffer.slice(window.dataBuffer.lastIndexOf("###") + 3);
         if ((window.dataBuffer.match(/\$\$\$/g) || []).length === (window.dataBuffer.match(/###/g) || []).length) {
