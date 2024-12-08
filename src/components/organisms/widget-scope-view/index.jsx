@@ -35,7 +35,9 @@ import SensorServiceIST, {
   FREQUENCY_WAVE_SENSOR_INFO,
   CURRENT_SENSOR_V2_INFO,
   VOLTAGE_SENSOR_V2_INFO,
-  SOUND_SENSOR_V2_INFO,
+  SOUND_SENSOR_V2_LEVEL_INFO,
+  SOUND_SENSOR_V2_INTENSITY_INFO,
+  SOUND_SENSOR_V2_ID,
 } from "../../../services/sensor-service";
 
 import MicrophoneServiceIST, { BUFFER_LENGTH } from "../../../services/microphone-service";
@@ -66,7 +68,7 @@ import {
 } from "../../../js/constants";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
 import { handleAddSelection, handleDeleteSelection } from "../../../utils/widget-line-chart/selection-plugin";
-import _ from "lodash";
+import _, { isArray } from "lodash";
 import PopoverStatisticOptions from "../widget-line-chart/PopoverStatisticOptions";
 import { addStatisticNote, removeStatisticNote } from "../../../utils/widget-scope-view/statistic-plugin";
 import { f7 } from "framework7-react";
@@ -75,10 +77,10 @@ import { getOscBufferData, clearOscBuffersData } from "../../../services/buffer-
 
 const MAX_DECIBEL = 120;
 const MIN_DECIBEL = 30;
-const DEFAULT_MIN_AMPLITUDE = 0.1;
-const MAX_FREQUENCY = 1000;
+const DEFAULT_MIN_AMPLITUDE = 0.01;
+const MAX_FREQUENCY = 2000;
 const POINT_RADIUS = 2;
-const READ_BUFFER_INTERVAL = 100;
+const READ_BUFFER_INTERVAL = 50;
 
 let drawChartAnimationFrameId;
 let drawChartTimeoutID;
@@ -503,14 +505,37 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     const bufferData = getOscBufferData(sensor.id);
     if (!bufferData) return;
 
-    const deltaTime = READ_BUFFER_INTERVAL / bufferData.length;
-    //console.log(bufferData.length);
-    const normalizedArray = bufferData.map((value, index) => {
-      return {
-        x: index * deltaTime,
-        y: value,
-      };
+    let deltaTime, maxX, maxY, minY;
+    if (sensor.id == SOUND_SENSOR_V2_ID) {
+      deltaTime = 0.02; // sound sampled at 48KHz with 400 samples ~0.02ms/sample
+      maxY = 0.05;
+      minY = -0.05;
+    } else {
+      deltaTime = READ_BUFFER_INTERVAL / bufferData.length;
+      minY = sensorDataInfo.min;
+      maxY = sensorDataInfo.max;
+      maxX = 100;
+    }
+
+    let normalizedArray = [];
+    
+    bufferData.map((value, index) => {
+      if (isArray(value[sensor.index])) {
+        for (let i=0; i<value[sensor.index].length; i++) {
+          normalizedArray.push({
+            x: (index * value[sensor.index].length + i) * deltaTime,
+            y: value[sensor.index][i],
+          });
+        }
+      } else {
+        normalizedArray.push( {
+          x: index * deltaTime,
+          y: value[sensor.index],
+        });
+      }
     });
+
+    maxX = normalizedArray.length * deltaTime;
 
     const chartData = [
       {
@@ -525,9 +550,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     updateChart({
       chartInstance: chartInstanceRef.current,
       data: chartDatas,
-      maxX: bufferData.length*0.02,
-      maxY: sensorDataInfo.max,
-      minY: sensorDataInfo.min,
+      maxX: maxX,
+      maxY: maxY,
+      minY: minY,
       labelY: sensor.name + ` (${sensor.unit})`,
       labelX: t("common.time") + " (ms)",
       tension: 0.6,
@@ -540,7 +565,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         if ([SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO].includes(sensorInfo)) {
           drawSoundChart();
           if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
-        } else if ([CURRENT_SENSOR_V2_INFO, VOLTAGE_SENSOR_V2_INFO, SOUND_SENSOR_V2_INFO].includes(sensorInfo)) {
+        } else if ([CURRENT_SENSOR_V2_INFO, VOLTAGE_SENSOR_V2_INFO, SOUND_SENSOR_V2_LEVEL_INFO, SOUND_SENSOR_V2_INTENSITY_INFO].includes(sensorInfo)) {
           drawBufferChart();
           if (isRunning) drawChartTimeoutID = setTimeout(drawChart, READ_BUFFER_INTERVAL);
           //if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);

@@ -34,7 +34,8 @@ export const CURRENT_SENSOR_INFO = `${CURRENT_SENSOR_ID}-0`;
 export const CURRENT_SENSOR_V2_INFO = `${CURRENT_SENSOR_V2_ID}-0`;
 export const VOLTAGE_SENSOR_INFO = `${VOLTAGE_SENSOR_ID}-0`;
 export const VOLTAGE_SENSOR_V2_INFO = `${VOLTAGE_SENSOR_V2_ID}-0`;
-export const SOUND_SENSOR_V2_INFO = `${SOUND_SENSOR_V2_ID}-0`;
+export const SOUND_SENSOR_V2_LEVEL_INFO = `${SOUND_SENSOR_V2_ID}-0`;
+export const SOUND_SENSOR_V2_INTENSITY_INFO = `${SOUND_SENSOR_V2_ID}-1`;
 
 export const defaultSensors = [
   {
@@ -117,7 +118,7 @@ export const defaultSensors = [
         min: -40,
         max: 125,
         formatFloatingPoint: 1,
-        //dataLength: 4,
+        //dataSize: 4,
         //calcFunc: x => x/1000,
       },
     ],
@@ -190,7 +191,7 @@ export const defaultSensors = [
     data: [
       {
         id: "inno-010-dba",
-        name: "list_sensor.sound_intensity",
+        name: "list_sensor.sound_level",
         unit: "dBA",
         min: 30,
         max: 120,
@@ -233,7 +234,7 @@ export const defaultSensors = [
         min: -10,
         max: 10,
         formatFloatingPoint: 1,
-        dataLength: 4, // in bytes
+        dataSize: 4, // in bytes
       },
     ],
   },
@@ -290,7 +291,7 @@ export const defaultSensors = [
         min: -5,
         max: 5,
         formatFloatingPoint: 1,
-        dataLength: 2, // in bytes
+        dataSize: 2, // in bytes
         calcFunc: x => x/1000,
       },
     ],
@@ -325,12 +326,24 @@ export const defaultSensors = [
     data: [
       {
         id: "inno-018-dba",
-        name: "list_sensor.sound_intensity",
+        name: "list_sensor.sound_level",
         unit: "dBA",
         min: 40,
         max: 80,
         formatFloatingPoint: 1,
-        dataLength: 2, // in bytes
+        dataSize: 2, // in bytes
+        calcFunc: x => x/100,
+      },
+      {
+        id: "inno-018-uW",
+        name: "list_sensor.sound_intensity",
+        unit: "µW/m2",
+        min: -0.1,
+        max: 0.1,
+        formatFloatingPoint: 3,
+        dataSize: 2, // in bytes
+        calcFunc: x => x/1000,
+        dataLength: 120
       },
     ],
   },
@@ -343,7 +356,7 @@ export const defaultSensors = [
     remote_logging: true,
     support_calib: true,
     data: [
-      { id: "inno-015-motion", name: "list_sensor.distance", unit: "cm", min: 0, max: 400, formatFloatingPoint: 1 },
+      { id: "inno-015-distance", name: "list_sensor.distance", unit: "cm", min: 0, max: 400, formatFloatingPoint: 1 },
     ],
   },
   {
@@ -495,7 +508,7 @@ export const defaultSensors = [
     remote_logging: false,
     support_calib: false,
     data: [
-      { id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dBA", min: 30, max: 120, formatFloatingPoint: 1 },
+      { id: "inno-068-db", name: "list_sensor.decibel_level", unit: "dBA", min: 40, max: 100, formatFloatingPoint: 1 },
     ],
   },
   {
@@ -508,12 +521,12 @@ export const defaultSensors = [
     remote_logging: false,
     support_calib: false,
     data: [
-      { id: "inno-069-wave", name: "list_sensor.wave", unit: "", min: -1, max: 1, formatFloatingPoint: 1 },
+      { id: "inno-069-wave", name: "list_sensor.wave", unit: "", min: -0.05, max: 0.05, formatFloatingPoint: 1 },
       {
         id: "inno-069-frequency",
         name: "list_sensor.frequency",
         unit: "",
-        min: -100,
+        min: 40,
         max: 100,
         formatFloatingPoint: 1,
       },
