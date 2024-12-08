@@ -1464,7 +1464,7 @@ export class DataManager {
     const sensor = this.sensorsQueue.find((element) => element.sensorId === sensorId);
 
     if (sensor != undefined) {
-      const sensorInfo = SensorServicesIST.getSensorInfo(sensorId);
+      const sensorInfo = this.sensorsQueue.find((element) => element.sensorId === sensorId);
       return {
         ...sensorInfo,
         sensorVersion: sensor.sensorVersion != undefined ? sensor.sensorVersion : SENSOR_VERSION.V1,
