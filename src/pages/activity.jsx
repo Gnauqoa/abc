@@ -168,6 +168,7 @@ export default ({ f7route, f7router, filePath, content }) => {
     onInitHandler();
     DataManagerIST.importActivityDataRun(activity.dataRuns);
     DataManagerIST.importCustomUnit(activity.customXAxis);
+    // MicrophoneServicesIST.init();
 
     SensorServicesIST.importSensors(activity.sensors, activity.customSensors);
     if (content) {
