@@ -142,6 +142,8 @@ export class DataManager {
       sensorId: null,
       data: [],
     };
+
+    this.selectedSensorIds = [];
   }
 
   init() {
@@ -590,6 +592,8 @@ export class DataManager {
     const dataRunData = dataRun.data;
     if (curBuffer) {
       Object.keys(curBuffer).forEach((sensorId) => {
+        if (!this.selectedSensorIds.includes(Number(sensorId))) return;
+
         const sensorData = {
           time: parsedTime,
           values: curBuffer[sensorId],
@@ -604,6 +608,8 @@ export class DataManager {
       const sampleSize = READ_BUFFER_INTERVAL / this.selectedInterval;
 
       buffers.keys().forEach((sensorId) => {
+        if (!this.selectedSensorIds.includes(Number(sensorId))) return;
+
         const sensorBuffer = getBufferData(sensorId, sampleSize);
         if (!sensorBuffer) return;
 
@@ -1796,6 +1802,14 @@ export class DataManager {
     this.dataRuns[dataRunId].data[sensorId] = this.dataRuns[dataRunId].data[sensorId].filter((item, index) => {
       return !indexes.includes(index);
     });
+  }
+
+  setSelectedSensorIds(sensorIds) {
+    this.selectedSensorIds = sensorIds;
+  }
+
+  getSelectedSensorIds() {
+    return this.selectedSensorIds;
   }
 }
 

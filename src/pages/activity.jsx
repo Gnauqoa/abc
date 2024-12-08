@@ -199,6 +199,9 @@ export default ({ f7route, f7router, filePath, content }) => {
     const widgets = pages[currentPageIndex]?.widgets;
     if (!widgets) return;
 
+    const selectedSensorIds = [...new Set(widgets.flatMap((w) => w.sensors.map((s) => s.id)).filter((id) => id >= 0))];
+    DataManagerIST.setSelectedSensorIds(selectedSensorIds);
+
     const subscribedSensorIds = [
       ...new Set(
         widgets.flatMap((widget) =>
@@ -395,6 +398,7 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function startCollectData() {
+    console.log(">>>>>>getActiveSensorIds", DataManagerIST.getSelectedSensorIds())
     const start = () => {
       SensorServicesIST.configureSensorsDataRate(frequency);
 
