@@ -4,7 +4,7 @@ import { List, ListInput, Button, f7, ListItem } from "framework7-react";
 import "./index.scss";
 import CustomDropdownInput from "./custom-list-input";
 import storeService from "../../../services/store-service";
-import SensorServicesIST from "../../../services/sensor-service";
+import DataManagerIST from "../../../services/data-manager";
 import {
   OFF,
   FLASH,
@@ -39,6 +39,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
   const { t, i18n } = useTranslation();
   const [formSetting, setFormSetting] = useState({});
   const sensorId = sensorInfo.id;
+  const sensorVersion = sensorId ? DataManagerIST.getActiveSensorWithId(sensorId).sensorVersion : SENSOR_VERSION.V1;
 
   useEffect(() => {
     let savedSetting = storeSettingService.find(sensorId) ||
@@ -255,7 +256,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
             title={`${t("modules.total_number_of_samples")}: ${~~(
               (formSetting.duration * 60) /
               formSetting.interval
-            )} (${t("modules.max")} ${(sensorInfo.sensorVersion === SENSOR_VERSION.V2
+            )} (${t("modules.max")} ${(sensorVersion === SENSOR_VERSION.V2
               ? MAX_SAMPLE_REMOTE_LOGGING
               : MAX_SAMPLE_REMOTE_LOGGING_V2
             )
