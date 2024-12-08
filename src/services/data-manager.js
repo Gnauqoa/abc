@@ -687,7 +687,7 @@ export class DataManager {
     return result;
   }
 
-  addSoundDataDataRun(sensorId, sensorData, dataRunId) {
+  addOscDataDataRun(sensorId, sensorData, dataRunId) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
       // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);
@@ -698,7 +698,7 @@ export class DataManager {
     dataRunData[sensorId] = [sensorData];
   }
 
-  getSoundDataDataRun(sensorId, dataRunId) {
+  getOscDataDataRun(sensorId, dataRunId) {
     const dataRun = this.dataRuns[dataRunId];
     if (!dataRun) {
       // console.log(`DATA_MANAGER-addSensorDataDataRun: dataRunId ${dataRunId} does not exist`);

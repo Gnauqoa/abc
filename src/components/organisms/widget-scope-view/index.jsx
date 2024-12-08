@@ -428,11 +428,29 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         ],
       });
 
-      const data = DataManagerIST.getSoundDataDataRun(sensorInfo, currentDataRunId);
+      const data = DataManagerIST.getOscDataDataRun(sensorInfo, currentDataRunId);
       if (Array.isArray(data) && data.length === 1) {
+        let chartName, labelX, labelY, tension;
+        if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
+          chartName = t("organisms.sound_amplitude");
+          labelX = t("common.time") + " (ms)";
+          labelY = t("organisms.sound_amplitude");
+          tension = 0.6;
+        } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
+          chartName = t("organisms.sound_level");
+          labelX = t("organisms.sound_frequency");
+          labelY = t("organisms.sound_frequency");
+          tension = 0.2;
+        } else {
+          chartName = sensor.name;
+          labelX = t("common.time") + " (ms)";
+          labelY = sensor.name + ` (${sensor.unit})`;
+          tension = 0.6;
+        }
+
         const chartData = [
           {
-            name: t("organisms.periodic_oscillations_according_to_frequency"),
+            name: chartName,
             data: data[0],
             dataRunId: currentDataRunId,
           },
@@ -446,9 +464,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
           data: chartDatas,
           maxX: maxX,
           maxY: yValue,
-          labelY: sensorInfo === SINE_WAVE_SENSOR_INFO ? "amplitude" : "decibels",
-          labelX: sensorInfo === SINE_WAVE_SENSOR_INFO ? "ms" : "frequency",
-          tension: sensorInfo === SINE_WAVE_SENSOR_INFO ? 0.6 : 0.2,
+          labelY: labelY,
+          labelX: labelX,
+          tension: tension,
         });
       } else {
         // Not need updated chart, as updateChart function will call update
@@ -485,7 +503,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         minY: maxAmplitude * -1,
         labelY: t("organisms.sound_amplitude"),
         labelX: t("common.time") + " (ms)",
-        tension: 0.2,
+        tension: 0.6,
       });
     } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
       updateChart({
@@ -577,7 +595,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       const curDatasets = chartInstanceRef.current.data?.datasets;
       if (Array.isArray(curDatasets) && curDatasets.length === 1) {
         const data = curDatasets[0].data;
-        DataManagerIST.addSoundDataDataRun(sensorInfo, data, currentDataRunId);
+        DataManagerIST.addOscDataDataRun(sensorInfo, data, currentDataRunId);
       }
       if (drawChartAnimationFrameId) {
         cancelAnimationFrame(drawChartAnimationFrameId);
