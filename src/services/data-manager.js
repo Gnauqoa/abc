@@ -1357,7 +1357,7 @@ export class DataManager {
             sensorId: sensorId,
             deviceId: deviceId,
             batteryStatus: parseInt(battery),
-            sensorVersion,
+            sensorVersion: sensorVersion,
           });
         } else {
           const index = this.sensorsQueue.findIndex((element) => element.sensorId === sensorId);
@@ -1493,7 +1493,7 @@ export class DataManager {
       const sensorInfo = this.sensorsQueue.find((element) => element.sensorId === sensorId);
       return {
         ...sensorInfo,
-        sensorVersion: sensor.sensorVersion != undefined ? sensor.sensorVersion : SENSOR_VERSION.V1,
+        sensorVersion: sensor.sensorVersion != undefined ? sensor.sensorVersion : SENSOR_VERSION.V2,
       };
     } else {
       return {};
