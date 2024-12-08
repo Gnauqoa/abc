@@ -39,7 +39,7 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
   const { t, i18n } = useTranslation();
   const [formSetting, setFormSetting] = useState({});
   const sensorId = sensorInfo.id;
-  const sensorVersion = sensorId ? DataManagerIST.getActiveSensorWithId(sensorId).sensorVersion : SENSOR_VERSION.V1;
+  const sensorVersion = sensorId ? DataManagerIST.getActiveSensorWithId(sensorId).sensorVersion : SENSOR_VERSION.V2;
 
   useEffect(() => {
     let savedSetting = storeSettingService.find(sensorId) ||
@@ -257,8 +257,8 @@ const RemoteLoggingTab = ({ sensorInfo, remoteLoggingInfo, sensorDataIndex, onSa
               (formSetting.duration * 60) /
               formSetting.interval
             )} (${t("modules.max")} ${(sensorVersion === SENSOR_VERSION.V2
-              ? MAX_SAMPLE_REMOTE_LOGGING
-              : MAX_SAMPLE_REMOTE_LOGGING_V2
+              ? MAX_SAMPLE_REMOTE_LOGGING_V2
+              : MAX_SAMPLE_REMOTE_LOGGING
             )
               .toString()
               .replace(/\B(?=(\d{3})+(?!\d))/g, ",")})`}
