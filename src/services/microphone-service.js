@@ -12,7 +12,7 @@ export const BUFFER_LENGTH = 1024;
 
 const DEFAULT_MIN_AMPLITUDE = 0.1;
 
-const MAX_FREQUENCY = 1000;
+const MAX_FREQUENCY = 2000;
 const REF_VALUE = 1.0; // Reference value for SPL calculation
 const REF_DB = 150.0; // Reference level in dB
 

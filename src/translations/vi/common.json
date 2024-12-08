@@ -227,6 +227,7 @@
     "gas_pressure": "Áp suất khí",
     "sound_sensor": "Cảm biến âm thanh",
     "sound": "Âm thanh",
+    "sound_level": "Độ ồn",
     "sound_intensity": "Cường độ âm thanh",
     "current_sensor": "Cảm biến dòng điện",
     "electrical_current": "Dòng điện",

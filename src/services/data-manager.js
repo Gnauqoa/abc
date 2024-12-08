@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { exportDataRunsToExcel, getCurrentTime, getFromBetween, parseSensorInfo } from "./../utils/core";
 import { EventEmitter } from "fbemitter";
-import _ from "lodash";
+import _, { isArray } from "lodash";
 import SensorServicesIST, { CURRENT_SENSOR_V2_ID, VOLTAGE_SENSOR_V2_ID, SOUND_SENSOR_V2_ID } from "./sensor-service";
 import {
   FREQUENCIES,
@@ -1069,33 +1069,43 @@ export class DataManager {
 
     while (dataRead < totalDataLength + header_bytes) {
       for (let i = 0; i < sensorInfo.data.length; i++) {
-        let dataLength = sensorInfo.data[i].dataLength ?? 4;
-        // read next dataLength bytes
-        let rawBytes = data.slice(dataRead, dataRead + dataLength);
+        let dataSize = sensorInfo.data[i].dataSize ?? 4;
+        let dataLength = sensorInfo.data[i].dataLength ?? 1;
+        let dataArray = [];
+        for (let j = 0; j < dataLength; j++) {
 
-        let view = new DataView(new ArrayBuffer(dataLength));
+          // read next dataSize bytes
+          let rawBytes = data.slice(dataRead, dataRead + dataSize);
 
-        rawBytes.forEach(function (b, i) {
-          view.setUint8(dataLength - i - 1, b);
-        });
+          let view = new DataView(new ArrayBuffer(dataSize));
 
-        let num;
+          rawBytes.forEach(function (b, i) {
+            view.setUint8(dataSize - i - 1, b);
+          });
+
+          let num;
+
+          if (dataSize == 1) {
+            num = view.getInt8(0);
+          } else if (dataSize == 2) {
+            num = view.getInt16(0);
+          } else if (dataSize == 4) {
+            num = view.getFloat32(0);
+          }
+
+          if (sensorInfo.data[i].calcFunc) {
+            num = sensorInfo.data[i].calcFunc(num);
+          }
+
+          dataArray.push(num);
+          dataRead += dataSize;
+        }
 
         if (dataLength == 1) {
-          num = view.getInt8(0);
-        } else if (dataLength == 2) {
-          num = view.getInt16(0);
-        } else if (dataLength == 4) {
-          num = view.getFloat32(0);
+          sensorData.push(dataArray[0]);
+        } else {
+          sensorData.push(dataArray);
         }
-
-        if (sensorInfo.data[i].calcFunc) {
-          num = sensorInfo.data[i].calcFunc(num);
-        }
-
-        sensorData.push(num);
-
-        dataRead += dataLength;
       }
 
       dataRecords++;
@@ -1301,7 +1311,17 @@ export class DataManager {
           let value = data[6 + recordsRead * sensorInfo.data.length + i];
           let formatFloatingPoint = sensorInfo.data[i]?.formatFloatingPoint;
           formatFloatingPoint = formatFloatingPoint ??= 1;
-          sample.push(parseFloat(value).toFixed(formatFloatingPoint));
+
+          if (isArray(value)) {
+            let subSample = [];
+            for (let j=0; j<value.length; j++) {
+              subSample.push(parseFloat(value[j]).toFixed(formatFloatingPoint));  
+            }
+            sample.push(subSample);
+          } else {
+            sample.push(parseFloat(value).toFixed(formatFloatingPoint));
+          }
+          
         }
         recordsRead++;
         sensorsData.push(sample);

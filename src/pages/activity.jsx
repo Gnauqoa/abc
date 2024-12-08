@@ -46,7 +46,7 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import DataManagerIST from "../services/data-manager";
 import MicrophoneServicesIST from "../services/microphone-service";
-import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, defaultSensors } from "../services/sensor-service";
+import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID, defaultSensors } from "../services/sensor-service";
 
 // Context
 import { useActivityContext } from "../context/ActivityContext";
@@ -384,8 +384,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     DataManagerIST.unsubscribeTimer();
     DataManagerIST.stopCollectingData();
 
-    const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
-    if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
+    const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID) || isSelectSensor(BUILTIN_MICROPHONE_ID);
+    if (isContainBuiltinMic) {
       MicrophoneServicesIST.stop();
     }
     setIsRunning(false);
@@ -429,8 +429,8 @@ export default ({ f7route, f7router, filePath, content }) => {
       }
 
       // MicrophoneServicesIST.init() if the current widget is scope view
-      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID);
-      if (pages[currentPageIndex].layout === LAYOUT_SCOPE || isContainBuiltinMic) {
+      const isContainBuiltinMic = isSelectSensor(BUILTIN_DECIBELS_SENSOR_ID) || isSelectSensor(BUILTIN_MICROPHONE_ID);
+      if (isContainBuiltinMic) {
         MicrophoneServicesIST.init();
       }
 

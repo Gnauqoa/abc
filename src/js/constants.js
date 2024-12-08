@@ -26,6 +26,7 @@ export const SCAN_SERIAL_INTERVAL = 1000; // millisecond
 export const READ_SERIAL_INTERVAL = 100; // millisecond
 export const RUNNER_INTERVAL = 50; // millisecond
 export const SERIAL_BAUD_RATE = 115200;
+export const SERIAL_BAUD_RATE_V2 = 921600;
 export const RUNNER_TYPE = {
   SCAN: "scan",
   READ: "read",
@@ -36,113 +37,10 @@ export const GITHUB_ACCESS_TOKEN = "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";
 // MQTT
 export const MQTT_URL = "wss://mqtt.ohstem.vn:8084/mqtt";
 
-// Home modules
-export const BUILD = "build";
-export const DASHBOARD = "dashboard";
-export const CODE = "code";
-export const LESSON = "lesson";
-export const CUSTOM_DASHBOARD = "custom-dashboard";
-export const GAMEPAD = "gamepad";
-export const PIN_IO = "pin-io";
-export const DRAW_RUN = "draw_run";
-export const RECORD_PLAY = "record_play";
-export const PLAYS = "plays";
-export const EXPAND = "expand";
-
-// Dashboard mode
-export const PLAY = "play";
-export const DESIGN = "design";
-
-// Widgets
-export const DEFAULT_BUTTON = "default-button";
-export const DEFAULT_SWITCH = "default-switch";
-export const JOYSTICK = "joystick";
-export const BUTTON = "button";
-export const SWITCH = "switch";
-export const IMG_SWITCH = "img-switch";
-export const IMG_SWITCH_SUGGESTIONS = [
-  {
-    turn_on: "static/widgets/img-switch-on.png",
-    turn_off: "static/widgets/img-switch-off.png",
-    id: "default", // Alway keep one default suggestion
-    name: "const.default",
-  },
-  {
-    turn_on: "static/widgets/img-switch-light-on.png",
-    turn_off: "static/widgets/img-switch-light-off.png",
-    id: "light",
-    name: "const.light_bulb",
-  },
-  {
-    turn_on: "static/widgets/img-switch-audio-on.png",
-    turn_off: "static/widgets/img-switch-audio-off.png",
-    id: "audio",
-    name: "const.sound",
-  },
-  {
-    turn_on: "static/widgets/img-switch-wifi-on.png",
-    turn_off: "static/widgets/img-switch-wifi-off.png",
-    id: "wifi",
-    name: "const.wifi",
-  },
-  {
-    turn_on: "static/widgets/img-switch-micro-on.png",
-    turn_off: "static/widgets/img-switch-micro-off.png",
-    id: "micro",
-    name: "const.record",
-  },
-  {
-    turn_on: "static/widgets/img-switch-media-play.png",
-    turn_off: "static/widgets/img-switch-media-stop.png",
-    id: "media",
-    name: "const.play_stop_button",
-  },
-  {
-    turn_on: "static/widgets/img-switch-camera-on.png",
-    turn_off: "static/widgets/img-switch-camera-off.png",
-    id: "camera",
-    name: "const.camera",
-  },
-  {
-    turn_on: "static/widgets/img-switch-bell-on.png",
-    turn_off: "static/widgets/img-switch-bell-off.png",
-    id: "bell",
-    name: "const.bell",
-  },
-  {
-    turn_on: "static/widgets/img-switch-lock-on.png",
-    turn_off: "static/widgets/img-switch-lock-off.png",
-    id: "lock",
-    name: "const.lock",
-  },
-];
-export const IMG_SWITCH_DEFAULT_SUGGESTION = IMG_SWITCH_SUGGESTIONS.find((s) => s.id === "default");
-export const DPAD = "dpad";
-export const SLIDER = "slider";
-export const SERVO = "servo";
-export const KNOB = "knob";
-export const PULL_SLIDER = "pull-slider";
-export const LED_PANEL = "led-panel";
-export const VALUE_DISPLAY = "value-display";
-export const STEP_CONTROL = "step-control";
-export const COLOR_PICKER = "color-picker";
-export const MENU = "menu";
-export const CHART = "chart";
-export const GAUGE = "gauge";
-
 //Connect type
 export const CONNECT_BLE_TYPE = 1;
 export const CONNECT_SERIAL_TYPE = 2;
 export const AUTO_CONNECT = false;
-
-// Pin mode
-export const INPUT = "Input";
-export const OUTPUT = "Output";
-export const PWM = "PWM";
-export const FLOATING = "Floating";
-export const PULL_UP = "Pull Up";
-export const LOW = "Low";
-export const HIGH = "High";
 
 // Connect flow
 export const STEP_GUIDE = "guide";
@@ -181,7 +79,7 @@ export const CONDITION = {
 };
 
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
-export const FREQUENCIES = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 4000, 5000, 10000];
+export const FREQUENCIES = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 4000, 5000, 10000, 48000];
 export const SAMPLING_MANUAL_NAME = "const.manual";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
