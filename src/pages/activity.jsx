@@ -398,7 +398,6 @@ export default ({ f7route, f7router, filePath, content }) => {
   }
 
   function startCollectData() {
-    console.log(">>>>>>getActiveSensorIds", DataManagerIST.getSelectedSensorIds())
     const start = () => {
       SensorServicesIST.configureSensorsDataRate(frequency);
 
