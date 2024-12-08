@@ -120,16 +120,17 @@ export const SENSOR_VERSION = {
 
 export const NUM_NON_DATA_SENSORS_CALLBACK = 5;
 export const NUM_NON_DATA_SENSORS_CALLBACK_V2 = 7;
-export const START_BYTE_V1 = 0xAA;
-export const START_BYTE_V2 = 0xCC;
-export const START_BYTE_V2_LOG = 0xDD;
-export const STOP_BYTE = 0xBB;
+export const START_BYTE_V1 = 0xaa;
+export const START_BYTE_V2 = 0xcc;
+export const START_BYTE_V2_LOG = 0xdd;
+export const STOP_BYTE = 0xbb;
 
 // TABLES DEFINED
 export const USER_INPUTS_TABLE = "user-inputs";
 export const LINE_CHART_STATISTIC_NOTE_TABLE = "line-chart-statistic-notes";
 export const LINE_CHART_LABEL_NOTE_TABLE = "line-chart-label-notes";
 export const LINE_CHART_RANGE_SELECTION_TABLE = "line-chart-range-selection";
+export const LINE_CHART_POINT_DATA_PREVIEW_TABLE = "line-chart-point-data-preview";
 
 // DELTA
 export const LINE_CHART_DELTA_TABLE = "line-chart-delta";

@@ -12,7 +12,6 @@ import DataManagerIST from "../../../services/data-manager";
 import lineChartIcon from "../../../img/expandable-options/line.png";
 import {
   createChartJsDatas,
-  getCustomTooltipFunc,
   getChartJsPlugin,
   scaleToFixHandler,
   interpolateHandler,
@@ -69,6 +68,10 @@ import {
   createLabelNoteId,
   getAllCurrentLabelNotes,
 } from "../../../utils/widget-line-chart/label-plugin";
+import {
+  addPointDataPreview,
+  getAllCurrentPointDataPreview,
+} from "../../../utils/widget-line-chart/point-data-preview-plugin";
 import {
   addDelta,
   findFirstDeltaByValue,
@@ -356,11 +359,17 @@ const updateChart = ({ chartInstance, data = [], axisRef, pageId, isDefaultXAxis
         widgetId,
       });
       const { rangeSelections } = getRangeSelections({ pageId: pageId, widgetId });
+      // const pointDataPreviewAnnotations = getAllCurrentPointDataPreview({
+      //   pageId,
+      //   widgetId,
+      //   hiddenDataLineIds,
+      // });
       newChartAnnotations = {
         ...labelNoteAnnotations,
         ...labelDeltaAnnotations,
         ...summaryNotes,
         ...rangeSelections,
+        // ...pointDataPreviewAnnotations,
       };
 
       for (const regression of linearRegNotes) {
@@ -457,6 +466,7 @@ let LineChart = (props, ref) => {
         chartInstanceRefs.current.forEach((chartInstanceRef, index) => {
           // Delete all the label + statistic notes of the deleted dataRunIds
           const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widgets[index].id });
+          const allPointDataPreviews = getAllCurrentPointDataPreview({ pageId, widgetId: widgets[index].id });
           const allLabelDeltas = getAllCurrentDeltas({ pageId, widgetId: widgets[index].id });
           const allStatisticNotes = getAllCurrentStatisticNotes({ pageId, widgetId: widgets[index].id });
 
@@ -468,6 +478,11 @@ let LineChart = (props, ref) => {
             if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelDeltaKey}]`)) {
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelDeltaKey];
             }
+          });
+
+          Object.keys(allPointDataPreviews).forEach((key) => {
+            if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${key}]`))
+              delete chartInstanceRef.config.options.plugins.annotation.annotations[key];
           });
 
           for (const statisticNote of allStatisticNotes.linearRegNotes) {
@@ -503,6 +518,7 @@ let LineChart = (props, ref) => {
           if (!chartInstanceRef.attached) return;
           const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widgets[index].id });
           const allLabelDeltas = getAllCurrentDeltas({ pageId, widgetId: widgets[index].id });
+          const allPointDataPreviews = getAllCurrentPointDataPreview({ pageId, widgetId: widgets[index].id });
 
           const allStatisticNotes = getAllCurrentStatisticNotes({ pageId, widgetId: widgets[index].id });
 
@@ -520,6 +536,14 @@ let LineChart = (props, ref) => {
             ) {
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelDeltaKey];
             }
+          });
+
+          Object.keys(allPointDataPreviews).forEach((key) => {
+            if (
+              !curSensorInfos.includes(allPointDataPreviews[key].sensorInfo) &&
+              _.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${key}]`)
+            )
+              delete chartInstanceRef.config.options.plugins.annotation.annotations[key];
           });
 
           for (const statisticNote of allStatisticNotes.linearRegNotes) {
@@ -607,37 +631,26 @@ let LineChart = (props, ref) => {
                   yValue,
                 });
 
-                setDeltaSelected(deltaResult);
-
                 selectedPointElement = newPointEl;
                 selectedNoteElement = null;
                 chartSelectedIndex = i;
+                handleAddPointDataPreview(newPointEl);
+                setDeltaSelected(deltaResult);
+              } else {
+                const otherPointData = getAllCurrentPointDataPreview({ pageId, widgetId: i });
+                Object.keys(otherPointData).forEach((key) => {
+                  delete chart.config.options.plugins.annotation.annotations[key];
+                });
+
+                chart.update();
               }
               return true;
             },
             animation: false,
             maintainAspectRatio: false,
             plugins: {
-              tooltip: {
-                usePointStyle: true,
-                enabled: false,
-                external: getCustomTooltipFunc({ axisRef: axisRef }),
+              tooltip: { enabled: false },
 
-                callbacks: {
-                  label: function (context) {
-                    const resultArr = [];
-                    let label = context.dataset.label || "";
-                    resultArr.push(label);
-
-                    if (context.parsed.x !== null && context.parsed.y != null) {
-                      resultArr.push(context.parsed.x);
-                      resultArr.push(context.parsed.y);
-                    }
-
-                    return resultArr.join("|");
-                  },
-                },
-              },
               zoom: {
                 pan: {
                   // pan options and/or events
@@ -787,6 +800,12 @@ let LineChart = (props, ref) => {
 
     if (result) {
       // Clear selected point
+      const otherPointData = getAllCurrentPointDataPreview({ pageId, widgetId: widgets[chartSelectedIndex].id });
+      Object.keys(otherPointData).forEach((key) => {
+        delete extraData.chartInstance.config.options.plugins.annotation.annotations[key];
+      });
+
+      extraData.chartInstance.update();
       selectedPointElement = null;
       selectedNoteElement = null;
       chartSelectedIndex = null;
@@ -797,6 +816,59 @@ let LineChart = (props, ref) => {
     }
   };
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
+
+  //========================= ADD DATA TOOLTIP FUNCTIONS =========================
+  const handleAddPointDataPreview = (pointElement) => {
+    const isValidPointElement = pointElement?.element;
+    if (!isValidPointElement) {
+      return;
+    }
+
+    const chartInstance = chartInstanceRefs.current[chartSelectedIndex];
+    let noteId, sensorInfo;
+    let prevContent = [""];
+    let yScaleId = "y";
+
+    // Get NoteId to find whether the note is exist or not
+    // for getting the old content of note
+    if (isValidPointElement) {
+      const datasetIndex = pointElement.datasetIndex;
+      const dataPointIndex = pointElement.index;
+      const dataset = chartInstance.data.datasets[datasetIndex];
+      const dataRunId = dataset?.dataRunId;
+      sensorInfo = dataset?.yAxis?.sensorInfo;
+      const sensorId = parseSensorInfo(sensorInfo).id;
+      if (widgets[chartSelectedIndex].sensors.length > 1) {
+        const sensorIndex = widgets[chartSelectedIndex].sensors.findIndex((item) => item.id == sensorId);
+        yScaleId = sensorIndex > 0 ? `y${sensorIndex}` : "y";
+      }
+
+      const content = [
+        dataset.name,
+        `x= ${dataset.data[dataPointIndex]?.x} (${xAxis.unit})`,
+        `y= ${dataset.data[dataPointIndex]?.y} (${dataset.yAxis.info.title.text})`,
+      ];
+
+      addPointDataPreview({
+        chartInstance,
+        pageId,
+        dataRunId,
+        sensorInfo,
+        content,
+        selectedPointElement: pointElement,
+        widgetId: chartSelectedIndex,
+        yScaleId,
+        dataPointIndex,
+      });
+    } else return;
+
+    const labelNote = labelNotesStorage.find(noteId);
+    if (labelNote) {
+      const note = labelNote.label;
+      prevContent = note.content;
+      prevContent = prevContent.join(" ");
+    }
+  };
 
   //========================= STATISTIC OPTION FUNCTIONS =========================
   const statisticHandler = ({ optionId, chart, widgetId, widgetIndex }) => {
@@ -1024,7 +1096,6 @@ let LineChart = (props, ref) => {
         chartInstance.config.options.plugins.annotation.annotations[key] = annotation[key];
       });
     }
-    const { tooltip } = chartInstance;
     // const newDataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
 
     const newPointBackgroundColor = Array.from(
@@ -1032,18 +1103,21 @@ let LineChart = (props, ref) => {
       () => currentDataset.backgroundColor
     );
     const newPointBorderColor = Array.from({ length: currentDataset.data.length }, () => currentDataset.borderColor);
+    const newPointSize = Array.from({ length: currentDataset.data.length }, () => 5);
 
-    newPointBackgroundColor[newDataPointIndex] = "red"; // Highlight new point
+    newPointBackgroundColor[newDataPointIndex] = "blue"; // Highlight new point
+    newPointSize[newDataPointIndex] = POINT_HOVER_RADIUS;
+
     currentDataset.pointBackgroundColor = newPointBackgroundColor;
     currentDataset.pointBorderColor = newPointBorderColor;
+    currentDataset.pointRadius = newPointSize;
 
-    tooltip.setActiveElements([
-      {
-        datasetIndex,
-        index: newDataPointIndex,
-      },
-    ]);
-    const newSelectedPointElement = tooltip.getActiveElements()[0];
+    const newSelectedPointElement = {
+      datasetIndex,
+      index: newDataPointIndex,
+      element: chartInstance.getDatasetMeta(datasetIndex).data[newDataPointIndex],
+    };
+    handleAddPointDataPreview(newSelectedPointElement);
     selectedPointElement = newSelectedPointElement;
 
     chartInstance.update();
