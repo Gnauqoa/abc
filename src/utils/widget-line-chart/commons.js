@@ -67,6 +67,12 @@ export const LABEL_NOTE_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_
 export const LABEL_NOTE_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.red;
 export const LABEL_NOTE_BORDER = "#C12553";
 
+// LABEL DATA FEATURES
+export const PREFIX_POINT_DATA_PREVIEW = "point-data-preview";
+export const POINT_DATA_PREVIEW_BACKGROUND = chartUtils.transparentize(chartUtils.CHART_COLORS.grey, 0.2);
+export const POINT_DATA_PREVIEW_BACKGROUND_ACTIVE = chartUtils.CHART_COLORS.grey;
+export const POINT_DATA_PREVIEW_BORDER = "#91A7B5";
+
 // LABEL DELTA FEATURES
 export const PREFIX_DELTA = "delta";
 export const DELTA_POINT_BACKGROUND = "transparent";
@@ -187,6 +193,28 @@ export const SAMPLE_LABEL_NOTE = {
   content: ["    Note    "],
   callout: {
     display: true,
+    borderColor: "black",
+  },
+  xValue: 0,
+  yValue: 0,
+  display: true,
+};
+export const SAMPLE_POINT_DATA_PREVIEW = {
+  type: "label",
+  backgroundColor: POINT_DATA_PREVIEW_BACKGROUND,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: POINT_DATA_PREVIEW_BORDER,
+  textAlign: "start",
+  padding: {
+    top: 8,
+    left: 4,
+    right: 4,
+    bottom: 8,
+  },
+  content: ["    Data    "],
+  callout: {
+    display: false,
     borderColor: "black",
   },
   xValue: 0,
@@ -652,9 +680,11 @@ export const clearAllSelectedPoints = (chart) => {
 
     const newPointBackgroundColor = Array.from({ length: dataset.data.length }, () => backgroundColor);
     const newPointBorderColor = Array.from({ length: dataset.data.length }, () => borderColor);
+    const newPointSize = Array.from({ length: dataset.data.length }, () => POINT_RADIUS);
 
     dataset.pointBackgroundColor = newPointBackgroundColor;
     dataset.pointBorderColor = newPointBorderColor;
+    dataset.pointRadius = newPointSize;
   });
 };
 

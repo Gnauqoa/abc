@@ -4,6 +4,8 @@ import {
   LABEL_NOTE_BACKGROUND,
   LABEL_NOTE_BACKGROUND_ACTIVE,
   clearAllSelectedPoints,
+  POINT_HOVER_RADIUS,
+  POINT_RADIUS,
 } from "./commons";
 import StoreService from "../../services/store-service";
 import { LINE_CHART_LABEL_NOTE_TABLE } from "../../js/constants";
@@ -76,18 +78,19 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
           { length: currentDataset.data.length },
           () => currentDataset.borderColor
         );
+        const newPointSize = Array.from({ length: currentDataset.data.length }, () => POINT_RADIUS);
 
         newPointEl = selectedPoint;
-        newPointBackgroundColor[dataPointIndex] = "red";
+        newPointBackgroundColor[dataPointIndex] = "blue";
+        newPointSize[dataPointIndex] = POINT_HOVER_RADIUS;
 
         currentDataset.pointBackgroundColor = newPointBackgroundColor;
         currentDataset.pointBorderColor = newPointBorderColor;
+        currentDataset.pointRadius = newPointSize;
 
         chart.update();
 
         // Tính toán vị trí của icons
-        // const x = selectedPoint.element.x + rect.left;
-        // const y = selectedPoint.element.y + rect.top - 20; // 20px phía trên
         const x = selectedPoint.element.x - 30;
         let y = selectedPoint.element.y - 70;
         if (y < 20) y = y + 120;
