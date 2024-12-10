@@ -103,7 +103,7 @@
     "condition_value": "Value",
     "condition": "Condition",
     "delay_time": "Delay Time",
-    "stop_condition": "End Condition",
+    "stop_condition": "End condition",
     "bluetooth_connection_error": "Bluetooth Connection Error",
     "lost_connection": "Lost Connection",
     "connecting": "Connecting...",
