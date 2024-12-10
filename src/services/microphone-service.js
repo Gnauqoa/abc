@@ -1,5 +1,5 @@
 import { f7 } from "framework7-react";
-import { USB_TYPE } from "../js/constants";
+import { START_BYTE_V1, USB_TYPE } from "../js/constants";
 import DataManagerIST from "./data-manager";
 import { BUILTIN_DECIBELS_SENSOR_ID, SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO } from "./sensor-service";
 import { abs } from "mathjs";
@@ -281,7 +281,7 @@ export class MicrophoneServices {
     this.getDecibelIntervalId = setInterval(() => {
       const decibelValue = this.getCurrentDecibel();
       if (decibelValue !== null) {
-        const dataArray = [BUILTIN_DECIBELS_SENSOR_ID, 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
+        const dataArray = [START_BYTE_V1, BUILTIN_DECIBELS_SENSOR_ID, 100, USB_TYPE, "DUMMY", 1, [decibelValue]];
         DataManagerIST.callbackReadSensor(dataArray);
       }
     }, 1000);
