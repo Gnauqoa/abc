@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 import { useTranslation } from "react-i18next";
 
-
 import "./index.scss";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 import { useActivityContext } from "../../../context/ActivityContext";
@@ -11,8 +10,22 @@ import _ from "lodash";
 
 const updateChart = ({ chartInstance, datas }) => {
   if (!chartInstance) return;
+
+  // Preserve the hidden states of datasets
+  const hiddenStates = chartInstance.data.datasets.map((dataset, index) => ({
+    index,
+    hidden: chartInstance.getDatasetMeta(index).hidden,
+  }));
+
+  // Update chart data
   chartInstance.data = datas;
-  chartInstance.options.animation = false;
+
+  // Restore hidden states
+  hiddenStates.forEach(({ index, hidden }) => {
+    chartInstance.getDatasetMeta(index).hidden = hidden;
+  });
+
+  chartInstance.options.animation = false; // Prevent animation during update
   chartInstance.update();
 };
 
@@ -54,6 +67,16 @@ const BarCharWidget = ({ widget, datas, xAxis }) => {
           plugins: {
             legend: {
               position: "top",
+              onClick: (event, legendItem, legend) => {
+                const datasetIndex = legendItem.datasetIndex;
+                const chart = legend.chart;
+
+                // Toggle dataset visibility
+                const meta = chart.getDatasetMeta(datasetIndex);
+                meta.hidden = !meta.hidden;
+
+                chart.update();
+              },
             },
             scales: {
               y: {
