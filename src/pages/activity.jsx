@@ -46,7 +46,11 @@ import { saveFile } from "../services/file-service";
 import storeService from "../services/store-service";
 import DataManagerIST from "../services/data-manager";
 import MicrophoneServicesIST from "../services/microphone-service";
-import SensorServicesIST, { BUILTIN_DECIBELS_SENSOR_ID, BUILTIN_MICROPHONE_ID, defaultSensors } from "../services/sensor-service";
+import SensorServicesIST, {
+  BUILTIN_DECIBELS_SENSOR_ID,
+  BUILTIN_MICROPHONE_ID,
+  defaultSensors,
+} from "../services/sensor-service";
 
 // Context
 import { useActivityContext } from "../context/ActivityContext";
@@ -54,7 +58,11 @@ import { useTableContext } from "../context/TableContext";
 
 // Utils
 import { getPageName } from "../utils/core";
-import { FIRST_COLUMN_DEFAULT_OPT, X_AXIS_TIME_UNIT } from "../utils/widget-table-chart/commons";
+import {
+  FIRST_COLUMN_DEFAULT_OPT,
+  FIRST_COLUMN_SENSOR_OPT,
+  X_AXIS_TIME_UNIT,
+} from "../utils/widget-table-chart/commons";
 import { createChartDataAndParseXAxis, getChartDatas } from "../utils/widget-line-chart/commons";
 import { getBarChartDatas } from "../utils/widget-bar-chart/common";
 
@@ -197,12 +205,11 @@ export default ({ f7route, f7router, filePath, content }) => {
     subscriberId && DataManagerIST.unsubscribe(subscriberId);
 
     const widgets = pages[currentPageIndex]?.widgets;
+    const xAxises = pages[currentPageIndex]?.xAxises;
     if (!widgets) return;
 
-    const selectedSensorIds = [...new Set(widgets.flatMap((w) => w.sensors.map((s) => s.id)).filter((id) => id >= 0))];
-    DataManagerIST.setSelectedSensorIds(selectedSensorIds);
-
-    const subscribedSensorIds = [
+    let selectedSensorIds = [...new Set(widgets.flatMap((w) => w.sensors.map((s) => s.id)).filter((id) => id >= 0))];
+    let subscribedSensorIds = [
       ...new Set(
         widgets.flatMap((widget) =>
           widget.sensors
@@ -212,11 +219,18 @@ export default ({ f7route, f7router, filePath, content }) => {
       ),
     ];
 
+    if (xAxises.length && xAxises[0].id.includes(FIRST_COLUMN_SENSOR_OPT)) {
+      selectedSensorIds.push(parseInt(xAxises[0].id.split(":")[1]));
+      subscribedSensorIds.push(parseInt(xAxises[0].id.split(":")[1]));
+    }
+
+    DataManagerIST.setSelectedSensorIds(selectedSensorIds);
+
     subscriberId = DataManagerIST.subscribe(handleDataManagerCallback, subscribedSensorIds);
     return () => {
       subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
-  }, [pages[currentPageIndex]?.widgets]);
+  }, [pages[currentPageIndex]?.widgets, pages[currentPageIndex]?.xAxises]);
 
   // =========================================================================================
   // =========================== Functions associate with Activity ===========================
