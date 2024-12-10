@@ -91,7 +91,7 @@ const SensorCalibratingTab = ({ sensorInfo, sensorDataIndex, onSaveHandler, onRe
 
     if (Number.isNaN(calibrationValueReadParsed) || calibrationValueRead === "") {
       f7.dialog.alert(
-        `${t("modules.readable_value")}c ${
+        `${t("modules.readable_value")} ${
           calibratingType === CALIBRATING_1_POINT ? t("modules.point_1") : t("modules.point_2")
         } ${t("modules.must_be_a_number")}`
       );
