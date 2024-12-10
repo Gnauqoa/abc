@@ -102,7 +102,7 @@
     "input_value": "Input",
     "condition_value": "Value",
     "condition": "Condition",
-    "delay_time": "Delay Time",
+    "delay_time": "Delay time",
     "stop_condition": "End condition",
     "bluetooth_connection_error": "Bluetooth Connection Error",
     "lost_connection": "Lost Connection",
