@@ -605,16 +605,16 @@ export class DataManager {
       });
     } else {
       const sampleSize = READ_BUFFER_INTERVAL / this.selectedInterval;
-
       buffers.keys().forEach((sensorId) => {
         if (!this.selectedSensorIds.includes(Number(sensorId))) return;
 
         const sensorBuffer = getBufferData(sensorId, sampleSize);
+
         if (!sensorBuffer) return;
 
         const sensorDataList = sensorBuffer.map((value, index) => {
           return {
-            time: (Number(parsedTime) + (index * this.selectedInterval) / 1000).toFixed(3),
+            time: (Number(parsedTime) + (index * this.selectedInterval) / 1000).toFixed(4),
             values: value,
           };
         });
@@ -910,7 +910,7 @@ export class DataManager {
         // Create default rows, Assign timeStamp for each row
         let hasData = false;
         const row = new Array(headers.length).fill("");
-        row[TIME_STAMP_ID] = (timeStamp / 1000).toFixed(3);
+        row[TIME_STAMP_ID] = (timeStamp / 1000).toFixed(4);
 
         for (const sensorId of recordedSensors) {
           const invertedSensor = invertedSensorsInfo[sensorId];
@@ -1077,7 +1077,6 @@ export class DataManager {
         let dataLength = sensorInfo.data[i].dataLength ?? 1;
         let dataArray = [];
         for (let j = 0; j < dataLength; j++) {
-
           // read next dataSize bytes
           let rawBytes = data.slice(dataRead, dataRead + dataSize);
 
@@ -1318,14 +1317,13 @@ export class DataManager {
 
           if (isArray(value)) {
             let subSample = [];
-            for (let j=0; j<value.length; j++) {
-              subSample.push(parseFloat(value[j]).toFixed(formatFloatingPoint));  
+            for (let j = 0; j < value.length; j++) {
+              subSample.push(parseFloat(value[j]).toFixed(formatFloatingPoint));
             }
             sample.push(subSample);
           } else {
             sample.push(parseFloat(value).toFixed(formatFloatingPoint));
           }
-          
         }
         recordsRead++;
         sensorsData.push(sample);
@@ -1347,7 +1345,6 @@ export class DataManager {
         return;
       } else {
         // real time data
-
         addBufferData(sensorId, sensorsData);
 
         // Add the sensor to sensorsQueue if not exist, otherwise update battery
@@ -1518,7 +1515,7 @@ export class DataManager {
 
   // -------------------------------- COLLECTING_DATA_TIME -------------------------------- //
   getParsedCollectingDataTime() {
-    const parsedTime = (this.collectingDataTime / 1000).toFixed(3);
+    const parsedTime = (this.collectingDataTime / 1000).toFixed(4);
     return parsedTime;
   }
 
@@ -1541,7 +1538,7 @@ export class DataManager {
 
       // Append data to data run and increment collecting data time
       if (this.isWaitingCollectingData) {
-        this.replaceDataRun(this.curDataRunId, (0).toFixed(3), curBuffer);
+        this.replaceDataRun(this.curDataRunId, (0).toFixed(4), curBuffer);
       } else if (this.isCollectingData) {
         // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
         if (this.isClearDataRun) {
@@ -1553,6 +1550,7 @@ export class DataManager {
           if (this.selectedInterval >= READ_BUFFER_INTERVAL && this.collectingDataTime % this.selectedInterval === 0) {
             // Set this.collectingDataTime % this.selectedInterval === 0 for case frequency < 1Hz
             this.appendDataRun(this.curDataRunId, parsedTime, curBuffer);
+            // Update total time collecting data
           } else if (this.selectedInterval < READ_BUFFER_INTERVAL) {
             this.appendDataRun(this.curDataRunId, parsedTime);
           }
@@ -1761,7 +1759,7 @@ export class DataManager {
       });
 
       this.dataRuns[dataRunId].data[sensorParse.id] = newDataSensor.map((item, i) => ({
-        time: ((i * this.collectingDataInterval) / 1000).toFixed(3),
+        time: ((i * this.collectingDataInterval) / 1000).toFixed(4),
         values: item.values,
       }));
       return {

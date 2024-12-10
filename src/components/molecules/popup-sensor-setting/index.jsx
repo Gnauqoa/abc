@@ -109,7 +109,7 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
           dataRunData[sensorId] = [];
           sensorLog.forEach((log, index) => {
             const sensorData = {
-              time: (interval * index).toFixed(3),
+              time: (interval * index).toFixed(4),
               values: log,
             };
             dataRunData[sensorId].push(sensorData);
@@ -188,9 +188,6 @@ const SensorSettingPopup = ({ openedPopup, onClosePopup, sensorId, sensorDataInd
       checkRemoteLogging();
     }
   };
-  useEffect(() => {
-    console.log({ sensorInfo });
-  }, [sensorInfo]);
 
   return (
     <Popup
