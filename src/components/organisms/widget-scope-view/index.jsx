@@ -27,6 +27,7 @@ import {
   getChartJsPlugin,
   PREFIX_LABEL_NOTE,
   NOTE_OPTION,
+  SCALE_FIT_OPTION,
 } from "../../../utils/widget-line-chart/commons";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 
@@ -301,6 +302,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
   //========================= OPTIONS FUNCTIONS =========================
   const onChooseOptionHandler = ({ optionId }) => {
     switch (optionId) {
+      case SCALE_FIT_OPTION:
+        handleScale({ chartInstance: chartInstanceRef.current, sensorInfo, currentDataRunId });
+        break;
       case NOTE_OPTION:
         addNoteHandler();
         break;
@@ -489,9 +493,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         dataRunId: currentDataRunId,
       },
     ];
-  
+
     const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
-  
+
     if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
       const timePerSample = MicrophoneServiceIST.getTimePerSample();
       let maxAmplitude = DEFAULT_MIN_AMPLITUDE;
@@ -517,7 +521,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         tension: 0.2,
       });
     }
-  }
+  };
 
   const drawBufferChart = () => {
     const bufferData = getOscBufferData(sensor.id);
@@ -536,17 +540,17 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     }
 
     let normalizedArray = [];
-    
+
     bufferData.map((value, index) => {
       if (isArray(value[sensor.index])) {
-        for (let i=0; i<value[sensor.index].length; i++) {
+        for (let i = 0; i < value[sensor.index].length; i++) {
           normalizedArray.push({
             x: (index * value[sensor.index].length + i) * deltaTime,
             y: value[sensor.index][i],
           });
         }
       } else {
-        normalizedArray.push( {
+        normalizedArray.push({
           x: index * deltaTime,
           y: value[sensor.index],
         });
@@ -583,7 +587,14 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         if ([SINE_WAVE_SENSOR_INFO, FREQUENCY_WAVE_SENSOR_INFO].includes(sensorInfo)) {
           drawSoundChart();
           if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
-        } else if ([CURRENT_SENSOR_V2_INFO, VOLTAGE_SENSOR_V2_INFO, SOUND_SENSOR_V2_LEVEL_INFO, SOUND_SENSOR_V2_INTENSITY_INFO].includes(sensorInfo)) {
+        } else if (
+          [
+            CURRENT_SENSOR_V2_INFO,
+            VOLTAGE_SENSOR_V2_INFO,
+            SOUND_SENSOR_V2_LEVEL_INFO,
+            SOUND_SENSOR_V2_INTENSITY_INFO,
+          ].includes(sensorInfo)
+        ) {
           drawBufferChart();
           if (isRunning) drawChartTimeoutID = setTimeout(drawChart, READ_BUFFER_INTERVAL);
           //if (isRunning) drawChartAnimationFrameId = requestAnimationFrame(drawChart);
@@ -607,6 +618,60 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       }
     }
   }, [isRunning]);
+
+  //========================= HANDLE SCALE FUNCTIONS =========================
+  const handleScale = ({ chartInstance, sensorInfo, currentDataRunId }) => {
+    if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
+      return;
+    }
+    const data = DataManagerIST.getOscDataDataRun(sensorInfo, currentDataRunId);
+    if (Array.isArray(data) && data.length === 1) {
+      let chartName, labelX, labelY, tension;
+      if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
+        chartName = t("organisms.sound_amplitude");
+        labelX = t("common.time") + " (ms)";
+        labelY = t("organisms.sound_amplitude");
+        tension = 0.6;
+      } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
+        chartName = t("organisms.sound_level");
+        labelX = t("organisms.sound_frequency");
+        labelY = t("organisms.sound_frequency");
+        tension = 0.2;
+      } else {
+        chartName = sensor.name;
+        labelX = t("common.time") + " (ms)";
+        labelY = sensor.name + ` (${sensor.unit})`;
+        tension = 0.6;
+      }
+
+      const chartData = [
+        {
+          name: chartName,
+          data: data[0],
+          dataRunId: currentDataRunId,
+        },
+      ];
+
+      const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
+      const { maxX, maxY, minY } = getMaxMinAxises({ chartDatas: chartDatas });
+      const yValue = Math.max(Math.abs(maxY), Math.abs(minY));
+      updateChart({
+        chartInstance: chartInstanceRef.current,
+        data: chartDatas,
+        maxX: maxX,
+        maxY: yValue,
+        labelY: labelY,
+        labelX: labelX,
+        tension: tension,
+      });
+    } else {
+      // Not need updated chart, as updateChart function will call update
+      chartInstanceRef.current.config.options.plugins.zoom.pan.enabled = !isSelectRangeSelection;
+      chartInstanceRef.current.config.options.plugins.zoom.zoom.pinch.enabled = !isSelectRangeSelection;
+      chartInstanceRef.current.config.options.plugins.zoom.zoom.wheel.enabled = !isSelectRangeSelection;
+      updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+    }
+  };
 
   const showOffDataPointHandler = () => {
     if (isOffDataPoint) {
