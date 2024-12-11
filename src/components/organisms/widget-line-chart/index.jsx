@@ -844,8 +844,8 @@ let LineChart = (props, ref) => {
       }
 
       const content = [
-        dataset.name,
-        `x= ${dataset.data[dataPointIndex]?.x} (${xAxis.unit})`,
+        dataset.name || dataset.label,
+        `x= ${dataset.data[dataPointIndex]?.x} (${axisRef.current.xUnit})`,
         `y= ${dataset.data[dataPointIndex]?.y} (${dataset.yAxis.info.title.text})`,
       ];
 
