@@ -25,7 +25,7 @@
 
 .popover-content {
   max-height: 300px; // Set a height limit
-  overflow-y: auto; // Enable vertical scrolling
+  overflow-y: scroll; // Enable vertical scrolling
   -webkit-overflow-scrolling: touch; // For smooth scrolling on iOS
 }
 
