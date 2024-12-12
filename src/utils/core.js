@@ -664,7 +664,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
           `${i18next.t("utils.loading")} ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
-            hasCancel ? '<button onclick="window.edlCancelCallback();" class="edl-cancel-preloader">Hủy</button>' : ""
+            hasCancel ? '<button onclick="window.edlCancelCallback();" class="edl-cancel-preloader dialog-button">Hủy</button>' : ""
           }`
         );
       }
