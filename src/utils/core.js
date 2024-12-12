@@ -680,7 +680,6 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
     }
 
     window.edlCancelCallback = () => {
-      console.log("Click cancel");
       f7.dialog.close();
       reject("cancel");
     };
