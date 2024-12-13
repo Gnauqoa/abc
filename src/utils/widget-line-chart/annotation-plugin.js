@@ -5,7 +5,6 @@ import {
   LABEL_NOTE_BACKGROUND_ACTIVE,
   clearAllSelectedPoints,
   POINT_HOVER_RADIUS,
-  POINT_RADIUS,
 } from "./commons";
 import StoreService from "../../services/store-service";
 import { LINE_CHART_LABEL_NOTE_TABLE } from "../../js/constants";
@@ -54,7 +53,7 @@ export const onClickNoteElement = ({ element, selectedNoteElement }) => {
   return { status: true, element: selectedNoteElement };
 };
 
-export const onClickChartHandler = ({ event, elements, chart, selectedPointElement, widgetIndex }) => {
+export const onClickChartHandler = ({ event, elements, chart, selectedPointElement, widgetIndex, POINT_RADIUS }) => {
   let newPointEl;
 
   if (event.type === "click") {
@@ -64,7 +63,7 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
     // Handle click point
     if (isPointElement || selectedPointElement !== null) {
       if (isPointElement) {
-        clearAllSelectedPoints(chart);
+        clearAllSelectedPoints({ chart, pointSize: POINT_RADIUS });
 
         const selectedPoint = elements[0];
         const datasetIndex = selectedPoint.datasetIndex;
@@ -83,7 +82,6 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
         newPointEl = selectedPoint;
         newPointBackgroundColor[dataPointIndex] = "blue";
         newPointSize[dataPointIndex] = POINT_HOVER_RADIUS;
-
         currentDataset.pointBackgroundColor = newPointBackgroundColor;
         currentDataset.pointBorderColor = newPointBorderColor;
         currentDataset.pointRadius = newPointSize;
@@ -109,7 +107,7 @@ export const onClickChartHandler = ({ event, elements, chart, selectedPointEleme
       } else if (selectedPointElement !== null) {
         newPointEl = null;
 
-        clearAllSelectedPoints(chart);
+        clearAllSelectedPoints({ chart, pointSize: POINT_RADIUS });
         chart.update();
 
         // Ẩn icon nếu không có điểm nào được chọn

@@ -109,7 +109,7 @@ export const addLabelNote = ({
         [noteId]: newNoteElement,
       };
     }
-    clearAllSelectedPoints(chartInstance);
+    clearAllSelectedPoints({ chart: chartInstance });
     chartInstance.update();
   };
 
