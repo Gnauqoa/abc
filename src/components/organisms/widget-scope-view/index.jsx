@@ -68,7 +68,11 @@ import {
   LINE_CHART_RANGE_SELECTION_TABLE,
 } from "../../../js/constants";
 import PromptPopup from "../../molecules/popup-prompt-dialog";
-import { handleAddSelection, handleDeleteSelection } from "../../../utils/widget-line-chart/selection-plugin";
+import {
+  handleAddSelection,
+  handleDeleteSelection,
+  getListRangeSelections,
+} from "../../../utils/widget-line-chart/selection-plugin";
 import _, { isArray } from "lodash";
 import PopoverStatisticOptions from "../widget-line-chart/PopoverStatisticOptions";
 import { addStatisticNote, removeStatisticNote } from "../../../utils/widget-scope-view/statistic-plugin";
@@ -236,7 +240,7 @@ export const onLeaveNoteElement = ({ chart, element }) => {
   chart.update();
 };
 
-const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, tension }) => {
+const updateChart = ({ chartInstance, data, maxX, maxY, minY, minX = 0, labelX, labelY, tension }) => {
   chartInstance.data = createChartJsDatas({
     chartDatas: data,
     pointRadius: POINT_RADIUS,
@@ -256,7 +260,7 @@ const updateChart = ({ chartInstance, data, maxX, maxY, minY, labelX, labelY, te
     },
     x: {
       type: "linear",
-      min: 0,
+      min: Math.round(minX),
       max: Math.round(maxX),
       ticks: {},
       title: {
@@ -293,10 +297,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       else return option;
     })
     .filter(
-      (option) =>
-        ![ADD_ROW_OPTION, DELETE_ROW_OPTION, ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION, DELETE_RANGE_SELECTION].includes(
-          option.id
-        )
+      (option) => ![ADD_ROW_OPTION, DELETE_ROW_OPTION, ADD_COLUMN_OPTION, DELETE_COLUMN_OPTION].includes(option.id)
     );
 
   //========================= OPTIONS FUNCTIONS =========================
@@ -319,6 +320,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         break;
       case STATISTIC_OPTION:
         statisticHandler({ optionId });
+        break;
+      case DELETE_RANGE_SELECTION:
+        deleteDataInRangeSelection({ chartInstance: chartInstanceRef.current });
         break;
       default:
         break;
@@ -643,7 +647,6 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         labelY = sensor.name + ` (${sensor.unit})`;
         tension = 0.6;
       }
-
       const chartData = [
         {
           name: chartName,
@@ -653,23 +656,33 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       ];
 
       const chartDatas = createChartDataAndParseXAxis({ chartDatas: chartData });
-      const { maxX, maxY, minY } = getMaxMinAxises({ chartDatas: chartDatas });
-      const yValue = Math.max(Math.abs(maxY), Math.abs(minY));
-      updateChart({
-        chartInstance: chartInstanceRef.current,
-        data: chartDatas,
-        maxX: maxX,
-        maxY: yValue,
-        labelY: labelY,
-        labelX: labelX,
-        tension: tension,
-      });
-    } else {
-      // Not need updated chart, as updateChart function will call update
-      chartInstanceRef.current.config.options.plugins.zoom.pan.enabled = !isSelectRangeSelection;
-      chartInstanceRef.current.config.options.plugins.zoom.zoom.pinch.enabled = !isSelectRangeSelection;
-      chartInstanceRef.current.config.options.plugins.zoom.zoom.wheel.enabled = !isSelectRangeSelection;
-      updateChart({ chartInstance: chartInstanceRef.current, data: [] });
+      if (isRangeSelected) {
+        const selectedRanges = getListRangeSelections({ pageId: pageId });
+        if (selectedRanges.length == 0) return;
+        updateChart({
+          chartInstance: chartInstanceRef.current,
+          data: chartDatas,
+          maxX: selectedRanges[0].xMax + 50,
+          maxY: selectedRanges[0].maxY + 50,
+          minX: selectedRanges[0].xMin - 30,
+          minY: selectedRanges[0].yMin - 0,
+          labelY,
+          labelX,
+          tension,
+        });
+      } else {
+        const { maxX, maxY, minY } = getMaxMinAxises({ chartDatas: chartDatas });
+        const yValue = Math.max(Math.abs(maxY), Math.abs(minY));
+        updateChart({
+          chartInstance: chartInstanceRef.current,
+          data: chartDatas,
+          maxX: maxX,
+          maxY: yValue,
+          labelY: labelY,
+          labelX: labelX,
+          tension: tension,
+        });
+      }
     }
   };
 
@@ -884,6 +897,33 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       hiddenDataLineIds: [],
     });
     result && setIsShowStatistic(!isShowStatistic);
+  };
+
+  //========================= DELETE DATA FUNCTIONS =========================
+  const deleteDataInRangeSelection = ({ chartInstance }) => {
+    if (!chartInstance.data || !Array.isArray(chartInstance.data.datasets) || chartInstance.data.datasets.length <= 0) {
+      return;
+    }
+    const selectedRanges = getListRangeSelections({ pageId: pageId });
+    console.log("selectedRanges", selectedRanges);
+
+    const datasets = chartInstance.data.datasets;
+
+    const selectedRange = selectedRanges[0];
+    if (selectedRange)
+      datasets.forEach((dataset) => {
+        const dataRunId = dataset.dataRunId;
+        const deletedResult = DataManagerIST.deleteSensorDataInDataRun({
+          dataRunId,
+          sensorInfo,
+          selectedRange,
+          unitId: FIRST_COLUMN_DEFAULT_OPT,
+          isScope: true,
+          chartInstance: chartInstanceRef.current,
+        });
+      });
+
+    handleDeleteSelection({ pageId, chartInstance: chartInstanceRef.current, widgetId: widget.id });
   };
 
   return (
