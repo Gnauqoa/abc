@@ -208,7 +208,8 @@ export default ({ f7route, f7router, filePath, content }) => {
     const xAxises = pages[currentPageIndex]?.xAxises;
     if (!widgets) return;
 
-    let selectedSensorIds = [...new Set(widgets.flatMap((w) => w.sensors.map((s) => s.id)).filter((id) => id >= 0))];
+    let selectedSensorIds = [...new Set(widgets.flatMap((w) => w.sensors?.map((s) => s.id)).filter((id) => id >= 0))];
+
     let subscribedSensorIds = [
       ...new Set(
         widgets.flatMap((widget) =>
