@@ -7,19 +7,21 @@ import CustomDropdownInput from "../popup-sensor-setting/custom-list-input";
 const PopoverButton = ({ options, onChange, display, label, name }) => {
   return (
     <CustomDropdownInput labelName={label} buttonName={display} popOverName={`sample-setting-popover-${name}`}>
-      {options.map((option) => {
-        return (
-          <Button
-            key={option.value}
-            onClick={() => {
-              onChange(option.value);
-              f7.popover.close();
-            }}
-          >
-            <span style={{ textTransform: "none" }}>{option.display}</span>
-          </Button>
-        );
-      })}
+      <div className="popover-content">
+        {options.map((option) => {
+          return (
+            <Button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                f7.popover.close();
+              }}
+            >
+              <span style={{ textTransform: "none" }}>{option.display}</span>
+            </Button>
+          );
+        })}
+      </div>
     </CustomDropdownInput>
   );
 };
