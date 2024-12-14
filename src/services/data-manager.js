@@ -1746,22 +1746,46 @@ export class DataManager {
     return userInput || [];
   }
 
-  deleteSensorDataInDataRun({ dataRunId, sensorInfo, selectedRange, unitId = FIRST_COLUMN_DEFAULT_OPT }) {
+  deleteSensorDataInDataRun({
+    dataRunId,
+    sensorInfo,
+    selectedRange,
+    unitId = FIRST_COLUMN_DEFAULT_OPT,
+    isScope = false,
+    chartInstance = null,
+  }) {
     const sensorParse = parseSensorInfo(sensorInfo);
-    if (unitId == FIRST_COLUMN_DEFAULT_OPT) {
-      const newDataSensor = this.dataRuns[dataRunId].data[sensorParse.id].filter((item) => {
-        return !(
-          Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
-          Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
-          Number(item.values[sensorParse.index]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
-          Number(item.values[sensorParse.index]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
-        );
-      });
 
-      this.dataRuns[dataRunId].data[sensorParse.id] = newDataSensor.map((item, i) => ({
-        time: ((i * this.collectingDataInterval) / 1000).toFixed(4),
-        values: item.values,
-      }));
+    if (unitId == FIRST_COLUMN_DEFAULT_OPT) {
+      if (isScope) {
+        const newDataSensor = this.dataRuns[dataRunId].data[sensorInfo][0].filter((item) => {
+          return !(
+            Number(item.x) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
+            Number(item.x) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
+            Number(item.y) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+            Number(item.y) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+          );
+        });
+        this.dataRuns[dataRunId].data[sensorInfo][0] = newDataSensor;
+
+        chartInstance.data.datasets[0].data = newDataSensor;
+        chartInstance.update();
+      } else {
+        const newDataSensor = this.dataRuns[dataRunId].data[sensorParse.id].filter((item) => {
+          return !(
+            Number(item.time) >= Math.min(selectedRange.xMin, selectedRange.xMax) &&
+            Number(item.time) <= Math.max(selectedRange.xMin, selectedRange.xMax) &&
+            Number(item.values[sensorParse.index]) >= Math.min(selectedRange.yMin, selectedRange.yMax) &&
+            Number(item.values[sensorParse.index]) <= Math.max(selectedRange.yMin, selectedRange.yMax)
+          );
+        });
+
+        this.dataRuns[dataRunId].data[sensorParse.id] = newDataSensor.map((item, i) => ({
+          time: ((i * this.collectingDataInterval) / 1000).toFixed(4),
+          values: item.values,
+        }));
+      }
+
       return {
         xAxisSensorId: FIRST_COLUMN_DEFAULT_OPT,
         data: null,
