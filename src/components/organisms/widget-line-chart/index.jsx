@@ -613,6 +613,7 @@ let LineChart = (props, ref) => {
                 chart,
                 selectedPointElement,
                 widgetIndex: i,
+                POINT_RADIUS,
               });
               if (status) {
                 const { datasetIndex, index: dataPointIndex } = newPointEl;
@@ -1103,7 +1104,7 @@ let LineChart = (props, ref) => {
       () => currentDataset.backgroundColor
     );
     const newPointBorderColor = Array.from({ length: currentDataset.data.length }, () => currentDataset.borderColor);
-    const newPointSize = Array.from({ length: currentDataset.data.length }, () => 5);
+    const newPointSize = Array.from({ length: currentDataset.data.length }, () => POINT_RADIUS);
 
     newPointBackgroundColor[newDataPointIndex] = "blue"; // Highlight new point
     newPointSize[newDataPointIndex] = POINT_HOVER_RADIUS;

@@ -673,14 +673,14 @@ export const prepareContentNote = (str) => {
   return result;
 };
 
-export const clearAllSelectedPoints = (chart) => {
+export const clearAllSelectedPoints = ({ chart, pointSize = POINT_RADIUS }) => {
   chart.data.datasets.forEach((dataset) => {
     const backgroundColor = dataset.backgroundColor;
     const borderColor = dataset.borderColor;
 
     const newPointBackgroundColor = Array.from({ length: dataset.data.length }, () => backgroundColor);
     const newPointBorderColor = Array.from({ length: dataset.data.length }, () => borderColor);
-    const newPointSize = Array.from({ length: dataset.data.length }, () => POINT_RADIUS);
+    const newPointSize = Array.from({ length: dataset.data.length }, () => pointSize);
 
     dataset.pointBackgroundColor = newPointBackgroundColor;
     dataset.pointBorderColor = newPointBorderColor;

@@ -356,6 +356,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
               elements,
               chart,
               selectedPointElement,
+              POINT_RADIUS,
             });
             if (status) {
               const { datasetIndex, index: dataPointIndex } = newPointEl;
@@ -833,10 +834,14 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       () => currentDataset.backgroundColor
     );
     const newPointBorderColor = Array.from({ length: currentDataset.data.length }, () => currentDataset.borderColor);
+    const newPointSize = Array.from({ length: currentDataset.data.length }, () => POINT_RADIUS);
 
     newPointBackgroundColor[newDataPointIndex] = "blue"; // Highlight new point
+    newPointSize[newDataPointIndex] = POINT_HOVER_RADIUS;
+
     currentDataset.pointBackgroundColor = newPointBackgroundColor;
     currentDataset.pointBorderColor = newPointBorderColor;
+    currentDataset.pointRadius = newPointSize;
 
     tooltip.setActiveElements([
       {
