@@ -72,6 +72,17 @@
       text-transform: none;
       font-family: var(--f7-font-family);
       color: #666666;
+
+      @media (max-width: 768px) {
+        font-size: 16px;
+        line-height: 80px; /* Adjust line height for smaller screens */
+      }
+
+      /* Responsive font size for very small screens (e.g., phones) */
+      @media (max-width: 480px) {
+        font-size: 12px;
+        line-height: 60px;
+      }
     }
   }
 
