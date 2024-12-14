@@ -649,7 +649,8 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
     let timeoutHandler;
     let dataBuffer = [];
     function dataHandler(e) {
-      if (e.type == "log,get" && e.detail.log_version == undefined) { // data log get event for sensor V1
+      if (e.type == "log,get" && e.detail.log_version == undefined) {
+        // data log get event for sensor V1
         dataBuffer.push([parseFloat(e.detail.data.slice(2))]);
       } else {
         if (Array.isArray(e.detail.data)) {
@@ -663,7 +664,7 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
       if (dataSize > 1) {
         $(".dialog-preloader .dialog-title").html(
           `${i18next.t("utils.loading")} ${Math.round((dataBuffer.length / dataSize) * 100)}% ${
-            hasCancel ? '<span class="edl-cancel-preloader dialog-button">Hủy</span>' : ""
+            hasCancel ? '<button onclick="window.edlCancelCallback();" class="edl-cancel-preloader dialog-button">Hủy</button>' : ""
           }`
         );
       }
@@ -671,15 +672,17 @@ export function timeoutEventData(eventName, dataSize = 1, timeout = 3000, hasCan
         f7.dialog.close();
         clearTimeout(timeoutHandler);
         document.removeEventListener(eventName, dataHandler);
-        document.dispatchEvent(new CustomEvent(`${eventName}-done`, { detail: { status: "success", data: dataBuffer } }));
+        document.dispatchEvent(
+          new CustomEvent(`${eventName}-done`, { detail: { status: "success", data: dataBuffer } })
+        );
         resolve(dataSize === 1 ? dataBuffer[0] : dataBuffer);
       }
     }
 
-    $(".edl-cancel-preloader").on("click", () => {
+    window.edlCancelCallback = () => {
       f7.dialog.close();
       reject("cancel");
-    });
+    };
 
     timeoutHandler = setTimeout(() => {
       f7.dialog.close();
