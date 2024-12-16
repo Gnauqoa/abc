@@ -28,6 +28,7 @@ import {
   PREFIX_LABEL_NOTE,
   NOTE_OPTION,
   SCALE_FIT_OPTION,
+  LABEL_NOTE_TYPE,
 } from "../../../utils/widget-line-chart/commons";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 
@@ -52,8 +53,13 @@ import {
   addDelta,
   findFirstDeltaByValue,
   getChartAnnotationByDelta,
+  getAllCurrentDeltas,
 } from "../../../utils/widget-line-chart/delta-plugin";
-import { addLabelNote, createLabelNoteId } from "../../../utils/widget-line-chart/label-plugin";
+import {
+  addLabelNote,
+  createLabelNoteId,
+  getAllCurrentLabelNotes,
+} from "../../../utils/widget-line-chart/label-plugin";
 import usePrompt from "../../../hooks/useModal";
 import deleteIconChart from "../../../img/expandable-options/ico-tool-delete.png";
 import nextIcon from "../../../img/expandable-options/ico-tool-rightarrow.png";
@@ -79,6 +85,10 @@ import { addStatisticNote, removeStatisticNote } from "../../../utils/widget-sco
 import { f7 } from "framework7-react";
 import { FIRST_COLUMN_DEFAULT_OPT } from "../../../utils/widget-table-chart/commons";
 import { getOscBufferData, clearOscBuffersData } from "../../../services/buffer-data-manager";
+import {
+  addPointDataPreview,
+  getAllCurrentPointDataPreview,
+} from "../../../utils/widget-line-chart/point-data-preview-plugin";
 
 const MAX_DECIBEL = 120;
 const MIN_DECIBEL = 30;
@@ -375,12 +385,21 @@ const ScopeViewWidget = ({ widget, pageId }) => {
 
               selectedPointElement = newPointEl;
               selectedNoteElement = null;
+              handleAddPointDataPreview(newPointEl);
+            } else {
+              const otherPointData = getAllCurrentPointDataPreview({ pageId, widgetId: widget.id });
+              Object.keys(otherPointData).forEach((key) => {
+                delete chart.config.options.plugins.annotation.annotations[key];
+              });
+
+              chart.update();
             }
             return true;
           },
           animation: false,
           maintainAspectRatio: false,
           plugins: {
+            tooltip: { enabled: false },
             legend: {
               display: false, //This will do the task
             },
@@ -606,6 +625,31 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         }
       };
 
+      const otherPointData = getAllCurrentPointDataPreview({ pageId, widgetId: widget.id });
+      Object.keys(otherPointData).forEach((key) => {
+        delete chartInstanceRef.current.config.options.plugins.annotation.annotations[key];
+      });
+
+      const allLabelNotes = getAllCurrentLabelNotes({ pageId, widgetId: widget.id });
+      Object.keys(allLabelNotes).forEach((labelNodeKey) => {
+        delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelNodeKey];
+      });
+
+      const allLabelDeltas = getAllCurrentDeltas({ pageId, widgetId: widget.id });
+      Object.keys(allLabelDeltas).forEach((labelDeltaKey) => {
+        delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelDeltaKey];
+      });
+
+      chartInstanceRef.current.update();
+
+      selectedPointElement = null;
+      selectedNoteElement = null;
+
+      const iconContainers = document.getElementsByClassName("icon-container-widget");
+      Array.from(iconContainers).forEach((iconContainer) => {
+        iconContainer.style.display = "none";
+      });
+
       drawChart();
     } else {
       const curDatasets = chartInstanceRef.current.data?.datasets;
@@ -748,6 +792,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       selectedPointElement,
       selectedNoteElement,
       widgetId: widget.id,
+      pointSize: POINT_RADIUS,
     });
 
     if (result) {
@@ -758,6 +803,12 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       Array.from(iconContainers).forEach((iconContainer) => {
         iconContainer.style.display = "none";
       });
+
+      const otherPointData = getAllCurrentPointDataPreview({ pageId, widgetId: widget.id });
+      Object.keys(otherPointData).forEach((key) => {
+        delete chartInstanceRef.current.config.options.plugins.annotation.annotations[key];
+      });
+      chartInstanceRef.current.update();
     }
   };
   const { prompt, showModal } = usePrompt({ className: "use-prompt-dialog-popup", callbackFn: callbackAddLabelNote });
@@ -826,8 +877,6 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         chartInstanceRef.current.config.options.plugins.annotation.annotations[key] = annotation[key];
       });
     }
-    const { tooltip } = chartInstanceRef.current;
-    // const newDataPointIndex = (dataPointIndex - 1 + currentDataset.data.length) % currentDataset.data.length;
 
     const newPointBackgroundColor = Array.from(
       { length: currentDataset.data.length },
@@ -843,16 +892,82 @@ const ScopeViewWidget = ({ widget, pageId }) => {
     currentDataset.pointBorderColor = newPointBorderColor;
     currentDataset.pointRadius = newPointSize;
 
-    tooltip.setActiveElements([
-      {
-        datasetIndex,
-        index: newDataPointIndex,
-      },
-    ]);
-    const newSelectedPointElement = tooltip.getActiveElements()[0];
+    const newSelectedPointElement = {
+      datasetIndex,
+      index: newDataPointIndex,
+      element: chartInstanceRef.current.getDatasetMeta(datasetIndex).data[newDataPointIndex],
+    };
+    handleAddPointDataPreview(newSelectedPointElement);
     selectedPointElement = newSelectedPointElement;
 
     chartInstanceRef.current.update();
+  };
+
+  //========================= ADD DATA TOOLTIP FUNCTIONS =========================
+  const handleAddPointDataPreview = (pointElement) => {
+    const isValidPointElement = pointElement?.element;
+    if (!isValidPointElement) {
+      return;
+    }
+
+    const chartInstance = chartInstanceRef.current;
+    let noteId, chartName, labelX, labelY;
+    let prevContent = [""];
+    let yScaleId = "y";
+
+    if (sensorInfo === SINE_WAVE_SENSOR_INFO) {
+      chartName = t("organisms.sound_amplitude");
+      labelX = t("common.time") + " (ms)";
+      labelY = t("organisms.sound_amplitude");
+    } else if (sensorInfo === FREQUENCY_WAVE_SENSOR_INFO) {
+      chartName = t("organisms.sound_level");
+      labelX = t("common.time") + " (ms)";
+      labelY = t("organisms.sound_frequency");
+    } else {
+      chartName = sensor.name;
+      labelX = t("common.time") + " (ms)";
+      labelY = sensor.name + ` (${sensor.unit})`;
+    }
+
+    // Get NoteId to find whether the note is exist or not
+    // for getting the old content of note
+    if (isValidPointElement) {
+      const dataPointIndex = pointElement.index;
+      const dataset = chartInstance.data.datasets[0];
+      const dataRunId = dataset?.dataRunId;
+
+      const content = [
+        chartName,
+        `x= ${dataset.data[dataPointIndex].x.toLocaleString("de-DE", {
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        })} (ms)`,
+        `y= ${dataset.data[dataPointIndex].y.toLocaleString("de-DE", {
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        })} ${sensor.unit && `(${sensor.unit})`}`,
+      ];
+
+      addPointDataPreview({
+        chartInstance,
+        pageId,
+        dataRunId,
+        sensorInfo,
+        content,
+        selectedPointElement: pointElement,
+        widgetId: widget.id,
+        yScaleId,
+        dataPointIndex,
+        xAdjust: 90,
+      });
+    } else return;
+
+    const labelNote = labelNotesStorage.find(noteId);
+    if (labelNote) {
+      const note = labelNote.label;
+      prevContent = note.content;
+      prevContent = prevContent.join(" ");
+    }
   };
 
   //========================= SELECTION REGION FUNCTIONS =========================
@@ -910,7 +1025,6 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       return;
     }
     const selectedRanges = getListRangeSelections({ pageId: pageId });
-    console.log("selectedRanges", selectedRanges);
 
     const datasets = chartInstance.data.datasets;
 

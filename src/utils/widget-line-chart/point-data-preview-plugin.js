@@ -54,6 +54,7 @@ export const addPointDataPreview = ({
   widgetId = 0,
   yScaleId = "y",
   dataPointIndex,
+  xAdjust = 45,
 }) => {
   const xValueNoteElement = chartInstance.scales.x.getValueForPixel(selectedPointElement.element.x);
   const yValueNoteElement = chartInstance.scales[yScaleId].getValueForPixel(selectedPointElement.element.y);
@@ -70,7 +71,7 @@ export const addPointDataPreview = ({
     backgroundColor: POINT_DATA_PREVIEW_BACKGROUND,
     xValue: xValueNoteElement,
     yValue: yValueNoteElement,
-    xAdjust: 45,
+    xAdjust: xAdjust,
     yAdjust: 0,
     widgetId,
   };

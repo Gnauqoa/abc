@@ -474,6 +474,7 @@ let LineChart = (props, ref) => {
             if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelNodeKey}]`))
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelNodeKey];
           });
+
           Object.keys(allLabelDeltas).forEach((labelDeltaKey) => {
             if (_.get(chartInstanceRef, `config.options.plugins.annotation.annotations[${labelDeltaKey}]`)) {
               delete chartInstanceRef.config.options.plugins.annotation.annotations[labelDeltaKey];
@@ -797,6 +798,7 @@ let LineChart = (props, ref) => {
       selectedNoteElement,
       widgetId: widgets[chartSelectedIndex].id,
       yScaleId: extraData.yScaleId,
+      pointSize: POINT_RADIUS,
     });
 
     if (result) {

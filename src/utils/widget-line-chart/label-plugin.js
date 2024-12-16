@@ -53,6 +53,7 @@ export const addLabelNote = ({
   selectedNoteElement,
   widgetId = 0,
   yScaleId = "y",
+  pointSize,
 }) => {
   const isValidPointElement = selectedPointElement?.element;
   const isValidNoteElement = selectedNoteElement?.options;
@@ -109,7 +110,7 @@ export const addLabelNote = ({
         [noteId]: newNoteElement,
       };
     }
-    clearAllSelectedPoints({ chart: chartInstance });
+    clearAllSelectedPoints({ chart: chartInstance, pointSize });
     chartInstance.update();
   };
 
