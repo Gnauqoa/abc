@@ -9,6 +9,7 @@ import {
   STATISTIC_INVERSE,
   STATISTIC_INVERSE_SQUARE,
   STATISTIC_SINUSOIDAL,
+  STATISTIC_AREA,
 } from "../widget-line-chart/commons";
 import DataManagerIST from "../../services/data-manager";
 import { LINE_CHART_STATISTIC_NOTE_TABLE } from "../../js/constants";
@@ -23,6 +24,7 @@ import {
   inverseRegression,
   inverseSquareRegression,
   sinusoidalRegression,
+  areaRegression,
   createRegressionDataPoints,
 } from "../widget-line-chart/statistic-formula";
 import _ from "lodash";
@@ -52,6 +54,10 @@ const createRegression = ({ statisticOptionId, datasetData, color }) => {
       break;
     case STATISTIC_SINUSOIDAL:
       regression = sinusoidalRegression(datasetData);
+      break;
+    case STATISTIC_AREA:
+      regression = areaRegression(datasetData);
+      break;
     default:
       break;
   }
