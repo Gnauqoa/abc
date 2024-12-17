@@ -134,7 +134,7 @@ export default function SensorSelector({
   };
 
   return (
-    <div className="sensor-selector " style={style}>
+    <div className="sensor-selector" style={style}>
       <Button disabled={disabled} fill round onClick={handleOpenPopup}>
         {displayButton}
       </Button>
