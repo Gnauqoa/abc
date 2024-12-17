@@ -72,16 +72,41 @@
       text-transform: none;
       font-family: var(--f7-font-family);
       color: #666666;
+    }
 
-      @media (max-width: 768px) {
-        font-size: 16px;
-        line-height: 80px; /* Adjust line height for smaller screens */
+    /* Target screens with a maximum height of 800px */
+    @media (max-height: 800px) {
+      .button {
+        font-size: 20px;
+        line-height: 90px;
+        max-height: 90px;
       }
+    }
 
-      /* Responsive font size for very small screens (e.g., phones) */
-      @media (max-width: 480px) {
+    /* Target screens with a maximum height of 600px */
+    @media (max-height: 600px) {
+      .button {
+        font-size: 16px;
+        line-height: 80px;
+        max-height: 80px;
+      }
+    }
+
+    /* Target screens with a maximum height of 480px */
+    @media (max-height: 480px) {
+      .button {
+        font-size: 14px;
+        line-height: 70px;
+        max-height: 70px;
+      }
+    }
+
+    /* Target screens with a maximum height of 360px */
+    @media (max-height: 360px) {
+      .button {
         font-size: 12px;
         line-height: 60px;
+        max-height: 60px;
       }
     }
   }
