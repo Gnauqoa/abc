@@ -23,6 +23,7 @@ const SamplingSettingPopup = ({
   defaultFrequency,
   defaultTimer,
   onClosePopup,
+  disableFrequency,
 }) => {
   const { t, i18n } = useTranslation();
   const [startSampleCondition, setStartSampleCondition] = useState(defaultStartSampleCondition);
@@ -119,6 +120,7 @@ const SamplingSettingPopup = ({
         <div className="__setting-content">
           <List className="__setting" form noHairlinesMd inlineLabels>
             <PopoverButton
+              disabled={disableFrequency}
               label={t("modules.cycle")}
               name={"frequency"}
               display={

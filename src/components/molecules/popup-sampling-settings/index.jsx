@@ -2,14 +2,15 @@ import React from "react";
 import clockFreImg from "../../../img/activity/clock-frequency.png";
 import { Popover, List, Button, f7 } from "framework7-react";
 import {
-  FREQUENCIES,
   SAMPLING_MANUAL_FREQUENCY,
   SAMPLING_MANUAL_NAME,
   FREQUENCY_UNIT,
   INVERSE_FREQUENCY_UNIT,
   FREQUENCY_MINI_SECOND_UNIT,
+  LAYOUT_SCOPE,
+  FREQUENCIES,
 } from "../../../js/constants";
-
+import SensorServicesIST from "../../../services/sensor-service";
 import "./index.scss";
 import usePrompt from "../../../hooks/useModal";
 import SamplingSettingPopup from "./sampling-settings";
@@ -26,9 +27,13 @@ const SamplingSetting = ({
   timerStopCollecting,
   handleSetTimer,
   handleGetManualSample,
+  pageLayout,
+  widgets,
 }) => {
   const { t, i18n } = useTranslation();
   const isManualMode = frequency === SAMPLING_MANUAL_FREQUENCY;
+  const disableFrequency =
+    pageLayout === LAYOUT_SCOPE && SensorServicesIST.getSoundSensorIds().includes(widgets[0]?.sensors[0]?.id);
   const displayedFrequency = isManualMode
     ? t(SAMPLING_MANUAL_NAME)
     : frequency >= 1000
@@ -67,6 +72,7 @@ const SamplingSetting = ({
     if (!isRunning) {
       showModal((onClose) => (
         <SamplingSettingPopup
+          disableFrequency={disableFrequency}
           defaultStartSampleCondition={startSampleCondition}
           defaultStopSampleCondition={stopSampleCondition}
           defaultFrequency={frequency}
@@ -79,12 +85,15 @@ const SamplingSetting = ({
 
   return (
     <div className="frequency">
-      <div className={`clock-button image ${isRunning ? "disabled" : ""}`} onClick={handleOpenSamplingSettings}>
+      <div
+        className={`clock-button image ${isRunning ? "disabled" : ""}`}
+        onClick={handleOpenSamplingSettings}
+      >
         <img src={clockFreImg} alt="frequency" />
       </div>
 
       <Button
-        disabled={isRunning}
+        disabled={isRunning || disableFrequency}
         className="button"
         textColor="black"
         bgColor="white"

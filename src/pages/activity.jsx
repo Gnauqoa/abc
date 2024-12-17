@@ -24,6 +24,7 @@ import {
   LINE_CHART_DELTA_TABLE,
   LAYOUT_BAR,
   CONDITION_TYPE,
+  SOUND_SENSOR_DEFAULT_FREQUENCY,
 } from "../js/constants";
 
 // Import Molecules Components
@@ -232,6 +233,18 @@ export default ({ f7route, f7router, filePath, content }) => {
       subscriberId && DataManagerIST.unsubscribe(subscriberId);
     };
   }, [pages[currentPageIndex]?.widgets, pages[currentPageIndex]?.xAxises]);
+
+  useEffect(() => {
+    const soundSensorIds = SensorServicesIST.getSoundSensorIds(pages[currentPageIndex]?.layout);
+
+    if (
+      pages[currentPageIndex]?.layout === LAYOUT_SCOPE &&
+      soundSensorIds.includes(pages[currentPageIndex]?.widgets[0]?.sensors[0]?.id)
+    ) {
+      setFrequency(SOUND_SENSOR_DEFAULT_FREQUENCY);
+      handleFrequencySelect(SOUND_SENSOR_DEFAULT_FREQUENCY);
+    }
+  }, [pages[currentPageIndex]?.layout, pages[currentPageIndex]?.widgets]);
 
   // =========================================================================================
   // =========================== Functions associate with Activity ===========================

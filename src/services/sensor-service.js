@@ -292,7 +292,7 @@ export const defaultSensors = [
         max: 5,
         formatFloatingPoint: 1,
         dataSize: 2, // in bytes
-        calcFunc: x => x/1000,
+        calcFunc: (x) => x / 1000,
       },
     ],
   },
@@ -332,7 +332,7 @@ export const defaultSensors = [
         max: 80,
         formatFloatingPoint: 1,
         dataSize: 2, // in bytes
-        calcFunc: x => x/100,
+        calcFunc: (x) => x / 100,
       },
       {
         id: "inno-018-uW",
@@ -342,8 +342,8 @@ export const defaultSensors = [
         max: 0.1,
         formatFloatingPoint: 3,
         dataSize: 2, // in bytes
-        calcFunc: x => x/1000,
-        dataLength: 120
+        calcFunc: (x) => x / 1000,
+        dataLength: 120,
       },
     ],
   },
@@ -658,6 +658,10 @@ export class SensorServices {
       else return false;
     });
     return soundSensors;
+  }
+
+  getSoundSensorIds() {
+    return [SOUND_SENSOR_V2_ID, ...this.getActiveSoundSensors().map((sensor) => sensor.id)];
   }
 
   getOscSensors() {

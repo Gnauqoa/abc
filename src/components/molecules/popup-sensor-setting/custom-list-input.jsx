@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Icon, Popover, List } from "framework7-react";
 
 import "./index.scss";
-const CustomDropdownInput = ({ labelName, buttonName, children, popOverName }) => {
+const CustomDropdownInput = ({ disabled, labelName, buttonName, children, popOverName }) => {
   return (
     <div className="display-setting-input label-color-black input-color-blue">
       <div className="item-content item-input item-input-outline item-input-with-value">
@@ -11,6 +11,7 @@ const CustomDropdownInput = ({ labelName, buttonName, children, popOverName }) =
 
           <div className="item-input-wrap">
             <Button
+              disabled={disabled}
               className="button"
               textColor="black"
               bgColor="white"
