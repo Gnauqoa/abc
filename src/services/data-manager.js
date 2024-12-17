@@ -1074,6 +1074,9 @@ export class DataManager {
     while (dataRead < totalDataLength + header_bytes) {
       for (let i = 0; i < sensorInfo.data.length; i++) {
         let dataSize = sensorInfo.data[i].dataSize ?? 4;
+        if (data[0] == START_BYTE_V2_LOG) {
+          dataSize = 4; // remote log data always sent using 4-byte float
+        }
         let dataLength = sensorInfo.data[i].dataLength ?? 1;
         let dataArray = [];
         for (let j = 0; j < dataLength; j++) {
@@ -1096,7 +1099,8 @@ export class DataManager {
             num = view.getFloat32(0);
           }
 
-          if (sensorInfo.data[i].calcFunc) {
+          if (sensorInfo.data[i].calcFunc && data[0] != START_BYTE_V2_LOG) {
+            // only apply recalculation for real time data
             num = sensorInfo.data[i].calcFunc(num);
           }
 
