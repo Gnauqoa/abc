@@ -32,7 +32,7 @@ import {
 } from "../../../utils/widget-line-chart/commons";
 import SensorSelector from "../../molecules/popup-sensor-selector";
 
-import SensorServiceIST, {
+import SensorServicesIST, {
   SINE_WAVE_SENSOR_INFO,
   FREQUENCY_WAVE_SENSOR_INFO,
   CURRENT_SENSOR_V2_INFO,
@@ -341,9 +341,9 @@ const ScopeViewWidget = ({ widget, pageId }) => {
   const defaultSensorIndex = 0;
   const sensor = widget.sensors[defaultSensorIndex];
   const sensorInfo = createSensorInfo(sensor);
-  const sensorDataInfo = SensorServiceIST.getSensorInfo(sensor.id)?.data[sensor.index];
+  const sensorDataInfo = SensorServicesIST.getSensorInfo(sensor.id)?.data[sensor.index];
 
-  const oscSensors = SensorServiceIST.getOscSensors();
+  const oscSensors = SensorServicesIST.getOscSensors();
   const oscSensorsId = oscSensors.map((sensor) => sensor.id);
 
   useEffect(() => {

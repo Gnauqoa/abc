@@ -80,6 +80,8 @@ export const CONDITION = {
 
 // export const FREQUENCIES = [1, 2, 5, 10, 50, 100, 1000];
 export const FREQUENCIES = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 4000, 5000, 10000, 48000];
+export const LAYOUT_SCOPE_FREQUENCIES = [48000];
+export const SOUND_SENSOR_DEFAULT_FREQUENCY = 48000;
 export const SAMPLING_MANUAL_NAME = "const.manual";
 export const SAMPLING_MANUAL_FREQUENCY = 0;
 export const SAMPLING_INTERVAL_LESS_1HZ = 1000;
