@@ -501,7 +501,16 @@ export const areaRegression = (data) => {
     totalArea += area;
   }
 
-  const content = totalArea ? ["Area fit", ` Area = ${totalArea}`, ""] : notFoundContent;
+  const content = totalArea
+    ? [
+        "Area fit",
+        ` Area = ${totalArea.toLocaleString("de-DE", {
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        })}`,
+        "",
+      ]
+    : notFoundContent;
 
   return {
     type: STATISTIC_AREA,

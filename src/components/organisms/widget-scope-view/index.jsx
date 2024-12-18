@@ -121,6 +121,7 @@ const handleDrag = function ({ event, chart, pageId, widgetId }) {
   if (isRangeSelected) {
     switch (event.type) {
       case "mousemove":
+      case "touchmove":
         if (!startRangeElement) return;
         handleAddSelection({
           chartInstance: chart,
@@ -130,13 +131,16 @@ const handleDrag = function ({ event, chart, pageId, widgetId }) {
           widgetId,
         });
         return true;
-      case "mouseup": // do not press the mouse
-        startRangeElement = undefined;
-        break;
+
       case "mousedown": // press the mouse
+      case "touchstart":
         startRangeElement = event;
         break;
       case "mouseout":
+      case "mouseup": // do not press the mouse
+      case "touchend":
+        startRangeElement = undefined;
+        break;
       default:
     }
   } else if (noteElement) {
@@ -448,7 +452,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
             id: "annotation-dragger",
             beforeEvent(chart, args, options) {
               if (handleDrag({ event: args.event, chart, pageId, widgetId: widget.id })) {
-                args.changed = true;
+                args.inChartArea = false;
                 return;
               }
             },
@@ -639,6 +643,16 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       Object.keys(allLabelDeltas).forEach((labelDeltaKey) => {
         delete chartInstanceRef.current.config.options.plugins.annotation.annotations[labelDeltaKey];
       });
+
+      const result = removeStatisticNote({
+        chartInstance: chartInstanceRef.current,
+        pageId,
+        widgetId: widget.id,
+      });
+      result && setIsShowStatistic(false);
+
+      handleDeleteSelection({ pageId, chartInstance: chartInstanceRef.current, widgetId: widget.id });
+      setIsSelectRegion(false);
 
       chartInstanceRef.current.update();
 
@@ -937,7 +951,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
       const dataRunId = dataset?.dataRunId;
 
       const content = [
-        chartName,
+        chartName || dataset.name,
         `x= ${dataset.data[dataPointIndex].x.toLocaleString("de-DE", {
           minimumFractionDigits: 3,
           maximumFractionDigits: 3,
@@ -945,7 +959,7 @@ const ScopeViewWidget = ({ widget, pageId }) => {
         `y= ${dataset.data[dataPointIndex].y.toLocaleString("de-DE", {
           minimumFractionDigits: 3,
           maximumFractionDigits: 3,
-        })} ${sensor.unit && `(${sensor.unit})`}`,
+        })} ${sensor.unit ? `(${sensor.unit})` : ""}`,
       ];
 
       addPointDataPreview({
@@ -980,12 +994,13 @@ const ScopeViewWidget = ({ widget, pageId }) => {
 
     if (!isRangeSelected) {
       handleDeleteSelection({ pageId, chartInstance: chartInstanceRef.current });
+      setIsSelectRegion(false);
+      startRangeElement = null;
     } else {
       chartInstanceRef.current.update();
+      setIsSelectRegion(isRangeSelected);
     }
     // isRangeSelected = True => display zoom
-
-    setIsSelectRegion(isRangeSelected);
   };
 
   //========================= STATISTIC OPTION FUNCTIONS =========================

@@ -54,8 +54,10 @@ const createRegression = ({ statisticOptionId, datasetData, color }) => {
       break;
     case STATISTIC_SINUSOIDAL:
       regression = sinusoidalRegression(datasetData);
+      break;
     case STATISTIC_AREA:
       regression = areaRegression(datasetData);
+      break;
     default:
       break;
   }
