@@ -92,9 +92,9 @@ export default function SensorSelector({
   const handleOpenPopup = () => {
     const sensorList = getSensorList();
 
-    let activeSensors;
-    if (!definedSensors) activeSensors = DataManagerIST.getListActiveSensor();
-    else activeSensors = definedSensors;
+    let activeSensors = DataManagerIST.getListActiveSensor();
+    // if (!definedSensors) activeSensors = DataManagerIST.getListActiveSensor();
+    // else activeSensors = definedSensors;
 
     const sensorListForDisplay = sensorList.map((sensor) => {
       const sensorStatus = activeSensors.includes(sensor.id) ? SENSOR_STATUS_ONLINE : SENSOR_STATUS_OFFLINE;
