@@ -22,6 +22,7 @@ import {
   START_BYTE_V2,
   START_BYTE_V2_LOG,
   STOP_BYTE,
+  SENSOR_TYPE,
 } from "../js/constants";
 import { FIRST_COLUMN_DEFAULT_OPT, FIRST_COLUMN_SENSOR_OPT } from "../utils/widget-table-chart/commons";
 import buffers, {
@@ -968,9 +969,11 @@ export class DataManager {
     if (device.code && (device.code.includes("BLE-9909") || device.code.includes("BLE-C600"))) {
       const dataArray = this.decodeDataFromBLE9909Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
+      return { sensorType: SENSOR_TYPE.ble9909 };
     } else if (device.code && device.code.includes("BLE-9100")) {
       const dataArray = this.decodeDataFromBLE9100Sensor(data, source, device);
       dataArray && this.callbackReadSensor(dataArray);
+      return { sensorType: SENSOR_TYPE.ble9100 };
     } else {
       if (data[0] === START_BYTE_V1 || data[0] === START_BYTE_V2 || data[0] === START_BYTE_V2_LOG) {
         // new sensor message
@@ -1020,6 +1023,7 @@ export class DataManager {
           this.callbackCommandDTO(data);
         }
       }
+      return { sensorType: SENSOR_TYPE.innoLab };
     }
   }
 

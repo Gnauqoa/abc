@@ -11,6 +11,7 @@ import {
   START_BYTE_V2,
   START_BYTE_V2_LOG,
   STOP_BYTE,
+  SENSOR_TYPE,
 } from "../js/constants";
 import dataManager from "./data-manager";
 
@@ -49,7 +50,7 @@ export class MobileSerialManager {
   initInterval() {
     if (!this.scanInterval)
       this.scanInterval = setInterval(() => {
-        this.runnerQueue.push({ type: RUNNER_TYPE.SCAN, opts: {} });
+        // this.runnerQueue.push({ type: RUNNER_TYPE.SCAN, opts: {} });
       }, SCAN_SERIAL_INTERVAL);
 
     if (!this.readInterval)
@@ -57,6 +58,7 @@ export class MobileSerialManager {
         if (this.activeDevices.length <= 0) return;
 
         const deviceId = this.activeDevices[this.readingDevice].deviceId;
+        this.readDeviceData(runner.opts.deviceId);
 
         this.readingDevice = (this.readingDevice + 1) % this.activeDevices.length;
 
@@ -130,7 +132,10 @@ export class MobileSerialManager {
   }
 
   initReadCallback = () => {
-    serial.registerReadCallback((data) => this.onReadDataSuccess(new Uint8Array(data)), this.handleError);
+    serial.registerReadCallback((data) => {
+      console.log("read by callback: ", new Uint8Array(data).join(", "));
+      this.onReadDataSuccess(new Uint8Array(data));
+    }, this.handleError);
   };
 
   initOnNewApprovedDeviceCallback = () => {
@@ -152,33 +157,13 @@ export class MobileSerialManager {
     });
   }
 
-  isInnoLabSensor(data) {
-    let header_bytes;
-    let dataLength;
-    if (data[0] == START_BYTE_V1) { // Sensor V1 message
-      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK;
-      dataLength = data[4]; // total data length in bytes
-    } else if (data[0] == START_BYTE_V2 || data[0] == START_BYTE_V2_LOG) { // Sensor V2 message
-      header_bytes = NUM_NON_DATA_SENSORS_CALLBACK_V2;
-      dataLength = (data[5] << 8) | data[6]; // total data length in bytes
-    };
-    let checksum = data[header_bytes + dataLength];
-    let calculatedChecksum = 0xff;
-    for (let i = 0; i < dataLength + header_bytes; i++) {
-      calculatedChecksum = calculatedChecksum ^ data[i];
-    }
-
-    if (calculatedChecksum != checksum) {
-      return false;
-    }
-    return true;
-  }
-
   onReadDataSuccess(newData, deviceId) {
-    dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
+    const result = dataManager.onDataCallback(newData, USB_TYPE, { deviceId });
+    const index = this.activeDevices.findIndex((device) => device.deviceId === deviceId);
 
-    if (this.isInnoLabSensor(newData)) {
-      const index = this.activeDevices.findIndex((device) => device.deviceId === deviceId);
+    if (this.activeDevices[index].sensorId) return;
+
+    if (result.sensorType === SENSOR_TYPE.innoLab) {
       this.activeDevices[index] = { ...this.activeDevices[index], sensorId: newData[1] };
     }
   }
@@ -299,13 +284,12 @@ export class MobileSerialManager {
   }
 
   async readDeviceData(deviceId) {
-    console.log("Reading device data: ", deviceId);
-
     try {
       const newData = await this.readSerialByDeviceId({
         baudRate: SERIAL_BAUD_RATE,
         deviceId,
       });
+      console.log("read by read device: ", new Uint8Array(newData).join(", "));
 
       this.onReadDataSuccess(new Uint8Array(newData), deviceId);
       return newData;

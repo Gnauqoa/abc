@@ -23,8 +23,8 @@ export const BLE_TX_ID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
 // Mobile Serial
 export const SCAN_SERIAL_INTERVAL = 1000; // millisecond
-export const READ_SERIAL_INTERVAL = 100; // millisecond
-export const RUNNER_INTERVAL = 50; // millisecond
+export const READ_SERIAL_INTERVAL = 10; // millisecond
+export const RUNNER_INTERVAL = 5; // millisecond
 export const SERIAL_BAUD_RATE = 115200;
 export const SERIAL_BAUD_RATE_V2 = 921600;
 export const RUNNER_TYPE = {
@@ -102,6 +102,11 @@ export const SENSOR_STATUS_ONLINE = "online";
 export const SENSOR_STATUS_OFFLINE = "offline";
 export const SENSOR_SELECTOR_SENSOR_TAB = "sensor";
 export const SENSOR_SELECTOR_USER_TAB = "user";
+export const SENSOR_TYPE = {
+  innoLab: "innoLab",
+  ble9909: "ble9909",
+  ble9100: "ble9100",
+};
 
 export const DEFAULT_SENSOR_ID = -1;
 export const DEFAULT_SENSOR_DATA = { id: DEFAULT_SENSOR_ID, index: 0 };
