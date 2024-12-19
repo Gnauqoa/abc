@@ -1,11 +1,15 @@
 import EdlHome from "../pages/home";
 import EdlLayout from "../pages/layout";
-import EdlActivity from "../pages/activity";
+import General from "../pages/general";
 
 var routes = [
   {
     path: "/",
     component: EdlHome,
+  },
+  {
+    path: "/general",
+    component: General,
   },
   {
     path: "(.*)",

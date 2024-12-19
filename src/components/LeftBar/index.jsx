@@ -19,10 +19,13 @@ const LeftBar = () => {
         px: 4,
         pt: 16,
         backgroundColor: "#FEF7FF",
+        width: "10vw",
+        maxWidth: "10vw",
+        overflow: "hidden",
       }}
     >
       <img src={logo} style={{ width: 100 }} />
-      <TabButton icon={memory} name="General" href={"/memory"} />
+      <TabButton icon={memory} name="General" href={"/general"} />
       <TabButton icon={clock} name="Clock" href={"/clock"} />
       <TabButton icon={reset} name="Reset" href={"/reset"} />
       <TabButton icon={doc} name="SFR" href={"/doc"} />

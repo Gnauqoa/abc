@@ -16,6 +16,14 @@ import { TableContextProvider } from "../context/TableContext";
 import commonEn from "../translations/en/common.json";
 import commonVi from "../translations/vi/common.json";
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#65558F",
+    },
+  },
+});
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -39,7 +47,7 @@ i18n
   })
   .then((t) => {});
 import MobileSerialManagerIST from "../services/mobile-serial-manager";
-import { Stack } from "@mui/material";
+import { createTheme, Stack, ThemeProvider } from "@mui/material";
 import LeftBar from "./LeftBar";
 
 const MyApp = () => {
@@ -115,14 +123,16 @@ const MyApp = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <ActivityContextProvider>
-        <TableContextProvider>
-          <App {...f7params}>
-            <Stack sx={{ display: "flex", flexDirection: "row", height: "100%", width: "100%" }}>
-              <LeftBar />
-              <View routes={routes} main style={{ width: "100%", height: "100%" }} url="/" />
-            </Stack>
-          </App>
-        </TableContextProvider>
+        <ThemeProvider theme={theme}>
+          <TableContextProvider>
+            <App {...f7params}>
+              <Stack sx={{ display: "flex", flexDirection: "row", height: "100%", width: "100%" }}>
+                <LeftBar />
+                <View style={{ width: "90vw", maxWidth: "90vw" }} main url="/general" className="safe-areas" />
+              </Stack>
+            </App>
+          </TableContextProvider>
+        </ThemeProvider>
       </ActivityContextProvider>
     </I18nextProvider>
   );
