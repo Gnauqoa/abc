@@ -1,7 +1,7 @@
 directories:
-  output: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\build
-  buildResources: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\build-res
-  app: C:\Workspaces\ohstem_repo\innolab\edl_app\cordova\platforms\electron\www
+  output: /Users/quang/workplace/ohsteam/edl_app/cordova/platforms/electron/build
+  buildResources: /Users/quang/workplace/ohsteam/edl_app/cordova/platforms/electron/build-res
+  app: /Users/quang/workplace/ohsteam/edl_app/cordova/platforms/electron/www
 extraFiles: []
 appId: vn.ohstem.edl_app
 nsis:
@@ -23,7 +23,7 @@ win:
 nodeGypRebuild: false
 npmRebuild: false
 productName: InnoLab
-electronVersion: 14.2.9
+electronVersion: 29.4.6
 electronDownload:
-  version: 14.2.9
+  version: 29.4.6
 files: []
