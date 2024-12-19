@@ -1,6 +1,6 @@
 import EdlHome from "../pages/home";
 import EdlLayout from "../pages/layout";
-import General from "../pages/general";
+import General from "../pages/general/prcm";
 
 var routes = [
   {
@@ -8,7 +8,11 @@ var routes = [
     component: EdlHome,
   },
   {
-    path: "/general",
+    path: "/general/prcm",
+    component: General,
+  },
+  {
+    path: '/general/(.*)',
     component: General,
   },
   {

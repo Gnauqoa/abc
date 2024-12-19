@@ -128,7 +128,12 @@ const MyApp = () => {
             <App {...f7params}>
               <Stack sx={{ display: "flex", flexDirection: "row", height: "100%", width: "100%" }}>
                 <LeftBar />
-                <View style={{ width: "90vw", maxWidth: "90vw" }} main url="/general" className="safe-areas" />
+                <View
+                  style={{ overflow: "hidden", width: "90vw", maxWidth: "90vw" }}
+                  main
+                  url="/general"
+                  className="safe-areas"
+                />
               </Stack>
             </App>
           </TableContextProvider>

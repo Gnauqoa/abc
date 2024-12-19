@@ -10,10 +10,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import CustomButton from "../components/atoms/custom-button";
-import { ListItem, Page } from "framework7-react";
-import APRCM from "../img/general/APRCM.png";
-import PPRCM from "../img/general/PPRCM.png";
+import CustomButton from "../../components/atoms/custom-button";
+import { Page } from "framework7-react";
+import APRCM from "../../img/general/APRCM.png";
+import PPRCM from "../../img/general/PPRCM.png";
 
 const General = () => {
   return (
@@ -22,10 +22,8 @@ const General = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          width: "78vw",
+          width: "100%",
           height: "100%",
-          mt: 4,
-          px: 10,
         }}
       >
         <Stack
@@ -35,15 +33,15 @@ const General = () => {
             justifyContent: "flex-end",
             gap: 3,
             width: "100%",
-            pr: 4,
-            mr: 4,
+            mt: 4,
           }}
         >
           <CustomButton title={"Check Config"} />
           <CustomButton title={"Save"} />
           <CustomButton title={"Generate"} />
+          <div style={{ width: 40 }}></div>
         </Stack>
-        <Stack sx={{ pt: "10%", display: "flex" }}>
+        <Stack sx={{ pt: "10%", display: "flex", ml: 4, flexDirection: "column" }}>
           <TextField
             sx={{
               "& .MuiInputBase-root": {
@@ -57,7 +55,7 @@ const General = () => {
           />
         </Stack>{" "}
         <RadioGroup aria-labelledby="demo-radio-buttons-group-label" name="radio-buttons-group">
-          <Stack display={"flex"} flexDirection={"row"} gap={4}>
+          <Stack display={"flex"} flexDirection={"row"} gap={4} ml={4} width={"100%"}>
             <Option image={APRCM} title={"APRCM"} content={["Can run individually", "Have TCPU, TBUS, ROM, RAM"]} />
             <Option
               image={PPRCM}
@@ -74,7 +72,7 @@ const General = () => {
 const Option = ({ image, content, title }) => {
   return (
     <Stack sx={{ display: "flex", flexDirection: "column" }}>
-      <img src={image} style={{ width: "100%", objectFit: "cover" }} />
+      <img src={image} style={{ width: "100%", height: 300, objectFit: "cover" }} />
       <FormControlLabel value={title} control={<Radio />} label={title} />
       <ul style={{ paddingLeft: 15 }}>
         {content.map((item) => (

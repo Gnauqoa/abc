@@ -1,5 +1,5 @@
 import React from "react";
-import { Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { Link } from "framework7-react";
 import clock from "../../img/icons/clock.svg";
 import code from "../../img/icons/code.svg";
@@ -10,26 +10,63 @@ import logo from "../../img/icons/logo.png";
 
 const LeftBar = () => {
   return (
+    <Stack sx={{ display: "flex", flexDirection: "row" }}>
+      <Stack
+        sx={{
+          display: "flex",
+          gap: 3,
+          flexDirection: "column",
+          height: "100%",
+          px: 4,
+          pt: 16,
+          backgroundColor: "#FEF7FF",
+          width: "10vw",
+          maxWidth: "10vw",
+          overflow: "hidden",
+        }}
+      >
+        <img src={logo} style={{ width: 100 }} />
+        <TabButton icon={memory} name="General" href={"/general/prcm"} />
+        <TabButton icon={clock} name="Clock" href={"/clock"} />
+        <TabButton icon={reset} name="Reset" href={"/reset"} />
+        <TabButton icon={doc} name="SFR" href={"/doc"} />
+        <TabButton icon={code} name="Binary" href={"/code"} />
+      </Stack>
+      <GeneralSubLeftBar />
+    </Stack>
+  );
+};
+
+const generalTab = [
+  { text: "PRCM Type", href: "/general/prcm" },
+  {
+    text: "Q/PCH Config",
+    href: "qpch",
+  },
+  {
+    text: "APRCM Config",
+    href: "aprcm",
+  },
+];
+
+const GeneralSubLeftBar = () => {
+  return (
     <Stack
       sx={{
         display: "flex",
-        gap: 3,
         flexDirection: "column",
-        height: "100%",
+        backgroundColor: "#F7F2FA",
         px: 4,
-        pt: 16,
-        backgroundColor: "#FEF7FF",
-        width: "10vw",
-        maxWidth: "10vw",
-        overflow: "hidden",
+        py: 6,
       }}
     >
-      <img src={logo} style={{ width: 100 }} />
-      <TabButton icon={memory} name="General" href={"/general"} />
-      <TabButton icon={clock} name="Clock" href={"/clock"} />
-      <TabButton icon={reset} name="Reset" href={"/reset"} />
-      <TabButton icon={doc} name="SFR" href={"/doc"} />
-      <TabButton icon={code} name="Binary" href={"/code"} />
+      {generalTab.map((tab) => (
+        <Link href={tab.href} key={tab.text}>
+          <Button sx={{ width: "auto", textTransform: "none", backgroundColor: "" === tab.href ? "#E8DEF8" : "" }}>
+            {tab.text}
+          </Button>
+        </Link>
+      ))}
     </Stack>
   );
 };
