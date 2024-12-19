@@ -39,6 +39,8 @@ i18n
   })
   .then((t) => {});
 import MobileSerialManagerIST from "../services/mobile-serial-manager";
+import { Stack } from "@mui/material";
+import LeftBar from "./LeftBar";
 
 const MyApp = () => {
   const device = getDevice();
@@ -115,10 +117,10 @@ const MyApp = () => {
       <ActivityContextProvider>
         <TableContextProvider>
           <App {...f7params}>
-            <Dialogs />
-            <MainMenu />
-            {/* Your main view, should have "view-main" class */}
-            <View main className="safe-areas" url="/" />
+            <Stack sx={{ display: "flex", flexDirection: "row", height: "100%", width: "100%" }}>
+              <LeftBar />
+              <View routes={routes} main style={{ width: "100%", height: "100%" }} url="/" />
+            </Stack>
           </App>
         </TableContextProvider>
       </ActivityContextProvider>

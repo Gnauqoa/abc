@@ -8,22 +8,6 @@ var routes = [
     component: EdlHome,
   },
   {
-    path: "/layout",
-    component: EdlLayout,
-  },
-  {
-    path: "/layout/:layout",
-    component: EdlActivity,
-  },
-  {
-    path: "/edl",
-    component: EdlActivity,
-  },
-  {
-    path: "/edl/:id",
-    component: EdlActivity,
-  },
-  {
     path: "(.*)",
     component: EdlHome,
   },

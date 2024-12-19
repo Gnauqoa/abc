@@ -29,6 +29,9 @@
     "Samsung >= 12"
   ],
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.2.1",
     "chart.js": "^4.2.1",
     "chartjs-plugin-annotation": "^2.2.1",
     "chartjs-plugin-zoom": "^2.0.1",
